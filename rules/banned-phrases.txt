@@ -1,0 +1,37 @@
+# Phrases never to write, one per line.
+#
+# Read by claude/bin/writing-style-hook.sh, which injects them into every
+# session and every subagent alongside claude/rules/writing-style.md.
+#
+# Add a line to ban a phrase. Delete a line to allow it again. Lines starting
+# with # are comments and blank lines are ignored.
+#
+# The test for whether something belongs here: if the word is doing emotional
+# work instead of stating what is true, it goes on the list.
+
+at the end of the day
+bite
+comes back to bite
+deep dive
+double-click
+fork in the road
+game changer
+has teeth
+heavy lifting
+here's the thing
+lean into
+load-bearing
+low-hanging fruit
+moving parts
+north star
+permanent furniture
+plumbing
+rabbit hole
+road not taken
+silver bullet
+teeth
+the point is
+under the hood
+unpack
+worse than it looks
+worse than you think

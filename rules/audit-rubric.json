@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "note": "Read by claude/bin for the weights and by audit-scribe for the meanings. Bump version only when a change makes audits written before it incomparable to audits written after, never for a reworded meaning.",
+  "cost": {
+    "small":    { "weight": 1,  "means": "One person loses minutes to it, or it is a nuisance nobody has to work around." },
+    "moderate": { "weight": 3,  "means": "Work has to be done differently because of it, and the workaround is known." },
+    "large":    { "weight": 8,  "means": "It blocks a change someone will want to make, or it costs a day when it is hit." },
+    "severe":   { "weight": 20, "means": "It loses data, exposes data, or takes the thing down." }
+  },
+  "horizon": {
+    "now":       { "multiplier": 1.0, "means": "The cost is already being paid at today's size and today's usage." },
+    "at-growth": { "multiplier": 0.6, "means": "The cost arrives when the data or the traffic grows the way it is expected to." },
+    "at-scale":  { "multiplier": 0.3, "means": "The cost arrives only well beyond anything this has been asked to handle." }
+  }
+}
