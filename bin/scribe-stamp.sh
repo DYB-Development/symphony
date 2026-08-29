@@ -39,7 +39,7 @@ printf '%s' "$model" | grep -qE '^[a-z0-9][a-z0-9.-]*(\[[a-z0-9]+\])?$' || usage
 [ -z "$source" ] ||
   printf '%s' "$source" | grep -qE '^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+@[0-9a-f]{7,40}$' || usage
 
-root=${SCRIBE_STAMP_ROOT:-$(cd -P "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}
+root=${SCRIBE_STAMP_ROOT:-$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}
 
 case "$kind" in
   pr)     scribe=pr-scribe;     rules=(pr-body writing-style); [ -z "$source" ] || usage ;;
