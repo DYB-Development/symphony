@@ -1,0 +1,19 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    # macOS because the suites lean on BSD sed, grep and awk, and on seq
+    # printing nothing for a descending range. A Linux runner would pass on
+    # code that fails on the machines this is used from.
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run the zsh test suites
+        run: ./run_tests.sh
