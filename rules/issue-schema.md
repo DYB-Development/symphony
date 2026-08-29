@@ -1,6 +1,6 @@
 # Issue Schema
 
-The single source of truth for how issues are labeled and written across all my
+The single source of truth for how issues are labeled and written across every
 repos. The issue agents (`issue-strategist`, `issue-scribe`, `issue-portfolio`)
 and the bootstrap script (`claude/bin/issue-bootstrap.sh`) all read this file.
 `next-task` is the executor that drains the backlog these rules produce.
