@@ -96,9 +96,9 @@ where touching more than the unit under test is expected and correct.
   be stale or wrong. Never make a claim about how something works from them.
 - **Two valid sources, nothing else: the code, or the expert agent that owns it.**
   Either read the code yourself, or delegate to the specialist agent that is
-  already an expert in that subsystem and let it implement the interfaces it owns
-  (e.g. the `declaro` skill for Declaro work). Prefer the owning expert for its
-  own interfaces rather than reconstructing their behavior from the outside.
+  already an expert in that subsystem and let it implement the interfaces it owns,
+  where such an agent exists. Prefer the owning expert for its own interfaces
+  rather than reconstructing their behavior from the outside.
 - **Never substitute an artifact for either.** A comment, issue, or doc is a hint
   to verify, never the basis for a claim or an implementation. If you don't have
   the code in front of you and no owning expert is handling it, go get the code

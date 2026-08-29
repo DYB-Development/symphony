@@ -4,7 +4,7 @@
 # Creates the label set and (optionally) writes .github/ISSUE_TEMPLATE/* so
 # GitHub renders the web "New issue" forms. Idempotent: re-running updates labels
 # in place (gh label --force) and overwrites templates.
-# Schema source of truth: claude/rules/issue-schema.md
+# Schema source of truth: rules/issue-schema.md
 #
 # Usage:
 #   issue-bootstrap.sh                 # bootstrap the repo in the current dir
@@ -14,9 +14,11 @@
 #
 set -euo pipefail
 
-# Accounts whose repos get the schema: your personal account + your own orgs.
-# (Excludes external orgs like emmertio / jumpstart-pro.)
-OWNERS=(tylercschneider DYB-Development)
+# Accounts whose repos get the schema, for --all-repos only. Set
+# ISSUE_BOOTSTRAP_OWNERS to a space-separated list of the accounts and orgs you
+# own. It is deliberately empty by default: --all-repos writes to every
+# non-archived repo of every account named here, so nothing is named for you.
+read -r -a OWNERS <<< "${ISSUE_BOOTSTRAP_OWNERS:-}" 
 
 MODE="repo"
 case "${1:-}" in
@@ -61,6 +63,11 @@ seed_labels() {
 
 # --- --all-repos: the rare schema-wide label sync (labels only, no PRs) -------
 if [[ "$MODE" == "all" ]]; then
+  if [[ ${#OWNERS[@]} -eq 0 ]]; then
+    echo "issue-bootstrap.sh: --all-repos needs to know whose repos to sync." >&2
+    echo "  Set ISSUE_BOOTSTRAP_OWNERS to the accounts you own, space separated." >&2
+    exit 78
+  fi
   for owner in "${OWNERS[@]}"; do
     echo "Syncing labels across $owner ..."
     gh repo list "$owner" --no-archived --limit 500 --json nameWithOwner -q '.[].nameWithOwner' \
