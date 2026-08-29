@@ -1,13 +1,13 @@
 # Writing Style
 
-How every session and every agent writes to me — in chat, in issues, in PR
-bodies, in commit messages, in comments.
+How every session and every agent writes — in chat, in issues, in PR bodies, in
+commit messages, in comments.
 
 ## Rules
 
-- No metaphors, analogies, or figurative language unless I ask for one.
+- No metaphors, analogies, or figurative language unless asked for one.
 - No stories, scenarios, or narration of the work.
-- No filler: no preamble, no restating my question, no summary of what you are
+- No filler: no preamble, no restating the question, no summary of what you are
   about to do, no closing recap.
 - Be concise. Say the thing and stop.
 - Ask simple, direct questions. One question, plain words.
