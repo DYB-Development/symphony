@@ -69,6 +69,33 @@ echo "issue-bootstrap.sh arguments:"
 "$BOOTSTRAP" --no-such-flag >/dev/null 2>&1
 assert_equals "64" "$?" "refuses an argument it does not recognise"
 
+assert_contains "--no-such-flag" \
+  "$("$BOOTSTRAP" --no-such-flag 2>&1)" \
+  "names the argument it refused"
+
+"$BOOTSTRAP" --help >/dev/null 2>&1
+assert_equals "0" "$?" "prints help without failing"
+
+assert_contains "--all-repos" \
+  "$("$BOOTSTRAP" --help 2>&1)" \
+  "names its flags in the help"
+
+assert_equals "" \
+  "$("$BOOTSTRAP" --help 2>&1 >/dev/null | grep -o 'STUB GH CALLED' || true)" \
+  "calls nothing outside itself while printing help"
+
+assert_equals "78" \
+  "$(ISSUE_BOOTSTRAP_OWNERS="" "$BOOTSTRAP" --all-repos >/dev/null 2>&1; echo $?)" \
+  "leaves a flag it already recognised behaving as it did"
+
+assert_contains "STUB GH CALLED" \
+  "$("$BOOTSTRAP" --labels-only 2>&1)" \
+  "still bootstraps when given a flag it recognises"
+
+assert_contains "STUB GH CALLED" \
+  "$("$BOOTSTRAP" 2>&1)" \
+  "still bootstraps the current repo with no argument"
+
 rm -rf "$STUB"
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
