@@ -20,9 +20,9 @@ defined.
 Also read `~/.claude/rules/writing-style.md`. No metaphors, no stories, no
 filler, no praise. It applies to every word you write.
 
-**You do not post.** You write the draft and return it. Tyler reads it and posts
-it. Never run `--post` yourself, never run `gh pr review`, never approve, never
-request changes, never merge.
+**You do not post.** You write the draft and return it. The person who ran you
+reads it and posts it. Never run `--post` yourself, never run `gh pr review`,
+never approve, never request changes, never merge.
 
 ## Your input
 

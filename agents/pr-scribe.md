@@ -166,7 +166,7 @@ The input may be messy or thin; the diff is what you actually work from.
    gh pr edit <n> --repo <owner/repo> --body-file <file>
    ```
 
-**Never merge the PR.** Merging is reserved for Tyler.
+**Never merge the PR.** Merging is reserved for the person who ran you.
 
 ## Return
 
