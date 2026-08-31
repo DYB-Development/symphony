@@ -30,7 +30,7 @@ Three commands drive them: `/feature-plan`, `/review` and `/audit`.
 Needs `git`, `zsh`, `jq`, and the GitHub CLI `gh` already authenticated.
 
 ```sh
-git clone https://github.com/tylercschneider/symphony.git
+git clone https://github.com/DYB-Development/symphony.git
 cd symphony
 ./install.sh --help
 ```
