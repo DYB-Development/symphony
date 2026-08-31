@@ -82,6 +82,33 @@ Then, once per repo you use the issue schema in, create its labels:
 ~/.claude/bin/issue-bootstrap.sh
 ```
 
+### Configuring it
+
+Everything works unset. These change what the package reads, and they belong in
+your own shell or settings rather than in a file here, so an update never
+overwrites them.
+
+| Variable | Changes |
+|---|---|
+| `CLAUDE_CONFIG_DIR` | Where the installer links to, instead of `~/.claude` |
+| `CLAUDE_WRITING_STYLE_FILE` | The writing rules carried into every session, so you can supply your own voice |
+| `CLAUDE_BANNED_PHRASES_FILE` | The phrase list carried alongside them |
+| `AUDIT_RUBRIC_FILE` | The cost bands and horizons an audit is scored against |
+| `ISSUE_BOOTSTRAP_OWNERS` | The accounts `issue-bootstrap.sh --all-repos` syncs labels across |
+| `SYMPHONY_IDENTIFIERS` | A file of terms no shipped file may name, checked by the suite |
+
+The two writing-style variables are how you replace the shipped voice without
+editing a file the package owns. Each names a path, so what they point at can be
+as long as you like.
+
+`ISSUE_BOOTSTRAP_OWNERS` is empty by default and `--all-repos` does nothing until
+you set it, because that flag writes to every non-archived repo of every account
+named.
+
+`SYMPHONY_IDENTIFIERS` is unset by default, so the suite reports nothing to check
+and passes. A list of names cannot be kept here without carrying the names the
+check exists to keep out.
+
 ## Running the tests
 
 ```sh
