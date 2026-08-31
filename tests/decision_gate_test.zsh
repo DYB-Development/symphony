@@ -93,6 +93,13 @@ arm >/dev/null
 assert_equals "" "$(check 'git status')" "leaves a command that is not a commit alone"
 drop_repo
 
+new_repo
+arm >/dev/null
+assert_contains '"permissionDecision":"deny"' \
+  "$(check 'git commit -m "explain what NO_DECISION=1 is for"')" \
+  "still refuses when the override is only mentioned in the message"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
