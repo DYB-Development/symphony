@@ -63,6 +63,12 @@ assert_equals \
   "$(grep -oE '^OWNERS=\([a-zA-Z]' "$BOOTSTRAP")" \
   "hardcodes no account of its own"
 
+echo ""
+echo "issue-bootstrap.sh arguments:"
+
+"$BOOTSTRAP" --no-such-flag >/dev/null 2>&1
+assert_equals "64" "$?" "refuses an argument it does not recognise"
+
 rm -rf "$STUB"
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"

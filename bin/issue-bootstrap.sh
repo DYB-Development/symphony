@@ -22,8 +22,10 @@ read -r -a OWNERS <<< "${ISSUE_BOOTSTRAP_OWNERS:-}"
 
 MODE="repo"
 case "${1:-}" in
+  "")            MODE="repo" ;;
   --all-repos)   MODE="all" ;;
   --labels-only) MODE="labels" ;;
+  *)             printf 'unrecognised argument: %s\n' "$1" >&2; exit 64 ;;
 esac
 
 command -v gh >/dev/null || { echo "gh CLI required" >&2; exit 1; }
