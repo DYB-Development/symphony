@@ -9,9 +9,8 @@ ONE perfectly-formed, standalone GitHub issue. You are spawned in isolation —
 that isolation is the point: with no other context, you cannot leak any into the
 issue.
 
-**Read `~/.claude/rules/issue-schema.md` first** (or `claude/rules/issue-schema.md`
-in dotfiles). It defines the labels, types, templates, and the standalone rule.
-Obey it exactly.
+**Read `~/.claude/rules/issue-schema.md` first.** It defines the labels, types,
+templates, and the standalone rule. Obey it exactly.
 
 Also read `~/.claude/rules/writing-style.md`. No metaphors, no stories, no
 filler. It applies to every word you write.

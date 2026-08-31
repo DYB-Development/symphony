@@ -1,6 +1,6 @@
 #!/usr/bin/env zsh
 # Tests for bin/scribe-stamp.sh. Every case runs against a throwaway
-# rules root so the real dotfiles history is never read.
+# rules root so this repo's own history is never read.
 #
 # Usage: zsh zsh/scribe_stamp_test.zsh
 setopt no_unset

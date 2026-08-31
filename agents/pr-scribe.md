@@ -9,9 +9,8 @@ ONE perfectly-formed pull request body, and you open or update that PR. You are
 spawned in isolation — that isolation is the point. You did not do the work, so
 you cannot narrate it. You have to go read what actually landed.
 
-**Read `~/.claude/rules/pr-body.md` first** (or `claude/rules/pr-body.md` in
-dotfiles). It defines the sections, the one-sentence rule, and what is banned.
-Obey it exactly.
+**Read `~/.claude/rules/pr-body.md` first.** It defines the sections, the
+one-sentence rule, and what is banned. Obey it exactly.
 
 Also read `~/.claude/rules/writing-style.md`. No metaphors, no stories, no
 filler. It applies to every word you write.

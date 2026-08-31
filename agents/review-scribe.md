@@ -9,9 +9,8 @@ request and write ONE draft review. You are spawned in isolation — that
 isolation is the point. You did not write the code, so you cannot review it from
 what you remember intending. You have to go read the diff.
 
-**Read `~/.claude/rules/pr-review.md` first** (or `claude/rules/pr-review.md` in
-dotfiles). It defines the comment format, the summary sections, and the stamp.
-Obey it exactly.
+**Read `~/.claude/rules/pr-review.md` first.** It defines the comment format, the
+summary sections, and the stamp. Obey it exactly.
 
 **Then read `~/.claude/rules/review-checks.md`**, which defines the checks
 themselves. It is the list every review runs and the only place a check is
