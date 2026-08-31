@@ -51,7 +51,9 @@ command -v jq >/dev/null || { echo "  jq is required to register the hooks" >&2;
 SETTINGS="$CONFIG_DIR/settings.json"
 [ -f "$SETTINGS" ] || echo '{}' > "$SETTINGS"
 
-ours="$(sed "s|__SYMPHONY_BIN__|$SYMPHONY_DIR/bin|g" "$SYMPHONY_DIR/hooks.json")"
+# One hooks file serves both installs: the plugin runtime substitutes
+# CLAUDE_PLUGIN_ROOT itself, and a linked install substitutes it here.
+ours="$(sed "s|\${CLAUDE_PLUGIN_ROOT}|$SYMPHONY_DIR|g" "$SYMPHONY_DIR/hooks/hooks.json" | jq '.hooks')"
 
 merged="$(jq --argjson ours "$ours" '
   .hooks = reduce ($ours | to_entries[]) as $event ((.hooks // {});

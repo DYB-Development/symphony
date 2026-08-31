@@ -93,5 +93,9 @@ assert_equals "0" \
 
 rm -rf "$CONFIG"
 
+assert_equals "hooks" \
+  "$(jq -r 'keys_unsorted[0]' "$ROOT/hooks/hooks.json" 2>/dev/null)" \
+  "keeps the hooks where a plugin expects them, in the shape a plugin expects"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
