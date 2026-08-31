@@ -57,7 +57,24 @@ link_file() {
   echo "  link   $dest → $src"
 }
 
+linked_here() {
+  [ "$(readlink "$CONFIG_DIR/rules" 2>/dev/null)" = "$SYMPHONY_DIR/rules" ]
+}
+
+plugin_installed() {
+  [ -f "$CONFIG_DIR/settings.json" ] &&
+    jq -e '(.enabledPlugins // {}) | keys[] | select(startswith("symphony@"))' \
+      "$CONFIG_DIR/settings.json" >/dev/null 2>&1
+}
+
 if [ "$MODE" = plugin ]; then
+  if linked_here; then
+    echo "symphony is already linked into $CONFIG_DIR." >&2
+    echo "Remove the rules, agents and bin links there, and its entries from" >&2
+    echo "settings.json, before installing the plugin — installing both" >&2
+    echo "registers every hook twice." >&2
+    exit 75
+  fi
   command -v claude >/dev/null || { echo "the claude CLI is required to install as a plugin" >&2; exit 1; }
   echo "Plugin:"
   claude plugin marketplace add "$SYMPHONY_DIR"
@@ -69,9 +86,7 @@ fi
 # Both installs at once would register the hooks twice, so each refuses while
 # the other is in place rather than layering on it. This reads the settings file
 # rather than asking the claude CLI, which rewrites that file as it runs.
-if [ -f "$CONFIG_DIR/settings.json" ] &&
-   jq -e '(.enabledPlugins // {}) | keys[] | select(startswith("symphony@"))' \
-     "$CONFIG_DIR/settings.json" >/dev/null 2>&1; then
+if plugin_installed; then
   echo "symphony is already installed as a plugin." >&2
   echo "Remove it with 'claude plugin uninstall symphony@symphony' before linking," >&2
   echo "or keep the plugin — installing both registers every hook twice." >&2

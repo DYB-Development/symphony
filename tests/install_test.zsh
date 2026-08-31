@@ -160,5 +160,16 @@ assert_equals "" "$(readlink "$CONFIG/rules")" "links nothing when it refuses"
 
 rm -rf "$CONFIG"
 
+STUB="$(mktemp -d "${TMPDIR:-/tmp}/install_test_stub3.XXXXXX")"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$STUB/claude"
+chmod +x "$STUB/claude"
+
+CONFIG="$(fresh_config)"
+CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" >/dev/null 2>&1
+PATH="$STUB:$PATH" CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" --plugin >/dev/null 2>&1
+assert_equals "75" "$?" "refuses to install the plugin while the linked install is in place"
+
+rm -rf "$CONFIG" "$STUB"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
