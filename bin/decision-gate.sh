@@ -45,7 +45,10 @@ case "${1:-}" in
     command=$(printf '%s' "$payload" | jq -r '.tool_input.command // empty')
     printf '%s' "$command" | grep -Eq "(^|[^A-Za-z])git([^A-Za-z]|$)" || exit 0
     printf '%s' "$command" | grep -Eq "(^|[^A-Za-z])commit([^A-Za-z]|$)" || exit 0
-    case "$command" in *NO_DECISION=1*) rm -f "$marker"; exit 0;; esac
+    # Quoted spans are stripped first, so the override counts only as an
+    # environment assignment on the command and never as prose in the message.
+    unquoted=$(printf '%s' "$command" | sed "s/\"[^\"]*\"//g; s/'[^']*'//g")
+    case "$unquoted" in *NO_DECISION=1*) rm -f "$marker"; exit 0;; esac
     jq -nc '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $text}}' \
       --arg text "A question answered earlier in this session settled a choice between real options, and .decisions.md does not carry it yet. Record it before committing: ~/.claude/bin/decide.sh \"<the question>\" \"<the decision>\". If that answer settled nothing a reviewer needs, prefix this command with NO_DECISION=1."
     ;;

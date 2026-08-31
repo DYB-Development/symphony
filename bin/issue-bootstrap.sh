@@ -20,10 +20,30 @@ set -euo pipefail
 # non-archived repo of every account named here, so nothing is named for you.
 read -r -a OWNERS <<< "${ISSUE_BOOTSTRAP_OWNERS:-}" 
 
+usage() {
+  cat <<'USAGE'
+issue-bootstrap.sh — materialize the issue schema into a repo.
+
+Creates the label set and, unless told otherwise, writes the issue templates
+GitHub renders its "New issue" forms from. Re-running updates both in place.
+
+usage: issue-bootstrap.sh [--labels-only | --all-repos | --help]
+
+  (no argument)   bootstrap the repo in the current directory
+  --labels-only   create the labels and write no templates
+  --all-repos     labels only, across every repo of every account in
+                  ISSUE_BOOTSTRAP_OWNERS
+  --help          print this and change nothing
+USAGE
+}
+
 MODE="repo"
 case "${1:-}" in
+  "")            MODE="repo" ;;
   --all-repos)   MODE="all" ;;
   --labels-only) MODE="labels" ;;
+  -h|--help)     usage; exit 0 ;;
+  *)             printf 'unrecognised argument: %s\n' "$1" >&2; usage >&2; exit 64 ;;
 esac
 
 command -v gh >/dev/null || { echo "gh CLI required" >&2; exit 1; }

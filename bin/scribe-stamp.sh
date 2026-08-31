@@ -4,7 +4,8 @@ set -euo pipefail
 usage() {
   cat >&2 <<'USAGE'
 usage: scribe-stamp.sh pr|issue "<model-id>"
-       scribe-stamp.sh plan|review|audit "<model-id>" [<owner/repo>@<sha>]
+       scribe-stamp.sh plan|review "<model-id>" [<owner/repo>@<sha>]
+       scribe-stamp.sh audit "<model-id>" [<section>]
 
 The model must be its identifier, not its display name — `claude-opus-5[1m]`,
 never `Opus 5 (1M context)`. A stamp is only worth reading if every scribe
@@ -14,8 +15,9 @@ A plan, a review and an audit are claims about a repo at one commit, so their
 stamps name it below the rest, after a blank line — `Planned Against` for a plan,
 `Reviewed Against` for a review, `Audited Against` for an audit. With no source
 given it is read from the working directory's repository, and a `+` there means
-the tree was dirty. A review passes the pull request's head commit instead, since
-that is the code it read. `pr` and `issue` carry neither line and refuse a
+the tree was dirty. An audit names the section it read instead of a source, and
+its `+` then means that section was dirty rather than the whole tree. A review
+passes the pull request's head commit instead, since that is the code it read. `pr` and `issue` carry neither line and refuse a
 source.
 
 Prints the version stamp a scribe appends below the body's last trailer,
@@ -33,8 +35,16 @@ USAGE
 kind=$1
 model=$2
 source=${3:-}
+section=""
 
 printf '%s' "$model" | grep -qE '^[a-z0-9][a-z0-9.-]*(\[[a-z0-9]+\])?$' || usage
+
+# An audit reads one named section, so its third argument is that section and
+# the mark it carries means that section was uncommitted, not the whole tree.
+if [ "$kind" = audit ]; then
+  section=$source
+  source=""
+fi
 
 [ -z "$source" ] ||
   printf '%s' "$source" | grep -qE '^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+@[0-9a-f]{7,40}$' || usage
@@ -101,7 +111,7 @@ case "$kind" in
       origin=$(git remote get-url origin 2>/dev/null || true)
       repo=$(printf '%s' "$origin" | sed -E 's#\.git$##; s#^.*[:/]([^/:]+/[^/]+)$#\1#')
       sha=$(git rev-parse --short HEAD)
-      [ -z "$(git status --porcelain)" ] || sha="$sha+"
+      [ -z "$(git status --porcelain -- ${section:-.})" ] || sha="$sha+"
       source="$repo@$sha"
     fi
     case "$kind" in

@@ -155,11 +155,12 @@ Audited Against: `acme/quotes@a1b2c3d`
 ```
 
 It is **generated, not written**: `~/.claude/bin/scribe-stamp.sh audit
-"<model-id>"` prints it and the Scribe pastes it verbatim. Never type a version
-by hand. `Audited Against` is the repo and commit the section was read at, which
-is what tells a reader months later whether the audit still describes the code.
+"<model-id>" <section>` prints it and the Scribe pastes it verbatim. Never type a
+version by hand. `Audited Against` is the repo and commit the section was read
+at, which is what tells a reader months later whether the audit still describes
+the code.
 
-A `+` there means the **whole tree** was dirty when the audit ran, not that the
-audited section was. An uncommitted file somewhere else in the repo puts a `+` on
-an audit of code that was clean, so the `+` is a reason to check rather than a
-statement about the section.
+A `+` there means the audited section had uncommitted changes when the audit
+ran, so what was read is not exactly the commit named. A file uncommitted
+elsewhere in the repo does not put one there, which is why the mark is worth
+acting on.
