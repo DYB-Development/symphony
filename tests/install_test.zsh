@@ -35,5 +35,18 @@ assert_equals "$ROOT/rules" "$(readlink "$CONFIG/rules")" \
 
 rm -rf "$CONFIG"
 
+CONFIG="$(fresh_config)"
+mkdir -p "$CONFIG/commands"
+printf 'mine\n' > "$CONFIG/commands/my-own.md"
+CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" >/dev/null 2>&1
+
+assert_equals "$ROOT/commands/review.md" "$(readlink "$CONFIG/commands/review.md")" \
+  "links each command file into the commands directory"
+
+assert_equals "mine" "$(cat "$CONFIG/commands/my-own.md")" \
+  "leaves a command it does not own untouched"
+
+rm -rf "$CONFIG"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

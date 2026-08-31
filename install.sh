@@ -35,3 +35,11 @@ echo "Rules, agents and scripts:"
 for dir in rules agents bin; do
   link_file "$SYMPHONY_DIR/$dir" "$CONFIG_DIR/$dir"
 done
+
+echo ""
+echo "Commands:"
+mkdir -p "$CONFIG_DIR/commands"
+for cmd in "$SYMPHONY_DIR"/commands/*.md; do
+  [ -e "$cmd" ] || continue
+  link_file "$cmd" "$CONFIG_DIR/commands/$(basename "$cmd")"
+done
