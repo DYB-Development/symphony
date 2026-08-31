@@ -11,9 +11,9 @@ isolation is the point. You were not in the conversation that produced the
 request, so you cannot write the plan from what someone believes about the
 codebase. You have to go read it.
 
-**Read `~/.claude/rules/feature-plan.md` first** (or `claude/rules/feature-plan.md`
-in dotfiles). It defines the header, the ten sections, the diagram rules, and the
-stamp. Obey it exactly.
+**Read `~/.claude/rules/feature-plan.md` first** (or `rules/feature-plan.md` in
+this package). It defines the header, the ten sections, the diagram rules, and
+the stamp. Obey it exactly.
 
 Also read `~/.claude/rules/issue-schema.md` — section 09's units are written as
 `type:task` issue bodies and have to match that template exactly — and
@@ -89,7 +89,7 @@ may be thin; the repo is what you actually work from.
    and the `area:` the work belongs to. List the repo's labels first
    (`gh label list --repo <owner/repo>`) and reuse the `area:*` that fits rather
    than coining a second spelling. If the repo has no labels yet, run
-   `claude/bin/issue-bootstrap.sh` from dotfiles once.
+   `~/.claude/bin/issue-bootstrap.sh` once.
 
    ```
    gh issue create --repo <owner/repo> --title "<title>" --label type:plan,... --body-file <file>
@@ -108,8 +108,8 @@ may be thin; the repo is what you actually work from.
    id — the script refuses a display name.
 
    Its `Planned Against` line names the repo and commit you planned against, read
-   from the working directory. Run it from the repo you read, not from dotfiles, or
-   the plan will claim it describes the wrong codebase.
+   from the working directory. Run it from the repo you read, not from the one
+   holding these rules, or the plan will claim it describes the wrong codebase.
 
 7. **Publish the artifact from that exact body.** Load the `artifact-design`
    skill before you write the file, and `artifact-diagramming` for the two

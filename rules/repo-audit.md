@@ -151,7 +151,7 @@ Scribe: audit-scribe `4e655ad`
 Rules: repo-audit `4e655ad`, review-checks `4e655ad`, writing-style `0426b47`
 Model: `claude-opus-5`, cc `2.1.246`
 
-Audited Against: `tylercschneider/quotes@a1b2c3d`
+Audited Against: `acme/quotes@a1b2c3d`
 ```
 
 It is **generated, not written**: `~/.claude/bin/scribe-stamp.sh audit
