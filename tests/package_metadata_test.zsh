@@ -44,9 +44,14 @@ assert_equals "$OWNER" \
   "$(jq -r '.owner.name // ""' "$ROOT/.claude-plugin/marketplace.json")" \
   "names that same owner in the marketplace"
 
+# Checked by owner rather than by name, so this file does not have to contain
+# the account it is looking for and then match itself. "acme" and "o" are the
+# placeholder owners the suites use in example urls.
 assert_equals "" \
-  "$(grep -rl 'tylercschneider' $(git -C "$ROOT" ls-files) 2>/dev/null | tr '\n' ' ' | sed 's/ $//')" \
-  "names no personal account anywhere it ships"
+  "$(grep -rhoE 'github\.com[:/][A-Za-z0-9_-]+' $(git -C "$ROOT" ls-files) 2>/dev/null \
+     | sed -E 's|.*[:/]||' | sort -u \
+     | grep -vxE "$OWNER|acme|o" | tr '\n' ' ' | sed 's/ $//')" \
+  "names no account but its own and the placeholders, anywhere it ships"
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
