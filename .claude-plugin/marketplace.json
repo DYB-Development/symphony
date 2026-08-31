@@ -1,0 +1,13 @@
+{
+  "name": "symphony",
+  "owner": {
+    "name": "symphony"
+  },
+  "plugins": [
+    {
+      "name": "symphony",
+      "source": "./"
+    }
+  ],
+  "description": "The symphony scribes: agents that write the documents around code, each to a fixed set of rules."
+}

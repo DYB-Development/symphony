@@ -12,6 +12,34 @@ set -euo pipefail
 SYMPHONY_DIR="$(cd "$(dirname "$0")" && pwd)"
 CONFIG_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
 
+usage() {
+  cat <<'USAGE'
+install.sh — put this package where Claude Code will find it.
+
+There are two ways to install it, and you want one of them, not both.
+
+usage: install.sh [--link | --plugin | --help]
+
+  (no argument)   same as --link
+  --link          symlink the rules, agents, scripts and commands into place,
+                  and merge the hooks into your settings. Commands are run as
+                  /review. Editing a file in this clone takes effect at once.
+  --plugin        register this clone as a marketplace and install it as a
+                  plugin. Commands are run as /symphony:review, and updates
+                  come through claude plugin update.
+  --help          print this and change nothing
+USAGE
+}
+
+MODE="link"
+case "${1:-}" in
+  "")        MODE="link" ;;
+  --link)    MODE="link" ;;
+  --plugin)  MODE="plugin" ;;
+  -h|--help) usage; exit 0 ;;
+  *)         printf 'unrecognised argument: %s\n' "$1" >&2; usage >&2; exit 64 ;;
+esac
+
 link_file() {
   local src="$1" dest="$2"
 
@@ -28,6 +56,15 @@ link_file() {
   ln -s "$src" "$dest"
   echo "  link   $dest → $src"
 }
+
+if [ "$MODE" = plugin ]; then
+  command -v claude >/dev/null || { echo "the claude CLI is required to install as a plugin" >&2; exit 1; }
+  echo "Plugin:"
+  claude plugin marketplace add "$SYMPHONY_DIR"
+  claude plugin install symphony@symphony
+  echo "  installed — its commands are namespaced, so a review is /symphony:review"
+  exit 0
+fi
 
 mkdir -p "$CONFIG_DIR"
 
