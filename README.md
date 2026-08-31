@@ -27,19 +27,21 @@ Three commands drive them: `/feature-plan`, `/review` and `/audit`.
 
 ## Setting it up
 
-Clone this repo, then link it where Claude Code looks:
+Needs `git`, `zsh`, `jq`, and the GitHub CLI `gh` already authenticated.
 
 ```sh
 git clone https://github.com/tylercschneider/symphony.git
 cd symphony
-
-ln -sfn "$PWD/rules"    ~/.claude/rules
-ln -sfn "$PWD/agents"   ~/.claude/agents
-ln -sfn "$PWD/bin"      ~/.claude/bin
-
-mkdir -p ~/.claude/commands
-ln -sf "$PWD"/commands/*.md ~/.claude/commands/
+./install.sh
 ```
+
+That links `rules`, `agents` and `bin` into `~/.claude`, links each command into
+`~/.claude/commands` one file at a time, and registers the hooks in
+`~/.claude/settings.json`. Anything already at one of those paths is moved aside
+to `<path>.backup` first, and running it again changes nothing. Set
+`CLAUDE_CONFIG_DIR` to install somewhere other than `~/.claude`.
+
+### What the links do
 
 Rules under `~/.claude/rules` are read in every session on the machine, so the
 writing style and the development process apply everywhere, not only here.
@@ -47,7 +49,38 @@ writing style and the development process apply everywhere, not only here.
 The commands are linked file by file rather than as a directory, so your own
 commands can live alongside these.
 
-Back up anything already at those paths first — the links replace it.
+### What the hooks do
+
+Settings are merged rather than replaced, so hooks and settings you already have
+are kept. Four entries are added:
+
+| Event | Runs | Why |
+|---|---|---|
+| `SessionStart` | `writing-style-hook.sh` | Carries the writing rules and the banned phrase list into the session |
+| `SubagentStart` | `writing-style-hook.sh` | A subagent receives no rules of its own, so it gets them here |
+| `PostToolUse` | `decision-gate.sh arm` | Answering a question settles a choice, which has to be recorded |
+| `PreToolUse` | `decision-gate.sh check` | Refuses a commit while that choice is still unrecorded |
+
+Skip the hooks and the package still loads, but the writing rules never reach a
+subagent and the decision gate never fires, both without saying so.
+
+### Two more steps
+
+The rules keep three working-tree files that must never reach a commit — the
+decision log, the ticket reference and the resume bookmark. Add them to your
+global gitignore:
+
+```
+.decisions.md
+.ticket
+start_here.md
+```
+
+Then, once per repo you use the issue schema in, create its labels:
+
+```sh
+~/.claude/bin/issue-bootstrap.sh
+```
 
 ## Running the tests
 
