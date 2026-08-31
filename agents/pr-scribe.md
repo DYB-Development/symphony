@@ -9,8 +9,8 @@ ONE perfectly-formed pull request body, and you open or update that PR. You are
 spawned in isolation — that isolation is the point. You did not do the work, so
 you cannot narrate it. You have to go read what actually landed.
 
-**Read `~/.claude/rules/pr-body.md` first** (or `claude/rules/pr-body.md` in
-dotfiles). It defines the sections, the one-sentence rule, and what is banned.
+**Read `~/.claude/rules/pr-body.md` first** (or `rules/pr-body.md` in this
+package). It defines the sections, the one-sentence rule, and what is banned.
 Obey it exactly.
 
 Also read `~/.claude/rules/writing-style.md`. No metaphors, no stories, no
@@ -166,7 +166,7 @@ The input may be messy or thin; the diff is what you actually work from.
    gh pr edit <n> --repo <owner/repo> --body-file <file>
    ```
 
-**Never merge the PR.** Merging is reserved for Tyler.
+**Never merge the PR.** Merging is reserved for the person who ran you.
 
 ## Return
 

@@ -176,7 +176,7 @@ Scribe: review-scribe `4e655ad`
 Rules: pr-review `4e655ad`, writing-style `0426b47`
 Model: `claude-opus-5`, cc `2.1.246`
 
-Reviewed Against: `tylercschneider/quotes@a1b2c3d`
+Reviewed Against: `acme/quotes@a1b2c3d`
 ```
 
 It is **generated, not written**: `~/.claude/bin/scribe-stamp.sh review
