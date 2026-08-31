@@ -43,3 +43,21 @@ for cmd in "$SYMPHONY_DIR"/commands/*.md; do
   [ -e "$cmd" ] || continue
   link_file "$cmd" "$CONFIG_DIR/commands/$(basename "$cmd")"
 done
+
+echo ""
+echo "Hooks:"
+command -v jq >/dev/null || { echo "  jq is required to register the hooks" >&2; exit 1; }
+
+SETTINGS="$CONFIG_DIR/settings.json"
+[ -f "$SETTINGS" ] || echo '{}' > "$SETTINGS"
+
+ours="$(sed "s|__SYMPHONY_BIN__|$SYMPHONY_DIR/bin|g" "$SYMPHONY_DIR/hooks.json")"
+
+merged="$(jq --argjson ours "$ours" '
+  .hooks = reduce ($ours | to_entries[]) as $event ((.hooks // {});
+    .[$event.key] = reduce (((.[$event.key] // []) + $event.value)[]) as $entry
+      ([]; if index($entry) then . else . + [$entry] end))
+' "$SETTINGS")"
+
+printf '%s\n' "$merged" > "$SETTINGS"
+echo "  merged into $SETTINGS"

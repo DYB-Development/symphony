@@ -48,5 +48,14 @@ assert_equals "mine" "$(cat "$CONFIG/commands/my-own.md")" \
 
 rm -rf "$CONFIG"
 
+CONFIG="$(fresh_config)"
+CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" >/dev/null 2>&1
+
+assert_equals "SessionStart SubagentStart PostToolUse PreToolUse" \
+  "$(jq -r '[.hooks | keys_unsorted[]] | join(" ")' "$CONFIG/settings.json" | tr '\n' ' ' | sed 's/ $//')" \
+  "registers a hook for each event the package needs"
+
+rm -rf "$CONFIG"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
