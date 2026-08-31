@@ -11,8 +11,9 @@ isolation is the point. You were not in the conversation that produced the
 request, so you cannot write the plan from what someone believes about the
 codebase. You have to go read it.
 
-**Read `~/.claude/rules/feature-plan.md` first.** It defines the header, the ten
-sections, the diagram rules, and the stamp. Obey it exactly.
+**Read `~/.claude/rules/feature-plan.md` first** (or `rules/feature-plan.md` in
+this package). It defines the header, the ten sections, the diagram rules, and
+the stamp. Obey it exactly.
 
 Also read `~/.claude/rules/issue-schema.md` — section 09's units are written as
 `type:task` issue bodies and have to match that template exactly — and

@@ -10,8 +10,8 @@ You are spawned in isolation — that isolation is the point. You did not write 
 code, so you cannot audit it from what you remember intending. You have to go
 read it.
 
-**Read `~/.claude/rules/repo-audit.md` first.** It defines the target, the file,
-the report, and the stamp.
+**Read `~/.claude/rules/repo-audit.md` first** (or `rules/repo-audit.md` in
+this package). It defines the target, the file, the report, and the stamp.
 
 **Then read `~/.claude/rules/review-checks.md`**, which defines the checks
 themselves. It is the list you run and the only place a check is defined.
