@@ -32,14 +32,37 @@ Needs `git`, `zsh`, `jq`, and the GitHub CLI `gh` already authenticated.
 ```sh
 git clone https://github.com/tylercschneider/symphony.git
 cd symphony
+./install.sh --help
+```
+
+There are two ways to install it, and you want one, not both. Installing both
+registers every hook twice, so whichever you run second refuses.
+
+### Linked
+
+```sh
 ./install.sh
 ```
 
-That links `rules`, `agents` and `bin` into `~/.claude`, links each command into
-`~/.claude/commands` one file at a time, and registers the hooks in
+Links `rules`, `agents` and `bin` into `~/.claude`, links each command into
+`~/.claude/commands` one file at a time, and merges the hooks into
 `~/.claude/settings.json`. Anything already at one of those paths is moved aside
 to `<path>.backup` first, and running it again changes nothing. Set
 `CLAUDE_CONFIG_DIR` to install somewhere other than `~/.claude`.
+
+Commands are run as `/review`. A file edited in this clone takes effect in the
+next session, with no reinstall, which is what makes this the mode to use while
+changing the rules themselves.
+
+### As a plugin
+
+```sh
+./install.sh --plugin
+```
+
+Registers this clone as a marketplace and installs it. Commands are namespaced,
+so a review is `/symphony:review`, and updates come through
+`claude plugin update` rather than `git pull`.
 
 ### What the links do
 
@@ -51,8 +74,9 @@ commands can live alongside these.
 
 ### What the hooks do
 
-Settings are merged rather than replaced, so hooks and settings you already have
-are kept. Four entries are added:
+The plugin carries its hooks itself. A linked install merges the same four
+entries into your settings, replacing any it put there before, and leaving hooks
+and settings that are not its own alone:
 
 | Event | Runs | Why |
 |---|---|---|

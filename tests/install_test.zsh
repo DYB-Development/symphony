@@ -19,6 +19,10 @@ assert_equals() {
   [[ "$1" == "$2" ]] && ok "$3" || { fail "$3"; printf '      want: %s\n      got:  %s\n' "$1" "$2"; }
 }
 
+assert_contains() {
+  [[ "$2" == *"$1"* ]] && ok "$3" || { fail "$3"; printf '      wanted to find: %s\n' "$1"; }
+}
+
 fresh_config() {
   local d
   d="$(mktemp -d)"
@@ -92,6 +96,80 @@ assert_equals "0" \
   "backs nothing up when everything is already linked"
 
 rm -rf "$CONFIG"
+
+assert_equals "hooks" \
+  "$(jq -r 'keys_unsorted[0]' "$ROOT/hooks/hooks.json" 2>/dev/null)" \
+  "keeps the hooks where a plugin expects them, in the shape a plugin expects"
+
+assert_equals "symphony" \
+  "$(jq -r '.name' "$ROOT/.claude-plugin/plugin.json" 2>/dev/null)" \
+  "declares itself a plugin named symphony, so its commands namespace under it"
+
+CONFIG="$(fresh_config)"
+CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" --no-such-mode >/dev/null 2>&1
+assert_equals "64" "$?" "refuses a mode it does not recognise"
+
+CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" --help >/dev/null 2>&1
+assert_equals "0" "$?" "prints help without failing"
+
+assert_equals "" "$(ls "$CONFIG" 2>/dev/null)" \
+  "installs nothing while printing help"
+rm -rf "$CONFIG"
+
+# A stub claude on PATH, so plugin mode cannot register a marketplace or
+# install anything on the machine running the suite.
+STUB="$(mktemp -d "${TMPDIR:-/tmp}/install_test_stub.XXXXXX")"
+cat > "$STUB/claude" <<'CLAUDE'
+#!/usr/bin/env bash
+echo "CLAUDE $*" >> "$STUB_LOG"
+CLAUDE
+chmod +x "$STUB/claude"
+export STUB_LOG="$STUB/calls.log"
+
+CONFIG="$(fresh_config)"
+PATH="$STUB:$PATH" CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" --plugin >/dev/null 2>&1
+
+assert_contains "plugin marketplace add $ROOT" "$(cat "$STUB_LOG")" \
+  "registers this clone as a marketplace"
+
+assert_contains "plugin install symphony@symphony" "$(cat "$STUB_LOG")" \
+  "installs the plugin from it"
+
+assert_equals "" "$(readlink "$CONFIG/rules")" \
+  "links nothing, because the plugin carries its own files"
+
+rm -rf "$CONFIG" "$STUB"
+unset STUB_LOG
+
+CONFIG="$(fresh_config)"
+CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" >/dev/null 2>&1
+# The package moves a hook to a new name upstream.
+sed -i '' 's|writing-style-hook.sh|writing-style-hook-renamed.sh|' "$CONFIG/settings.json"
+CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" >/dev/null 2>&1
+assert_equals "1" \
+  "$(jq '.hooks.SessionStart | length' "$CONFIG/settings.json")" \
+  "replaces a hook of its own that moved, rather than leaving both"
+rm -rf "$CONFIG"
+
+CONFIG="$(fresh_config)"
+printf '{"enabledPlugins":{"symphony@symphony":true}}\n' > "$CONFIG/settings.json"
+CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" >/dev/null 2>&1
+assert_equals "75" "$?" "refuses to link while the plugin is already installed"
+
+assert_equals "" "$(readlink "$CONFIG/rules")" "links nothing when it refuses"
+
+rm -rf "$CONFIG"
+
+STUB="$(mktemp -d "${TMPDIR:-/tmp}/install_test_stub3.XXXXXX")"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$STUB/claude"
+chmod +x "$STUB/claude"
+
+CONFIG="$(fresh_config)"
+CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" >/dev/null 2>&1
+PATH="$STUB:$PATH" CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" --plugin >/dev/null 2>&1
+assert_equals "75" "$?" "refuses to install the plugin while the linked install is in place"
+
+rm -rf "$CONFIG" "$STUB"
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
