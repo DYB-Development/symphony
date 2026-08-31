@@ -1,6 +1,8 @@
 #!/usr/bin/env zsh
-# Tests for bin/issue-bootstrap.sh. Nothing here reaches the network: the cases
-# that would call gh run only the argument handling in front of it.
+# Tests for bin/issue-bootstrap.sh. Nothing here reaches the network, and nothing
+# writes into this repo: gh is stubbed on PATH, and the case that exercises the
+# default path runs inside a throwaway repo because that path writes templates
+# into whatever directory it is run from.
 #
 # Usage: zsh tests/issue_bootstrap_test.zsh
 setopt no_unset
@@ -92,9 +94,23 @@ assert_contains "STUB GH CALLED" \
   "$("$BOOTSTRAP" --labels-only 2>&1)" \
   "still bootstraps when given a flag it recognises"
 
+# The default path writes issue templates into the current directory, so it runs
+# inside a throwaway repo. Running it here would bootstrap this one.
+SANDBOX="$(mktemp -d "${TMPDIR:-/tmp}/issue_bootstrap_sandbox.XXXXXX")"
+git -C "$SANDBOX" init -q
 assert_contains "STUB GH CALLED" \
-  "$("$BOOTSTRAP" 2>&1)" \
+  "$(cd "$SANDBOX" && "$BOOTSTRAP" 2>&1)" \
   "still bootstraps the current repo with no argument"
+
+assert_equals "task.md" \
+  "$(ls "$SANDBOX/.github/ISSUE_TEMPLATE" 2>/dev/null | grep -x 'task.md' || true)" \
+  "writes the templates into the repo it was run in"
+
+assert_equals "" \
+  "$(ls "$SCRIPT_DIR/../.github/ISSUE_TEMPLATE" 2>/dev/null || true)" \
+  "writes nothing into the repo the suite lives in"
+
+rm -rf "$SANDBOX"
 
 rm -rf "$STUB"
 
