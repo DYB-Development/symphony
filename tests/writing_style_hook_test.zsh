@@ -97,6 +97,26 @@ assert_contains "$RULES_DIR" "$CONTEXT" \
   "still names the directory it ships, for every rule not overlaid"
 rm -rf "$OVERLAY"
 
+
+BOTH="$(mktemp -d "${TMPDIR:-/tmp}/symphony_both.XXXXXX")"
+cat > "$BOTH/settings.json" <<'JSON'
+{
+  "enabledPlugins": { "symphony@symphony": true },
+  "hooks": { "SessionStart": [ { "hooks": [ { "type": "command", "command": "/somewhere/bin/writing-style-hook.sh" } ] } ] }
+}
+JSON
+assert_contains \
+  "installed twice" \
+  "$(CLAUDE_CONFIG_DIR="$BOTH" run_hook SessionStart | jq -r '.hookSpecificOutput.additionalContext')" \
+  "says so when it is installed both ways at once"
+
+printf '{"enabledPlugins":{"symphony@symphony":true}}\n' > "$BOTH/settings.json"
+CONTEXT="$(CLAUDE_CONFIG_DIR="$BOTH" run_hook SessionStart | jq -r '.hookSpecificOutput.additionalContext')"
+[[ "$CONTEXT" == *"installed twice"* ]] \
+  && { fail "stays quiet when it is installed only one way"; } \
+  || ok "stays quiet when it is installed only one way"
+rm -rf "$BOTH"
+
 silence_rules
 assert_equals \
   "" \

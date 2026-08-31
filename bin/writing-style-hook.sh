@@ -20,9 +20,28 @@ phrases_file="${CLAUDE_BANNED_PHRASES_FILE:-$(shipped_or_overlaid banned-phrases
 # can be pointed at a voice file kept anywhere.
 rules_dir="$(cd -P "$here/../rules" 2>/dev/null && pwd)" || rules_dir=""
 
+# The plugin carries its own hooks and the linked install writes them into the
+# settings file, so finding both means every hook runs twice. Nothing else
+# notices, because a plugin install never runs this package's installer.
+installed_twice() {
+  local settings="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json"
+  [ -f "$settings" ] || return 1
+  command -v jq >/dev/null || return 1
+  jq -e '((.enabledPlugins // {}) | keys | any(startswith("symphony@")))
+         and ((.hooks // {}) | to_entries | any(.value[]?.hooks[]?.command
+              | strings | contains("writing-style-hook.sh")))' \
+    "$settings" >/dev/null 2>&1
+}
+
 context=""
+if installed_twice; then
+  context+="This system is installed twice, as a plugin and as links in "
+  context+="${CLAUDE_CONFIG_DIR:-$HOME/.claude}, so every hook it registers runs "
+  context+="twice. Remove one: either 'claude plugin uninstall symphony@symphony', "
+  context+=$'or the links and this package\'s entries in settings.json.\n\n'
+fi
 if [ -n "$rules_dir" ]; then
-  context="Every rules file this system follows is in $rules_dir. Read one from"
+  context+="Every rules file this system follows is in $rules_dir. Read one from"
   context+=$' there when you are told to read it by name.'
   if [ -d "$overlay_dir" ]; then
     overlay_abs="$(cd -P "$overlay_dir" && pwd)"
