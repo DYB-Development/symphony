@@ -76,7 +76,7 @@ caller may say what they are worried about; read the code anyway.
 7. **Append the stamp; do not write it.**
 
    ```
-   ~/.claude/bin/scribe-stamp.sh audit "<your model id>"
+   ~/.claude/bin/scribe-stamp.sh audit "<your model id>" <the section you read>
    ```
 
    Run it from the audited repo so its `Audited Against` line names that repo and

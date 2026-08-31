@@ -195,6 +195,34 @@ drop_root
 new_root
 new_source
 commit_rules agents/audit-scribe.md rules/repo-audit.md rules/review-checks.md rules/audit-rubric.json rules/writing-style.md
+mkdir -p "$SOURCE_DIR/lib"
+printf 'lib\n' > "$SOURCE_DIR/lib/thing.rb"
+git -C "$SOURCE_DIR" add lib/thing.rb
+git -C "$SOURCE_DIR" commit -qm "add lib"
+printf 'edited\n' > "$SOURCE_DIR/app.rb"
+assert_equals "Audited Against: \`acme/quotes@$(source_head)\`" \
+  "$(cd "$SOURCE_DIR" && "$STAMP" audit claude-opus-5 lib | sed -n 7p)" \
+  "leaves an audit unmarked when the uncommitted file is outside its section"
+drop_source
+drop_root
+
+new_root
+new_source
+commit_rules agents/audit-scribe.md rules/repo-audit.md rules/review-checks.md rules/audit-rubric.json rules/writing-style.md
+mkdir -p "$SOURCE_DIR/lib"
+printf 'lib\n' > "$SOURCE_DIR/lib/thing.rb"
+git -C "$SOURCE_DIR" add lib/thing.rb
+git -C "$SOURCE_DIR" commit -qm "add lib"
+printf 'edited\n' > "$SOURCE_DIR/lib/thing.rb"
+assert_equals "Audited Against: \`acme/quotes@$(source_head)+\`" \
+  "$(cd "$SOURCE_DIR" && "$STAMP" audit claude-opus-5 lib | sed -n 7p)" \
+  "marks an audit whose own section had uncommitted changes"
+drop_source
+drop_root
+
+new_root
+new_source
+commit_rules agents/audit-scribe.md rules/repo-audit.md rules/review-checks.md rules/audit-rubric.json rules/writing-style.md
 printf 'edited\n' > "$SOURCE_DIR/app.rb"
 assert_equals "Audited Against: \`acme/quotes@$(source_head)+\`" \
   "$(cd "$SOURCE_DIR" && "$STAMP" audit claude-opus-5 | sed -n 7p)" \
