@@ -57,5 +57,41 @@ assert_equals "SessionStart SubagentStart PostToolUse PreToolUse" \
 
 rm -rf "$CONFIG"
 
+CONFIG="$(fresh_config)"
+cat > "$CONFIG/settings.json" <<'JSON'
+{
+  "model": "opus",
+  "hooks": {
+    "PreToolUse": [
+      { "matcher": "Bash", "hooks": [ { "type": "command", "command": "mine.sh" } ] }
+    ]
+  }
+}
+JSON
+CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" >/dev/null 2>&1
+
+assert_equals "mine.sh" \
+  "$(jq -r '.hooks.PreToolUse[0].hooks[0].command' "$CONFIG/settings.json")" \
+  "keeps a hook the person already had"
+
+assert_equals "opus" "$(jq -r '.model' "$CONFIG/settings.json")" \
+  "keeps settings that are not hooks"
+
+rm -rf "$CONFIG"
+
+CONFIG="$(fresh_config)"
+CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" >/dev/null 2>&1
+CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" >/dev/null 2>&1
+
+assert_equals "1" \
+  "$(jq '.hooks.PreToolUse | length' "$CONFIG/settings.json")" \
+  "adds a hook once however often it runs"
+
+assert_equals "0" \
+  "$(find "$CONFIG" -name '*.backup' | wc -l | tr -d ' ')" \
+  "backs nothing up when everything is already linked"
+
+rm -rf "$CONFIG"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
