@@ -1,7 +1,8 @@
 {
   "name": "symphony",
   "owner": {
-    "name": "symphony"
+    "name": "DYB-Development",
+    "url": "https://github.com/DYB-Development"
   },
   "plugins": [
     {

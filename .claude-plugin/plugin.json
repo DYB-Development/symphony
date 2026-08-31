@@ -1,6 +1,12 @@
 {
   "name": "symphony",
-  "description": "Context-free agents that write the documents around code — issues, pull request bodies, feature plans, code reviews and repo audits — each to a fixed set of rules, and each stamped with the versions that produced it.",
+  "description": "Context-free agents that write the documents around code \u2014 issues, pull request bodies, feature plans, code reviews and repo audits \u2014 each to a fixed set of rules, and each stamped with the versions that produced it.",
   "version": "0.1.0",
-  "homepage": "https://github.com/tylercschneider/symphony"
+  "homepage": "https://github.com/DYB-Development/symphony",
+  "repository": "https://github.com/DYB-Development/symphony",
+  "license": "MIT",
+  "author": {
+    "name": "DYB-Development",
+    "url": "https://github.com/DYB-Development"
+  }
 }

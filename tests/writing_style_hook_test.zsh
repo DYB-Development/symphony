@@ -78,6 +78,25 @@ assert_contains \
   "still names its own rules directory when the voice file is somewhere else"
 rm -f "$VOICE_FILE"
 
+
+OVERLAY="$(mktemp -d "${TMPDIR:-/tmp}/symphony_overlay.XXXXXX")"
+printf '# My House Style\n\nWrite short.\n' > "$OVERLAY/writing-style.md"
+assert_contains \
+  "My House Style" \
+  "$(SYMPHONY_OVERLAY_DIR="$OVERLAY" run_hook SubagentStart | jq -r '.hookSpecificOutput.additionalContext')" \
+  "carries a rules file from the overlay instead of the one it ships"
+rm -rf "$OVERLAY"
+
+
+OVERLAY="$(mktemp -d "${TMPDIR:-/tmp}/symphony_overlay2.XXXXXX")"
+printf 'mine\n' > "$OVERLAY/pr-body.md"
+CONTEXT="$(SYMPHONY_OVERLAY_DIR="$OVERLAY" run_hook SubagentStart | jq -r '.hookSpecificOutput.additionalContext')"
+assert_contains "${OVERLAY:A}" "$CONTEXT" \
+  "names the overlay directory so a scribe reads its rules from there"
+assert_contains "$RULES_DIR" "$CONTEXT" \
+  "still names the directory it ships, for every rule not overlaid"
+rm -rf "$OVERLAY"
+
 silence_rules
 assert_equals \
   "" \
