@@ -141,5 +141,24 @@ assert_equals "" "$(readlink "$CONFIG/rules")" \
 rm -rf "$CONFIG" "$STUB"
 unset STUB_LOG
 
+CONFIG="$(fresh_config)"
+CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" >/dev/null 2>&1
+# The package moves a hook to a new name upstream.
+sed -i '' 's|writing-style-hook.sh|writing-style-hook-renamed.sh|' "$CONFIG/settings.json"
+CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" >/dev/null 2>&1
+assert_equals "1" \
+  "$(jq '.hooks.SessionStart | length' "$CONFIG/settings.json")" \
+  "replaces a hook of its own that moved, rather than leaving both"
+rm -rf "$CONFIG"
+
+CONFIG="$(fresh_config)"
+printf '{"enabledPlugins":{"symphony@symphony":true}}\n' > "$CONFIG/settings.json"
+CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" >/dev/null 2>&1
+assert_equals "75" "$?" "refuses to link while the plugin is already installed"
+
+assert_equals "" "$(readlink "$CONFIG/rules")" "links nothing when it refuses"
+
+rm -rf "$CONFIG"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

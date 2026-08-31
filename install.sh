@@ -66,6 +66,18 @@ if [ "$MODE" = plugin ]; then
   exit 0
 fi
 
+# Both installs at once would register the hooks twice, so each refuses while
+# the other is in place rather than layering on it. This reads the settings file
+# rather than asking the claude CLI, which rewrites that file as it runs.
+if [ -f "$CONFIG_DIR/settings.json" ] &&
+   jq -e '(.enabledPlugins // {}) | keys[] | select(startswith("symphony@"))' \
+     "$CONFIG_DIR/settings.json" >/dev/null 2>&1; then
+  echo "symphony is already installed as a plugin." >&2
+  echo "Remove it with 'claude plugin uninstall symphony@symphony' before linking," >&2
+  echo "or keep the plugin — installing both registers every hook twice." >&2
+  exit 75
+fi
+
 mkdir -p "$CONFIG_DIR"
 
 echo "Rules, agents and scripts:"
@@ -92,10 +104,15 @@ SETTINGS="$CONFIG_DIR/settings.json"
 # CLAUDE_PLUGIN_ROOT itself, and a linked install substitutes it here.
 ours="$(sed "s|\${CLAUDE_PLUGIN_ROOT}|$SYMPHONY_DIR|g" "$SYMPHONY_DIR/hooks/hooks.json" | jq '.hooks')"
 
-merged="$(jq --argjson ours "$ours" '
+# Every entry of ours is dropped before ours are added back, so a hook that
+# moved upstream replaces its predecessor instead of running alongside it.
+# An entry pointing anywhere else is left alone.
+merged="$(jq --argjson ours "$ours" --arg mine "$SYMPHONY_DIR/bin/" '
   .hooks = reduce ($ours | to_entries[]) as $event ((.hooks // {});
-    .[$event.key] = reduce (((.[$event.key] // []) + $event.value)[]) as $entry
-      ([]; if index($entry) then . else . + [$entry] end))
+    .[$event.key] = (
+      ((.[$event.key] // [])
+        | map(select(any(.hooks[]?; (.command // "") | startswith($mine)) | not)))
+      + $event.value))
 ' "$SETTINGS")"
 
 printf '%s\n' "$merged" > "$SETTINGS"
