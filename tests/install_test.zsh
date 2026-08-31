@@ -97,5 +97,9 @@ assert_equals "hooks" \
   "$(jq -r 'keys_unsorted[0]' "$ROOT/hooks/hooks.json" 2>/dev/null)" \
   "keeps the hooks where a plugin expects them, in the shape a plugin expects"
 
+assert_equals "symphony" \
+  "$(jq -r '.name' "$ROOT/.claude-plugin/plugin.json" 2>/dev/null)" \
+  "declares itself a plugin named symphony, so its commands namespace under it"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
