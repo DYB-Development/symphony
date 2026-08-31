@@ -62,6 +62,22 @@ assert_contains \
 unset CLAUDE_BANNED_PHRASES_FILE
 rm -f "$PHRASES_FILE"
 
+
+RULES_DIR="${SCRIPT_DIR:h}/rules"
+assert_contains \
+  "$RULES_DIR" \
+  "$(run_hook SubagentStart | jq -r '.hookSpecificOutput.additionalContext')" \
+  "names the directory its rules were read from, as an absolute path"
+
+
+VOICE_FILE="$(mktemp "${TMPDIR:-/tmp}/own_voice.XXXXXX")"
+printf 'My own voice.\n' > "$VOICE_FILE"
+assert_contains \
+  "$RULES_DIR" \
+  "$(CLAUDE_WRITING_STYLE_FILE="$VOICE_FILE" run_hook SubagentStart | jq -r '.hookSpecificOutput.additionalContext')" \
+  "still names its own rules directory when the voice file is somewhere else"
+rm -f "$VOICE_FILE"
+
 silence_rules
 assert_equals \
   "" \
