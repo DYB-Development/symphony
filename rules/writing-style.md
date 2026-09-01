@@ -24,6 +24,7 @@ commit messages, in comments.
 - Do not simplify. Say the whole thing plainly rather than a smaller version of
   it — an answer that leaves out what matters is worse than a longer one that
   does not.
+- Nothing cute. No wordplay, no jokes, no charm standing in for information.
 
 ## Banned phrasing
 
