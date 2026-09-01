@@ -35,7 +35,9 @@ Never invent criteria from the PR body and check the diff against those.
 One finding, on the line that causes it. The whole comment:
 
 ```
-**<Check>** — <one sentence naming what is wrong>
+**<Check> — <the issue in a few words>**
+
+<one sentence naming what is wrong>
 
 1. <one sentence: what the code does>
 2. <one sentence: what that leads to>
@@ -46,10 +48,15 @@ One finding, on the line that causes it. The whole comment:
 
 - **Check** is the name of one of the checks, spelled as `review-checks.md`
   spells it.
-- **The first line names the defect, not the route to it.** One sentence saying
-  what is wrong, readable on its own by someone who stops there. The route is
-  what the steps are for, and a first line carrying it is the run-on sentence
-  this shape exists to prevent.
+- **The header is the check and the issue in a few words**, on one bold line —
+  `**Failure modes — the warning and the server disagree about approval**`. It
+  is a phrase rather than a sentence, and it says what the issue is rather than
+  how the code reaches it, so someone reading a list of threads knows what each
+  one is about without opening it. A dozen words is long for one.
+- **The sentence under the header names the defect, not the route to it.** It is
+  readable on its own by someone who stops there. The route is what the steps
+  are for, and a first sentence carrying it is the run-on sentence this shape
+  exists to prevent.
 - **The numbered steps are the route** — one sentence each, in the order they
   happen, ending with what the user, the caller or the stored data is left with.
   They are there only when the defect takes more than one step to reach; a
@@ -136,9 +143,9 @@ shape.
 
 The rule from `~/.claude/rules/pr-body.md` applies to every bullet and every
 inline comment here. One sentence, one period, no semicolon, no clause bolted on
-the end. An inline comment is one sentence naming the defect, one sentence
-per numbered step, and one sentence saying what to do instead. The steps
-carry the chain of cause, so no single sentence has to.
+the end. An inline comment is a header phrase, one sentence naming the defect,
+one sentence per numbered step, and one sentence saying what to do instead. The
+steps carry the chain of cause, so no single sentence has to.
 
 And `~/.claude/rules/writing-style.md` applies to every word. No metaphors, no
 narration, no filler, no praise.
