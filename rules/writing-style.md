@@ -18,6 +18,9 @@ commit messages, in comments.
   no longer permanent furniture."
 - Plain nouns for technical things. Say "boundary", not "seam". Say "warning",
   not "alarm bell".
+- No jargon. Write the direct word for the thing. Say "the title, the progress
+  bar and the buttons around the step", not "the chrome". Where a term of art is
+  the only accurate name for something, use it and say what it means once.
 
 ## Banned phrasing
 
