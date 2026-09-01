@@ -88,9 +88,10 @@ review of yours, in which case it is a **re-review**.
    your own.
 
 5. **Write each inline comment** in the two-sentence form from `pr-review.md`:
-   the check and severity in bold, one sentence naming what is wrong, one saying
-   what to do instead. `blocking` is for a real defect, never a preference. One
-   comment per finding, on the line that causes it, in the current diff.
+   the check in bold, one sentence naming what is wrong, one saying what to do
+   instead. There is no severity — raise it only when the code is wrong without
+   the fix. One comment per finding, on the line that causes it, in the current
+   diff.
 
 6. **Write the summary** with its four sections — Verdict, Findings,
    Conformance, Not checked — and never another. Findings has one bullet per
@@ -146,7 +147,7 @@ review of yours, in which case it is a **re-review**.
    - Any comment longer than two sentences, or carrying a question, a design, or
      praise.
    - Any pattern finding you cannot point at an existing file for.
-   - Any `blocking` severity on something that is a preference.
+   - Any finding the code is not actually wrong without.
    - Any comment on a line the diff does not touch.
    - Any finding past the sixth.
 
