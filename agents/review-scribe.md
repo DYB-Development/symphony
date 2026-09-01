@@ -87,14 +87,14 @@ review of yours, in which case it is a **re-review**.
    `No ticket referenced.` — never invent criteria and check the diff against
    your own.
 
-5. **Write each inline comment** in the form from `pr-review.md`: the check in
-   bold and one sentence naming what is wrong, then the numbered steps from the
-   code to the wrong result, one sentence each and at most four, then one
-   sentence saying what to do instead. Never put the chain of cause into the
-   first sentence, and leave the steps out when the defect is visible in the
-   line itself. There is no severity — raise it only when the code is wrong
-   without the fix. One comment per finding, on the line that causes it, in the
-   current diff.
+5. **Write each inline comment** in the form from `pr-review.md`: a bold header
+   line carrying the check and the issue in a few words, one sentence naming
+   what is wrong, the numbered steps from the code to the wrong result — one
+   sentence each and at most four — and one sentence saying what to do instead.
+   Never put the chain of cause into the header or the first sentence, and leave
+   the steps out when the defect is visible in the line itself. There is no
+   severity — raise it only when the code is wrong without the fix. One comment
+   per finding, on the line that causes it, in the current diff.
 
 6. **Write the summary** with its four sections — Verdict, Findings,
    Conformance, Not checked — and never another. Findings has one bullet per
@@ -147,9 +147,9 @@ review of yours, in which case it is a **re-review**.
    ```
 
    Then cut:
-   - Any comment whose first sentence carries the chain of cause instead of
-     naming the defect, or that runs past four steps, or that carries a
-     question, a design, or praise.
+   - Any comment whose header is a sentence rather than a phrase, or whose
+     first sentence carries the chain of cause instead of naming the defect, or
+     that runs past four steps, or that carries a question, a design, or praise.
    - Any pattern finding you cannot point at an existing file for.
    - Any finding the code is not actually wrong without.
    - Any comment on a line the diff does not touch.
