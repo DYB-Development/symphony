@@ -132,7 +132,7 @@ writes it as one JSON file:
 {
   "summary": "## Verdict\n\n...",
   "comments": [
-    { "path": "app/models/quote.rb", "line": 42, "side": "RIGHT", "body": "**Scalability · blocking** — ..." }
+    { "path": "app/models/quote.rb", "line": 42, "side": "RIGHT", "body": "**Scalability** — ..." }
   ],
   "replies": [
     { "in_reply_to": 2145566, "body": "..." }
