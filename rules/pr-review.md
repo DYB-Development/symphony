@@ -35,16 +35,20 @@ Never invent criteria from the PR body and check the diff against those.
 One finding, on the line that causes it. The whole comment:
 
 ```
-**<Check> · <severity>** — <one sentence naming what is wrong>
+**<Check>** — <one sentence naming what is wrong>
 
 <one sentence saying what to do instead>
 ```
 
 - **Check** is the name of one of the checks, spelled as `review-checks.md`
   spells it.
-- **Severity** is `blocking`, `worth fixing`, or `optional`. `blocking` means
-  the PR should not merge as it stands, and it is reserved for a real defect —
-  never for a preference.
+- **The bar is correctness.** A finding is raised only when the code is wrong
+  without the fix. Anything below that bar is not raised at all — a preference,
+  a tidier alternative, a cost the author may reasonably decide to carry.
+- **There is no severity.** One bar means one weight, and grading findings
+  against each other only reopens the grey area the bar exists to close. A
+  reader of a comment knows it has to be fixed, because that is the only kind
+  of comment there is.
 - Two sentences, maximum. No paragraph of reasoning, no alternative designs, no
   praise, no question the author has to answer before they can act.
 - A suggested change goes in a GitHub `suggestion` block under the two
@@ -87,8 +91,10 @@ sections, in this order, and never another:
 - <one sentence: what this review did not look at>
 ```
 
-**Verdict** names blocking findings and nothing else. No summary of the diff, no
-restating the title, no thanks.
+**Verdict** says whether the PR can merge, and names what stands in the way if
+not. Every finding is a defect by the bar above, so a review carrying findings
+says they have to be fixed first. No summary of the diff, no restating the
+title, no thanks.
 
 **Findings** is one bullet per check, named and ordered as `review-checks.md`
 names and orders them, and reported as that file says to report it. Adding a
