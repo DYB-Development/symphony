@@ -37,11 +37,29 @@ One finding, on the line that causes it. The whole comment:
 ```
 **<Check>** — <one sentence naming what is wrong>
 
+1. <one sentence: what the code does>
+2. <one sentence: what that leads to>
+3. <one sentence: the wrong result someone gets>
+
 <one sentence saying what to do instead>
 ```
 
 - **Check** is the name of one of the checks, spelled as `review-checks.md`
   spells it.
+- **The first line names the defect, not the route to it.** One sentence saying
+  what is wrong, readable on its own by someone who stops there. The route is
+  what the steps are for, and a first line carrying it is the run-on sentence
+  this shape exists to prevent.
+- **The numbered steps are the route** — one sentence each, in the order they
+  happen, ending with what the user, the caller or the stored data is left with.
+  They are there only when the defect takes more than one step to reach; a
+  defect visible in the line being commented on carries none, and the comment is
+  its first line and its fix.
+- **Four steps is the cap.** Past four the comment is describing a subsystem
+  rather than a defect, and the honest move is to name the step that is wrong
+  and stop.
+- **The last line is the fix** — one sentence saying what to do instead, never a
+  restatement of the defect and never a question.
 - **The bar is correctness.** A finding is raised only when the code is wrong
   without the fix. Anything below that bar is not raised at all — a preference,
   a tidier alternative, a cost the author may reasonably decide to carry.
@@ -49,10 +67,10 @@ One finding, on the line that causes it. The whole comment:
   against each other only reopens the grey area the bar exists to close. A
   reader of a comment knows it has to be fixed, because that is the only kind
   of comment there is.
-- Two sentences, maximum. No paragraph of reasoning, no alternative designs, no
-  praise, no question the author has to answer before they can act.
-- A suggested change goes in a GitHub `suggestion` block under the two
-  sentences, and only when the fix is exactly the lines being commented on.
+- No paragraph of reasoning, no alternative designs, no praise, no question the
+  author has to answer before they can act.
+- A suggested change goes in a GitHub `suggestion` block under the fix, and only
+  when the fix is exactly the lines being commented on.
 - One comment per finding. The same problem in six files is one comment on the
   first, saying it repeats and where.
 
@@ -118,7 +136,9 @@ shape.
 
 The rule from `~/.claude/rules/pr-body.md` applies to every bullet and every
 inline comment here. One sentence, one period, no semicolon, no clause bolted on
-the end. An inline comment gets two sentences because the second is the fix.
+the end. An inline comment is one sentence naming the defect, one sentence
+per numbered step, and one sentence saying what to do instead. The steps
+carry the chain of cause, so no single sentence has to.
 
 And `~/.claude/rules/writing-style.md` applies to every word. No metaphors, no
 narration, no filler, no praise.
