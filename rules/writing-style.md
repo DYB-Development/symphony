@@ -21,6 +21,9 @@ commit messages, in comments.
 - No jargon. Write the direct word for the thing. Say "the title, the progress
   bar and the buttons around the step", not "the chrome". Where a term of art is
   the only accurate name for something, use it and say what it means once.
+- Do not simplify. Say the whole thing plainly rather than a smaller version of
+  it — an answer that leaves out what matters is worse than a longer one that
+  does not.
 
 ## Banned phrasing
 
