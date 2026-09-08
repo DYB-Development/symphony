@@ -35,9 +35,9 @@ between the last two matters:
 Never omit a check, and never guess a result: a check you did not run has no
 honest result to record, so run it.
 
-**Six findings is the cap**, whatever the list grows to. Past that, what is being
-read needs reworking rather than reviewing, and the honest move is to say so and
-raise the six that matter.
+**There is no cap on findings.** Raise every one the checks turn up. A long list
+is itself worth saying in the verdict: what was read needs reworking rather than
+reviewing.
 
 ## The checks
 
