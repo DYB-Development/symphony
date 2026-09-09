@@ -136,9 +136,6 @@ ticket's own order and words. With no ticket, its whole content is
 not — a test suite that was not run, a migration whose data was not looked at,
 a file skipped because it is generated. Nothing to say means `Not relevant.`
 
-The cap on findings is in `review-checks.md` with the rest of the reporting
-shape.
-
 ## One sentence means one sentence
 
 The rule from `~/.claude/rules/pr-body.md` applies to every bullet and every

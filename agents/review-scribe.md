@@ -102,8 +102,8 @@ review of yours, in which case it is a **re-review**.
    `{{comment:N}}`, where N is that comment's position in your `comments` array,
    counting from 1. A check with no finding carries no link.
 
-   The cap on findings is in `review-checks.md`. Past it, say in the verdict that
-   the PR needs reworking rather than reviewing.
+   Raise every finding; there is no cap. When the list is long, say in the
+   verdict that the PR needs reworking rather than reviewing.
 
    For a re-review, the verdict says what you raised last time that is now
    fixed and what still stands.
@@ -153,7 +153,6 @@ review of yours, in which case it is a **re-review**.
    - Any pattern finding you cannot point at an existing file for.
    - Any finding the code is not actually wrong without.
    - Any comment on a line the diff does not touch.
-   - Any finding past the sixth.
 
    Cutting a comment renumbers the `{{comment:N}}` tokens — fix them, or
    `--post` will refuse the summary.
