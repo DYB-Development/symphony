@@ -67,6 +67,7 @@ printf '%s\n' "$body" | awk -v work="$work" "$esc_awk"'
     part = 1
     next
   }
+  !part { next }
   { print }
   END { mark(close_part()) }
 ' > "$work/plan.md"

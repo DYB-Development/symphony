@@ -140,5 +140,14 @@ assert_contains '<p>Quotes become orders.</p>' "$(render)" \
   "turns each section's markdown into HTML through GitHub's markdown service"
 drop_issue
 
+new_issue "Quote Conversion" <<'MD'
+[Quote Conversion](https://claude.ai/code/artifact/abc)
+
+## 01 The plan
+MD
+[[ "$(render)" != *"claude.ai/code/artifact/abc"* ]]
+assert_equals "0" "$?" "leaves the link to the page itself off the page"
+drop_issue
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
