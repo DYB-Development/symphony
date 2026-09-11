@@ -56,8 +56,14 @@ printf '%s\n' "$body" | awk -v work="$work" "$esc_awk"'
     close(work "/" id)
     printf "\n%s\n\n", id
   }
+  function close_unit(   h) {
+    h = unit ? "</article>" : ""
+    unit = 0
+    return h
+  }
   function close_stage(   h) {
-    h = stage ? "</section>" : ""
+    h = close_unit() (stage ? "</section>" : "")
+
     stage = 0
     return h
   }
@@ -79,6 +85,17 @@ printf '%s\n' "$body" | awk -v work="$work" "$esc_awk"'
     stage = n
     next
   }
+  stage && match($0, /^#### Unit [1-4]\.[0-9]+ /) {
+    rest = substr($0, 11)
+    split(rest, words, " ")
+    id = words[1]
+    gsub(/\./, "-", id)
+    heading = substr(rest, index(rest, " ") + 1)
+    mark(close_unit() "<article class=\"unit\" data-stage=\"" stage "\"><h4 id=\"unit-" id "\"><span class=\"unum\">Unit " words[1] "</span> <span class=\"utitle\">" esc(heading) "</span></h4>")
+    unit = 1
+    next
+  }
+
 
   !part { next }
   { print }
