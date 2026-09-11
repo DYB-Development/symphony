@@ -162,5 +162,11 @@ assert_equals "Read it as a site foreman would." \
   "reads the person's own reading rules in place of the shipped ones"
 drop_reader
 
+echo ""
+echo "scribes that have their draft read:"
+
+grep -qF '~/.claude/bin/read-draft.sh' "$SCRIPT_DIR/../agents/review-scribe.md"
+assert_equals "0" "$?" "review-scribe has its draft read before it returns it"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
