@@ -73,7 +73,17 @@ printf '%s\n' "$body" | awk -v work="$work" "$esc_awk"'
     return h
   }
 
+  in_diagram && /^```$/ {
+    mark("<figure class=\"diagram\"><pre class=\"mermaid\">" esc(diagram) "</pre></figure>")
+    in_diagram = 0
+    next
+  }
+  in_diagram {
+    diagram = diagram (diagram == "" ? "" : "\n") $0
+    next
+  }
   match($0, /^## (0[1-9]|10) /) {
+
     num = substr($0, 4, 2)
     mark(close_part() "<section class=\"part\" aria-labelledby=\"s" num "\"><h2 id=\"s" num "\"><span class=\"num\">" num "</span> " esc(substr($0, 7)) "</h2>")
     part = num
@@ -102,7 +112,13 @@ printf '%s\n' "$body" | awk -v work="$work" "$esc_awk"'
 
 
 
+  part && /^```mermaid$/ {
+    in_diagram = 1
+    diagram = ""
+    next
+  }
   !part { next }
+
   { print }
   END { mark(close_part()) }
 ' > "$work/plan.md"

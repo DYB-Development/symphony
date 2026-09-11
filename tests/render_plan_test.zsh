@@ -187,5 +187,18 @@ assert_contains '<h5>Part of</h5>' "$(render)" \
   "sets a unit's own headings below the unit's title"
 drop_issue
 
+new_issue "Quote Conversion" <<'MD'
+## 04 How it fits
+
+```mermaid
+flowchart LR
+  Quote -->|"becomes"| Order
+```
+MD
+assert_contains '<figure class="diagram"><pre class="mermaid">flowchart LR
+  Quote --&gt;|"becomes"| Order</pre></figure>' "$(render)" \
+  "hands each mermaid diagram to the page as diagram source"
+drop_issue
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
