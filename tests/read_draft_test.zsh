@@ -97,5 +97,13 @@ assert_equals "--no-session-persistence" \
   "saves no session for a read nobody will resume"
 drop_reader
 
+new_reader
+printf 'The poll stops when the dialog closes.\n' > "$DRAFT_FILE"
+read_with_reader >/dev/null
+assert_equals "--strict-mcp-config" \
+  "$(grep -x -- --strict-mcp-config "$READER_DIR/args" 2>/dev/null)" \
+  "starts no MCP server, whose tools would reach the reader past the no-tools flag"
+drop_reader
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
