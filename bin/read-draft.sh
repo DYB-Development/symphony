@@ -22,7 +22,7 @@ overlay="${SYMPHONY_OVERLAY_DIR:-$HOME/.config/symphony/rules}/draft-reading.md"
 [ -f "$overlay" ] && rules_file="$overlay" || rules_file="$here/../rules/draft-reading.md"
 rules="$(cat "$rules_file")"
 
-reply="$(claude -p --system-prompt "$rules" --tools "" --setting-sources "" --no-session-persistence --strict-mcp-config < "$draft")" ||
+reply="$(claude -p --model sonnet --system-prompt "$rules" --tools "" --setting-sources "" --no-session-persistence --strict-mcp-config < "$draft")" ||
   { echo "read-draft.sh: the reader's run failed, so nothing was read" >&2; exit 70; }
 printf '%s\n' "$reply"
 

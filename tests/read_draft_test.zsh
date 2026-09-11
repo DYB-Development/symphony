@@ -31,6 +31,7 @@ printf '%s\n' "$@" > "$here/args"
 while [ $# -gt 0 ]; do
   [ "$1" = --system-prompt ] && printf '%s' "$2" > "$here/system-prompt"
   [ "$1" = --tools ] && printf 'tools=%s' "$2" > "$here/tools"
+  [ "$1" = --model ] && printf '%s' "$2" > "$here/model"
   [ "$1" = --setting-sources ] && printf 'sources=%s' "$2" > "$here/setting-sources"
   shift
 done
@@ -160,6 +161,14 @@ SYMPHONY_OVERLAY_DIR="$READER_DIR/overlay" read_with_reader >/dev/null
 assert_equals "Read it as a site foreman would." \
   "$(cat "$READER_DIR/system-prompt" 2>/dev/null)" \
   "reads the person's own reading rules in place of the shipped ones"
+drop_reader
+
+new_reader
+printf 'The poll stops when the dialog closes.\n' > "$DRAFT_FILE"
+read_with_reader >/dev/null
+assert_equals "sonnet" \
+  "$(cat "$READER_DIR/model" 2>/dev/null)" \
+  "reads on a faster model than the session it was run from"
 drop_reader
 
 echo ""
