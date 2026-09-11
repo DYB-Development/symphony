@@ -149,8 +149,8 @@ ticket's own order and words. With no ticket, its whole content is
 `No ticket referenced.`
 
 **Not checked** is what a reader would reasonably assume was covered and was
-not — a test suite that was not run, a migration whose data was not looked at,
-a file skipped because it is generated. Nothing to say means `Not relevant.`
+not — a migration whose data was not looked at, or a file skipped because it is
+generated. Nothing to say means `Not relevant.`
 
 ## One sentence means one sentence
 

@@ -96,5 +96,12 @@ else
   fail "pr-review.md keeps what CI checks out of a review"
 fi
 
+not_checked="$(grep -A3 '^\*\*Not checked\*\* is' "$RULES/pr-review.md")"
+if [[ "$not_checked" != *"test suite"* ]]; then
+  ok "pr-review.md gives no unrun test suite as something a review did not check"
+else
+  fail "pr-review.md gives no unrun test suite as something a review did not check"
+fi
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
