@@ -175,16 +175,16 @@ echo ""
 echo "scribe-stamp.sh audit:"
 
 new_root
-commit_rules agents/audit-scribe.md rules/repo-audit.md rules/review-checks.md rules/audit-rubric.json rules/writing-style.md
+commit_rules agents/audit-scribe.md rules/repo-audit.md rules/review-checks.md rules/audit-rubric.json rules/draft-reading.md rules/writing-style.md
 assert_equals "Scribe: audit-scribe \`$(sha_of agents/audit-scribe.md)\`
-Rules: repo-audit \`$(sha_of rules/repo-audit.md)\`, review-checks \`$(sha_of rules/review-checks.md)\`, audit-rubric \`$(sha_of rules/audit-rubric.json)\`, writing-style \`$(sha_of rules/writing-style.md)\`" \
+Rules: repo-audit \`$(sha_of rules/repo-audit.md)\`, review-checks \`$(sha_of rules/review-checks.md)\`, audit-rubric \`$(sha_of rules/audit-rubric.json)\`, draft-reading \`$(sha_of rules/draft-reading.md)\`, writing-style \`$(sha_of rules/writing-style.md)\`" \
   "$("$STAMP" audit claude-opus-5 | sed -n '3,4p')" \
   "names the audit scribe, the audit rules, the checks and the rubric that scored it"
 drop_root
 
 new_root
 new_source
-commit_rules agents/audit-scribe.md rules/repo-audit.md rules/review-checks.md rules/audit-rubric.json rules/writing-style.md
+commit_rules agents/audit-scribe.md rules/repo-audit.md rules/review-checks.md rules/audit-rubric.json rules/draft-reading.md rules/writing-style.md
 assert_equals "
 Audited Against: \`acme/quotes@$(source_head)\`" \
   "$(cd "$SOURCE_DIR" && "$STAMP" audit claude-opus-5 | sed -n '6,7p')" \
@@ -194,7 +194,7 @@ drop_root
 
 new_root
 new_source
-commit_rules agents/audit-scribe.md rules/repo-audit.md rules/review-checks.md rules/audit-rubric.json rules/writing-style.md
+commit_rules agents/audit-scribe.md rules/repo-audit.md rules/review-checks.md rules/audit-rubric.json rules/draft-reading.md rules/writing-style.md
 mkdir -p "$SOURCE_DIR/lib"
 printf 'lib\n' > "$SOURCE_DIR/lib/thing.rb"
 git -C "$SOURCE_DIR" add lib/thing.rb
@@ -208,7 +208,7 @@ drop_root
 
 new_root
 new_source
-commit_rules agents/audit-scribe.md rules/repo-audit.md rules/review-checks.md rules/audit-rubric.json rules/writing-style.md
+commit_rules agents/audit-scribe.md rules/repo-audit.md rules/review-checks.md rules/audit-rubric.json rules/draft-reading.md rules/writing-style.md
 mkdir -p "$SOURCE_DIR/lib"
 printf 'lib\n' > "$SOURCE_DIR/lib/thing.rb"
 git -C "$SOURCE_DIR" add lib/thing.rb
@@ -222,7 +222,7 @@ drop_root
 
 new_root
 new_source
-commit_rules agents/audit-scribe.md rules/repo-audit.md rules/review-checks.md rules/audit-rubric.json rules/writing-style.md
+commit_rules agents/audit-scribe.md rules/repo-audit.md rules/review-checks.md rules/audit-rubric.json rules/draft-reading.md rules/writing-style.md
 printf 'edited\n' > "$SOURCE_DIR/app.rb"
 assert_equals "Audited Against: \`acme/quotes@$(source_head)+\`" \
   "$(cd "$SOURCE_DIR" && "$STAMP" audit claude-opus-5 | sed -n 7p)" \
