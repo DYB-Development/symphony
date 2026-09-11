@@ -44,11 +44,8 @@ may be thin; the repo is what you actually work from.
 
    ```
    git branch --show-current
-   gh issue list --state open --limit 100 --json number,title,labels
    ```
 
-   Existing issues tell you what is already asked for, so a unit you are about
-   to write is not one that already exists as a ticket.
 
 2. **Write the rule everything follows from** — the single sentence that opens
    section 01 and that every later section is a consequence of. Do this before
