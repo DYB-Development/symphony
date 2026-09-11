@@ -18,6 +18,10 @@ say the same thing word for word — when the plan changes, the issue is edited
 and the artifact is republished from it in the same step. The artifact is never
 edited on its own.
 
+`~/.claude/bin/render-plan.sh` builds the artifact from the issue's title and
+body. Every plan uses the same layout, so no plan's page is designed by hand.
+
+
 Never a committed `.md`. A plan describes a codebase that keeps moving, and a
 committed one is read as fact long after it stopped being true. The issue is
 closed when its `type:breakdown` has sliced it, and what survives is the issues.

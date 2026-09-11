@@ -271,5 +271,8 @@ FEATURE_PLAN="$SCRIPT_DIR/../rules/feature-plan.md"
 grep -qF 'turned off or rolled back' "$FEATURE_PLAN"
 assert_equals "1" "$?" "leave rollback and production failure to standard practice"
 
+grep -qF '~/.claude/bin/render-plan.sh' "$FEATURE_PLAN"
+assert_equals "0" "$?" "build every plan's page with the render script"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
