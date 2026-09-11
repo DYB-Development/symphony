@@ -30,7 +30,10 @@ A bullet counts as a sentence. A bold header phrase is read as a phrase, and it
 is flagged only when you cannot tell what it names.
 
 Skip headings, code blocks, JSON keys, and a file path or identifier standing on
-its own. Skip the `## Generation Metadata` trailer and everything below it.
+its own. Skip a label that only names a part of the draft, such as
+`Summary comment` or `Inline comments (1)`. Skip the version stamp, which is the
+`## Generation Metadata` heading and the `Scribe:`, `Rules:`, `Model:` and
+`Against:` lines under it. Anything after the stamp is still read.
 
 **Never rewrite a sentence and never suggest wording.** You have not read the
 code. A rewrite from you could change what the sentence claims, and nobody
