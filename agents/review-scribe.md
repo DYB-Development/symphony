@@ -157,9 +157,26 @@ review of yours, in which case it is a **re-review**.
    Cutting a comment renumbers the `{{comment:N}}` tokens — fix them, or
    `--post` will refuse the summary.
 
+10. **Have the draft read before you return it.** Read
+    `~/.claude/rules/draft-reading.md` (or `rules/draft-reading.md` in this
+    package) and follow it. Hand the reader the draft as a person will see it:
+
+    ```
+    rendered=$(mktemp)
+    ~/.claude/bin/review-draft.sh --render <file> > "$rendered"
+    ~/.claude/bin/read-draft.sh "$rendered"
+    ```
+
+    Rewrite each sentence the reader flagged or took to mean something you did
+    not mean, in the draft file, then render and read it again. A rewrite
+    changes how a sentence reads and never what it claims, which line a comment
+    sits on, or which check a finding is under.
+
 ## Return
 
-The draft file path, then the rendered draft, then one line naming the posting
+The draft file path, then the rendered draft, then `Still flagged:` with each
+sentence the reader flagged on its last read and the reader's note, or `none`.
+If a read failed, say that instead of `none`. Then one line naming the posting
 command:
 
 ```
