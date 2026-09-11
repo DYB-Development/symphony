@@ -243,5 +243,13 @@ MD
 assert_equals "0" "$?" "lays out the contents beside the plan, with the plan under its masthead"
 drop_issue
 
+echo ""
+echo "the plan scribe:"
+
+PLAN_SCRIBE="$SCRIPT_DIR/../agents/plan-scribe.md"
+
+grep -qF '~/.claude/bin/render-plan.sh' "$PLAN_SCRIBE"
+assert_equals "0" "$?" "publishes the page the render script builds from the filed issue"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
