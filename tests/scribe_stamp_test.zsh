@@ -122,9 +122,9 @@ echo ""
 echo "scribe-stamp.sh issue:"
 
 new_root
-commit_rules agents/issue-scribe.md rules/issue-schema.md rules/writing-style.md
+commit_rules agents/issue-scribe.md rules/issue-schema.md rules/draft-reading.md rules/writing-style.md
 assert_equals "Scribe: issue-scribe \`$(sha_of agents/issue-scribe.md)\`
-Rules: issue-schema \`$(sha_of rules/issue-schema.md)\`, writing-style \`$(sha_of rules/writing-style.md)\`" \
+Rules: issue-schema \`$(sha_of rules/issue-schema.md)\`, draft-reading \`$(sha_of rules/draft-reading.md)\`, writing-style \`$(sha_of rules/writing-style.md)\`" \
   "$("$STAMP" issue claude-opus-5 | sed -n '3,4p')" \
   "names the issue scribe and the schema it followed"
 drop_root
