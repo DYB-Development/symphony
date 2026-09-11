@@ -24,3 +24,5 @@ reply="$(claude -p --system-prompt "$rules" --tools "" --setting-sources "" --no
 
 printf '%s\n' "$reply" | grep -q '^Flagged: [0-9][0-9]*$' ||
   { echo "read-draft.sh: the reader's reply carries no count of flagged sentences" >&2; exit 70; }
+
+printf '%s\n' "$reply" | grep -q '^Flagged: 0$' || exit 1

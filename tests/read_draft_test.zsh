@@ -112,5 +112,15 @@ READER_REPLY='1. "The poll stops when the dialog closes."
 assert_equals "70" "$?" "treats a reply with no count of flagged sentences as a failed read"
 drop_reader
 
+new_reader
+printf 'The poll stops when the dialog closes.\n' > "$DRAFT_FILE"
+READER_REPLY='1. "The poll stops when the dialog closes."
+   Means: polling ends once the dialog is shut
+   Flag: which poll is not named
+
+Flagged: 1' read_with_reader >/dev/null
+assert_equals "1" "$?" "exits 1 when the reader flags a sentence"
+drop_reader
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
