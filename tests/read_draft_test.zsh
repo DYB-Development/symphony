@@ -165,7 +165,7 @@ drop_reader
 echo ""
 echo "scribes that have their draft read:"
 
-for scribe in review-scribe issue-scribe pr-scribe plan-scribe; do
+for scribe in review-scribe issue-scribe pr-scribe plan-scribe audit-scribe; do
   grep -qF '~/.claude/bin/read-draft.sh' "$SCRIPT_DIR/../agents/$scribe.md"
   assert_equals "0" "$?" "$scribe has its draft read before it goes out"
 done
