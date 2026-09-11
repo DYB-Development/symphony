@@ -84,7 +84,9 @@ Then work through the reply:
   Decision Log is one. List it under `Still flagged:` instead, since its wording
   belongs to whoever wrote the entry.
 
-Run the reader again on the rewritten draft.
+Run the reader again. A later read is handed only the sentences you rewrote,
+never the whole draft a second time.
+
 
 **Two rounds of rewriting, then stop.** Read, rewrite, read, rewrite, and read
 once more. A sentence still flagged on that third read stays as it is. List each

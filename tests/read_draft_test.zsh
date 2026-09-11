@@ -187,5 +187,8 @@ READING_RULES="$SCRIPT_DIR/../rules/draft-reading.md"
 grep -qF 'Flag: none' "$READING_RULES"
 assert_equals "1" "$?" "ask the reader for the flagged sentences and nothing else"
 
+grep -qF 'only the sentences you rewrote' "$READING_RULES"
+assert_equals "0" "$?" "hand a later read only the sentences that were rewritten"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
