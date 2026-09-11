@@ -118,5 +118,18 @@ assert_contains '<dl class="facts"><div><dt>Scope</dt><dd>acme/quotes · main</d
   "shows the plan's four header facts under its name"
 drop_issue
 
+new_issue "Quote Conversion" <<'MD'
+## 01 The plan
+
+Quotes become orders.
+
+## 02 Already built
+
+- Quotes
+MD
+assert_contains '<section class="part" aria-labelledby="s02"><h2 id="s02"><span class="num">02</span> Already built</h2>' "$(render)" \
+  "opens each numbered section with its number and label"
+drop_issue
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

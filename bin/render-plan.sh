@@ -45,3 +45,39 @@ printf '<dl class="facts">%s</dl>\n</header>\n' "$(printf '%s\n' "$body" | awk "
   match($0, /^(Scope|Shape|Status|Date)  +/) {
     printf "<div><dt>%s</dt><dd>%s</dd></div>", $1, esc(substr($0, RLENGTH + 1))
   }')"
+
+work="$(mktemp -d "${TMPDIR:-/tmp}/render-plan.XXXXXX")"
+trap 'rm -rf "$work"' EXIT
+
+printf '%s\n' "$body" | awk -v work="$work" "$esc_awk"'
+  function mark(html,   id) {
+    id = sprintf("MARKER-%04d-END", ++marks)
+    printf "%s", html > (work "/" id)
+    close(work "/" id)
+    printf "\n%s\n\n", id
+  }
+  function close_part(   h) {
+    h = part ? "</section>" : ""
+    part = 0
+    return h
+  }
+  match($0, /^## (0[1-9]|10) /) {
+    num = substr($0, 4, 2)
+    mark(close_part() "<section class=\"part\" aria-labelledby=\"s" num "\"><h2 id=\"s" num "\"><span class=\"num\">" num "</span> " esc(substr($0, 7)) "</h2>")
+    part = 1
+    next
+  }
+  { print }
+  END { mark(close_part()) }
+' > "$work/plan.md"
+
+awk -v work="$work" '
+  match($0, /^(<p>)?MARKER-[0-9]+-END(<\/p>)?$/) {
+    id = $0
+    gsub(/<\/?p>/, "", id)
+    while ((getline line < (work "/" id)) > 0) print line
+    close(work "/" id)
+    next
+  }
+  { print }
+' "$work/plan.md"
