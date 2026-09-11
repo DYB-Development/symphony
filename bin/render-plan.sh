@@ -27,3 +27,8 @@ escape() {
 title="$(printf '%s' "$issue" | jq -r .title)"
 
 printf '<title>%s</title>\n' "$(printf '%s' "$title" | escape)"
+
+root="$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+printf '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Schibsted+Grotesk:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&display=swap">\n'
+printf '<style>%s</style>\n' "$(cat "$root/templates/plan-page.css")"

@@ -88,5 +88,12 @@ assert_contains "<title>Quotes &amp; Orders &lt;v2&gt;</title>" "$(render)" \
   "names the page after the plan issue's title"
 drop_issue
 
+new_issue "Quote Conversion" <<'MD'
+## 01 The plan
+MD
+assert_contains "<style>$(cat "$SCRIPT_DIR/../templates/plan-page.css")</style>" "$(render)" \
+  "styles every plan page with the one shipped stylesheet"
+drop_issue
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
