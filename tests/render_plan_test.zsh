@@ -149,5 +149,16 @@ MD
 assert_equals "0" "$?" "leaves the link to the page itself off the page"
 drop_issue
 
+new_issue "Quote Conversion" <<'MD'
+## 09 The work
+
+### Stage 1 · End to end
+
+A rep converts one quote.
+MD
+assert_contains '<section class="stage" data-stage="1"><h3 id="stage-1">Stage 1 · End to end</h3>' "$(render)" \
+  "opens each stage of the work with its number and name"
+drop_issue
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

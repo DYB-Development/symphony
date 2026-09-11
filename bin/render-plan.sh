@@ -56,17 +56,30 @@ printf '%s\n' "$body" | awk -v work="$work" "$esc_awk"'
     close(work "/" id)
     printf "\n%s\n\n", id
   }
+  function close_stage(   h) {
+    h = stage ? "</section>" : ""
+    stage = 0
+    return h
+  }
   function close_part(   h) {
-    h = part ? "</section>" : ""
+    h = close_stage() (part ? "</section>" : "")
     part = 0
     return h
   }
+
   match($0, /^## (0[1-9]|10) /) {
     num = substr($0, 4, 2)
     mark(close_part() "<section class=\"part\" aria-labelledby=\"s" num "\"><h2 id=\"s" num "\"><span class=\"num\">" num "</span> " esc(substr($0, 7)) "</h2>")
-    part = 1
+    part = num
     next
   }
+  part == "09" && match($0, /^### Stage [1-4] /) {
+    n = substr($0, 11, 1)
+    mark(close_stage() "<section class=\"stage\" data-stage=\"" n "\"><h3 id=\"stage-" n "\">" esc(substr($0, 5)) "</h3>")
+    stage = n
+    next
+  }
+
   !part { next }
   { print }
   END { mark(close_part()) }
