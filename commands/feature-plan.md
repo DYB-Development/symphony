@@ -37,7 +37,9 @@ this session already believes.
    the questions section 08 leaves open. Then stop — the plan is for me to read.
 
 4. **When I have read it and settled section 08**, edit the answers into the
-   issue body and republish the artifact from it in the same step, then file the
+   issue body and republish the artifact in the same step, rendered with
+   `~/.claude/bin/render-plan.sh <owner/repo> <issue-number>`. Then file the
+
    `type:breakdown` that slices the units into `type:task` issues. The units are
    already written as issue bodies, so the breakdown copies them rather than
    rewriting them — hand each to an `issue-scribe` with the unit's body inlined
