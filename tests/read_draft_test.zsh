@@ -31,6 +31,7 @@ printf '%s\n' "$@" > "$here/args"
 while [ $# -gt 0 ]; do
   [ "$1" = --system-prompt ] && printf '%s' "$2" > "$here/system-prompt"
   [ "$1" = --tools ] && printf 'tools=%s' "$2" > "$here/tools"
+  [ "$1" = --model ] && printf '%s' "$2" > "$here/model"
   [ "$1" = --setting-sources ] && printf 'sources=%s' "$2" > "$here/setting-sources"
   shift
 done
@@ -68,9 +69,9 @@ drop_reader
 new_reader
 printf 'The poll stops when the dialog closes.\n' > "$DRAFT_FILE"
 read_with_reader >/dev/null
-assert_equals "$(cat "$SCRIPT_DIR/../rules/draft-reading.md")" \
+assert_equals "$(awk '/^## What the scribe does with it/ { exit } { print }' "$SCRIPT_DIR/../rules/draft-reading.md")" \
   "$(cat "$READER_DIR/system-prompt" 2>/dev/null)" \
-  "gives the reader the reading rules as its only instructions"
+  "gives the reader the reader's part of the rules, and not the scribe's"
 drop_reader
 
 new_reader
@@ -162,6 +163,14 @@ assert_equals "Read it as a site foreman would." \
   "reads the person's own reading rules in place of the shipped ones"
 drop_reader
 
+new_reader
+printf 'The poll stops when the dialog closes.\n' > "$DRAFT_FILE"
+read_with_reader >/dev/null
+assert_equals "sonnet" \
+  "$(cat "$READER_DIR/model" 2>/dev/null)" \
+  "reads on a faster model than the session it was run from"
+drop_reader
+
 echo ""
 echo "scribes that have their draft read:"
 
@@ -169,6 +178,17 @@ for scribe in review-scribe issue-scribe pr-scribe plan-scribe audit-scribe; do
   grep -qF '~/.claude/bin/read-draft.sh' "$SCRIPT_DIR/../agents/$scribe.md"
   assert_equals "0" "$?" "$scribe has its draft read before it goes out"
 done
+
+echo ""
+echo "the reading rules:"
+
+READING_RULES="$SCRIPT_DIR/../rules/draft-reading.md"
+
+grep -qF 'Flag: none' "$READING_RULES"
+assert_equals "1" "$?" "ask the reader for the flagged sentences and nothing else"
+
+grep -qF 'only the sentences you rewrote' "$READING_RULES"
+assert_equals "0" "$?" "hand a later read only the sentences that were rewritten"
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

@@ -19,12 +19,16 @@ and never explains does.
 
 ## What the reader does
 
-Read every sentence in the draft, in order. For each one:
+Read every sentence in the draft, in order. Say nothing about a sentence you
+followed on one read.
+
+Flag a sentence when you had to read it twice, when it makes more than one
+claim, or when you are not sure what it claims. For each one you flag:
 
 - Quote it exactly as written.
 - Say what it means in plain words, as you understood it on one read.
-- Flag it when you had to read it twice, when it makes more than one claim, or
-  when you are not sure what it claims.
+- Say what you could not follow.
+
 
 A bullet counts as a sentence. A bold header phrase is read as a phrase, and it
 is flagged only when you cannot tell what it names.
@@ -46,16 +50,14 @@ This shape and nothing else:
 ```
 1. "<the sentence, exactly as written>"
    Means: <what it says, in plain words>
-   Flag: none
-
-2. "<the sentence, exactly as written>"
-   Means: <what it says, in plain words>
    Flag: <what you could not follow on one read>
 
 Flagged: <how many sentences were flagged>
 ```
 
-The last line is always `Flagged:` and a number. Nothing follows it.
+The last line is always `Flagged:` and a number. Nothing follows it. A draft you
+followed all the way through returns that line alone.
+
 
 ## What the scribe does with it
 
@@ -82,7 +84,9 @@ Then work through the reply:
   Decision Log is one. List it under `Still flagged:` instead, since its wording
   belongs to whoever wrote the entry.
 
-Run the reader again on the rewritten draft.
+Run the reader again. A later read is handed only the sentences you rewrote,
+never the whole draft a second time.
+
 
 **Two rounds of rewriting, then stop.** Read, rewrite, read, rewrite, and read
 once more. A sentence still flagged on that third read stays as it is. List each
