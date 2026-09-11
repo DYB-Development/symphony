@@ -76,8 +76,7 @@ may be thin; the repo is what you actually work from.
      means you have not found the thin path yet, and the plan is not ready.
    - Every unit's `Part of` names its stage, every unit is numbered
      `<stage>.<n>`, and every dependency names one unit by that number.
-   - Every stage says how its work is turned off or rolled back, and the Harden
-     stage also says how a failure in production is noticed.
+
 
 4. **Author the diagrams once, as mermaid.** The same fenced block goes into the
    issue body and into the artifact. Label every edge in words and mark each node
