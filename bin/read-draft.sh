@@ -20,7 +20,8 @@ draft=$1
 here="$(dirname "$0")"
 rules="$(cat "$here/../rules/draft-reading.md")"
 
-reply="$(claude -p --system-prompt "$rules" --tools "" --setting-sources "" --no-session-persistence --strict-mcp-config < "$draft")"
+reply="$(claude -p --system-prompt "$rules" --tools "" --setting-sources "" --no-session-persistence --strict-mcp-config < "$draft")" ||
+  { echo "read-draft.sh: the reader's run failed, so nothing was read" >&2; exit 70; }
 printf '%s\n' "$reply"
 
 count="$(printf '%s\n' "$reply" | awk 'NF { last = $0 } END { print last }')"

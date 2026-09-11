@@ -146,5 +146,11 @@ assert_equals "$REPLY_TEXT" \
   "prints the reader's reply for the scribe to work through"
 drop_reader
 
+new_reader
+printf 'The poll stops when the dialog closes.\n' > "$DRAFT_FILE"
+READER_EXIT=1 read_with_reader >/dev/null
+assert_equals "70" "$?" "exits 70 when the reader's run fails, so a failure is never taken for a flag"
+drop_reader
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
