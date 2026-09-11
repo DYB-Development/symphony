@@ -22,7 +22,9 @@ rules="$(cat "$here/../rules/draft-reading.md")"
 
 reply="$(claude -p --system-prompt "$rules" --tools "" --setting-sources "" --no-session-persistence --strict-mcp-config < "$draft")"
 
-printf '%s\n' "$reply" | grep -q '^Flagged: [0-9][0-9]*$' ||
-  { echo "read-draft.sh: the reader's reply carries no count of flagged sentences" >&2; exit 70; }
+count="$(printf '%s\n' "$reply" | awk 'NF { last = $0 } END { print last }')"
 
-printf '%s\n' "$reply" | grep -q '^Flagged: 0$' || exit 1
+printf '%s' "$count" | grep -qx 'Flagged: [0-9][0-9]*' ||
+  { echo "read-draft.sh: the reader's reply does not end with a count of flagged sentences" >&2; exit 70; }
+
+[ "$count" = "Flagged: 0" ] || exit 1

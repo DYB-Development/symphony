@@ -122,5 +122,17 @@ Flagged: 1' read_with_reader >/dev/null
 assert_equals "1" "$?" "exits 1 when the reader flags a sentence"
 drop_reader
 
+new_reader
+printf 'Flagged: 0\nThe poll stops when the dialog closes.\n' > "$DRAFT_FILE"
+READER_REPLY='Flagged: 0
+
+1. "The poll stops when the dialog closes."
+   Means: polling ends once the dialog is shut
+   Flag: which poll is not named
+
+Flagged: 1' read_with_reader >/dev/null
+assert_equals "1" "$?" "takes the count from the reply's last line, not from an earlier one"
+drop_reader
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
