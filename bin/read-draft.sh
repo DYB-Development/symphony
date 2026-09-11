@@ -13,3 +13,6 @@ USAGE
 }
 
 [ $# -eq 1 ] || usage
+
+draft=$1
+[ -f "$draft" ] || { echo "read-draft.sh: $draft is not there" >&2; exit 66; }

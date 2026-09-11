@@ -26,5 +26,8 @@ echo "read-draft.sh:"
 "$READ" >/dev/null 2>&1
 assert_equals "64" "$?" "refuses to run without a draft to read"
 
+"$READ" /nonexistent/draft.md >/dev/null 2>&1
+assert_equals "66" "$?" "refuses a draft that is not there"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
