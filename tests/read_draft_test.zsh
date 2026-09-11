@@ -31,6 +31,7 @@ printf '%s\n' "$@" > "$here/args"
 while [ $# -gt 0 ]; do
   [ "$1" = --system-prompt ] && printf '%s' "$2" > "$here/system-prompt"
   [ "$1" = --tools ] && printf 'tools=%s' "$2" > "$here/tools"
+  [ "$1" = --setting-sources ] && printf 'sources=%s' "$2" > "$here/setting-sources"
   shift
 done
 cat > "$here/stdin"
@@ -78,6 +79,14 @@ read_with_reader >/dev/null
 assert_equals "tools=" \
   "$(cat "$READER_DIR/tools" 2>/dev/null)" \
   "gives the reader no tools, so it cannot read the code"
+drop_reader
+
+new_reader
+printf 'The poll stops when the dialog closes.\n' > "$DRAFT_FILE"
+read_with_reader >/dev/null
+assert_equals "sources=" \
+  "$(cat "$READER_DIR/setting-sources" 2>/dev/null)" \
+  "loads none of the person's settings, so no hook or plugin reaches the reader"
 drop_reader
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
