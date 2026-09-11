@@ -274,5 +274,11 @@ assert_equals "1" "$?" "leave rollback and production failure to standard practi
 grep -qF '~/.claude/bin/render-plan.sh' "$FEATURE_PLAN"
 assert_equals "0" "$?" "build every plan's page with the render script"
 
+echo ""
+echo "the feature plan command:"
+
+grep -qF '~/.claude/bin/render-plan.sh' "$SCRIPT_DIR/../commands/feature-plan.md"
+assert_equals "0" "$?" "republishes a settled plan's page with the render script"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
