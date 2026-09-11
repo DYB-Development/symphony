@@ -134,5 +134,17 @@ Flagged: 1' read_with_reader >/dev/null
 assert_equals "1" "$?" "takes the count from the reply's last line, not from an earlier one"
 drop_reader
 
+new_reader
+printf 'The poll stops when the dialog closes.\n' > "$DRAFT_FILE"
+REPLY_TEXT='1. "The poll stops when the dialog closes."
+   Means: polling ends once the dialog is shut
+   Flag: none
+
+Flagged: 0'
+assert_equals "$REPLY_TEXT" \
+  "$(READER_REPLY="$REPLY_TEXT" read_with_reader)" \
+  "prints the reader's reply for the scribe to work through"
+drop_reader
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

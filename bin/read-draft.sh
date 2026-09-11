@@ -21,6 +21,7 @@ here="$(dirname "$0")"
 rules="$(cat "$here/../rules/draft-reading.md")"
 
 reply="$(claude -p --system-prompt "$rules" --tools "" --setting-sources "" --no-session-persistence --strict-mcp-config < "$draft")"
+printf '%s\n' "$reply"
 
 count="$(printf '%s\n' "$reply" | awk 'NF { last = $0 } END { print last }')"
 
