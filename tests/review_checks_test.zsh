@@ -89,5 +89,25 @@ else
   fail "review-scribe.md opens each Findings bullet with its marker"
 fi
 
+ci_section="$(awk '/^## What CI checks/ { on = 1; next } /^## / { on = 0 } on' "$RULES/pr-review.md")"
+if [[ -n "${ci_section//[[:space:]]/}" ]]; then
+  ok "pr-review.md keeps what CI checks out of a review"
+else
+  fail "pr-review.md keeps what CI checks out of a review"
+fi
+
+not_checked="$(grep -A3 '^\*\*Not checked\*\* is' "$RULES/pr-review.md")"
+if [[ "$not_checked" != *"test suite"* ]]; then
+  ok "pr-review.md gives no unrun test suite as something a review did not check"
+else
+  fail "pr-review.md gives no unrun test suite as something a review did not check"
+fi
+
+if grep -qF -- "- **Never run the code.**" "$SCRIPT_DIR/../agents/review-scribe.md"; then
+  ok "review-scribe reads the code and runs nothing CI runs"
+else
+  fail "review-scribe reads the code and runs nothing CI runs"
+fi
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
