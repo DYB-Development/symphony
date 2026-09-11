@@ -236,5 +236,12 @@ assert_contains '<ol class="toc"><li><a href="#s01"><span class="num">01</span> 
   "lists every section, stage and unit in the contents"
 drop_issue
 
+new_issue "Quote Conversion" <<'MD'
+## 01 The plan
+MD
+[[ "$(render)" == *"</style>"*"<div class=\"shell\">"*"</aside>"*"<main>"*"<header class=\"masthead\">"*"</main>"*"</div>" ]]
+assert_equals "0" "$?" "lays out the contents beside the plan, with the plan under its masthead"
+drop_issue
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

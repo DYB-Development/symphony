@@ -16,172 +16,129 @@ USAGE
 
 repo=$1
 number=$2
-
-issue="$(gh issue view "$number" --repo "$repo" --json title,body)" ||
-  { echo "render-plan.sh: could not read issue $repo#$number" >&2; exit 70; }
+root="$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+fonts='https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Schibsted+Grotesk:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&display=swap'
+esc_awk='function esc(t) { gsub(/&/, "\\&amp;", t); gsub(/</, "\\&lt;", t); gsub(/>/, "\\&gt;", t); return t }'
 
 escape() {
   sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g'
 }
 
-title="$(printf '%s' "$issue" | jq -r .title)"
+header_facts() {
+  awk "$esc_awk"'
+    /^## 01 / { exit }
+    match($0, /^(Scope|Shape|Status|Date)  +/) {
+      printf "<div><dt>%s</dt><dd>%s</dd></div>", $1, esc(substr($0, RLENGTH + 1))
+    }'
+}
 
-printf '<title>%s</title>\n' "$(printf '%s' "$title" | escape)"
+mark_structure() {
+  awk -v work="$1" "$esc_awk"'
+    function mark(html,   id) {
+      id = sprintf("MARKER-%04d-END", ++marks)
+      printf "%s", html > (work "/" id)
+      close(work "/" id)
+      printf "\n%s\n\n", id
+    }
+    function close_unit(   h) { h = unit ? "</article>" : ""; unit = 0; return h }
+    function close_stage(   h) { h = close_unit() (stage ? "</section>" : ""); stage = 0; return h }
+    function close_part(   h) { h = close_stage() (part ? "</section>" : ""); part = 0; return h }
+    function close_contents_part(   h) {
+      h = (contents_units ? "</ol>" : "") (contents_part ? "</li>" : "")
+      contents_units = 0
+      contents_part = 0
+      return h
+    }
+    function open_part(num, label) {
+      mark(close_part() "<section class=\"part\" aria-labelledby=\"s" num "\"><h2 id=\"s" num "\"><span class=\"num\">" num "</span> " esc(label) "</h2>")
+      contents = contents close_contents_part() "<li><a href=\"#s" num "\"><span class=\"num\">" num "</span> " esc(label) "</a>"
+      contents_part = 1
+      part = num
+    }
+    function open_stage(n, name) {
+      mark(close_stage() "<section class=\"stage\" data-stage=\"" n "\"><h3 id=\"stage-" n "\">" esc(name) "</h3>")
+      contents = contents (contents_units ? "" : "<ol class=\"toc-units\">") "<li class=\"toc-stage\"><a href=\"#stage-" n "\">" esc(name) "</a></li>"
+      contents_units = 1
+      stage = n
+    }
+    function open_unit(rest,   number, id, heading, entry) {
+      number = substr(rest, 1, index(rest, " ") - 1)
+      id = number
+      gsub(/\./, "-", id)
+      heading = substr(rest, index(rest, " ") + 1)
+      entry = heading
+      sub(/^— /, "", entry)
+      mark(close_unit() "<article class=\"unit\" data-stage=\"" stage "\"><h4 id=\"unit-" id "\"><span class=\"unum\">Unit " number "</span> <span class=\"utitle\">" esc(heading) "</span></h4>")
+      contents = contents "<li><a href=\"#unit-" id "\"><span class=\"unum\">" number "</span> " esc(entry) "</a></li>"
+      unit = 1
+    }
+    function open_stamp() {
+      mark(close_part() "<footer class=\"stamp\"><h2 id=\"stamp\">Generation Metadata</h2>")
+      stamp = 1
+    }
 
-root="$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+    in_diagram && /^```$/ {
+      mark("<figure class=\"diagram\"><pre class=\"mermaid\">" esc(diagram) "</pre></figure>")
+      in_diagram = 0
+      next
+    }
+    in_diagram { diagram = diagram (diagram == "" ? "" : "\n") $0; next }
 
-printf '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Schibsted+Grotesk:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&display=swap">\n'
-printf '<style>%s</style>\n' "$(cat "$root/templates/plan-page.css")"
+    rule_held && /^$/ { next }
+    rule_held && /^## Generation Metadata$/ { rule_held = 0; open_stamp(); next }
+    rule_held { print "---"; print ""; rule_held = 0 }
+    part && /^---$/ { rule_held = 1; next }
 
-printf '<header class="masthead"><p class="kicker">Feature plan · %s#%s</p><h1>%s</h1>' \
-  "$repo" "$number" "$(printf '%s' "$title" | escape)"
+    /^## (0[1-9]|10) / { open_part(substr($0, 4, 2), substr($0, 7)); next }
+    part == "09" && /^### Stage [1-4] / { open_stage(substr($0, 11, 1), substr($0, 5)); next }
+    stage && /^#### Unit [1-4]\.[0-9]+ / { open_unit(substr($0, 11)); next }
+    unit && /^## / { print "##### " substr($0, 4); next }
+    part && /^```mermaid$/ { in_diagram = 1; diagram = ""; next }
+    !part && !stamp { next }
+    { print }
 
+    END {
+      mark(close_part() (stamp ? "</footer>" : ""))
+      printf "<aside aria-label=\"Contents\"><p class=\"label\">Contents</p><ol class=\"toc\">%s</ol></aside>\n", contents close_contents_part() > (work "/contents.html")
+    }'
+}
+
+fill_structure() {
+  awk -v work="$1" '
+    /^(<p>)?MARKER-[0-9]+-END(<\/p>)?$/ {
+      id = $0
+      gsub(/<\/?p>/, "", id)
+      while ((getline line < (work "/" id)) > 0) print line
+      close(work "/" id)
+      next
+    }
+    {
+      gsub(/<markdown-accessiblity-table>/, "<div class=\"table-wrap\">")
+      gsub(/<\/markdown-accessiblity-table>/, "</div>")
+      gsub(/ class="notranslate"/, "")
+      print
+    }'
+}
+
+issue="$(gh issue view "$number" --repo "$repo" --json title,body)" ||
+  { echo "render-plan.sh: could not read issue $repo#$number" >&2; exit 70; }
+title="$(printf '%s' "$issue" | jq -r .title | escape)"
 body="$(printf '%s' "$issue" | jq -r .body)"
-
-esc_awk='function esc(t) { gsub(/&/, "\\&amp;", t); gsub(/</, "\\&lt;", t); gsub(/>/, "\\&gt;", t); return t }'
-
-printf '<dl class="facts">%s</dl>\n</header>\n' "$(printf '%s\n' "$body" | awk "$esc_awk"'
-  /^## 01 / { exit }
-  match($0, /^(Scope|Shape|Status|Date)  +/) {
-    printf "<div><dt>%s</dt><dd>%s</dd></div>", $1, esc(substr($0, RLENGTH + 1))
-  }')"
 
 work="$(mktemp -d "${TMPDIR:-/tmp}/render-plan.XXXXXX")"
 trap 'rm -rf "$work"' EXIT
 
-printf '%s\n' "$body" | awk -v work="$work" "$esc_awk"'
-  function mark(html,   id) {
-    id = sprintf("MARKER-%04d-END", ++marks)
-    printf "%s", html > (work "/" id)
-    close(work "/" id)
-    printf "\n%s\n\n", id
-  }
-  function toc_close(   h) {
-    h = (toc_units ? "</ol>" : "") (toc_part ? "</li>" : "")
-    toc_units = 0
-    toc_part = 0
-    return h
-  }
-  function close_unit(   h) {
-
-    h = unit ? "</article>" : ""
-    unit = 0
-    return h
-  }
-  function close_stage(   h) {
-    h = close_unit() (stage ? "</section>" : "")
-
-    stage = 0
-    return h
-  }
-  function close_part(   h) {
-    h = close_stage() (part ? "</section>" : "")
-    part = 0
-    return h
-  }
-
-  in_diagram && /^```$/ {
-    mark("<figure class=\"diagram\"><pre class=\"mermaid\">" esc(diagram) "</pre></figure>")
-    in_diagram = 0
-    next
-  }
-  in_diagram {
-    diagram = diagram (diagram == "" ? "" : "\n") $0
-    next
-  }
-  held && /^$/ { next }
-  held && /^## Generation Metadata$/ {
-    mark(close_part() "<footer class=\"stamp\"><h2 id=\"stamp\">Generation Metadata</h2>")
-    held = 0
-    footer = 1
-    next
-  }
-  held {
-    print "---"
-    print ""
-    held = 0
-  }
-  part && /^---$/ {
-    held = 1
-    next
-  }
-  match($0, /^## (0[1-9]|10) /) {
-
-
-    num = substr($0, 4, 2)
-    mark(close_part() "<section class=\"part\" aria-labelledby=\"s" num "\"><h2 id=\"s" num "\"><span class=\"num\">" num "</span> " esc(substr($0, 7)) "</h2>")
-    toc = toc toc_close() "<li><a href=\"#s" num "\"><span class=\"num\">" num "</span> " esc(substr($0, 7)) "</a>"
-    toc_part = 1
-    part = num
-    next
-
-  }
-  part == "09" && match($0, /^### Stage [1-4] /) {
-    n = substr($0, 11, 1)
-    mark(close_stage() "<section class=\"stage\" data-stage=\"" n "\"><h3 id=\"stage-" n "\">" esc(substr($0, 5)) "</h3>")
-    toc = toc (toc_units ? "" : "<ol class=\"toc-units\">") "<li class=\"toc-stage\"><a href=\"#stage-" n "\">" esc(substr($0, 5)) "</a></li>"
-    toc_units = 1
-    stage = n
-    next
-
-  }
-  stage && match($0, /^#### Unit [1-4]\.[0-9]+ /) {
-    rest = substr($0, 11)
-    split(rest, words, " ")
-    id = words[1]
-    gsub(/\./, "-", id)
-    heading = substr(rest, index(rest, " ") + 1)
-    mark(close_unit() "<article class=\"unit\" data-stage=\"" stage "\"><h4 id=\"unit-" id "\"><span class=\"unum\">Unit " words[1] "</span> <span class=\"utitle\">" esc(heading) "</span></h4>")
-    entry = heading
-    sub(/^— /, "", entry)
-    toc = toc "<li><a href=\"#unit-" id "\"><span class=\"unum\">" words[1] "</span> " esc(entry) "</a></li>"
-    unit = 1
-    next
-
-  }
-  unit && /^## / {
-    print "##### " substr($0, 4)
-    next
-  }
-
-
-
-  part && /^```mermaid$/ {
-    in_diagram = 1
-    diagram = ""
-    next
-  }
-  !part && !footer { next }
-
-
-  { print }
-  END {
-    mark(close_part() (footer ? "</footer>" : ""))
-    printf "<aside aria-label=\"Contents\"><p class=\"label\">Contents</p><ol class=\"toc\">%s</ol></aside>\n", toc toc_close() > (work "/toc.html")
-  }
-
-
-' > "$work/plan.md"
-
+printf '%s\n' "$body" | mark_structure "$work" > "$work/plan.md"
 gh api markdown -f mode=gfm -F text=@"$work/plan.md" > "$work/plan.html" ||
   { echo "render-plan.sh: GitHub could not render the plan's markdown" >&2; exit 70; }
 
-awk -v work="$work" '
-  match($0, /^(<p>)?MARKER-[0-9]+-END(<\/p>)?$/) {
-    id = $0
-    gsub(/<\/?p>/, "", id)
-    while ((getline line < (work "/" id)) > 0) print line
-    close(work "/" id)
-    next
-  }
-  {
-    gsub(/<markdown-accessiblity-table>/, "<div class=\"table-wrap\">")
-    gsub(/<\/markdown-accessiblity-table>/, "</div>")
-    gsub(/ class="notranslate"/, "")
-    print
-  }
-
-' "$work/plan.html"
-
-cat "$work/toc.html"
-
+printf '<title>%s</title>\n' "$title"
+printf '<link rel="stylesheet" href="%s">\n' "$fonts"
+printf '<style>%s</style>\n' "$(cat "$root/templates/plan-page.css")"
+printf '<div class="shell">\n'
+cat "$work/contents.html"
+printf '<main>\n'
+printf '<header class="masthead"><p class="kicker">Feature plan · %s#%s</p><h1>%s</h1>' "$repo" "$number" "$title"
+printf '<dl class="facts">%s</dl>\n</header>\n' "$(printf '%s\n' "$body" | header_facts)"
+fill_structure "$work" < "$work/plan.html"
+printf '</main>\n</div>\n'
