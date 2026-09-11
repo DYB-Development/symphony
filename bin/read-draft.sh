@@ -20,4 +20,7 @@ draft=$1
 here="$(dirname "$0")"
 rules="$(cat "$here/../rules/draft-reading.md")"
 
-claude -p --system-prompt "$rules" --tools "" --setting-sources "" --no-session-persistence --strict-mcp-config < "$draft"
+reply="$(claude -p --system-prompt "$rules" --tools "" --setting-sources "" --no-session-persistence --strict-mcp-config < "$draft")"
+
+printf '%s\n' "$reply" | grep -q '^Flagged: [0-9][0-9]*$' ||
+  { echo "read-draft.sh: the reader's reply carries no count of flagged sentences" >&2; exit 70; }

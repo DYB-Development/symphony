@@ -105,5 +105,12 @@ assert_equals "--strict-mcp-config" \
   "starts no MCP server, whose tools would reach the reader past the no-tools flag"
 drop_reader
 
+new_reader
+printf 'The poll stops when the dialog closes.\n' > "$DRAFT_FILE"
+READER_REPLY='1. "The poll stops when the dialog closes."
+   Means: polling ends once the dialog is shut' read_with_reader >/dev/null
+assert_equals "70" "$?" "treats a reply with no count of flagged sentences as a failed read"
+drop_reader
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
