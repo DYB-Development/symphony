@@ -26,7 +26,7 @@ every document.
 Before a draft goes out, a second reader reads it with nothing else in front of
 it. The reader says what each sentence means and flags any it had to read twice.
 The scribe then rewrites those sentences, as `rules/draft-reading.md` sets out.
-Only the review scribe does this so far.
+Every scribe does this before its draft is posted, filed, published or returned.
 
 Three commands drive them: `/feature-plan`, `/review` and `/audit`.
 
