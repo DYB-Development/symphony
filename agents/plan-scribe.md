@@ -97,17 +97,17 @@ may be thin; the repo is what you actually work from.
    stage it sits in. The issue and the artifact are both made from the file you
    end with.
 
-6. **File the `type:plan` issue.** Labels: `type:plan`, exactly one `priority:`,
-   and the `area:` the work belongs to. List the repo's labels first
-   (`gh label list --repo <owner/repo>`) and reuse the `area:*` that fits rather
-   than coining a second spelling. If the repo has no labels yet, run
-   `~/.claude/bin/issue-bootstrap.sh` once.
+6. **File the `type:plan` issue.** Label it `type:plan` and exactly one
+   `priority:`. Labels are set up outside this work, so do not list or create
+   any.
+
 
    Title the issue with the feature's name in two to four words, since the page
    takes its name from the title.
 
    ```
-   gh issue create --repo <owner/repo> --title "<name>" --label type:plan,... --body-file <file>
+   gh issue create --repo <owner/repo> --title "<name>" --label type:plan --label priority:<p> --body-file <file>
+
    ```
 
 

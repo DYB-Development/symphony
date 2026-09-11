@@ -254,5 +254,8 @@ assert_equals "0" "$?" "publishes the page the render script builds from the fil
 grep -qF 'gh issue list' "$PLAN_SCRIBE"
 assert_equals "1" "$?" "does not survey the repo's open issues"
 
+grep -qE 'gh label list|issue-bootstrap' "$PLAN_SCRIBE"
+assert_equals "1" "$?" "does not look up or create labels"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
