@@ -75,5 +75,12 @@ else
   printf '      unmarked: %s\n' "${(j:, :)unmarked}"
 fi
 
+report_section="$(awk '/^## What the report says/ { on = 1; next } /^## / { on = 0 } on' "$RULES/repo-audit.md")"
+if [[ "$report_section" == *"❌"* && "$report_section" == *"✅"* ]]; then
+  ok "repo-audit.md opens each check in the report with its marker"
+else
+  fail "repo-audit.md opens each check in the report with its marker"
+fi
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
