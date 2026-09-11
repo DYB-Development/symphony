@@ -20,4 +20,4 @@ draft=$1
 here="$(dirname "$0")"
 rules="$(cat "$here/../rules/draft-reading.md")"
 
-claude -p --system-prompt "$rules" < "$draft"
+claude -p --system-prompt "$rules" --tools "" < "$draft"

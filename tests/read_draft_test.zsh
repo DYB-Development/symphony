@@ -30,6 +30,7 @@ here="$(dirname "$0")"
 printf '%s\n' "$@" > "$here/args"
 while [ $# -gt 0 ]; do
   [ "$1" = --system-prompt ] && printf '%s' "$2" > "$here/system-prompt"
+  [ "$1" = --tools ] && printf 'tools=%s' "$2" > "$here/tools"
   shift
 done
 cat > "$here/stdin"
@@ -69,6 +70,14 @@ read_with_reader >/dev/null
 assert_equals "$(cat "$SCRIPT_DIR/../rules/draft-reading.md")" \
   "$(cat "$READER_DIR/system-prompt" 2>/dev/null)" \
   "gives the reader the reading rules as its only instructions"
+drop_reader
+
+new_reader
+printf 'The poll stops when the dialog closes.\n' > "$DRAFT_FILE"
+read_with_reader >/dev/null
+assert_equals "tools=" \
+  "$(cat "$READER_DIR/tools" 2>/dev/null)" \
+  "gives the reader no tools, so it cannot read the code"
 drop_reader
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
