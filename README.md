@@ -23,6 +23,11 @@ They share one list of checks in `rules/review-checks.md`, one writing style in
 `rules/writing-style.md`, and one stamp generator that names the versions behind
 every document.
 
+Before a draft goes out, a second reader reads it with nothing else in front of
+it. The reader says what each sentence means and flags any it had to read twice.
+The scribe then rewrites those sentences, as `rules/draft-reading.md` sets out.
+Only the review scribe does this so far.
+
 Three commands drive them: `/feature-plan`, `/review` and `/audit`.
 
 ## Setting it up
@@ -157,6 +162,7 @@ overwrites them.
 | `AUDIT_RUBRIC_FILE` | The cost bands and horizons an audit is scored against |
 | `ISSUE_BOOTSTRAP_OWNERS` | The accounts `issue-bootstrap.sh --all-repos` syncs labels across |
 | `SYMPHONY_IDENTIFIERS` | A file of terms no shipped file may name, checked by the suite |
+| `READ_DRAFT_SMOKE` | Set to `1` and the suite runs one real read through `claude` |
 
 `ISSUE_BOOTSTRAP_OWNERS` is empty by default and `--all-repos` does nothing until
 you set it, because that flag writes to every non-archived repo of every account
@@ -193,6 +199,7 @@ here.
 | What an audit's findings cost | `audit-rubric.json` |
 | The shape of a feature plan | `feature-plan.md` |
 | How everything is written | `writing-style.md` |
+| Who a draft is read for before it goes out | `draft-reading.md` |
 | The phrases nothing may use | `banned-phrases.txt` |
 | The development process followed | `develop_process_rules.md` |
 | When a decision is recorded | `decision-log.md` |
@@ -212,6 +219,10 @@ directory your team shares.
 
 Every file named `*_test.zsh` anywhere under the repo root is a suite and is
 picked up with no registration.
+
+No suite calls the network by default. `READ_DRAFT_SMOKE=1 ./run_tests.sh` also
+sends one sentence to a real reader, which needs `claude` logged in and is billed
+like any other run.
 
 ## Licence
 
