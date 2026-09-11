@@ -54,7 +54,7 @@ root=${SCRIBE_STAMP_ROOT:-$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}
 case "$kind" in
   pr)     scribe=pr-scribe;     rules=(pr-body draft-reading writing-style); [ -z "$source" ] || usage ;;
   issue)  scribe=issue-scribe;  rules=(issue-schema draft-reading writing-style); [ -z "$source" ] || usage ;;
-  plan)   scribe=plan-scribe;   rules=(feature-plan review-checks writing-style) ;;
+  plan)   scribe=plan-scribe;   rules=(feature-plan review-checks draft-reading writing-style) ;;
   review) scribe=review-scribe; rules=(review-checks pr-review draft-reading writing-style) ;;
   audit)  scribe=audit-scribe;  rules=(repo-audit review-checks audit-rubric.json writing-style) ;;
   *)      usage ;;

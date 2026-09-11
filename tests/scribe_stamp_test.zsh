@@ -133,16 +133,16 @@ echo ""
 echo "scribe-stamp.sh plan:"
 
 new_root
-commit_rules agents/plan-scribe.md rules/feature-plan.md rules/review-checks.md rules/writing-style.md
+commit_rules agents/plan-scribe.md rules/feature-plan.md rules/review-checks.md rules/draft-reading.md rules/writing-style.md
 assert_equals "Scribe: plan-scribe \`$(sha_of agents/plan-scribe.md)\`
-Rules: feature-plan \`$(sha_of rules/feature-plan.md)\`, review-checks \`$(sha_of rules/review-checks.md)\`, writing-style \`$(sha_of rules/writing-style.md)\`" \
+Rules: feature-plan \`$(sha_of rules/feature-plan.md)\`, review-checks \`$(sha_of rules/review-checks.md)\`, draft-reading \`$(sha_of rules/draft-reading.md)\`, writing-style \`$(sha_of rules/writing-style.md)\`" \
   "$("$STAMP" plan claude-opus-5 | sed -n '3,4p')" \
   "names the plan scribe, the feature plan schema and the checks it was written to pass"
 drop_root
 
 new_root
 new_source
-commit_rules agents/plan-scribe.md rules/feature-plan.md rules/review-checks.md rules/writing-style.md
+commit_rules agents/plan-scribe.md rules/feature-plan.md rules/review-checks.md rules/draft-reading.md rules/writing-style.md
 assert_equals "
 Planned Against: \`acme/quotes@$(source_head)\`" \
   "$(cd "$SOURCE_DIR" && "$STAMP" plan claude-opus-5 | sed -n '6,7p')" \
