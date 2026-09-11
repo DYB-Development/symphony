@@ -85,17 +85,20 @@ may be thin; the repo is what you actually work from.
 
 5. **Have the plan read before you file it.** Read
    `~/.claude/rules/draft-reading.md` (or `rules/draft-reading.md` in this
-   package) and follow it. Write the body to a file and hand it to the reader:
+   package) and follow it. Write the body to a file. Hand the reader a copy
+   without section 09, since each unit is read again when it is filed as an
+   issue:
 
    ```
-   ~/.claude/bin/read-draft.sh <file>
+   awk '/^## 09 /{skip=1} /^## 10 /{skip=0} !skip' <file> > <file>.read
+   ~/.claude/bin/read-draft.sh <file>.read
    ```
 
    Rewrite each sentence the reader flagged or took to mean something you did
-   not mean, in that file, then read it again. A rewrite changes how a sentence
-   reads and never what the plan claims is built, what a unit covers, or which
-   stage it sits in. The issue and the artifact are both made from the file you
-   end with.
+   not mean, in the body file, then read it again. A rewrite changes how a
+   sentence reads and never what the plan claims is built, what a unit covers,
+   or which stage it sits in.
+
 
 6. **File the `type:plan` issue.** Label it `type:plan` and exactly one
    `priority:`. Labels are set up outside this work, so do not list or create

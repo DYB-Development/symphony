@@ -257,5 +257,8 @@ assert_equals "1" "$?" "does not survey the repo's open issues"
 grep -qE 'gh label list|issue-bootstrap' "$PLAN_SCRIBE"
 assert_equals "1" "$?" "does not look up or create labels"
 
+grep -qF "awk '/^## 09 /{skip=1} /^## 10 /{skip=0} !skip'" "$PLAN_SCRIBE"
+assert_equals "0" "$?" "hands the reader the plan without its units, which are read when they are filed"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
