@@ -13,3 +13,9 @@ USAGE
 }
 
 [ $# -eq 2 ] || usage
+
+repo=$1
+number=$2
+
+issue="$(gh issue view "$number" --repo "$repo" --json title,body)" ||
+  { echo "render-plan.sh: could not read issue $repo#$number" >&2; exit 70; }

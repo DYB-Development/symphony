@@ -31,10 +31,55 @@ assert_equals() {
   fi
 }
 
+new_issue() {
+  STUB_DIR="$(mktemp -d "${TMPDIR:-/tmp}/render_plan_test.XXXXXX")"
+  cat > "$STUB_DIR/gh" <<'SH'
+#!/usr/bin/env bash
+here="$(dirname "$0")"
+case "$1 $2" in
+  "issue view")
+    [ "${ISSUE_EXIT:-0}" = 0 ] || exit "$ISSUE_EXIT"
+    cat "$here/issue.json"
+    ;;
+  "api markdown")
+    shift 2
+    while [ $# -gt 0 ]; do
+      [ "$1" = -F ] && src="${2#text=@}"
+      shift
+    done
+    while IFS= read -r line || [ -n "$line" ]; do
+      case "$line" in
+        "") ;;
+        "<"*) printf '%s\n' "$line" ;;
+        *) printf '<p>%s</p>\n' "$line" ;;
+      esac
+    done < "$src"
+    ;;
+esac
+SH
+  chmod +x "$STUB_DIR/gh"
+  jq -n --arg title "$1" --arg body "$(cat)" '{title: $title, body: $body}' > "$STUB_DIR/issue.json"
+}
+
+drop_issue() {
+  rm -rf "$STUB_DIR"
+}
+
+render() {
+  PATH="$STUB_DIR:$PATH" "$RENDER" acme/quotes 42 2>&1
+}
+
 echo "render-plan.sh:"
 
 "$RENDER" >/dev/null 2>&1
 assert_equals "64" "$?" "refuses to run without a repo and an issue number"
+
+new_issue "Quote Conversion" <<'MD'
+## 01 The plan
+MD
+ISSUE_EXIT=1 render >/dev/null
+assert_equals "70" "$?" "exits 70 when the plan issue cannot be read"
+drop_issue
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
