@@ -73,7 +73,21 @@ caller may say what they are worried about; read the code anyway.
    caller named. Every check present, in order, with its state and its findings,
    and the rubric version that scored it.
 
-7. **Append the stamp; do not write it.**
+7. **Have the audit file read before you score or publish it.** Read
+   `~/.claude/rules/draft-reading.md` (or `rules/draft-reading.md` in this
+   package) and follow it. The report is rendered from the file, so the file is
+   what the reader gets:
+
+   ```
+   ~/.claude/bin/read-draft.sh <the audit file>
+   ```
+
+   Rewrite each summary or fix the reader flagged or took to mean something you
+   did not mean, in the file, then read it again. A rewrite changes how a
+   sentence reads and never the file and line, the area, the cost band or the
+   horizon a finding carries.
+
+8. **Append the stamp; do not write it.**
 
    ```
    ~/.claude/bin/scribe-stamp.sh audit "<your model id>" <the section you read>
@@ -86,7 +100,7 @@ caller may say what they are worried about; read the code anyway.
    display name — `claude-opus-5[1m]`, not `Opus 5 (1M context)`. Never type a
    version by hand and never edit a `+` off one.
 
-8. **Score the areas; do not compute them yourself.**
+9. **Score the areas; do not compute them yourself.**
 
    ```
    ~/.claude/bin/audit-score.sh <the audit file>
@@ -97,7 +111,7 @@ caller may say what they are worried about; read the code anyway.
    it with both files and put the movement in the report as well. Never work a
    score out by hand and never write one into the audit file.
 
-9. **Publish the report from that exact file.** Load the `artifact-design` skill
+10. **Publish the report from that exact file.** Load the `artifact-design` skill
    before writing the HTML, then publish it with the `Artifact` tool. The report
    says what the file says — you are rendering the audit, not rewriting it. Title
    it the section, as a reader would say it — the path is usually enough.
@@ -105,7 +119,8 @@ caller may say what they are worried about; read the code anyway.
 ## Return
 
 The audit file path, the report URL, and one line per check giving its state.
-Nothing else. You are a tool — no preamble, no summary of the code, no report of
+Then `Still flagged:` with each sentence the reader flagged on its last read and
+the reader's note, or `none`, or that the read failed. Nothing else. You are a tool — no preamble, no summary of the code, no report of
 what you did.
 
 ## Rules

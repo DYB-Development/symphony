@@ -82,7 +82,7 @@ drop_source() {
 echo "scribe-stamp.sh pr:"
 
 new_root
-commit_rules agents/pr-scribe.md rules/pr-body.md rules/writing-style.md
+commit_rules agents/pr-scribe.md rules/pr-body.md rules/draft-reading.md rules/writing-style.md
 assert_equals "## Generation Metadata
 
 Scribe: pr-scribe \`$(sha_of agents/pr-scribe.md)\`" \
@@ -91,28 +91,28 @@ Scribe: pr-scribe \`$(sha_of agents/pr-scribe.md)\`" \
 drop_root
 
 new_root
-commit_rules agents/pr-scribe.md rules/pr-body.md rules/writing-style.md
+commit_rules agents/pr-scribe.md rules/pr-body.md rules/draft-reading.md rules/writing-style.md
 assert_equals "Scribe: pr-scribe \`$(sha_of agents/pr-scribe.md)\`" \
   "$("$STAMP" pr claude-opus-5 | sed -n 3p)" \
   "names the scribe and the commit that last touched its prompt"
 drop_root
 
 new_root
-commit_rules agents/pr-scribe.md rules/pr-body.md rules/writing-style.md
-assert_equals "Rules: pr-body \`$(sha_of rules/pr-body.md)\`, writing-style \`$(sha_of rules/writing-style.md)\`" \
+commit_rules agents/pr-scribe.md rules/pr-body.md rules/draft-reading.md rules/writing-style.md
+assert_equals "Rules: pr-body \`$(sha_of rules/pr-body.md)\`, draft-reading \`$(sha_of rules/draft-reading.md)\`, writing-style \`$(sha_of rules/writing-style.md)\`" \
   "$("$STAMP" pr claude-opus-5 | sed -n 4p)" \
   "names each rules file the pr scribe follows and its own commit"
 drop_root
 
 new_root
-commit_rules agents/pr-scribe.md rules/pr-body.md rules/writing-style.md
+commit_rules agents/pr-scribe.md rules/pr-body.md rules/draft-reading.md rules/writing-style.md
 assert_equals "Model: \`claude-opus-5\`, cc \`9.9.9\`" \
   "$(AI_AGENT=claude-code_9-9-9_agent "$STAMP" pr claude-opus-5 | sed -n 5p)" \
   "names the model that wrote the body and the cli it ran under"
 drop_root
 
 new_root
-commit_rules agents/pr-scribe.md rules/pr-body.md rules/writing-style.md
+commit_rules agents/pr-scribe.md rules/pr-body.md rules/draft-reading.md rules/writing-style.md
 assert_equals "Model: \`claude-opus-5\`, cc \`unknown\`" \
   "$(AI_AGENT= PATH=/usr/bin:/bin "$STAMP" pr claude-opus-5 | sed -n 5p)" \
   "names the cli unknown when there is none to ask for a version"
@@ -122,9 +122,9 @@ echo ""
 echo "scribe-stamp.sh issue:"
 
 new_root
-commit_rules agents/issue-scribe.md rules/issue-schema.md rules/writing-style.md
+commit_rules agents/issue-scribe.md rules/issue-schema.md rules/draft-reading.md rules/writing-style.md
 assert_equals "Scribe: issue-scribe \`$(sha_of agents/issue-scribe.md)\`
-Rules: issue-schema \`$(sha_of rules/issue-schema.md)\`, writing-style \`$(sha_of rules/writing-style.md)\`" \
+Rules: issue-schema \`$(sha_of rules/issue-schema.md)\`, draft-reading \`$(sha_of rules/draft-reading.md)\`, writing-style \`$(sha_of rules/writing-style.md)\`" \
   "$("$STAMP" issue claude-opus-5 | sed -n '3,4p')" \
   "names the issue scribe and the schema it followed"
 drop_root
@@ -133,16 +133,16 @@ echo ""
 echo "scribe-stamp.sh plan:"
 
 new_root
-commit_rules agents/plan-scribe.md rules/feature-plan.md rules/review-checks.md rules/writing-style.md
+commit_rules agents/plan-scribe.md rules/feature-plan.md rules/review-checks.md rules/draft-reading.md rules/writing-style.md
 assert_equals "Scribe: plan-scribe \`$(sha_of agents/plan-scribe.md)\`
-Rules: feature-plan \`$(sha_of rules/feature-plan.md)\`, review-checks \`$(sha_of rules/review-checks.md)\`, writing-style \`$(sha_of rules/writing-style.md)\`" \
+Rules: feature-plan \`$(sha_of rules/feature-plan.md)\`, review-checks \`$(sha_of rules/review-checks.md)\`, draft-reading \`$(sha_of rules/draft-reading.md)\`, writing-style \`$(sha_of rules/writing-style.md)\`" \
   "$("$STAMP" plan claude-opus-5 | sed -n '3,4p')" \
   "names the plan scribe, the feature plan schema and the checks it was written to pass"
 drop_root
 
 new_root
 new_source
-commit_rules agents/plan-scribe.md rules/feature-plan.md rules/review-checks.md rules/writing-style.md
+commit_rules agents/plan-scribe.md rules/feature-plan.md rules/review-checks.md rules/draft-reading.md rules/writing-style.md
 assert_equals "
 Planned Against: \`acme/quotes@$(source_head)\`" \
   "$(cd "$SOURCE_DIR" && "$STAMP" plan claude-opus-5 | sed -n '6,7p')" \
@@ -175,16 +175,16 @@ echo ""
 echo "scribe-stamp.sh audit:"
 
 new_root
-commit_rules agents/audit-scribe.md rules/repo-audit.md rules/review-checks.md rules/audit-rubric.json rules/writing-style.md
+commit_rules agents/audit-scribe.md rules/repo-audit.md rules/review-checks.md rules/audit-rubric.json rules/draft-reading.md rules/writing-style.md
 assert_equals "Scribe: audit-scribe \`$(sha_of agents/audit-scribe.md)\`
-Rules: repo-audit \`$(sha_of rules/repo-audit.md)\`, review-checks \`$(sha_of rules/review-checks.md)\`, audit-rubric \`$(sha_of rules/audit-rubric.json)\`, writing-style \`$(sha_of rules/writing-style.md)\`" \
+Rules: repo-audit \`$(sha_of rules/repo-audit.md)\`, review-checks \`$(sha_of rules/review-checks.md)\`, audit-rubric \`$(sha_of rules/audit-rubric.json)\`, draft-reading \`$(sha_of rules/draft-reading.md)\`, writing-style \`$(sha_of rules/writing-style.md)\`" \
   "$("$STAMP" audit claude-opus-5 | sed -n '3,4p')" \
   "names the audit scribe, the audit rules, the checks and the rubric that scored it"
 drop_root
 
 new_root
 new_source
-commit_rules agents/audit-scribe.md rules/repo-audit.md rules/review-checks.md rules/audit-rubric.json rules/writing-style.md
+commit_rules agents/audit-scribe.md rules/repo-audit.md rules/review-checks.md rules/audit-rubric.json rules/draft-reading.md rules/writing-style.md
 assert_equals "
 Audited Against: \`acme/quotes@$(source_head)\`" \
   "$(cd "$SOURCE_DIR" && "$STAMP" audit claude-opus-5 | sed -n '6,7p')" \
@@ -194,7 +194,7 @@ drop_root
 
 new_root
 new_source
-commit_rules agents/audit-scribe.md rules/repo-audit.md rules/review-checks.md rules/audit-rubric.json rules/writing-style.md
+commit_rules agents/audit-scribe.md rules/repo-audit.md rules/review-checks.md rules/audit-rubric.json rules/draft-reading.md rules/writing-style.md
 mkdir -p "$SOURCE_DIR/lib"
 printf 'lib\n' > "$SOURCE_DIR/lib/thing.rb"
 git -C "$SOURCE_DIR" add lib/thing.rb
@@ -208,7 +208,7 @@ drop_root
 
 new_root
 new_source
-commit_rules agents/audit-scribe.md rules/repo-audit.md rules/review-checks.md rules/audit-rubric.json rules/writing-style.md
+commit_rules agents/audit-scribe.md rules/repo-audit.md rules/review-checks.md rules/audit-rubric.json rules/draft-reading.md rules/writing-style.md
 mkdir -p "$SOURCE_DIR/lib"
 printf 'lib\n' > "$SOURCE_DIR/lib/thing.rb"
 git -C "$SOURCE_DIR" add lib/thing.rb
@@ -222,7 +222,7 @@ drop_root
 
 new_root
 new_source
-commit_rules agents/audit-scribe.md rules/repo-audit.md rules/review-checks.md rules/audit-rubric.json rules/writing-style.md
+commit_rules agents/audit-scribe.md rules/repo-audit.md rules/review-checks.md rules/audit-rubric.json rules/draft-reading.md rules/writing-style.md
 printf 'edited\n' > "$SOURCE_DIR/app.rb"
 assert_equals "Audited Against: \`acme/quotes@$(source_head)+\`" \
   "$(cd "$SOURCE_DIR" && "$STAMP" audit claude-opus-5 | sed -n 7p)" \
@@ -234,7 +234,7 @@ echo ""
 echo "scribe-stamp.sh uncommitted rules:"
 
 new_root
-commit_rules agents/pr-scribe.md rules/pr-body.md rules/writing-style.md
+commit_rules agents/pr-scribe.md rules/pr-body.md rules/draft-reading.md rules/writing-style.md
 printf 'edited\n' > "$SCRIBE_STAMP_ROOT/agents/pr-scribe.md"
 assert_equals "Scribe: pr-scribe \`$(sha_of agents/pr-scribe.md)+\`" \
   "$("$STAMP" pr claude-opus-5 | sed -n 3p)" \
@@ -282,7 +282,7 @@ assert_equals "64" "$?" "refuses a source that does not name a repo and a commit
 drop_root
 
 new_root
-commit_rules agents/pr-scribe.md rules/pr-body.md rules/writing-style.md
+commit_rules agents/pr-scribe.md rules/pr-body.md rules/draft-reading.md rules/writing-style.md
 "$STAMP" pr claude-opus-5 acme/quotes@deadbee >/dev/null 2>&1
 assert_equals "64" "$?" "refuses a source for a scribe whose stamp carries none"
 drop_root
@@ -291,13 +291,13 @@ echo ""
 echo "scribe-stamp.sh model form:"
 
 new_root
-commit_rules agents/pr-scribe.md rules/pr-body.md rules/writing-style.md
+commit_rules agents/pr-scribe.md rules/pr-body.md rules/draft-reading.md rules/writing-style.md
 "$STAMP" pr "Opus 5 (1M context)" >/dev/null 2>&1
 assert_equals "64" "$?" "refuses a model given as a display name instead of an identifier"
 drop_root
 
 new_root
-commit_rules agents/pr-scribe.md rules/pr-body.md rules/writing-style.md
+commit_rules agents/pr-scribe.md rules/pr-body.md rules/draft-reading.md rules/writing-style.md
 assert_equals "Model: \`claude-opus-5[1m]\`, cc \`9.9.9\`" \
   "$(AI_AGENT=claude-code_9-9-9_agent "$STAMP" pr 'claude-opus-5[1m]' | sed -n 5p)" \
   "accepts an identifier carrying a context marker"

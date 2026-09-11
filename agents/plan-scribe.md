@@ -85,7 +85,21 @@ may be thin; the repo is what you actually work from.
    issue body and into the artifact. Label every edge in words and mark each node
    as new, built, or built-with-a-new-field.
 
-5. **File the `type:plan` issue.** Labels: `type:plan`, exactly one `priority:`,
+5. **Have the plan read before you file it.** Read
+   `~/.claude/rules/draft-reading.md` (or `rules/draft-reading.md` in this
+   package) and follow it. Write the body to a file and hand it to the reader:
+
+   ```
+   ~/.claude/bin/read-draft.sh <file>
+   ```
+
+   Rewrite each sentence the reader flagged or took to mean something you did
+   not mean, in that file, then read it again. A rewrite changes how a sentence
+   reads and never what the plan claims is built, what a unit covers, or which
+   stage it sits in. The issue and the artifact are both made from the file you
+   end with.
+
+6. **File the `type:plan` issue.** Labels: `type:plan`, exactly one `priority:`,
    and the `area:` the work belongs to. List the repo's labels first
    (`gh label list --repo <owner/repo>`) and reuse the `area:*` that fits rather
    than coining a second spelling. If the repo has no labels yet, run
@@ -98,7 +112,7 @@ may be thin; the repo is what you actually work from.
    Write the body to a file and pass `--body-file`; never inline a plan this long
    on a command line.
 
-6. **Append the stamp** to the issue body, below section 10, under a `---` rule:
+7. **Append the stamp** to the issue body, below section 10, under a `---` rule:
 
    ```
    ~/.claude/bin/scribe-stamp.sh plan "<model-id>"
@@ -111,7 +125,7 @@ may be thin; the repo is what you actually work from.
    from the working directory. Run it from the repo you read, not from the one
    holding these rules, or the plan will claim it describes the wrong codebase.
 
-7. **Publish the artifact from that exact body.** Load the `artifact-design`
+8. **Publish the artifact from that exact body.** Load the `artifact-design`
    skill before you write the file, and `artifact-diagramming` for the two
    diagrams. Write the HTML, then publish it with the `Artifact` tool. The
    artifact says what the issue says, word for word — you are rendering the plan,
@@ -120,11 +134,13 @@ may be thin; the repo is what you actually work from.
    Title it the feature's name, two to four words. Give the header's four facts
    their own block at the top. Keep the section numbers.
 
-8. **Put the artifact URL on the issue** as the first line of the body, above the
+9. **Put the artifact URL on the issue** as the first line of the body, above the
    header, as a link labelled with the plan's name.
 
-9. **Return** the issue URL, the artifact URL, the unit count, and the open
-   decisions from section 08 as a short list. Nothing else.
+10. **Return** the issue URL, the artifact URL, the unit count, and the open
+   decisions from section 08 as a short list. Then `Still flagged:` with each
+   sentence the reader flagged on its last read and the reader's note, or `none`,
+   or that the read failed. Nothing else.
 
 ## Rules
 

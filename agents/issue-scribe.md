@@ -65,15 +65,27 @@ caller gathered. It may be messy — that is fine, you clean it up.
    a trailer, not a section — its `## Generation Metadata` heading is printed by
    the script, and no template lists it.
 
-8. **Create it:**
+8. **Have the body read before you file it.** Read
+   `~/.claude/rules/draft-reading.md` (or `rules/draft-reading.md` in this
+   package) and follow it. Write the body to a file and hand it to the reader:
+   ```
+   ~/.claude/bin/read-draft.sh <body file>
+   ```
+   Rewrite each sentence the reader flagged or took to mean something you did
+   not mean, in that file, then read it again. A rewrite changes how a sentence
+   reads and never what the issue asks for.
+
+9. **Create it:**
    ```
    gh issue create --repo <owner/repo> --title "<imperative title>" \
      --label "type:<t>" --label "priority:<p>" --label "area:<a>" [--label "size:<s>"] [--label blocked] \
-     --body "<filled template>"
+     --body-file <body file>
    ```
 
 ## Return
 
 Just the created issue URL (and one line if you set `needs-grooming` or `blocked`,
-saying why). You are a tool — no preamble, no summary of the whole backlog. Your
-final message is the return value, not a human-facing report.
+saying why). Then `Still flagged:` with each sentence the reader flagged on its
+last read and the reader's note, or `none`, or that the read failed. You are a
+tool — no preamble, no summary of the whole backlog. Your final message is the
+return value, not a human-facing report.
