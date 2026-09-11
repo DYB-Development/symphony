@@ -18,6 +18,21 @@ That file also says how a check is reported — that every one appears every tim
 and what its three results mean. This file does not restate either, so adding a
 check changes that file and no other.
 
+## What CI checks
+
+A review reads the code and never runs it. CI runs the test suite, the
+typecheck, the linter and the build, so a reviewer runs none of them.
+
+A CI result is not part of a review, whether it passed or failed. Neither is a
+defect a CI job in the repo already catches, such as a failing test, a type
+error, a lint error or a formatting error. None of these is a finding, a reason
+in the verdict, or a Not checked item. Read the repo's CI workflows to know what
+they check.
+
+The tests are still read as code. A test that passes for the wrong reason is a
+finding under the Tests check, and so is behaviour no test reaches. CI cannot
+see either one.
+
 ## Conformance
 
 A pull request that names a ticket is also checked against that ticket's

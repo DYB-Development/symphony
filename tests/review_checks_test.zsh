@@ -89,5 +89,12 @@ else
   fail "review-scribe.md opens each Findings bullet with its marker"
 fi
 
+ci_section="$(awk '/^## What CI checks/ { on = 1; next } /^## / { on = 0 } on' "$RULES/pr-review.md")"
+if [[ -n "${ci_section//[[:space:]]/}" ]]; then
+  ok "pr-review.md keeps what CI checks out of a review"
+else
+  fail "pr-review.md keeps what CI checks out of a review"
+fi
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
