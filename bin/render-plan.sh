@@ -71,6 +71,9 @@ printf '%s\n' "$body" | awk -v work="$work" "$esc_awk"'
   END { mark(close_part()) }
 ' > "$work/plan.md"
 
+gh api markdown -f mode=gfm -F text=@"$work/plan.md" > "$work/plan.html" ||
+  { echo "render-plan.sh: GitHub could not render the plan's markdown" >&2; exit 70; }
+
 awk -v work="$work" '
   match($0, /^(<p>)?MARKER-[0-9]+-END(<\/p>)?$/) {
     id = $0
@@ -80,4 +83,4 @@ awk -v work="$work" '
     next
   }
   { print }
-' "$work/plan.md"
+' "$work/plan.html"

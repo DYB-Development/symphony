@@ -131,5 +131,14 @@ assert_contains '<section class="part" aria-labelledby="s02"><h2 id="s02"><span 
   "opens each numbered section with its number and label"
 drop_issue
 
+new_issue "Quote Conversion" <<'MD'
+## 01 The plan
+
+Quotes become orders.
+MD
+assert_contains '<p>Quotes become orders.</p>' "$(render)" \
+  "turns each section's markdown into HTML through GitHub's markdown service"
+drop_issue
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
