@@ -166,9 +166,9 @@ drop_reader
 new_reader
 printf 'The poll stops when the dialog closes.\n' > "$DRAFT_FILE"
 read_with_reader >/dev/null
-assert_equals "sonnet" \
+assert_equals "opus" \
   "$(cat "$READER_DIR/model" 2>/dev/null)" \
-  "reads on a faster model than the session it was run from"
+  "reads on the model that read a draft fastest when both were timed"
 drop_reader
 
 echo ""
