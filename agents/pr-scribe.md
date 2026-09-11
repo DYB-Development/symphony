@@ -155,8 +155,19 @@ The input may be messy or thin; the diff is what you actually work from.
    not cover stays unticked with one sentence saying what it still needs — not a
    paragraph, and not moved into another section.
 
-10. **Open or update it.** Write the body to a temp file so shell quoting cannot
-   mangle it, then:
+10. **Have the body read before you open it.** Read
+   `~/.claude/rules/draft-reading.md` (or `rules/draft-reading.md` in this
+   package) and follow it. Write the body to a temp file and hand it to the
+   reader:
+   ```
+   ~/.claude/bin/read-draft.sh <file>
+   ```
+   Rewrite each sentence the reader flagged or took to mean something you did
+   not mean, in that file, then read it again. A rewrite changes how a sentence
+   reads and never what it claims. The Decision Log and Ticket Billed Against
+   are pasted from a script, so a sentence flagged in either stays as it is.
+
+11. **Open or update it** from that same file:
    ```
    gh pr create --repo <owner/repo> --base main --head <branch> \
      --title "<imperative title>" --body-file <file>
@@ -171,6 +182,8 @@ The input may be messy or thin; the diff is what you actually work from.
 ## Return
 
 Just the PR URL, and one line if you left an acceptance criterion unticked,
-saying which and why. You are a tool — no preamble, no summary of the diff, no
+saying which and why. Then `Still flagged:` with each sentence the reader flagged
+on its last read and the reader's note, or `none`, or that the read failed. You
+are a tool — no preamble, no summary of the diff, no
 report of what you did. Your final message is the return value, not a
 human-facing message.
