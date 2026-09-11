@@ -153,5 +153,11 @@ awk -v work="$work" '
     close(work "/" id)
     next
   }
-  { print }
+  {
+    gsub(/<markdown-accessiblity-table>/, "<div class=\"table-wrap\">")
+    gsub(/<\/markdown-accessiblity-table>/, "</div>")
+    gsub(/ class="notranslate"/, "")
+    print
+  }
+
 ' "$work/plan.html"

@@ -214,5 +214,14 @@ assert_contains '</section><footer class="stamp"><h2 id="stamp">Generation Metad
   "sets the version stamp apart below the last section"
 drop_issue
 
+new_issue "Quote Conversion" <<'MD'
+## 04 How it fits
+
+<markdown-accessiblity-table><table role="table">
+MD
+assert_contains '<div class="table-wrap"><table role="table">' "$(render)" \
+  "lets a wide table scroll inside its own box"
+drop_issue
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
