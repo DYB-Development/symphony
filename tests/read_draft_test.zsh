@@ -89,5 +89,13 @@ assert_equals "sources=" \
   "loads none of the person's settings, so no hook or plugin reaches the reader"
 drop_reader
 
+new_reader
+printf 'The poll stops when the dialog closes.\n' > "$DRAFT_FILE"
+read_with_reader >/dev/null
+assert_equals "--no-session-persistence" \
+  "$(grep -x -- --no-session-persistence "$READER_DIR/args" 2>/dev/null)" \
+  "saves no session for a read nobody will resume"
+drop_reader
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
