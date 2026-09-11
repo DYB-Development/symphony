@@ -223,5 +223,18 @@ assert_contains '<div class="table-wrap"><table role="table">' "$(render)" \
   "lets a wide table scroll inside its own box"
 drop_issue
 
+new_issue "Quote Conversion" <<'MD'
+## 01 The plan
+
+## 09 The work
+
+### Stage 1 · End to end
+
+#### Unit 1.1 — Convert a quote
+MD
+assert_contains '<ol class="toc"><li><a href="#s01"><span class="num">01</span> The plan</a></li><li><a href="#s09"><span class="num">09</span> The work</a><ol class="toc-units"><li class="toc-stage"><a href="#stage-1">Stage 1 · End to end</a></li><li><a href="#unit-1-1"><span class="unum">1.1</span> Convert a quote</a></li></ol></li></ol>' "$(render)" \
+  "lists every section, stage and unit in the contents"
+drop_issue
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

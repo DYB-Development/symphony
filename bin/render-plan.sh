@@ -56,7 +56,14 @@ printf '%s\n' "$body" | awk -v work="$work" "$esc_awk"'
     close(work "/" id)
     printf "\n%s\n\n", id
   }
+  function toc_close(   h) {
+    h = (toc_units ? "</ol>" : "") (toc_part ? "</li>" : "")
+    toc_units = 0
+    toc_part = 0
+    return h
+  }
   function close_unit(   h) {
+
     h = unit ? "</article>" : ""
     unit = 0
     return h
@@ -103,14 +110,20 @@ printf '%s\n' "$body" | awk -v work="$work" "$esc_awk"'
 
     num = substr($0, 4, 2)
     mark(close_part() "<section class=\"part\" aria-labelledby=\"s" num "\"><h2 id=\"s" num "\"><span class=\"num\">" num "</span> " esc(substr($0, 7)) "</h2>")
+    toc = toc toc_close() "<li><a href=\"#s" num "\"><span class=\"num\">" num "</span> " esc(substr($0, 7)) "</a>"
+    toc_part = 1
     part = num
     next
+
   }
   part == "09" && match($0, /^### Stage [1-4] /) {
     n = substr($0, 11, 1)
     mark(close_stage() "<section class=\"stage\" data-stage=\"" n "\"><h3 id=\"stage-" n "\">" esc(substr($0, 5)) "</h3>")
+    toc = toc (toc_units ? "" : "<ol class=\"toc-units\">") "<li class=\"toc-stage\"><a href=\"#stage-" n "\">" esc(substr($0, 5)) "</a></li>"
+    toc_units = 1
     stage = n
     next
+
   }
   stage && match($0, /^#### Unit [1-4]\.[0-9]+ /) {
     rest = substr($0, 11)
@@ -119,8 +132,12 @@ printf '%s\n' "$body" | awk -v work="$work" "$esc_awk"'
     gsub(/\./, "-", id)
     heading = substr(rest, index(rest, " ") + 1)
     mark(close_unit() "<article class=\"unit\" data-stage=\"" stage "\"><h4 id=\"unit-" id "\"><span class=\"unum\">Unit " words[1] "</span> <span class=\"utitle\">" esc(heading) "</span></h4>")
+    entry = heading
+    sub(/^— /, "", entry)
+    toc = toc "<li><a href=\"#unit-" id "\"><span class=\"unum\">" words[1] "</span> " esc(entry) "</a></li>"
     unit = 1
     next
+
   }
   unit && /^## / {
     print "##### " substr($0, 4)
@@ -138,7 +155,11 @@ printf '%s\n' "$body" | awk -v work="$work" "$esc_awk"'
 
 
   { print }
-  END { mark(close_part() (footer ? "</footer>" : "")) }
+  END {
+    mark(close_part() (footer ? "</footer>" : ""))
+    printf "<aside aria-label=\"Contents\"><p class=\"label\">Contents</p><ol class=\"toc\">%s</ol></aside>\n", toc toc_close() > (work "/toc.html")
+  }
+
 
 ' > "$work/plan.md"
 
@@ -161,3 +182,6 @@ awk -v work="$work" '
   }
 
 ' "$work/plan.html"
+
+cat "$work/toc.html"
+
