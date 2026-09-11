@@ -69,9 +69,9 @@ drop_reader
 new_reader
 printf 'The poll stops when the dialog closes.\n' > "$DRAFT_FILE"
 read_with_reader >/dev/null
-assert_equals "$(cat "$SCRIPT_DIR/../rules/draft-reading.md")" \
+assert_equals "$(awk '/^## What the scribe does with it/ { exit } { print }' "$SCRIPT_DIR/../rules/draft-reading.md")" \
   "$(cat "$READER_DIR/system-prompt" 2>/dev/null)" \
-  "gives the reader the reading rules as its only instructions"
+  "gives the reader the reader's part of the rules, and not the scribe's"
 drop_reader
 
 new_reader
