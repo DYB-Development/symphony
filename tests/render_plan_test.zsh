@@ -200,5 +200,19 @@ assert_contains '<figure class="diagram"><pre class="mermaid">flowchart LR
   "hands each mermaid diagram to the page as diagram source"
 drop_issue
 
+new_issue "Quote Conversion" <<'MD'
+## 10 Risks
+
+- One risk.
+
+---
+## Generation Metadata
+
+Scribe: plan-scribe `abc1234`
+MD
+assert_contains '</section><footer class="stamp"><h2 id="stamp">Generation Metadata</h2>' "$(render)" \
+  "sets the version stamp apart below the last section"
+drop_issue
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

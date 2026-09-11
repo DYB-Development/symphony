@@ -82,7 +82,24 @@ printf '%s\n' "$body" | awk -v work="$work" "$esc_awk"'
     diagram = diagram (diagram == "" ? "" : "\n") $0
     next
   }
+  held && /^$/ { next }
+  held && /^## Generation Metadata$/ {
+    mark(close_part() "<footer class=\"stamp\"><h2 id=\"stamp\">Generation Metadata</h2>")
+    held = 0
+    footer = 1
+    next
+  }
+  held {
+    print "---"
+    print ""
+    held = 0
+  }
+  part && /^---$/ {
+    held = 1
+    next
+  }
   match($0, /^## (0[1-9]|10) /) {
+
 
     num = substr($0, 4, 2)
     mark(close_part() "<section class=\"part\" aria-labelledby=\"s" num "\"><h2 id=\"s" num "\"><span class=\"num\">" num "</span> " esc(substr($0, 7)) "</h2>")
@@ -117,10 +134,12 @@ printf '%s\n' "$body" | awk -v work="$work" "$esc_awk"'
     diagram = ""
     next
   }
-  !part { next }
+  !part && !footer { next }
+
 
   { print }
-  END { mark(close_part()) }
+  END { mark(close_part() (footer ? "</footer>" : "")) }
+
 ' > "$work/plan.md"
 
 gh api markdown -f mode=gfm -F text=@"$work/plan.md" > "$work/plan.html" ||
