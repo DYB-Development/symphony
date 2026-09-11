@@ -82,5 +82,12 @@ else
   fail "repo-audit.md opens each check in the report with its marker"
 fi
 
+scribe_summary_step="$(awk '/^6\. \*\*Write the summary\*\*/ { on = 1 } /^7\. / { on = 0 } on' "$SCRIPT_DIR/../agents/review-scribe.md")"
+if [[ "$scribe_summary_step" == *"❌"* && "$scribe_summary_step" == *"✅"* ]]; then
+  ok "review-scribe.md opens each Findings bullet with its marker"
+else
+  fail "review-scribe.md opens each Findings bullet with its marker"
+fi
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

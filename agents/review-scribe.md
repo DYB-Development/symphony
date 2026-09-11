@@ -98,7 +98,8 @@ review of yours, in which case it is a **re-review**.
 
 6. **Write the summary** with its four sections — Verdict, Findings,
    Conformance, Not checked — and never another. Findings has one bullet per
-   check in the list, always every one. Link the words naming a finding to
+   check in the list, always every one, and each bullet opens with ❌ when the
+   check has a finding and ✅ when it has none. Link the words naming a finding to
    `{{comment:N}}`, where N is that comment's position in your `comments` array,
    counting from 1. A check with no finding carries no link.
 
