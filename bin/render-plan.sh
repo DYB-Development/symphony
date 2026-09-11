@@ -19,3 +19,11 @@ number=$2
 
 issue="$(gh issue view "$number" --repo "$repo" --json title,body)" ||
   { echo "render-plan.sh: could not read issue $repo#$number" >&2; exit 70; }
+
+escape() {
+  sed 's/&/\&amp;/g; s/</\&lt;/g; s/>/\&gt;/g'
+}
+
+title="$(printf '%s' "$issue" | jq -r .title)"
+
+printf '<title>%s</title>\n' "$(printf '%s' "$title" | escape)"

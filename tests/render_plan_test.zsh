@@ -81,5 +81,12 @@ ISSUE_EXIT=1 render >/dev/null
 assert_equals "70" "$?" "exits 70 when the plan issue cannot be read"
 drop_issue
 
+new_issue "Quotes & Orders <v2>" <<'MD'
+## 01 The plan
+MD
+assert_contains "<title>Quotes &amp; Orders &lt;v2&gt;</title>" "$(render)" \
+  "names the page after the plan issue's title"
+drop_issue
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
