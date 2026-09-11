@@ -191,12 +191,6 @@ and it changes no behaviour.
 **4 · Harden** — what fails quietly today. Errors, retries, limits, and the
 checks that catch a mistake in the same session it was made.
 
-**Every stage says how its work is turned off or rolled back**, in one sentence
-under the stage heading. A stage nobody can back out of is a stage that ships
-whether it is right or not.
-
-**The Harden stage also says how a failure in production is noticed.** Code that
-breaks silently is not hardened, however carefully it handles errors.
 
 **Units are numbered `<stage>.<n>`** — `Unit 1.1`, `Unit 2.3` — so a number says
 which stage a unit is in and where it sits inside it. A dependency names exactly

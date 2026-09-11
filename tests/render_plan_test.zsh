@@ -263,5 +263,13 @@ assert_equals "0" "$?" "hands the reader the plan without its units, which are r
 grep -qF 'turned off or rolled back' "$PLAN_SCRIBE"
 assert_equals "1" "$?" "does not write a rollback sentence for each stage"
 
+echo ""
+echo "the feature plan rules:"
+
+FEATURE_PLAN="$SCRIPT_DIR/../rules/feature-plan.md"
+
+grep -qF 'turned off or rolled back' "$FEATURE_PLAN"
+assert_equals "1" "$?" "leave rollback and production failure to standard practice"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
