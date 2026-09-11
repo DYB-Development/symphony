@@ -95,6 +95,11 @@ printf '%s\n' "$body" | awk -v work="$work" "$esc_awk"'
     unit = 1
     next
   }
+  unit && /^## / {
+    print "##### " substr($0, 4)
+    next
+  }
+
 
 
   !part { next }

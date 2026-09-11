@@ -50,6 +50,7 @@ case "$1 $2" in
     while IFS= read -r line || [ -n "$line" ]; do
       case "$line" in
         "") ;;
+        "##### "*) printf '<h5>%s</h5>\n' "${line#"##### "}" ;;
         "<"*) printf '%s\n' "$line" ;;
         *) printf '<p>%s</p>\n' "$line" ;;
       esac
@@ -171,6 +172,19 @@ new_issue "Quote Conversion" <<'MD'
 MD
 assert_contains '<article class="unit" data-stage="1"><h4 id="unit-1-2"><span class="unum">Unit 1.2</span> <span class="utitle">— Convert a quote</span></h4>' "$(render)" \
   "puts each unit in its own card, coloured by its stage"
+drop_issue
+
+new_issue "Quote Conversion" <<'MD'
+## 09 The work
+
+### Stage 1 · End to end
+
+#### Unit 1.2 — Convert a quote
+
+## Part of
+MD
+assert_contains '<h5>Part of</h5>' "$(render)" \
+  "sets a unit's own headings below the unit's title"
 drop_issue
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
