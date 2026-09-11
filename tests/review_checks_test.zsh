@@ -48,5 +48,21 @@ for reader in pr-review repo-audit; do
   fi
 done
 
+marker_for() {
+  awk '/^## How a check is reported/ { on = 1; next } /^## / { on = 0 } on' "$RULES/review-checks.md" \
+    | grep -F -- "**$1**" | grep -oE '^- [^ ]+' | sed 's/^- //'
+}
+
+typeset -A MARKERS
+MARKERS=("a finding" "❌" "nothing found" "✅" "nothing to check" "✅")
+
+for result marker in "${(@kv)MARKERS}"; do
+  if [[ "$(marker_for "$result")" == "$marker" ]]; then
+    ok "review-checks.md marks $result with $marker"
+  else
+    fail "review-checks.md marks $result with $marker"
+  fi
+done
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

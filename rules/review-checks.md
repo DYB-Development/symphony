@@ -27,10 +27,14 @@ say still appears, because a reader cannot otherwise tell a check that ran and
 found nothing from one that was skipped. Three results, and the difference
 between the last two matters:
 
-- **a finding** — the check ran and found something.
-- **nothing found** — the check ran against code it applies to and found nothing.
-- **nothing to check** — what was read holds nothing it applies to, such as a
+- ❌ **a finding** — the check ran and found something.
+- ✅ **nothing found** — the check ran against code it applies to and found nothing.
+- ✅ **nothing to check** — what was read holds nothing it applies to, such as a
   migration check against code with no migrations.
+
+**The marker goes first** wherever a check's result is shown to a person, so a
+reader sees which checks raised something before reading any of them. The last
+two results share a marker, and the words after it still tell them apart.
 
 Never omit a check, and never guess a result: a check you did not run has no
 honest result to record, so run it.
