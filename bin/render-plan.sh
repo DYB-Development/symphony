@@ -35,3 +35,13 @@ printf '<style>%s</style>\n' "$(cat "$root/templates/plan-page.css")"
 
 printf '<header class="masthead"><p class="kicker">Feature plan · %s#%s</p><h1>%s</h1>' \
   "$repo" "$number" "$(printf '%s' "$title" | escape)"
+
+body="$(printf '%s' "$issue" | jq -r .body)"
+
+esc_awk='function esc(t) { gsub(/&/, "\\&amp;", t); gsub(/</, "\\&lt;", t); gsub(/>/, "\\&gt;", t); return t }'
+
+printf '<dl class="facts">%s</dl>\n</header>\n' "$(printf '%s\n' "$body" | awk "$esc_awk"'
+  /^## 01 / { exit }
+  match($0, /^(Scope|Shape|Status|Date)  +/) {
+    printf "<div><dt>%s</dt><dd>%s</dd></div>", $1, esc(substr($0, RLENGTH + 1))
+  }')"

@@ -102,5 +102,21 @@ assert_contains '<header class="masthead"><p class="kicker">Feature plan · acme
   "heads the page with the plan's issue and its name"
 drop_issue
 
+new_issue "Quote Conversion" <<'MD'
+[Quote Conversion](https://claude.ai/code/artifact/abc)
+
+```
+Scope    acme/quotes · main
+Shape    4 units in four stages
+Status   proposal — no code changed
+Date     2026-09-11
+```
+
+## 01 The plan
+MD
+assert_contains '<dl class="facts"><div><dt>Scope</dt><dd>acme/quotes · main</dd></div><div><dt>Shape</dt><dd>4 units in four stages</dd></div><div><dt>Status</dt><dd>proposal — no code changed</dd></div><div><dt>Date</dt><dd>2026-09-11</dd></div></dl>' "$(render)" \
+  "shows the plan's four header facts under its name"
+drop_issue
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
