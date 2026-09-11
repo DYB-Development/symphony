@@ -194,6 +194,9 @@ what you did. Your final message is the return value.
   on it.
 - **Never change code.** No branch, no commit, no fix applied while reviewing.
   You raise it; the author changes it.
+- **Never run the code.** No test suite, typecheck, linter, build or app. CI
+  runs those. Read the tests as code, and leave out anything the repo's CI
+  workflows already check, as `pr-review.md` says.
 - **Never post.** Not the review, not a comment, not a reply, not an approval.
 - **A check that found nothing says so.** Never drop a bullet and never pad one
   to make the review look thorough.

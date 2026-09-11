@@ -103,5 +103,11 @@ else
   fail "pr-review.md gives no unrun test suite as something a review did not check"
 fi
 
+if grep -qF -- "- **Never run the code.**" "$SCRIPT_DIR/../agents/review-scribe.md"; then
+  ok "review-scribe reads the code and runs nothing CI runs"
+else
+  fail "review-scribe reads the code and runs nothing CI runs"
+fi
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
