@@ -179,5 +179,13 @@ for scribe in review-scribe issue-scribe pr-scribe plan-scribe audit-scribe; do
   assert_equals "0" "$?" "$scribe has its draft read before it goes out"
 done
 
+echo ""
+echo "the reading rules:"
+
+READING_RULES="$SCRIPT_DIR/../rules/draft-reading.md"
+
+grep -qF 'Flag: none' "$READING_RULES"
+assert_equals "1" "$?" "ask the reader for the flagged sentences and nothing else"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
