@@ -48,5 +48,46 @@ for reader in pr-review repo-audit; do
   fi
 done
 
+marker_for() {
+  awk '/^## How a check is reported/ { on = 1; next } /^## / { on = 0 } on' "$RULES/review-checks.md" \
+    | grep -F -- "**$1**" | grep -oE '^- [^ ]+' | sed 's/^- //'
+}
+
+typeset -A MARKERS
+MARKERS=("a finding" "❌" "nothing found" "✅" "nothing to check" "✅")
+
+for result marker in "${(@kv)MARKERS}"; do
+  if [[ "$(marker_for "$result")" == "$marker" ]]; then
+    ok "review-checks.md marks $result with $marker"
+  else
+    fail "review-checks.md marks $result with $marker"
+  fi
+done
+
+unmarked=()
+for c in "${CHECKS[@]}"; do
+  grep -qF -- "- <✅ or ❌> **$c** —" "$RULES/pr-review.md" || unmarked+=("$c")
+done
+if [[ ${#unmarked[@]} -eq 0 ]]; then
+  ok "every Findings bullet in pr-review.md opens with its marker"
+else
+  fail "every Findings bullet in pr-review.md opens with its marker"
+  printf '      unmarked: %s\n' "${(j:, :)unmarked}"
+fi
+
+report_section="$(awk '/^## What the report says/ { on = 1; next } /^## / { on = 0 } on' "$RULES/repo-audit.md")"
+if [[ "$report_section" == *"❌"* && "$report_section" == *"✅"* ]]; then
+  ok "repo-audit.md opens each check in the report with its marker"
+else
+  fail "repo-audit.md opens each check in the report with its marker"
+fi
+
+scribe_summary_step="$(awk '/^6\. \*\*Write the summary\*\*/ { on = 1 } /^7\. / { on = 0 } on' "$SCRIPT_DIR/../agents/review-scribe.md")"
+if [[ "$scribe_summary_step" == *"❌"* && "$scribe_summary_step" == *"✅"* ]]; then
+  ok "review-scribe.md opens each Findings bullet with its marker"
+else
+  fail "review-scribe.md opens each Findings bullet with its marker"
+fi
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

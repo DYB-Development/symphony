@@ -106,6 +106,10 @@ An artifact rendered from that file and from nothing else, so the two say the
 same thing. It carries the target, the measurement, what each area costs, one
 part per check in the same order, and the stamp.
 
+**Each check's part opens with the marker `review-checks.md` gives its state**,
+❌ for `findings` and ✅ for `nothing-found` or `nothing-to-check`. The words
+after the marker still say which of the last two it is.
+
 **The area scores are computed, never written.**
 `~/.claude/bin/audit-score.sh <file>` prints each area's score and the number of
 findings behind it, and the report shows what it printed. A lower score means
