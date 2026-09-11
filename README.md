@@ -28,6 +28,10 @@ it. The reader says what each sentence means and flags any it had to read twice.
 The scribe then rewrites those sentences, as `rules/draft-reading.md` sets out.
 Every scribe does this before its draft is posted, filed, published or returned.
 
+A plan's page is built by `bin/render-plan.sh` from the plan issue. Every plan
+gets the same layout, from `templates/plan-page.css`, so no page is designed by
+hand.
+
 Three commands drive them: `/feature-plan`, `/review` and `/audit`.
 
 ## Setting it up
@@ -163,6 +167,7 @@ overwrites them.
 | `ISSUE_BOOTSTRAP_OWNERS` | The accounts `issue-bootstrap.sh --all-repos` syncs labels across |
 | `SYMPHONY_IDENTIFIERS` | A file of terms no shipped file may name, checked by the suite |
 | `READ_DRAFT_SMOKE` | Set to `1` and the suite runs one real read through `claude` |
+| `RENDER_PLAN_SMOKE` | Set to a plan issue as `owner/repo#N` and the suite renders it through GitHub |
 
 `ISSUE_BOOTSTRAP_OWNERS` is empty by default and `--all-repos` does nothing until
 you set it, because that flag writes to every non-archived repo of every account
@@ -222,7 +227,8 @@ picked up with no registration.
 
 No suite calls the network by default. `READ_DRAFT_SMOKE=1 ./run_tests.sh` also
 sends one sentence to a real reader, which needs `claude` logged in and is billed
-like any other run.
+like any other run. `RENDER_PLAN_SMOKE=owner/repo#N ./run_tests.sh` renders that
+plan issue's page through GitHub's markdown service.
 
 ## Licence
 
