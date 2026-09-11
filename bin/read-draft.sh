@@ -16,3 +16,5 @@ USAGE
 
 draft=$1
 [ -f "$draft" ] || { echo "read-draft.sh: $draft is not there" >&2; exit 66; }
+
+claude -p < "$draft"

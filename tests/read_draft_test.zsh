@@ -21,6 +21,28 @@ assert_equals() {
   fi
 }
 
+new_reader() {
+  READER_DIR="$(mktemp -d "${TMPDIR:-/tmp}/read_draft_test.XXXXXX")"
+  DRAFT_FILE="$READER_DIR/draft.md"
+  cat > "$READER_DIR/claude" <<'SH'
+#!/usr/bin/env bash
+here="$(dirname "$0")"
+printf '%s\n' "$@" > "$here/args"
+cat > "$here/stdin"
+printf '%s\n' "${READER_REPLY:-Flagged: 0}"
+exit "${READER_EXIT:-0}"
+SH
+  chmod +x "$READER_DIR/claude"
+}
+
+drop_reader() {
+  rm -rf "$READER_DIR"
+}
+
+read_with_reader() {
+  PATH="$READER_DIR:$PATH" "$READ" "$DRAFT_FILE" 2>&1
+}
+
 echo "read-draft.sh:"
 
 "$READ" >/dev/null 2>&1
@@ -28,6 +50,14 @@ assert_equals "64" "$?" "refuses to run without a draft to read"
 
 "$READ" /nonexistent/draft.md >/dev/null 2>&1
 assert_equals "66" "$?" "refuses a draft that is not there"
+
+new_reader
+printf 'The poll stops when the dialog closes.\n' > "$DRAFT_FILE"
+read_with_reader >/dev/null
+assert_equals "The poll stops when the dialog closes." \
+  "$(cat "$READER_DIR/stdin" 2>/dev/null)" \
+  "hands the reader the draft and nothing else"
+drop_reader
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
