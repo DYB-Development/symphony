@@ -95,5 +95,12 @@ assert_contains "<style>$(cat "$SCRIPT_DIR/../templates/plan-page.css")</style>"
   "styles every plan page with the one shipped stylesheet"
 drop_issue
 
+new_issue "Quote Conversion" <<'MD'
+## 01 The plan
+MD
+assert_contains '<header class="masthead"><p class="kicker">Feature plan · acme/quotes#42</p><h1>Quote Conversion</h1>' "$(render)" \
+  "heads the page with the plan's issue and its name"
+drop_issue
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
