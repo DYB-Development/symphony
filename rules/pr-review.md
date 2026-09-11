@@ -97,14 +97,14 @@ sections, in this order, and never another:
 
 ## Findings
 
-- **Security** — <one sentence, or "nothing found", or "nothing to check">
-- **Scalability** — <one sentence, or "nothing found", or "nothing to check">
-- **Design** — <one sentence, or "nothing found", or "nothing to check">
-- **Patterns** — <one sentence, or "nothing found", or "nothing to check">
-- **Dependencies** — <one sentence, or "nothing found", or "nothing to check">
-- **Tests** — <one sentence, or "nothing found", or "nothing to check">
-- **Failure modes** — <one sentence, or "nothing found", or "nothing to check">
-- **Migration safety** — <one sentence, or "nothing found", or "nothing to check">
+- <✅ or ❌> **Security** — <one sentence, or "nothing found", or "nothing to check">
+- <✅ or ❌> **Scalability** — <one sentence, or "nothing found", or "nothing to check">
+- <✅ or ❌> **Design** — <one sentence, or "nothing found", or "nothing to check">
+- <✅ or ❌> **Patterns** — <one sentence, or "nothing found", or "nothing to check">
+- <✅ or ❌> **Dependencies** — <one sentence, or "nothing found", or "nothing to check">
+- <✅ or ❌> **Tests** — <one sentence, or "nothing found", or "nothing to check">
+- <✅ or ❌> **Failure modes** — <one sentence, or "nothing found", or "nothing to check">
+- <✅ or ❌> **Migration safety** — <one sentence, or "nothing found", or "nothing to check">
 
 ## Conformance
 
@@ -122,9 +122,10 @@ says they have to be fixed first. No summary of the diff, no restating the
 title, no thanks.
 
 **Findings** is one bullet per check, named and ordered as `review-checks.md`
-names and orders them, and reported as that file says to report it. Adding a
-check there means adding its bullet here, and the suite fails if the two ever
-disagree. A bullet naming a finding links the words that name it to the comment
+names and orders them, and reported as that file says to report it. Each bullet
+opens with the marker that file gives its result, ❌ for a finding and ✅ for
+either of the other two. Adding a check there means adding its bullet here, and
+the suite fails if the two ever disagree. A bullet naming a finding links the words that name it to the comment
 that raised it — `[the line item loop]({{comment:1}})`, where the number is the
 comment's position in the draft. A bullet with no finding carries no link.
 

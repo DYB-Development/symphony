@@ -64,5 +64,16 @@ for result marker in "${(@kv)MARKERS}"; do
   fi
 done
 
+unmarked=()
+for c in "${CHECKS[@]}"; do
+  grep -qF -- "- <✅ or ❌> **$c** —" "$RULES/pr-review.md" || unmarked+=("$c")
+done
+if [[ ${#unmarked[@]} -eq 0 ]]; then
+  ok "every Findings bullet in pr-review.md opens with its marker"
+else
+  fail "every Findings bullet in pr-review.md opens with its marker"
+  printf '      unmarked: %s\n' "${(j:, :)unmarked}"
+fi
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
