@@ -78,6 +78,9 @@ Then work through the reply:
   sentences. Keep what it claims, since you read the code and the reader did not.
 - **A sentence whose meaning is not what you meant is rewritten too**, flagged or
   not. A sentence read wrongly on one pass is worse than one flagged.
+- **A sentence you pasted verbatim from a script is never rewritten.** A rendered
+  Decision Log is one. List it under `Still flagged:` instead, since its wording
+  belongs to whoever wrote the entry.
 
 Run the reader again on the rewritten draft.
 
