@@ -17,4 +17,7 @@ USAGE
 draft=$1
 [ -f "$draft" ] || { echo "read-draft.sh: $draft is not there" >&2; exit 66; }
 
-claude -p < "$draft"
+here="$(dirname "$0")"
+rules="$(cat "$here/../rules/draft-reading.md")"
+
+claude -p --system-prompt "$rules" < "$draft"

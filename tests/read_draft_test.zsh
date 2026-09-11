@@ -28,6 +28,10 @@ new_reader() {
 #!/usr/bin/env bash
 here="$(dirname "$0")"
 printf '%s\n' "$@" > "$here/args"
+while [ $# -gt 0 ]; do
+  [ "$1" = --system-prompt ] && printf '%s' "$2" > "$here/system-prompt"
+  shift
+done
 cat > "$here/stdin"
 printf '%s\n' "${READER_REPLY:-Flagged: 0}"
 exit "${READER_EXIT:-0}"
@@ -57,6 +61,14 @@ read_with_reader >/dev/null
 assert_equals "The poll stops when the dialog closes." \
   "$(cat "$READER_DIR/stdin" 2>/dev/null)" \
   "hands the reader the draft and nothing else"
+drop_reader
+
+new_reader
+printf 'The poll stops when the dialog closes.\n' > "$DRAFT_FILE"
+read_with_reader >/dev/null
+assert_equals "$(cat "$SCRIPT_DIR/../rules/draft-reading.md")" \
+  "$(cat "$READER_DIR/system-prompt" 2>/dev/null)" \
+  "gives the reader the reading rules as its only instructions"
 drop_reader
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
