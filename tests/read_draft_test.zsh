@@ -46,7 +46,7 @@ drop_reader() {
 }
 
 read_with_reader() {
-  PATH="$READER_DIR:$PATH" "$READ" "$DRAFT_FILE" 2>&1
+  SYMPHONY_OVERLAY_DIR="${SYMPHONY_OVERLAY_DIR:-$READER_DIR/no-overlay}" PATH="$READER_DIR:$PATH" "$READ" "$DRAFT_FILE" 2>&1
 }
 
 echo "read-draft.sh:"
@@ -150,6 +150,16 @@ new_reader
 printf 'The poll stops when the dialog closes.\n' > "$DRAFT_FILE"
 READER_EXIT=1 read_with_reader >/dev/null
 assert_equals "70" "$?" "exits 70 when the reader's run fails, so a failure is never taken for a flag"
+drop_reader
+
+new_reader
+printf 'The poll stops when the dialog closes.\n' > "$DRAFT_FILE"
+mkdir -p "$READER_DIR/overlay"
+printf 'Read it as a site foreman would.' > "$READER_DIR/overlay/draft-reading.md"
+SYMPHONY_OVERLAY_DIR="$READER_DIR/overlay" read_with_reader >/dev/null
+assert_equals "Read it as a site foreman would." \
+  "$(cat "$READER_DIR/system-prompt" 2>/dev/null)" \
+  "reads the person's own reading rules in place of the shipped ones"
 drop_reader
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
