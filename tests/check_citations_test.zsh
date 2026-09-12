@@ -145,5 +145,22 @@ check >/dev/null 2>&1
 assert_equals "70" "$?" "reports a cited commit it cannot read as not checked"
 drop_source
 
+new_source
+cat > "$WORK/gh" <<'SH'
+#!/usr/bin/env bash
+printf 'A rep can convert a quote.\nA rep can print a quote.\n'
+SH
+chmod +x "$WORK/gh"
+jq -n --arg draft "$DRAFT" '{
+  draft: $draft,
+  claims: [
+    { text: "The loader reads two lines.", negative: false,
+      evidence: [ { kind: "criterion", ticket: "acme/quotes#7", quote: "A rep can delete a quote." } ] }
+  ]
+}' > "$LEDGER"
+(cd "$SOURCE" && PATH="$WORK:$PATH" "$CHECK" "$LEDGER") >/dev/null 2>&1
+assert_equals "1" "$?" "fails a criterion that is not in the cited ticket"
+drop_source
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

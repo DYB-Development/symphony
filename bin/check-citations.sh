@@ -75,5 +75,25 @@ while IFS= read -r citation; do
   fi
 done < <(jq -c '.claims[].evidence[] | select(.kind == "lines")' "$ledger")
 
+while IFS= read -r citation; do
+  ticket=$(printf '%s' "$citation" | jq -r .ticket)
+  quote=$(printf '%s' "$citation" | jq -r .quote)
+  repo=${ticket%%#*}
+  number=${ticket##*#}
+
+  if ! body=$(gh issue view "$number" --repo "$repo" --json body --jq .body 2>/dev/null); then
+    printf 'not checked  criterion in %s\n' "$ticket"
+    unchecked=1
+    continue
+  fi
+
+  if printf '%s' "$body" | grep -Fq -- "$quote"; then
+    printf 'pass  criterion in %s\n' "$ticket"
+  else
+    printf 'fail  criterion not in %s: %s\n' "$ticket" "$quote"
+    failed=1
+  fi
+done < <(jq -c '.claims[].evidence[] | select(.kind == "criterion")' "$ledger")
+
 [ "$unchecked" -eq 0 ] || exit 70
 [ "$failed" -eq 0 ] || exit 1
