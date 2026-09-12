@@ -268,5 +268,17 @@ check >/dev/null 2>&1
 assert_equals "1" "$?" "fails a search that does not say what it looked for"
 drop_source
 
+new_source
+jq -n --arg draft "$DRAFT" '{
+  draft: $draft,
+  claims: [ { text: "The loader reads two lines.", negative: false,
+    evidence: [ { kind: "command", run: "sed -i '' s/one/ONE/ quote.rb", output: "" } ] } ]
+}' > "$LEDGER"
+check >/dev/null 2>&1
+code=$?
+[[ $code -eq 1 ]] && grep -q '^one$' "$SOURCE/quote.rb"
+assert_equals "0" "$?" "refuses a sed that edits a file in place, and never runs it"
+drop_source
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

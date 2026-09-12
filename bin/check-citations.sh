@@ -107,7 +107,16 @@ while IFS= read -r citation; do
   recorded=$(printf '%s' "$citation" | jq -r .output)
 
   case "$run" in
+    "sed -i"*)
+      printf 'fail  command changes a file, so it was not run: %s\n' "$run"
+      failed=1
+      continue
+      ;;
+  esac
+
+  case "$run" in
     "git show "*|"git log "*|"git cat-file "*|"git grep "*|"git status"*) ;;
+
     "gh issue view "*|"gh pr view "*|"gh api "*) ;;
     "grep "*|"rg "*|"sed "*|"awk "*|"cat "*|"head "*|"tail "*|"wc "*|"ls "*|"find "*|"jq "*) ;;
     *)
