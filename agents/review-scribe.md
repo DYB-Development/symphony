@@ -209,8 +209,8 @@ The draft file path, then the rendered draft, then `Still flagged:` with each
 sentence the reader flagged on its last read and the reader's note, or `none`.
 If a read failed, say that instead of `none`.
 
-Then `Removed for a failed citation:` with each claim you cut and the citation
-that failed, or `none`.
+Then `Cut for an unresolved pointer:` with each claim you cut and the pointer
+that would not resolve, or `none`.
 
 Then one line naming the posting command:
 
