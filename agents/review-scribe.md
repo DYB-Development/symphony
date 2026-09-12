@@ -148,7 +148,7 @@ review of yours, in which case it is a **re-review**.
    word and a pointer, and a pointer holds a path, a first and last line, and a
    side. You write nothing else: no quote, no commit, no line of code.
 
-   Every inline comment has a claim whose pointer is that comment own path, line and side.
+   Every inline comment has a claim whose pointer is that comment's own path, line and side.
 
    Every Findings bullet that reports a finding has a claim pointing at the lines it is about.
 
