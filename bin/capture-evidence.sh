@@ -92,9 +92,10 @@ while [ "$index" -lt "$count" ]; do
     continue
   fi
 
+  length=$(printf '%s\n' "$file_at_commit" | wc -l | tr -d ' ')
   lines=$(printf '%s\n' "$file_at_commit" | sed -n "${from},${to}p")
 
-  if [ -z "$lines" ]; then
+  if [ -z "$lines" ] || [ "$to" -gt "$length" ]; then
     printf 'unresolved  %s does not reach lines %s-%s at %s\n' "$path" "$from" "$to" "$commit"
     unresolved=1
     index=$((index + 1))

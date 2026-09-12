@@ -165,5 +165,13 @@ capture >/dev/null 2>&1
 assert_equals "0" "$?" "exits 0 when every pointer resolves"
 drop_source
 
+new_source
+write_pointer 3 12
+capture >/dev/null 2>&1
+code=$?
+[[ $code -eq 1 && "$(jq -r '.claims[0].captured // "none"' "$CLAIMS")" == "none" ]]
+assert_equals "0" "$?" "reports a range that overruns the end of the file as unresolved"
+drop_source
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
