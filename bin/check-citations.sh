@@ -37,6 +37,14 @@ while IFS= read -r text; do
   fi
 done < <(jq -r '.claims[].text' "$ledger")
 
+while IFS= read -r claim; do
+  text=$(printf '%s' "$claim" | jq -r .text)
+  if [ "$(printf '%s' "$claim" | jq '.evidence | length')" -eq 0 ]; then
+    printf 'fail  claim with no evidence: %s\n' "$text"
+    failed=1
+  fi
+done < <(jq -c '.claims[]' "$ledger")
+
 while IFS= read -r citation; do
   commit=$(printf '%s' "$citation" | jq -r .commit)
   path=$(printf '%s' "$citation" | jq -r .path)

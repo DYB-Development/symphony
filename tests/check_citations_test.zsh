@@ -112,5 +112,14 @@ check >/dev/null 2>&1
 assert_equals "1" "$?" "fails a claim whose text is not in the draft word for word"
 drop_source
 
+new_source
+jq -n --arg draft "$DRAFT" '{
+  draft: $draft,
+  claims: [ { text: "The loader reads two lines.", negative: false, evidence: [] } ]
+}' > "$LEDGER"
+check >/dev/null 2>&1
+assert_equals "1" "$?" "fails a claim that carries no evidence"
+drop_source
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
