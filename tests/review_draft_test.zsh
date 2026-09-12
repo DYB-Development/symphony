@@ -344,6 +344,16 @@ check_lines >/dev/null 2>&1
 assert_equals "0" "$?" "passes a comment on a line a deleted file removes"
 rm -rf "$LINES_DIR"
 
+new_diff
+cat > "$LINES_FILE" <<'JSON'
+{ "summary": "One finding.",
+  "comments": [ { "path": "app/models/quote.rb", "line": 41, "side": "right", "body": "a finding" } ],
+  "replies": [] }
+JSON
+check_lines >/dev/null 2>&1
+assert_equals "0" "$?" "reads a side however it is spelled"
+drop_diff
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

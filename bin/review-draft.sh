@@ -59,7 +59,7 @@ if [ "$mode" = "--check-lines" ]; then
   while [ "$i" -lt "$count" ]; do
     path=$(jq -r ".comments[$i].path" "$draft")
     line=$(jq -r ".comments[$i].line" "$draft")
-    side=$(jq -r ".comments[$i].side // \"RIGHT\"" "$draft")
+    side=$(jq -r ".comments[$i].side // \"RIGHT\"" "$draft" | tr '[:lower:]' '[:upper:]')
     if printf '%s\n' "$touched" | grep -qxF -- "$side:$path:$line"; then
       printf 'on the diff  %s:%s\n' "$path" "$line"
     else
