@@ -159,5 +159,11 @@ assert_equals "five" "$(jq -r '.claims[0].captured.lines' "$CLAIMS" 2>/dev/null)
   "downloads a commit the clone does not have, then reads it"
 drop_source
 
+new_source
+write_pointer 2 3
+capture >/dev/null 2>&1
+assert_equals "0" "\$?" "exits 0 when every pointer resolves"
+drop_source
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
