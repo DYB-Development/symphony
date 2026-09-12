@@ -141,7 +141,13 @@ review of yours, in which case it is a **re-review**.
    Every key present, empty arrays where there is nothing. A reply job has an
    empty `comments` array and a `summary` of `null`.
 
-9. **Render it back and read it.** Run:
+9. **Write the claim ledger beside it.** Read
+   `~/.claude/rules/claim-checking.md` (or `rules/claim-checking.md` in this
+   package) and follow it. The ledger sits next to the draft, at
+   `<repo root>/.review-<pr>.claims.json`, and lists every factual claim the
+   draft makes with the lines behind it.
+
+10. **Render it back and read it.** Run:
 
    ```
    ~/.claude/bin/review-draft.sh --render <file>
@@ -158,7 +164,7 @@ review of yours, in which case it is a **re-review**.
    Cutting a comment renumbers the `{{comment:N}}` tokens — fix them, or
    `--post` will refuse the summary.
 
-10. **Have the draft read before you return it.** Read
+11. **Have the draft read before you return it.** Read
     `~/.claude/rules/draft-reading.md` (or `rules/draft-reading.md` in this
     package) and follow it. Hand the reader the draft as a person will see it:
 
