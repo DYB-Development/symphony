@@ -36,9 +36,27 @@ if [ "$mode" = "--check-lines" ]; then
     { echo "review-draft.sh: the diff for $repo#$pr could not be read" >&2; exit 70; }
 
   touched=$(printf '%s\n' "$diff" | awk '
-    function path_of(line,   p) {
+    function path_of(line,   p, out, i, c, oct) {
       p = substr(line, 5)
       sub(/\t.*$/, "", p)
+      if (p ~ /^".*"$/) {
+        p = substr(p, 2, length(p) - 2)
+        out = ""
+        for (i = 1; i <= length(p); i++) {
+          c = substr(p, i, 1)
+          if (c == "\\" && substr(p, i + 1, 1) ~ /[0-7]/) {
+            oct = substr(p, i + 1, 3)
+            out = out sprintf("%c", strtonum("0" oct))
+            i += 3
+          } else if (c == "\\") {
+            out = out substr(p, i + 1, 1)
+            i++
+          } else {
+            out = out c
+          }
+        }
+        p = out
+      }
       sub(/^[ab]\//, "", p)
       return p
     }
