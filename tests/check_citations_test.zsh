@@ -188,5 +188,17 @@ code=$?
 assert_equals "0" "$?" "refuses a command that is not a reader, and never runs it"
 drop_source
 
+new_source
+jq -n --arg draft "$DRAFT" '{
+  draft: $draft,
+  claims: [
+    { text: "The loader reads two lines.", negative: false,
+      evidence: [ { kind: "command", run: "bun test tests/loader.test.ts", output: "2 pass" } ] }
+  ]
+}' > "$LEDGER"
+check >/dev/null 2>&1
+assert_equals "1" "$?" "refuses a command that runs the code or its tests as evidence"
+drop_source
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
