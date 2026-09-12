@@ -129,5 +129,16 @@ capture >/dev/null 2>&1
 assert_equals "1" "$?" "reports a claim whose text is not in the draft as failing"
 drop_source
 
+new_source
+write_pointer 2 3
+cat > "$WORK/gh" <<'SH'
+#!/usr/bin/env bash
+exit 1
+SH
+chmod +x "$WORK/gh"
+capture >/dev/null 2>&1
+assert_equals "70" "$?" "reports a pull request it cannot read as not captured"
+drop_source
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
