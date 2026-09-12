@@ -23,15 +23,19 @@ echo "the review scribe's citing step:"
 
 assert_names '.review-<pr>.claims.json' "writes the claim ledger beside the draft"
 
-assert_names 'at the pull request'\''s head or base commit' "cites the lines each inline comment is about"
+assert_names 'a side' "names which side of the diff a pointer reads"
 
 assert_names 'Every Findings bullet that reports a finding' "cites the lines behind each Findings bullet that reports a finding"
 
-assert_names '~/.claude/bin/check-citations.sh' "checks the ledger before the draft goes back"
+assert_names '~/.claude/bin/capture-evidence.sh' "has the tooling read the lines before the draft goes back"
 
-assert_names 'A finding whose citation cannot be made to pass is cut from the draft.' "cuts a finding whose citation cannot pass"
+assert_names 'A finding whose pointer cannot be resolved is cut from the draft.' "cuts a finding whose pointer cannot be resolved"
 
-assert_names 'Removed for a failed citation:' "names each claim it cut for a failed citation"
+assert_names 'Cut for an unresolved pointer:' "names each claim it cut for an unresolved pointer"
+
+assert_names "Every inline comment has a claim whose pointer is that comment's own path, line and side." "points each finding at the lines its comment already names"
+
+assert_names '~/.claude/bin/review-draft.sh --check-lines' "checks each comment sits on a line the diff touches"
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

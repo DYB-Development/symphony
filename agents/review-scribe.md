@@ -141,29 +141,43 @@ review of yours, in which case it is a **re-review**.
    Every key present, empty arrays where there is nothing. A reply job has an
    empty `comments` array and a `summary` of `null`.
 
-9. **Write the claim ledger beside it.** Read
+9. **Point each claim at the lines it is about.** Read
    `~/.claude/rules/claim-checking.md` (or `rules/claim-checking.md` in this
-   package) and follow it. The ledger sits next to the draft, at
-   `<repo root>/.review-<pr>.claims.json`, and lists every factual claim the
-   draft makes with the lines behind it.
+   package) and follow it. The claims file sits next to the draft, at
+   `<repo root>/.review-<pr>.claims.json`. Each claim holds its text word for
+   word and a pointer.
 
-   Every inline comment carries at least one claim citing the lines it is about,
-   at the pull request's head or base commit.
+   A pointer holds a path, a first and last line, and a side.
 
-   Every Findings bullet that reports a finding carries a claim too. A bullet
-   saying `nothing found` or `nothing to check` carries none, since a later unit
-   covers those.
+   You write nothing else: no quote, no commit, no line of code.
 
-   Then check the ledger against the code it cites:
+   Every inline comment has a claim whose pointer is that comment's own path, line and side.
+
+   Every Findings bullet that reports a finding has a claim pointing at the lines it is about.
+
+   A bullet saying `nothing found` or `nothing to check` carries no claim yet,
+   since a later unit covers those.
+
+   First check that every comment sits on a line the diff touches:
 
    ```
-   ~/.claude/bin/check-citations.sh <repo root>/.review-<pr>.claims.json
+   ~/.claude/bin/review-draft.sh --check-lines <repo root>/.review-<pr>.json <owner/repo> <n>
    ```
 
-   Never return a draft while that check reports a failing citation. Fix the
-   citation where you can.
+   A comment that does not is a comment on code this pull request did not
+   change. Cut it, or move it to a line the diff touches. That check reads the
+   diff alone and captures nothing.
 
-   A finding whose citation cannot be made to pass is cut from the draft.
+   Then have the tooling read the lines:
+
+   ```
+   ~/.claude/bin/capture-evidence.sh <repo root>/.review-<pr>.claims.json <owner/repo> <n>
+   ```
+
+   Never return a draft while the capture reports an unresolved pointer. Fix the
+   pointer where you can.
+
+   A finding whose pointer cannot be resolved is cut from the draft.
    Its inline comment, its claim and the summary link naming it all go, and the
    remaining `{{comment:N}}` tokens are renumbered.
 
@@ -205,8 +219,8 @@ The draft file path, then the rendered draft, then `Still flagged:` with each
 sentence the reader flagged on its last read and the reader's note, or `none`.
 If a read failed, say that instead of `none`.
 
-Then `Removed for a failed citation:` with each claim you cut and the citation
-that failed, or `none`.
+Then `Cut for an unresolved pointer:` with each claim you cut and the pointer
+that would not resolve, or `none`.
 
 Then one line naming the posting command:
 

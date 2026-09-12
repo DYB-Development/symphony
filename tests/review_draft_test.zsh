@@ -195,5 +195,255 @@ assert_equals "64" "$?" "exits with a usage code when the mode is not one it has
 drop_draft
 
 echo ""
+echo "review-draft.sh --check-lines:"
+
+new_diff() {
+  LINES_DIR="$(mktemp -d "${TMPDIR:-/tmp}/review_lines_test.XXXXXX")"
+  LINES_FILE="$LINES_DIR/review.json"
+  cat > "$LINES_DIR/gh" <<'SH'
+#!/usr/bin/env bash
+cat <<'DIFF'
+diff --git a/app/models/quote.rb b/app/models/quote.rb
+index 1111111..2222222 100644
+--- a/app/models/quote.rb
++++ b/app/models/quote.rb
+@@ -40,3 +40,4 @@ class Quote
+   def convert
++    order.save
+   end
+ end
+DIFF
+SH
+  chmod +x "$LINES_DIR/gh"
+}
+
+drop_diff() {
+  rm -rf "$LINES_DIR"
+}
+
+check_lines() {
+  PATH="$LINES_DIR:$PATH" "$DRAFT" --check-lines "$LINES_FILE" acme/quotes 7 2>&1
+}
+
+new_diff
+cat > "$LINES_FILE" <<'JSON'
+{ "summary": "One finding.",
+  "comments": [ { "path": "app/models/quote.rb", "line": 41, "side": "RIGHT", "body": "a finding" } ],
+  "replies": [] }
+JSON
+assert_equals "on the diff  app/models/quote.rb:41" "$(check_lines)" \
+  "says an inline comment sits on a line the diff touches"
+drop_diff
+
+new_diff
+cat > "$LINES_FILE" <<'JSON'
+{ "summary": "One finding.",
+  "comments": [ { "path": "app/models/quote.rb", "line": 12, "side": "RIGHT", "body": "a finding" } ],
+  "replies": [] }
+JSON
+check_lines >/dev/null 2>&1
+assert_equals "1" "$?" "fails an inline comment that is not on a line the diff touches"
+drop_diff
+
+new_diff
+cat > "$LINES_FILE" <<'JSON'
+{ "summary": "One finding.",
+  "comments": [ { "path": "app/models/quote.rb", "line": 41, "side": "LEFT", "body": "a finding" } ],
+  "replies": [] }
+JSON
+check_lines >/dev/null 2>&1
+assert_equals "1" "$?" "fails a left-side comment on a line the diff does not remove"
+drop_diff
+
+LINES_DIR="$(mktemp -d "${TMPDIR:-/tmp}/review_lines_test.XXXXXX")"
+LINES_FILE="$LINES_DIR/review.json"
+cat > "$LINES_DIR/gh" <<'SH'
+#!/usr/bin/env bash
+cat <<'DIFF'
+diff --git a/app/quote[1].rb b/app/quote[1].rb
+--- a/app/quote[1].rb
++++ b/app/quote[1].rb
+@@ -1,2 +1,3 @@
+ class Quote
++  def convert; end
+ end
+DIFF
+SH
+chmod +x "$LINES_DIR/gh"
+cat > "$LINES_FILE" <<'JSON'
+{ "summary": "One finding.",
+  "comments": [ { "path": "app/quote[1].rb", "line": 2, "side": "RIGHT", "body": "a finding" } ],
+  "replies": [] }
+JSON
+check_lines >/dev/null 2>&1
+assert_equals "0" "$?" "matches a path holding regex characters as plain text"
+rm -rf "$LINES_DIR"
+
+"$DRAFT" 2>&1 | grep -q -- '--check-lines <draft.json> <owner/repo> <pr-number>'
+assert_equals "0" "$?" "documents the line check in its own usage"
+
+LINES_DIR="$(mktemp -d "${TMPDIR:-/tmp}/review_lines_test.XXXXXX")"
+LINES_FILE="$LINES_DIR/review.json"
+cat > "$LINES_DIR/gh" <<'SH'
+#!/usr/bin/env bash
+cat <<'DIFF'
+diff --git a/app/models/quote.rb b/app/models/quote.rb
+--- a/app/models/quote.rb
++++ b/app/models/quote.rb
+@@ -40,3 +40,4 @@ class Quote
+   def convert
++    order.save
+   end
+diff --git a/app/other.rb b/app/other.rb
+--- a/app/other.rb
++++ b/app/other.rb
+@@ -1,2 +1,3 @@
+ class Other
++  def run; end
+ end
+DIFF
+SH
+chmod +x "$LINES_DIR/gh"
+cat > "$LINES_FILE" <<'JSON'
+{ "summary": "One finding.",
+  "comments": [ { "path": "app/models/quote.rb", "line": 42, "side": "LEFT", "body": "a finding" } ],
+  "replies": [] }
+JSON
+check_lines >/dev/null 2>&1
+assert_equals "1" "$?" "fails a comment on a line no hunk touches in a diff of several files"
+rm -rf "$LINES_DIR"
+
+LINES_DIR="$(mktemp -d "${TMPDIR:-/tmp}/review_lines_test.XXXXXX")"
+LINES_FILE="$LINES_DIR/review.json"
+cat > "$LINES_DIR/gh" <<'SH'
+#!/usr/bin/env bash
+cat <<'DIFF'
+diff --git a/app/models/quote.rb b/app/models/quote.rb
+--- a/app/models/quote.rb
++++ b/app/models/quote.rb
+@@ -40,3 +40,4 @@ class Quote
+   def convert
++    order.save
+   end
+diff --git a/app/gone.rb b/app/gone.rb
+deleted file mode 100644
+--- a/app/gone.rb
++++ /dev/null
+@@ -1,2 +0,0 @@
+-class Gone
+-end
+DIFF
+SH
+chmod +x "$LINES_DIR/gh"
+cat > "$LINES_FILE" <<'JSON'
+{ "summary": "One finding.",
+  "comments": [ { "path": "app/gone.rb", "line": 1, "side": "LEFT", "body": "a finding" } ],
+  "replies": [] }
+JSON
+check_lines >/dev/null 2>&1
+assert_equals "0" "$?" "passes a comment on a line a deleted file removes"
+rm -rf "$LINES_DIR"
+
+new_diff
+cat > "$LINES_FILE" <<'JSON'
+{ "summary": "One finding.",
+  "comments": [ { "path": "app/models/quote.rb", "line": 41, "side": "right", "body": "a finding" } ],
+  "replies": [] }
+JSON
+check_lines >/dev/null 2>&1
+assert_equals "0" "$?" "reads a side however it is spelled"
+drop_diff
+
+LINES_DIR="$(mktemp -d "${TMPDIR:-/tmp}/review_lines_test.XXXXXX")"
+LINES_FILE="$LINES_DIR/review.json"
+cat > "$LINES_DIR/gh" <<'SH'
+#!/usr/bin/env bash
+cat <<'DIFF'
+diff --git a/db/quote.sql b/db/quote.sql
+--- a/db/quote.sql
++++ b/db/quote.sql
+@@ -1,3 +1,3 @@
+ select 1
+--- the old comment
++-- the new comment
+ from quotes
+DIFF
+SH
+chmod +x "$LINES_DIR/gh"
+cat > "$LINES_FILE" <<'JSON'
+{ "summary": "One finding.",
+  "comments": [ { "path": "db/quote.sql", "line": 2, "side": "RIGHT", "body": "a finding" } ],
+  "replies": [] }
+JSON
+check_lines >/dev/null 2>&1
+assert_equals "0" "$?" "reads a changed line whose own text begins with dashes"
+rm -rf "$LINES_DIR"
+
+LINES_DIR="$(mktemp -d "${TMPDIR:-/tmp}/review_lines_test.XXXXXX")"
+LINES_FILE="$LINES_DIR/review.json"
+printf 'diff --git a/app/my quote.rb b/app/my quote.rb\n--- a/app/my quote.rb\t\n+++ b/app/my quote.rb\t\n@@ -1,2 +1,3 @@\n class Quote\n+  def convert; end\n end\n' > "$LINES_DIR/diff.txt"
+cat > "$LINES_DIR/gh" <<SH
+#!/usr/bin/env bash
+cat "$LINES_DIR/diff.txt"
+SH
+chmod +x "$LINES_DIR/gh"
+cat > "$LINES_FILE" <<'JSON'
+{ "summary": "One finding.",
+  "comments": [ { "path": "app/my quote.rb", "line": 2, "side": "RIGHT", "body": "a finding" } ],
+  "replies": [] }
+JSON
+check_lines >/dev/null 2>&1
+assert_equals "0" "$?" "matches a path that carries a trailing tab in the diff"
+rm -rf "$LINES_DIR"
+
+LINES_DIR="$(mktemp -d "${TMPDIR:-/tmp}/review_lines_test.XXXXXX")"
+LINES_FILE="$LINES_DIR/review.json"
+printf 'diff --git a/app/quote.rb b/app/quote.rb\n--- a/app/quote.rb\n+++ b/app/quote.rb\n@@ -1,4 +1,5 @@\n class Quote\n\n+  def convert; end\n end\n' > "$LINES_DIR/diff.txt"
+cat > "$LINES_DIR/gh" <<SH
+#!/usr/bin/env bash
+cat "$LINES_DIR/diff.txt"
+SH
+chmod +x "$LINES_DIR/gh"
+cat > "$LINES_FILE" <<'JSON'
+{ "summary": "One finding.",
+  "comments": [ { "path": "app/quote.rb", "line": 3, "side": "RIGHT", "body": "a finding" } ],
+  "replies": [] }
+JSON
+check_lines >/dev/null 2>&1
+assert_equals "0" "$?" "counts a bare empty line as a line that did not change"
+rm -rf "$LINES_DIR"
+
+LINES_DIR="$(mktemp -d "${TMPDIR:-/tmp}/review_lines_test.XXXXXX")"
+LINES_FILE="$LINES_DIR/review.json"
+printf 'diff --git "a/caf\\303\\251.txt" "b/caf\\303\\251.txt"\n--- "a/caf\\303\\251.txt"\n+++ "b/caf\\303\\251.txt"\n@@ -1,2 +1,3 @@\n one\n+two\n three\n' > "$LINES_DIR/diff.txt"
+cat > "$LINES_DIR/gh" <<SH
+#!/usr/bin/env bash
+cat "$LINES_DIR/diff.txt"
+SH
+chmod +x "$LINES_DIR/gh"
+jq -n '{summary:"One finding.",comments:[{path:"café.txt",line:2,side:"RIGHT",body:"a finding"}],replies:[]}' > "$LINES_FILE"
+check_lines >/dev/null 2>&1
+assert_equals "0" "$?" "matches a path git wrote in quotes with escapes"
+rm -rf "$LINES_DIR"
+
+new_diff
+printf '{ "summary": "Nothing to raise." }\n' > "$LINES_FILE"
+check_lines >/dev/null 2>&1
+assert_equals "70" "$?" "refuses a draft with no comments to check"
+drop_diff
+
+new_diff
+printf 'not json at all\n' > "$LINES_FILE"
+check_lines >/dev/null 2>&1
+assert_equals "70" "$?" "refuses a draft that is not readable as a draft"
+drop_diff
+
+new_diff
+printf '{ "summary": "Nothing to raise.", "comments": null }\n' > "$LINES_FILE"
+check_lines >/dev/null 2>&1
+assert_equals "70" "$?" "refuses a draft whose comments are null"
+drop_diff
+
+echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

@@ -6,6 +6,7 @@ usage() {
 usage: review-draft.sh --render <draft.json>
        review-draft.sh --link <draft.json> <comment-url>...
        review-draft.sh --post <owner/repo> <pr-number> <draft.json>
+       review-draft.sh --check-lines <draft.json> <owner/repo> <pr-number>
 
 Reads the draft review written by `review-scribe`. `--render` prints it for
 reading before any of it reaches the pull request. `--post` posts it, once I
@@ -22,6 +23,85 @@ USAGE
 }
 
 mode=${1:-}
+
+if [ "$mode" = "--check-lines" ]; then
+  [ $# -eq 4 ] || usage
+  draft=$2
+  repo=$3
+  pr=$4
+
+  [ -r "$draft" ] || { echo "review-draft.sh: $draft cannot be read" >&2; exit 70; }
+
+  jq -e . "$draft" >/dev/null 2>&1 ||
+    { echo "review-draft.sh: $draft is not readable as a draft, so nothing was checked" >&2; exit 70; }
+
+  jq -e '.comments | type == "array"' "$draft" >/dev/null 2>&1 ||
+    { echo "review-draft.sh: $draft names no comments to check, so nothing was checked" >&2; exit 70; }
+
+  diff=$(gh pr diff "$pr" --repo "$repo") ||
+    { echo "review-draft.sh: the diff for $repo#$pr could not be read" >&2; exit 70; }
+
+  touched=$(printf '%s\n' "$diff" | awk '
+    function path_of(line,   p, out, i, c, oct) {
+      p = substr(line, 5)
+      sub(/\t.*$/, "", p)
+      if (p ~ /^".*"$/) {
+        p = substr(p, 2, length(p) - 2)
+        out = ""
+        for (i = 1; i <= length(p); i++) {
+          c = substr(p, i, 1)
+          if (c == "\\" && substr(p, i + 1, 1) ~ /[0-7]/) {
+            oct = substr(p, i + 1, 3)
+            out = out sprintf("%c", (substr(oct, 1, 1) * 64) + (substr(oct, 2, 1) * 8) + substr(oct, 3, 1))
+            i += 3
+          } else if (c == "\\") {
+            out = out substr(p, i + 1, 1)
+            i++
+          } else {
+            out = out c
+          }
+        }
+        p = out
+      }
+      sub(/^[ab]\//, "", p)
+      return p
+    }
+    /^diff --git / { in_hunk = 0; next }
+    !in_hunk && /^index / { next }
+    !in_hunk && /^--- / { old_path = path_of($0); next }
+    !in_hunk && /^\+\+\+ / { new_path = path_of($0); next }
+    /^@@ / {
+      split($2, o, ","); old = o[1] + 0; if (old < 0) old = -old
+      split($3, n, ","); new = n[1] + 0; if (new < 0) new = -new
+      in_hunk = 1
+      next
+    }
+    !in_hunk { next }
+    /^\\/ { next }
+    /^-/ { print "LEFT:" old_path ":" old; old++; next }
+    /^\+/ { print "RIGHT:" new_path ":" new; new++; next }
+    { old++; new++ }
+  ')
+
+  missing=0
+  count=$(jq '.comments | length' "$draft")
+  i=0
+  while [ "$i" -lt "$count" ]; do
+    path=$(jq -r ".comments[$i].path" "$draft")
+    line=$(jq -r ".comments[$i].line" "$draft")
+    side=$(jq -r ".comments[$i].side // \"RIGHT\"" "$draft" | tr '[:lower:]' '[:upper:]')
+    if printf '%s\n' "$touched" | grep -qxF -- "$side:$path:$line"; then
+      printf 'on the diff  %s:%s\n' "$path" "$line"
+    else
+      printf 'fail  %s:%s is not a line this diff touches\n' "$path" "$line"
+      missing=1
+    fi
+    i=$((i + 1))
+  done
+
+  [ "$missing" -eq 0 ] || exit 1
+  exit 0
+fi
 
 if [ "$mode" = "--post" ]; then
   [ $# -eq 4 ] || usage
