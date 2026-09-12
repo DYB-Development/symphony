@@ -150,9 +150,11 @@ review of yours, in which case it is a **re-review**.
    Every inline comment carries at least one claim citing the lines it is about,
    at the pull request's head or base commit.
 
-   Every Findings bullet that reports a finding carries a claim too. A bullet
-   saying `nothing found` or `nothing to check` carries none, since a later unit
-   covers those.
+   Every Findings bullet that reports a finding carries a claim too.
+
+   A bullet saying `nothing found` or `nothing to check`
+   carries a claim whose evidence is the searches that came back empty, and so
+   does `No ticket referenced`. Each search says what it looked for.
 
    Then check the ledger against the code it cites:
 

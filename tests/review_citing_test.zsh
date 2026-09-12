@@ -33,5 +33,7 @@ assert_names 'A finding whose citation cannot be made to pass is cut from the dr
 
 assert_names 'Removed for a failed citation:' "names each claim it cut for a failed citation"
 
+assert_names 'carries a claim whose evidence is the searches that came back empty' "cites the searches behind a bullet that found nothing"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
