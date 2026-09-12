@@ -203,8 +203,12 @@ review of yours, in which case it is a **re-review**.
 
 The draft file path, then the rendered draft, then `Still flagged:` with each
 sentence the reader flagged on its last read and the reader's note, or `none`.
-If a read failed, say that instead of `none`. Then one line naming the posting
-command:
+If a read failed, say that instead of `none`.
+
+Then `Removed for a failed citation:` with each claim you cut and the citation
+that failed, or `none`.
+
+Then one line naming the posting command:
 
 ```
 ~/.claude/bin/review-draft.sh --post <owner/repo> <n> <file>

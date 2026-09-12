@@ -31,5 +31,7 @@ assert_names '~/.claude/bin/check-citations.sh' "checks the ledger before the dr
 
 assert_names 'A finding whose citation cannot be made to pass is cut from the draft.' "cuts a finding whose citation cannot pass"
 
+assert_names 'Removed for a failed citation:' "names each claim it cut for a failed citation"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
