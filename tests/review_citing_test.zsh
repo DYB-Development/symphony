@@ -25,5 +25,7 @@ assert_names '.review-<pr>.claims.json' "writes the claim ledger beside the draf
 
 assert_names 'at the pull request'\''s head or base commit' "cites the lines each inline comment is about"
 
+assert_names 'Every Findings bullet that reports a finding' "cites the lines behind each Findings bullet that reports a finding"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
