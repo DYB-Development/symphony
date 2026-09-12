@@ -81,5 +81,12 @@ check >/dev/null 2>&1
 assert_equals "0" "$?" "passes a quote that matches those lines at the cited commit"
 drop_source
 
+new_source
+write_ledger 'two
+threex' 2 3
+check >/dev/null 2>&1
+assert_equals "1" "$?" "fails a quote that differs from those lines by one character"
+drop_source
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
