@@ -243,5 +243,17 @@ check >/dev/null 2>&1
 assert_equals "1" "$?" "fails a negative claim that rests on anything but a search"
 drop_source
 
+new_source
+jq -n --arg draft "$DRAFT" '{
+  draft: $draft,
+  claims: [
+    { text: "The loader reads two lines.", negative: true,
+      evidence: [ { kind: "search", looked_for: "any mention of three", run: "grep -n three quote.rb", output: "" } ] }
+  ]
+}' > "$LEDGER"
+check >/dev/null 2>&1
+assert_equals "1" "$?" "fails a negative claim whose search now finds something"
+drop_source
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

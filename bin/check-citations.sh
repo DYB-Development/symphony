@@ -128,6 +128,29 @@ while IFS= read -r citation; do
 done < <(jq -c '.claims[].evidence[] | select(.kind == "command")' "$ledger")
 
 while IFS= read -r citation; do
+  run=$(printf '%s' "$citation" | jq -r .run)
+  looked_for=$(printf '%s' "$citation" | jq -r .looked_for)
+
+  case "$run" in
+    "git grep "*|"git log "*|"grep "*|"rg "*|"find "*|"jq "*|"ls "*) ;;
+    *)
+      printf 'fail  search is not a reader, so it was not run: %s\n' "$run"
+      failed=1
+      continue
+      ;;
+  esac
+
+  found=$(eval "$run" 2>/dev/null) || found=""
+
+  if [ -z "$found" ]; then
+    printf 'pass  search came back empty: %s\n' "$looked_for"
+  else
+    printf 'fail  search now finds something: %s\n' "$looked_for"
+    failed=1
+  fi
+done < <(jq -c '.claims[].evidence[] | select(.kind == "search")' "$ledger")
+
+while IFS= read -r citation; do
   url=$(printf '%s' "$citation" | jq -r .url)
   quote=$(printf '%s' "$citation" | jq -r .quote)
 
