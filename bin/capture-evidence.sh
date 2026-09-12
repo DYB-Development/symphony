@@ -85,6 +85,13 @@ while [ "$index" -lt "$count" ]; do
     exit 70
   fi
 
+  if [ "$(git cat-file -t "$commit:$path" 2>/dev/null)" != blob ]; then
+    printf 'unresolved  %s is not a file at %s\n' "$path" "$commit"
+    unresolved=1
+    index=$((index + 1))
+    continue
+  fi
+
   if ! file_at_commit=$(git show "$commit:$path" 2>/dev/null); then
     printf 'unresolved  %s is not at %s\n' "$path" "$commit"
     unresolved=1

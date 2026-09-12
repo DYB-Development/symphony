@@ -173,5 +173,23 @@ code=$?
 assert_equals "0" "$?" "reports a range that overruns the end of the file as unresolved"
 drop_source
 
+new_source
+mkdir -p "$SOURCE/app/models"
+printf 'class Quote\nend\n' > "$SOURCE/app/models/quote.rb"
+git -C "$SOURCE" add app/models/quote.rb
+git -C "$SOURCE" commit -q -m "add a directory"
+HEAD_COMMIT="$(git -C "$SOURCE" rev-parse HEAD)"
+cat > "$WORK/gh" <<SH
+#!/usr/bin/env bash
+printf '%s\t%s\n' "$HEAD_COMMIT" "$HEAD_COMMIT"
+SH
+chmod +x "$WORK/gh"
+write_pointer 1 1 app/models
+capture >/dev/null 2>&1
+code=$?
+[[ $code -eq 1 && "$(jq -r '.claims[0].captured // "none"' "$CLAIMS")" == "none" ]]
+assert_equals "0" "$?" "reports a pointer naming a directory as unresolved"
+drop_source
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
