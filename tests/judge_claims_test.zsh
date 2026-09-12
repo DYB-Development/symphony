@@ -40,5 +40,8 @@ echo "judge-claims.sh:"
 "$JUDGE" >/dev/null 2>&1
 assert_equals "64" "$?" "refuses to run without a claims file to judge"
 
+"$JUDGE" /nonexistent/claims.json >/dev/null 2>&1
+assert_equals "70" "$?" "reports a claims file it cannot read as not judged"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

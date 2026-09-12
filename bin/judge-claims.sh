@@ -16,3 +16,11 @@ USAGE
 }
 
 [ $# -eq 1 ] || usage
+
+claims=$1
+
+[ -r "$claims" ] ||
+  { echo "judge-claims.sh: $claims cannot be read, so nothing was judged" >&2; exit 70; }
+
+jq -e '.claims | type == "array"' "$claims" >/dev/null 2>&1 ||
+  { echo "judge-claims.sh: $claims names no claims to judge, so nothing was judged" >&2; exit 70; }
