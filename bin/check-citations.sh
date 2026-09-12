@@ -108,7 +108,7 @@ while IFS= read -r citation; do
 
   # shellcheck disable=SC2016
   case "$run" in
-    "sed -i"*|*" -delete"*|*" -exec"*|*" -X "*|*" --method "*|*" -f "*|*" --field "*|*" --input "*|*">"*|*";"*|*"&&"*|*"||"*|*'$('*|*'`'*)
+    "sed -i"*|*" -delete"*|*" -exec"*|*" -X "*|*" --method "*|*" -f "*|*" --field "*|*" --input "*|*">"*|*";"*|*"&&"*|*"||"*|*'$('*|*'`'*|*"|"*)
       printf 'fail  command changes a file, so it was not run: %s\n' "$run"
       failed=1
       continue
