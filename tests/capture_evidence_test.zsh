@@ -119,5 +119,15 @@ capture >/dev/null 2>&1
 assert_equals "1" "$?" "reports a claim with no pointer as failing"
 drop_source
 
+new_source
+jq -n --arg draft "$DRAFT" '{
+  draft: $draft,
+  claims: [ { text: "The loader reads nine lines.",
+    pointer: { path: "quote.rb", from: 2, to: 3, side: "RIGHT" } } ]
+}' > "$CLAIMS"
+capture >/dev/null 2>&1
+assert_equals "1" "$?" "reports a claim whose text is not in the draft as failing"
+drop_source
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

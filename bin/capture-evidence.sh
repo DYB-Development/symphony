@@ -34,6 +34,10 @@ commits=$(gh pr view "$pr" --repo "$repo" --json headRefOid,baseRefOid --jq '[.h
 head_commit=$(printf '%s' "$commits" | cut -f1)
 base_commit=$(printf '%s' "$commits" | cut -f2)
 
+draft=$(jq -r '.draft' "$claims")
+[ -r "$draft" ] ||
+  { echo "capture-evidence.sh: the draft $draft cannot be read, so nothing was captured" >&2; exit 70; }
+
 count=$(jq '.claims | length' "$claims")
 index=0
 unresolved=0
@@ -41,8 +45,17 @@ unresolved=0
 while [ "$index" -lt "$count" ]; do
   pointer=$(jq -c ".claims[$index].pointer // empty" "$claims")
 
+  text=$(jq -r ".claims[$index].text" "$claims")
+
+  if ! grep -Fq -- "$text" "$draft"; then
+    printf 'fail  claim not in the draft: %s\n' "$text"
+    unresolved=1
+    index=$((index + 1))
+    continue
+  fi
+
   if [ -z "$pointer" ]; then
-    printf 'fail  claim with no pointer: %s\n' "$(jq -r ".claims[$index].text" "$claims")"
+    printf 'fail  claim with no pointer: %s\n' "$text"
     unresolved=1
     index=$((index + 1))
     continue
