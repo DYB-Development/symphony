@@ -162,5 +162,17 @@ jq -n --arg draft "$DRAFT" '{
 assert_equals "1" "$?" "fails a criterion that is not in the cited ticket"
 drop_source
 
+new_source
+jq -n --arg draft "$DRAFT" '{
+  draft: $draft,
+  claims: [
+    { text: "The loader reads two lines.", negative: false,
+      evidence: [ { kind: "command", run: "grep -c two quote.rb", output: "5" } ] }
+  ]
+}' > "$LEDGER"
+check >/dev/null 2>&1
+assert_equals "1" "$?" "fails a command whose output differs from the output recorded"
+drop_source
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

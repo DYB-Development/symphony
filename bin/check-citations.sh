@@ -95,5 +95,19 @@ while IFS= read -r citation; do
   fi
 done < <(jq -c '.claims[].evidence[] | select(.kind == "criterion")' "$ledger")
 
+while IFS= read -r citation; do
+  run=$(printf '%s' "$citation" | jq -r .run)
+  recorded=$(printf '%s' "$citation" | jq -r .output)
+
+  again=$(eval "$run" 2>/dev/null) || again=""
+
+  if [ "$again" = "$recorded" ]; then
+    printf 'pass  command: %s\n' "$run"
+  else
+    printf 'fail  command output differs: %s\n' "$run"
+    failed=1
+  fi
+done < <(jq -c '.claims[].evidence[] | select(.kind == "command")' "$ledger")
+
 [ "$unchecked" -eq 0 ] || exit 70
 [ "$failed" -eq 0 ] || exit 1
