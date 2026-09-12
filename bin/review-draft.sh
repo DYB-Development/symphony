@@ -23,6 +23,43 @@ USAGE
 
 mode=${1:-}
 
+if [ "$mode" = "--check-lines" ]; then
+  [ $# -eq 4 ] || usage
+  draft=$2
+  repo=$3
+  pr=$4
+
+  [ -r "$draft" ] || { echo "review-draft.sh: $draft cannot be read" >&2; exit 70; }
+
+  diff=$(gh pr diff "$pr" --repo "$repo") ||
+    { echo "review-draft.sh: the diff for $repo#$pr could not be read" >&2; exit 70; }
+
+  touched=$(printf '%s\n' "$diff" | awk '
+    /^\+\+\+ b\// { path = substr($0, 7); next }
+    /^@@ / { split($3, a, ","); line = a[1] + 0; if (line < 0) line = -line; next }
+    /^\+/ { print path ":" line; line++; next }
+    /^ / { line++ }
+  ')
+
+  missing=0
+  count=$(jq '.comments | length' "$draft")
+  i=0
+  while [ "$i" -lt "$count" ]; do
+    path=$(jq -r ".comments[$i].path" "$draft")
+    line=$(jq -r ".comments[$i].line" "$draft")
+    if printf '%s\n' "$touched" | grep -qx -- "$path:$line"; then
+      printf 'on the diff  %s:%s\n' "$path" "$line"
+    else
+      printf 'fail  %s:%s is not a line this diff touches\n' "$path" "$line"
+      missing=1
+    fi
+    i=$((i + 1))
+  done
+
+  [ "$missing" -eq 0 ] || exit 1
+  exit 0
+fi
+
 if [ "$mode" = "--post" ]; then
   [ $# -eq 4 ] || usage
   repo=$2
