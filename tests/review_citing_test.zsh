@@ -35,5 +35,7 @@ assert_names 'Cut for an unresolved pointer:' "names each claim it cut for an un
 
 assert_names "Every inline comment has a claim whose pointer is that comment's own path, line and side." "points each finding at the lines its comment already names"
 
+assert_names '~/.claude/bin/review-draft.sh --check-lines' "checks each comment sits on a line the diff touches"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

@@ -158,6 +158,16 @@ review of yours, in which case it is a **re-review**.
    A bullet saying `nothing found` or `nothing to check` carries no claim yet,
    since a later unit covers those.
 
+   First check that every comment sits on a line the diff touches:
+
+   ```
+   ~/.claude/bin/review-draft.sh --check-lines <repo root>/.review-<pr>.json <owner/repo> <n>
+   ```
+
+   A comment that does not is a comment on code this pull request did not
+   change. Cut it, or move it to a line the diff touches. That check reads the
+   diff alone and captures nothing.
+
    Then have the tooling read the lines:
 
    ```
