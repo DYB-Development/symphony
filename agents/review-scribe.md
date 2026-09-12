@@ -156,6 +156,8 @@ review of yours, in which case it is a **re-review**.
    carries a claim whose evidence is the searches that came back empty, and so
    does `No ticket referenced`. Each search says what it looked for.
 
+   Every ticked box in Conformance cites the ticket criterion and the lines that cover it.
+
    Then check the ledger against the code it cites:
 
    ```

@@ -35,5 +35,7 @@ assert_names 'Removed for a failed citation:' "names each claim it cut for a fai
 
 assert_names 'carries a claim whose evidence is the searches that came back empty' "cites the searches behind a bullet that found nothing"
 
+assert_names 'Every ticked box in Conformance cites the ticket criterion and the lines that cover it.' "cites the criterion and covering lines behind each ticked Conformance box"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
