@@ -396,6 +396,23 @@ check_lines >/dev/null 2>&1
 assert_equals "0" "$?" "matches a path that carries a trailing tab in the diff"
 rm -rf "$LINES_DIR"
 
+LINES_DIR="$(mktemp -d "${TMPDIR:-/tmp}/review_lines_test.XXXXXX")"
+LINES_FILE="$LINES_DIR/review.json"
+printf 'diff --git a/app/quote.rb b/app/quote.rb\n--- a/app/quote.rb\n+++ b/app/quote.rb\n@@ -1,4 +1,5 @@\n class Quote\n\n+  def convert; end\n end\n' > "$LINES_DIR/diff.txt"
+cat > "$LINES_DIR/gh" <<SH
+#!/usr/bin/env bash
+cat "$LINES_DIR/diff.txt"
+SH
+chmod +x "$LINES_DIR/gh"
+cat > "$LINES_FILE" <<'JSON'
+{ "summary": "One finding.",
+  "comments": [ { "path": "app/quote.rb", "line": 3, "side": "RIGHT", "body": "a finding" } ],
+  "replies": [] }
+JSON
+check_lines >/dev/null 2>&1
+assert_equals "0" "$?" "counts a bare empty line as a line that did not change"
+rm -rf "$LINES_DIR"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
