@@ -154,6 +154,14 @@ review of yours, in which case it is a **re-review**.
    saying `nothing found` or `nothing to check` carries none, since a later unit
    covers those.
 
+   Then check the ledger against the code it cites:
+
+   ```
+   ~/.claude/bin/check-citations.sh <repo root>/.review-<pr>.claims.json
+   ```
+
+   Never return a draft while that check reports a failing citation.
+
 10. **Render it back and read it.** Run:
 
    ```

@@ -27,5 +27,7 @@ assert_names 'at the pull request'\''s head or base commit' "cites the lines eac
 
 assert_names 'Every Findings bullet that reports a finding' "cites the lines behind each Findings bullet that reports a finding"
 
+assert_names '~/.claude/bin/check-citations.sh' "checks the ledger before the draft goes back"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
