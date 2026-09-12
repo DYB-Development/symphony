@@ -113,5 +113,11 @@ capture >/dev/null 2>&1
 assert_equals "1" "$?" "rejects a pointer carrying a quote, a commit or any line content"
 drop_source
 
+new_source
+jq -n --arg draft "$DRAFT" '{ draft: $draft, claims: [ { text: "The loader reads two lines." } ] }' > "$CLAIMS"
+capture >/dev/null 2>&1
+assert_equals "1" "$?" "reports a claim with no pointer as failing"
+drop_source
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

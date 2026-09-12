@@ -39,7 +39,15 @@ index=0
 unresolved=0
 
 while [ "$index" -lt "$count" ]; do
-  pointer=$(jq -c ".claims[$index].pointer" "$claims")
+  pointer=$(jq -c ".claims[$index].pointer // empty" "$claims")
+
+  if [ -z "$pointer" ]; then
+    printf 'fail  claim with no pointer: %s\n' "$(jq -r ".claims[$index].text" "$claims")"
+    unresolved=1
+    index=$((index + 1))
+    continue
+  fi
+
   path=$(printf '%s' "$pointer" | jq -r .path)
   from=$(printf '%s' "$pointer" | jq -r .from)
   to=$(printf '%s' "$pointer" | jq -r .to)
