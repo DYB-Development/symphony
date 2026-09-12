@@ -145,8 +145,11 @@ review of yours, in which case it is a **re-review**.
    `~/.claude/rules/claim-checking.md` (or `rules/claim-checking.md` in this
    package) and follow it. The claims file sits next to the draft, at
    `<repo root>/.review-<pr>.claims.json`. Each claim holds its text word for
-   word and a pointer, and a pointer holds a path, a first and last line, and a
-   side. You write nothing else: no quote, no commit, no line of code.
+   word and a pointer.
+
+   A pointer holds a path, a first and last line, and a side.
+
+   You write nothing else: no quote, no commit, no line of code.
 
    Every inline comment has a claim whose pointer is that comment's own path, line and side.
 
