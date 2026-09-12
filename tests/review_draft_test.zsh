@@ -432,6 +432,12 @@ check_lines >/dev/null 2>&1
 assert_equals "70" "$?" "refuses a draft with no comments to check"
 drop_diff
 
+new_diff
+printf 'not json at all\n' > "$LINES_FILE"
+check_lines >/dev/null 2>&1
+assert_equals "70" "$?" "refuses a draft that is not readable as a draft"
+drop_diff
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
