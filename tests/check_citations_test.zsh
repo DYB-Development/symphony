@@ -37,5 +37,8 @@ echo "check-citations.sh:"
 "$CHECK" >/dev/null 2>&1
 assert_equals "64" "$?" "refuses to run without a ledger to check"
 
+"$CHECK" /nonexistent/ledger.json >/dev/null 2>&1
+assert_equals "70" "$?" "reports a ledger it cannot read as not checked"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
