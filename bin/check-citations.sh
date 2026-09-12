@@ -124,7 +124,11 @@ while IFS= read -r citation; do
   url=$(printf '%s' "$citation" | jq -r .url)
   quote=$(printf '%s' "$citation" | jq -r .quote)
 
-  page=$(curl -fsSL --max-time 20 "$url" 2>/dev/null) || page=""
+  if ! page=$(curl -fsSL --max-time 20 "$url" 2>/dev/null); then
+    printf 'not checked  link %s\n' "$url"
+    unchecked=1
+    continue
+  fi
 
   if printf '%s' "$page" | grep -Fq -- "$quote"; then
     printf 'pass  link %s\n' "$url"

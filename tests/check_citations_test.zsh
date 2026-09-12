@@ -218,5 +218,22 @@ jq -n --arg draft "$DRAFT" '{
 assert_equals "1" "$?" "fails a link whose page no longer holds the quoted text"
 drop_source
 
+new_source
+cat > "$WORK/curl" <<'SH'
+#!/usr/bin/env bash
+exit 7
+SH
+chmod +x "$WORK/curl"
+jq -n --arg draft "$DRAFT" '{
+  draft: $draft,
+  claims: [
+    { text: "The loader reads two lines.", negative: false,
+      evidence: [ { kind: "link", url: "https://example.com/doc", quote: "the loader reads two lines" } ] }
+  ]
+}' > "$LEDGER"
+(cd "$SOURCE" && PATH="$WORK:$PATH" "$CHECK" "$LEDGER") >/dev/null 2>&1
+assert_equals "70" "$?" "reports a link it could not fetch as not checked"
+drop_source
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
