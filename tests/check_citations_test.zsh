@@ -100,5 +100,17 @@ check >/dev/null 2>&1
 assert_equals "1" "$?" "fails a citation to a file that is not at the cited commit"
 drop_source
 
+new_source
+jq -n --arg draft "$DRAFT" --arg commit "$COMMIT" '{
+  draft: $draft,
+  claims: [
+    { text: "The loader reads three lines.", negative: false,
+      evidence: [ { kind: "lines", repo: "acme/quotes", commit: $commit, path: "quote.rb", from: 2, to: 3, quote: "two\nthree" } ] }
+  ]
+}' > "$LEDGER"
+check >/dev/null 2>&1
+assert_equals "1" "$?" "fails a claim whose text is not in the draft word for word"
+drop_source
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

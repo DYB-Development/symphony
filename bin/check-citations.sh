@@ -24,6 +24,19 @@ jq -e . "$ledger" >/dev/null 2>&1 ||
 
 failed=0
 
+draft=$(jq -r '.draft' "$ledger")
+[ -r "$draft" ] ||
+  { echo "check-citations.sh: the draft $draft cannot be read, so nothing was checked" >&2; exit 70; }
+
+while IFS= read -r text; do
+  if grep -Fq -- "$text" "$draft"; then
+    printf 'pass  claim in the draft\n'
+  else
+    printf 'fail  claim not in the draft: %s\n' "$text"
+    failed=1
+  fi
+done < <(jq -r '.claims[].text' "$ledger")
+
 while IFS= read -r citation; do
   commit=$(printf '%s' "$citation" | jq -r .commit)
   path=$(printf '%s' "$citation" | jq -r .path)
