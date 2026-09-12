@@ -120,5 +120,19 @@ while IFS= read -r citation; do
   fi
 done < <(jq -c '.claims[].evidence[] | select(.kind == "command")' "$ledger")
 
+while IFS= read -r citation; do
+  url=$(printf '%s' "$citation" | jq -r .url)
+  quote=$(printf '%s' "$citation" | jq -r .quote)
+
+  page=$(curl -fsSL --max-time 20 "$url" 2>/dev/null) || page=""
+
+  if printf '%s' "$page" | grep -Fq -- "$quote"; then
+    printf 'pass  link %s\n' "$url"
+  else
+    printf 'fail  link no longer holds the quote: %s\n' "$url"
+    failed=1
+  fi
+done < <(jq -c '.claims[].evidence[] | select(.kind == "link")' "$ledger")
+
 [ "$unchecked" -eq 0 ] || exit 70
 [ "$failed" -eq 0 ] || exit 1

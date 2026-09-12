@@ -200,5 +200,23 @@ check >/dev/null 2>&1
 assert_equals "1" "$?" "refuses a command that runs the code or its tests as evidence"
 drop_source
 
+new_source
+cat > "$WORK/curl" <<'SH'
+#!/usr/bin/env bash
+[ "${CURL_EXIT:-0}" = 0 ] || exit "$CURL_EXIT"
+printf 'The page says something else entirely.\n'
+SH
+chmod +x "$WORK/curl"
+jq -n --arg draft "$DRAFT" '{
+  draft: $draft,
+  claims: [
+    { text: "The loader reads two lines.", negative: false,
+      evidence: [ { kind: "link", url: "https://example.com/doc", quote: "the loader reads two lines" } ] }
+  ]
+}' > "$LEDGER"
+(cd "$SOURCE" && PATH="$WORK:$PATH" "$CHECK" "$LEDGER") >/dev/null 2>&1
+assert_equals "1" "$?" "fails a link whose page no longer holds the quoted text"
+drop_source
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
