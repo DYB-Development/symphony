@@ -106,20 +106,20 @@ while IFS= read -r citation; do
   run=$(printf '%s' "$citation" | jq -r .run)
   recorded=$(printf '%s' "$citation" | jq -r .output)
 
-  # shellcheck disable=SC2016
   case "$run" in
-    "sed -i"*|*" -delete"*|*" -exec"*|*" -X "*|*" --method "*|*" -f "*|*" --field "*|*" --input "*|*">"*|*";"*|*"&&"*|*"||"*|*'$('*|*'`'*|*"|"*)
-      printf 'fail  command changes a file, so it was not run: %s\n' "$run"
+    *[\'\"\`\$\;\&\|\<\>\(\)]*)
+      printf 'fail  command is not a plain command, so it was not run: %s\n' "$run"
       failed=1
       continue
       ;;
   esac
 
-  case "$run" in
-    "git show "*|"git log "*|"git cat-file "*|"git grep "*|"git status"*) ;;
+  read -ra argv <<< "$run"
 
-    "gh issue view "*|"gh pr view "*|"gh api "*) ;;
-    "grep "*|"rg "*|"sed "*|"awk "*|"cat "*|"head "*|"tail "*|"wc "*|"ls "*|"find "*|"jq "*) ;;
+  case "${argv[0]:-} ${argv[1]:-}" in
+    "git show"*|"git log"*|"git cat-file"*|"git grep"*|"git status"*) ;;
+    "gh issue view"|"gh pr view"|"gh api"*) ;;
+    "grep "*|"rg "*|"cat "*|"head "*|"tail "*|"wc "*|"ls "*) ;;
     *)
       printf 'fail  command is not a reader, so it was not run: %s\n' "$run"
       failed=1
@@ -127,7 +127,15 @@ while IFS= read -r citation; do
       ;;
   esac
 
-  again=$(eval "$run" 2>/dev/null) || again=""
+  case " $run " in
+    *" -X "*|*" --method "*|*" -f "*|*" --field "*|*" --input "*)
+      printf 'fail  command writes through a flag, so it was not run: %s\n' "$run"
+      failed=1
+      continue
+      ;;
+  esac
+
+  again=$("${argv[@]}" 2>/dev/null) || again=""
 
   if [ "$again" = "$recorded" ]; then
     printf 'pass  command: %s\n' "$run"

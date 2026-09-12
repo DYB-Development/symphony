@@ -326,5 +326,17 @@ code=$?
 assert_equals "0" "$?" "refuses a command that pipes into another, and never runs it"
 drop_source
 
+new_source
+jq -n --arg draft "$DRAFT" '{
+  draft: $draft,
+  claims: [ { text: "The loader reads two lines.", negative: false,
+    evidence: [ { kind: "command", run: "sed -n \u0027w escaped.txt\u0027 quote.rb", output: "" } ] } ]
+}' > "$LEDGER"
+check >/dev/null 2>&1
+code=$?
+[[ $code -eq 1 && ! -e "$SOURCE/escaped.txt" ]]
+assert_equals "0" "$?" "refuses a reader that writes a file through its own option"
+drop_source
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
