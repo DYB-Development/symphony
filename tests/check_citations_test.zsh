@@ -88,5 +88,17 @@ check >/dev/null 2>&1
 assert_equals "1" "$?" "fails a quote that differs from those lines by one character"
 drop_source
 
+new_source
+jq -n --arg draft "$DRAFT" --arg commit "$COMMIT" '{
+  draft: $draft,
+  claims: [
+    { text: "The loader reads two lines.", negative: false,
+      evidence: [ { kind: "lines", repo: "acme/quotes", commit: $commit, path: "gone.rb", from: 1, to: 1, quote: "" } ] }
+  ]
+}' > "$LEDGER"
+check >/dev/null 2>&1
+assert_equals "1" "$?" "fails a citation to a file that is not at the cited commit"
+drop_source
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

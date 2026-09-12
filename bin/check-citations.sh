@@ -31,9 +31,15 @@ while IFS= read -r citation; do
   to=$(printf '%s' "$citation" | jq -r .to)
   quote=$(printf '%s' "$citation" | jq -r .quote)
 
-  source_lines=$(git show "$commit:$path" 2>/dev/null | sed -n "${from},${to}p") || source_lines=""
+  if ! file_at_commit=$(git show "$commit:$path" 2>/dev/null); then
+    printf 'fail  %s:%s-%s\n' "$path" "$from" "$to"
+    failed=1
+    continue
+  fi
 
-  if [ "$source_lines" = "$quote" ]; then
+  source_lines=$(printf '%s\n' "$file_at_commit" | sed -n "${from},${to}p")
+
+  if [ -n "$source_lines" ] && [ "$source_lines" = "$quote" ]; then
     printf 'pass  %s:%s-%s\n' "$path" "$from" "$to"
   else
     printf 'fail  %s:%s-%s\n' "$path" "$from" "$to"
