@@ -43,6 +43,13 @@ while IFS= read -r claim; do
   if [ "$(printf '%s' "$claim" | jq '.evidence | length')" -eq 0 ]; then
     printf 'fail  claim with no evidence: %s\n' "$text"
     failed=1
+    continue
+  fi
+
+  if [ "$(printf '%s' "$claim" | jq -r '.negative')" = "true" ] &&
+     [ "$(printf '%s' "$claim" | jq '[.evidence[] | select(.kind != "search")] | length')" -ne 0 ]; then
+    printf 'fail  negative claim resting on more than searches: %s\n' "$text"
+    failed=1
   fi
 done < <(jq -c '.claims[]' "$ledger")
 

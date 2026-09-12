@@ -235,5 +235,13 @@ jq -n --arg draft "$DRAFT" '{
 assert_equals "70" "$?" "reports a link it could not fetch as not checked"
 drop_source
 
+new_source
+write_ledger 'two
+three' 2 3
+jq '.claims[0].negative = true' "$LEDGER" > "$LEDGER.tmp" && mv "$LEDGER.tmp" "$LEDGER"
+check >/dev/null 2>&1
+assert_equals "1" "$?" "fails a negative claim that rests on anything but a search"
+drop_source
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
