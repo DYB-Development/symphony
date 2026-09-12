@@ -195,5 +195,56 @@ assert_equals "64" "$?" "exits with a usage code when the mode is not one it has
 drop_draft
 
 echo ""
+echo "review-draft.sh --check-lines:"
+
+new_diff() {
+  LINES_DIR="$(mktemp -d "${TMPDIR:-/tmp}/review_lines_test.XXXXXX")"
+  LINES_FILE="$LINES_DIR/review.json"
+  cat > "$LINES_DIR/gh" <<'SH'
+#!/usr/bin/env bash
+cat <<'DIFF'
+diff --git a/app/models/quote.rb b/app/models/quote.rb
+index 1111111..2222222 100644
+--- a/app/models/quote.rb
++++ b/app/models/quote.rb
+@@ -40,3 +40,4 @@ class Quote
+   def convert
++    order.save
+   end
+ end
+DIFF
+SH
+  chmod +x "$LINES_DIR/gh"
+}
+
+drop_diff() {
+  rm -rf "$LINES_DIR"
+}
+
+check_lines() {
+  PATH="$LINES_DIR:$PATH" "$DRAFT" --check-lines "$LINES_FILE" acme/quotes 7 2>&1
+}
+
+new_diff
+cat > "$LINES_FILE" <<'JSON'
+{ "summary": "One finding.",
+  "comments": [ { "path": "app/models/quote.rb", "line": 41, "side": "RIGHT", "body": "a finding" } ],
+  "replies": [] }
+JSON
+assert_equals "on the diff  app/models/quote.rb:41" "$(check_lines)" \
+  "says an inline comment sits on a line the diff touches"
+drop_diff
+
+new_diff
+cat > "$LINES_FILE" <<'JSON'
+{ "summary": "One finding.",
+  "comments": [ { "path": "app/models/quote.rb", "line": 12, "side": "RIGHT", "body": "a finding" } ],
+  "replies": [] }
+JSON
+check_lines >/dev/null 2>&1
+assert_equals "1" "$?" "fails an inline comment that is not on a line the diff touches"
+drop_diff
+
+echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
