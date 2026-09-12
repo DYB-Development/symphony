@@ -141,7 +141,33 @@ review of yours, in which case it is a **re-review**.
    Every key present, empty arrays where there is nothing. A reply job has an
    empty `comments` array and a `summary` of `null`.
 
-9. **Render it back and read it.** Run:
+9. **Write the claim ledger beside it.** Read
+   `~/.claude/rules/claim-checking.md` (or `rules/claim-checking.md` in this
+   package) and follow it. The ledger sits next to the draft, at
+   `<repo root>/.review-<pr>.claims.json`, and lists every factual claim the
+   draft makes with the lines behind it.
+
+   Every inline comment carries at least one claim citing the lines it is about,
+   at the pull request's head or base commit.
+
+   Every Findings bullet that reports a finding carries a claim too. A bullet
+   saying `nothing found` or `nothing to check` carries none, since a later unit
+   covers those.
+
+   Then check the ledger against the code it cites:
+
+   ```
+   ~/.claude/bin/check-citations.sh <repo root>/.review-<pr>.claims.json
+   ```
+
+   Never return a draft while that check reports a failing citation. Fix the
+   citation where you can.
+
+   A finding whose citation cannot be made to pass is cut from the draft.
+   Its inline comment, its claim and the summary link naming it all go, and the
+   remaining `{{comment:N}}` tokens are renumbered.
+
+10. **Render it back and read it.** Run:
 
    ```
    ~/.claude/bin/review-draft.sh --render <file>
@@ -158,7 +184,7 @@ review of yours, in which case it is a **re-review**.
    Cutting a comment renumbers the `{{comment:N}}` tokens — fix them, or
    `--post` will refuse the summary.
 
-10. **Have the draft read before you return it.** Read
+11. **Have the draft read before you return it.** Read
     `~/.claude/rules/draft-reading.md` (or `rules/draft-reading.md` in this
     package) and follow it. Hand the reader the draft as a person will see it:
 
@@ -177,8 +203,12 @@ review of yours, in which case it is a **re-review**.
 
 The draft file path, then the rendered draft, then `Still flagged:` with each
 sentence the reader flagged on its last read and the reader's note, or `none`.
-If a read failed, say that instead of `none`. Then one line naming the posting
-command:
+If a read failed, say that instead of `none`.
+
+Then `Removed for a failed citation:` with each claim you cut and the citation
+that failed, or `none`.
+
+Then one line naming the posting command:
 
 ```
 ~/.claude/bin/review-draft.sh --post <owner/repo> <n> <file>
