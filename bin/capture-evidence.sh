@@ -27,3 +27,32 @@ pr=$3
 
 jq -e . "$claims" >/dev/null 2>&1 ||
   { echo "capture-evidence.sh: $claims is not readable as a claims file, so nothing was captured" >&2; exit 70; }
+
+commits=$(gh pr view "$pr" --repo "$repo" --json headRefOid,baseRefOid --jq '[.headRefOid, .baseRefOid] | @tsv') ||
+  { echo "capture-evidence.sh: the pull request $repo#$pr could not be read, so nothing was captured" >&2; exit 70; }
+
+head_commit=$(printf '%s' "$commits" | cut -f1)
+base_commit=$(printf '%s' "$commits" | cut -f2)
+
+count=$(jq '.claims | length' "$claims")
+index=0
+
+while [ "$index" -lt "$count" ]; do
+  pointer=$(jq -c ".claims[$index].pointer" "$claims")
+  path=$(printf '%s' "$pointer" | jq -r .path)
+  from=$(printf '%s' "$pointer" | jq -r .from)
+  to=$(printf '%s' "$pointer" | jq -r .to)
+  side=$(printf '%s' "$pointer" | jq -r .side)
+
+  commit=$head_commit
+  [ "$side" = LEFT ] && commit=$base_commit
+
+  file_at_commit=$(git show "$commit:$path" 2>/dev/null)
+  lines=$(printf '%s\n' "$file_at_commit" | sed -n "${from},${to}p")
+
+  claims_json=$(jq --argjson i "$index" --arg commit "$commit" --arg lines "$lines" \
+    '.claims[$i].captured = { commit: $commit, lines: $lines }' "$claims")
+  printf '%s\n' "$claims_json" > "$claims"
+
+  index=$((index + 1))
+done

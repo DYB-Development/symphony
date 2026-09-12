@@ -40,5 +40,49 @@ assert_equals "64" "$?" "refuses to run without a claims file and a pull request
 "$CAPTURE" /nonexistent/claims.json acme/quotes 7 >/dev/null 2>&1
 assert_equals "70" "$?" "reports a claims file it cannot read as not captured"
 
+new_source() {
+  WORK="$(mktemp -d "${TMPDIR:-/tmp}/capture_evidence_test.XXXXXX")"
+  SOURCE="$WORK/repo"
+  mkdir -p "$SOURCE"
+  git -C "$SOURCE" init -q
+  git -C "$SOURCE" config user.email test@example.com
+  git -C "$SOURCE" config user.name Test
+  printf 'one\ntwo\nthree\nfour\n' > "$SOURCE/quote.rb"
+  git -C "$SOURCE" add quote.rb
+  git -C "$SOURCE" commit -q -m first
+  HEAD_COMMIT="$(git -C "$SOURCE" rev-parse HEAD)"
+  DRAFT="$WORK/draft.md"
+  CLAIMS="$WORK/claims.json"
+  printf 'The loader reads two lines.\n' > "$DRAFT"
+  cat > "$WORK/gh" <<SH
+#!/usr/bin/env bash
+printf '%s\\t%s\\n' "$HEAD_COMMIT" "$HEAD_COMMIT"
+SH
+  chmod +x "$WORK/gh"
+}
+
+drop_source() {
+  rm -rf "$WORK"
+}
+
+write_pointer() {
+  jq -n --arg draft "$DRAFT" --argjson from "$1" --argjson to "$2" --arg path "${3:-quote.rb}" '{
+    draft: $draft,
+    claims: [ { text: "The loader reads two lines.", pointer: { path: $path, from: $from, to: $to, side: "RIGHT" } } ]
+  }' > "$CLAIMS"
+}
+
+capture() {
+  (cd "$SOURCE" && PATH="$WORK:$PATH" "$CAPTURE" "$CLAIMS" acme/quotes 7)
+}
+
+new_source
+write_pointer 2 3
+capture >/dev/null 2>&1
+assert_equals "two
+three" "$(jq -r '.claims[0].captured.lines' "$CLAIMS" 2>/dev/null)" \
+  "records the lines a pointer names, read at that side's commit"
+drop_source
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
