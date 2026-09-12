@@ -40,5 +40,46 @@ assert_equals "64" "$?" "refuses to run without a ledger to check"
 "$CHECK" /nonexistent/ledger.json >/dev/null 2>&1
 assert_equals "70" "$?" "reports a ledger it cannot read as not checked"
 
+new_source() {
+  WORK="$(mktemp -d "${TMPDIR:-/tmp}/check_citations_test.XXXXXX")"
+  SOURCE="$WORK/repo"
+  mkdir -p "$SOURCE"
+  git -C "$SOURCE" init -q
+  git -C "$SOURCE" config user.email test@example.com
+  git -C "$SOURCE" config user.name Test
+  printf 'one\ntwo\nthree\nfour\n' > "$SOURCE/quote.rb"
+  git -C "$SOURCE" add quote.rb
+  git -C "$SOURCE" commit -q -m "first"
+  COMMIT="$(git -C "$SOURCE" rev-parse HEAD)"
+  DRAFT="$WORK/draft.md"
+  LEDGER="$WORK/ledger.json"
+  printf 'The loader reads two lines.\n' > "$DRAFT"
+}
+
+drop_source() {
+  rm -rf "$WORK"
+}
+
+write_ledger() {
+  jq -n --arg draft "$DRAFT" --arg commit "$COMMIT" --arg quote "$1" --argjson from "$2" --argjson to "$3" '{
+    draft: $draft,
+    claims: [
+      { text: "The loader reads two lines.", negative: false,
+        evidence: [ { kind: "lines", repo: "acme/quotes", commit: $commit, path: "quote.rb", from: $from, to: $to, quote: $quote } ] }
+    ]
+  }' > "$LEDGER"
+}
+
+check() {
+  (cd "$SOURCE" && "$CHECK" "$LEDGER")
+}
+
+new_source
+write_ledger 'two
+three' 2 3
+check >/dev/null 2>&1
+assert_equals "0" "$?" "passes a quote that matches those lines at the cited commit"
+drop_source
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
