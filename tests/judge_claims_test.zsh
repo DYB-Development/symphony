@@ -43,5 +43,51 @@ assert_equals "64" "$?" "refuses to run without a claims file to judge"
 "$JUDGE" /nonexistent/claims.json >/dev/null 2>&1
 assert_equals "70" "$?" "reports a claims file it cannot read as not judged"
 
+new_claims() {
+  WORK="$(mktemp -d "${TMPDIR:-/tmp}/judge_claims_test.XXXXXX")"
+  SOURCE="$WORK/repo"
+  mkdir -p "$SOURCE"
+  git -C "$SOURCE" init -q
+  git -C "$SOURCE" config user.email test@example.com
+  git -C "$SOURCE" config user.name Test
+  printf 'one\ntwo\nthree\nfour\n' > "$SOURCE/quote.rb"
+  git -C "$SOURCE" add quote.rb
+  git -C "$SOURCE" commit -q -m first
+  COMMIT="$(git -C "$SOURCE" rev-parse HEAD)"
+  DRAFT="$WORK/draft.md"
+  CLAIMS="$WORK/claims.json"
+  printf 'The loader reads two lines.\n' > "$DRAFT"
+  jq -n --arg draft "$DRAFT" --arg commit "$COMMIT" '{
+    draft: $draft,
+    claims: [ { text: "The loader reads two lines.",
+      pointer: { path: "quote.rb", from: 2, to: 3, side: "RIGHT" },
+      captured: { commit: $commit, lines: "two\nthree" } } ]
+  }' > "$CLAIMS"
+  cat > "$WORK/claude" <<'SH'
+#!/usr/bin/env bash
+here="$(dirname "$0")"
+printf '%s\n' "$@" > "$here/args"
+cat > "$here/stdin"
+printf '%s\n' "${JUDGE_REPLY:-Standing: 0}"
+exit "${JUDGE_EXIT:-0}"
+SH
+  chmod +x "$WORK/claude"
+}
+
+drop_claims() {
+  rm -rf "$WORK"
+}
+
+judge() {
+  (cd "$SOURCE" && PATH="$WORK:$PATH" "$JUDGE" "$CLAIMS")
+}
+
+new_claims
+judge >/dev/null 2>&1
+assert_equals "two
+three" "$(awk '/^Lines captured/{on=1; next} /^File/{on=0} on && NF' "$WORK/stdin" | head -2)" \
+  "hands the judge the lines captured for a claim"
+drop_claims
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
