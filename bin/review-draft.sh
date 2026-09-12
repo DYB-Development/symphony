@@ -35,8 +35,8 @@ if [ "$mode" = "--check-lines" ]; then
   jq -e . "$draft" >/dev/null 2>&1 ||
     { echo "review-draft.sh: $draft is not readable as a draft, so nothing was checked" >&2; exit 70; }
 
-  jq -e 'has("comments")' "$draft" >/dev/null 2>&1 ||
-    { echo "review-draft.sh: $draft names no comments, so nothing was checked" >&2; exit 70; }
+  jq -e '.comments | type == "array"' "$draft" >/dev/null 2>&1 ||
+    { echo "review-draft.sh: $draft names no comments to check, so nothing was checked" >&2; exit 70; }
 
   diff=$(gh pr diff "$pr" --repo "$repo") ||
     { echo "review-draft.sh: the diff for $repo#$pr could not be read" >&2; exit 70; }
