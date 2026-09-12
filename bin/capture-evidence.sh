@@ -17,3 +17,13 @@ USAGE
 }
 
 [ $# -eq 3 ] || usage
+
+claims=$1
+repo=$2
+pr=$3
+
+[ -r "$claims" ] ||
+  { echo "capture-evidence.sh: $claims cannot be read, so nothing was captured" >&2; exit 70; }
+
+jq -e . "$claims" >/dev/null 2>&1 ||
+  { echo "capture-evidence.sh: $claims is not readable as a claims file, so nothing was captured" >&2; exit 70; }

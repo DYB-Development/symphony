@@ -37,5 +37,8 @@ echo "capture-evidence.sh:"
 "$CAPTURE" >/dev/null 2>&1
 assert_equals "64" "$?" "refuses to run without a claims file and a pull request"
 
+"$CAPTURE" /nonexistent/claims.json acme/quotes 7 >/dev/null 2>&1
+assert_equals "70" "$?" "reports a claims file it cannot read as not captured"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
