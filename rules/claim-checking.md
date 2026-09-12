@@ -82,3 +82,52 @@ under that claim. Nothing else writes there.
   reported as captured and never counted as resolved.
 - The capture exits 0 when every pointer resolves, 1 when any does not, and 70
   when it could not read the source.
+
+## What the judge is given
+
+Once every pointer has resolved, a separate model run reads each claim beside
+the evidence captured for it and says whether the evidence bears the claim out.
+That judgement is the part no script can make.
+
+It is given three things and nothing else:
+
+- The draft, as a person will read it.
+- Each claim, with the commit and the lines captured for it.
+- The whole file those lines sit in, at that commit, so the code above and below
+  them can be read. A file too large to hand over is cut to a window around the
+  lines, and the claim records that it was cut.
+
+It is given no tools, no settings and no servers, exactly as the draft reader
+is. It never sees the instructions the scribe was given, the conversation behind
+them, or the draft reader's reply. It runs nothing.
+
+## What the judge returns
+
+This shape and nothing else:
+
+```
+1. "<the claim, word for word>"
+   Verdict: supported
+   Why: <one sentence>
+
+2. "<the claim, word for word>"
+   Verdict: refuted
+   Why: <one sentence>
+
+Uncited:
+- "<a sentence in the draft that states a fact and carries no claim>"
+
+Standing: <how many claims did not stand>
+```
+
+- **supported** means the captured lines bear the claim out.
+- **unsupported** means they neither bear it out nor contradict it.
+- **refuted** means they contradict it.
+- A sentence saying what someone wants, asks for or intends is never listed as
+  uncited, and neither is a section pasted word for word from a script.
+- The last line is always `Standing:` and a number. Nothing follows it.
+
+Each verdict is written back into the claims file, beside the evidence it was
+judged against, so a later reader sees the claim, the lines and the judgement
+together.
+
