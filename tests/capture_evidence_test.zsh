@@ -97,5 +97,11 @@ capture >/dev/null 2>&1
 assert_equals "1" "$?" "reports a pointer naming a file that is not at that commit as unresolved"
 drop_source
 
+new_source
+write_pointer 9 12
+capture >/dev/null 2>&1
+assert_equals "1" "$?" "reports a line range the file does not reach as unresolved"
+drop_source
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

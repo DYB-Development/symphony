@@ -57,6 +57,13 @@ while [ "$index" -lt "$count" ]; do
 
   lines=$(printf '%s\n' "$file_at_commit" | sed -n "${from},${to}p")
 
+  if [ -z "$lines" ]; then
+    printf 'unresolved  %s does not reach lines %s-%s at %s\n' "$path" "$from" "$to" "$commit"
+    unresolved=1
+    index=$((index + 1))
+    continue
+  fi
+
   claims_json=$(jq --argjson i "$index" --arg commit "$commit" --arg lines "$lines" \
     '.claims[$i].captured = { commit: $commit, lines: $lines }' "$claims")
   printf '%s\n' "$claims_json" > "$claims"
