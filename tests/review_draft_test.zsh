@@ -245,6 +245,16 @@ check_lines >/dev/null 2>&1
 assert_equals "1" "$?" "fails an inline comment that is not on a line the diff touches"
 drop_diff
 
+new_diff
+cat > "$LINES_FILE" <<'JSON'
+{ "summary": "One finding.",
+  "comments": [ { "path": "app/models/quote.rb", "line": 41, "side": "LEFT", "body": "a finding" } ],
+  "replies": [] }
+JSON
+check_lines >/dev/null 2>&1
+assert_equals "1" "$?" "fails a left-side comment on a line the diff does not remove"
+drop_diff
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

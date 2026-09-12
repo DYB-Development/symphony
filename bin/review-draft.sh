@@ -36,9 +36,15 @@ if [ "$mode" = "--check-lines" ]; then
 
   touched=$(printf '%s\n' "$diff" | awk '
     /^\+\+\+ b\// { path = substr($0, 7); next }
-    /^@@ / { split($3, a, ","); line = a[1] + 0; if (line < 0) line = -line; next }
-    /^\+/ { print path ":" line; line++; next }
-    /^ / { line++ }
+    /^@@ / {
+      split($2, o, ","); old = o[1] + 0; if (old < 0) old = -old
+      split($3, n, ","); new = n[1] + 0; if (new < 0) new = -new
+      next
+    }
+    /^\\/ { next }
+    /^-/ { print "LEFT:" path ":" old; old++; next }
+    /^\+/ { print "RIGHT:" path ":" new; new++; next }
+    /^ / { old++; new++ }
   ')
 
   missing=0
@@ -47,7 +53,8 @@ if [ "$mode" = "--check-lines" ]; then
   while [ "$i" -lt "$count" ]; do
     path=$(jq -r ".comments[$i].path" "$draft")
     line=$(jq -r ".comments[$i].line" "$draft")
-    if printf '%s\n' "$touched" | grep -qx -- "$path:$line"; then
+    side=$(jq -r ".comments[$i].side // \"RIGHT\"" "$draft")
+    if printf '%s\n' "$touched" | grep -qxF -- "$side:$path:$line"; then
       printf 'on the diff  %s:%s\n' "$path" "$line"
     else
       printf 'fail  %s:%s is not a line this diff touches\n' "$path" "$line"
