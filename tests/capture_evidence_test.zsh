@@ -91,5 +91,11 @@ assert_equals "$HEAD_COMMIT" "$(jq -r '.claims[0].captured.commit' "$CLAIMS" 2>/
   "records the full commit each pointer was read at"
 drop_source
 
+new_source
+write_pointer 1 1 gone.rb
+capture >/dev/null 2>&1
+assert_equals "1" "$?" "reports a pointer naming a file that is not at that commit as unresolved"
+drop_source
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

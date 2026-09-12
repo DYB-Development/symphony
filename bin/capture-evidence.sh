@@ -36,6 +36,7 @@ base_commit=$(printf '%s' "$commits" | cut -f2)
 
 count=$(jq '.claims | length' "$claims")
 index=0
+unresolved=0
 
 while [ "$index" -lt "$count" ]; do
   pointer=$(jq -c ".claims[$index].pointer" "$claims")
@@ -47,7 +48,13 @@ while [ "$index" -lt "$count" ]; do
   commit=$head_commit
   [ "$side" = LEFT ] && commit=$base_commit
 
-  file_at_commit=$(git show "$commit:$path" 2>/dev/null)
+  if ! file_at_commit=$(git show "$commit:$path" 2>/dev/null); then
+    printf 'unresolved  %s is not at %s\n' "$path" "$commit"
+    unresolved=1
+    index=$((index + 1))
+    continue
+  fi
+
   lines=$(printf '%s\n' "$file_at_commit" | sed -n "${from},${to}p")
 
   claims_json=$(jq --argjson i "$index" --arg commit "$commit" --arg lines "$lines" \
@@ -56,3 +63,5 @@ while [ "$index" -lt "$count" ]; do
 
   index=$((index + 1))
 done
+
+[ "$unresolved" -eq 0 ] || exit 1
