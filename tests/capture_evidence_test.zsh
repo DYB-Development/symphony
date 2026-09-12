@@ -31,5 +31,11 @@ echo "the claim rules, written around pointers:"
 assert_equals "yes" "$(section_named '## What a claim pointer holds')" \
   "say what a scribe writes for one claim"
 
+echo ""
+echo "capture-evidence.sh:"
+
+"$CAPTURE" >/dev/null 2>&1
+assert_equals "64" "$?" "refuses to run without a claims file and a pull request"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
