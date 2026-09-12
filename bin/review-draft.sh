@@ -36,10 +36,16 @@ if [ "$mode" = "--check-lines" ]; then
     { echo "review-draft.sh: the diff for $repo#$pr could not be read" >&2; exit 70; }
 
   touched=$(printf '%s\n' "$diff" | awk '
+    function path_of(line,   p) {
+      p = substr(line, 5)
+      sub(/\t.*$/, "", p)
+      sub(/^[ab]\//, "", p)
+      return p
+    }
     /^diff --git / { in_hunk = 0; next }
-    /^index / { next }
-    /^--- / { old_path = substr($0, 5); sub(/^a\//, "", old_path); in_hunk = 0; next }
-    /^\+\+\+ / { new_path = substr($0, 5); sub(/^b\//, "", new_path); in_hunk = 0; next }
+    !in_hunk && /^index / { next }
+    !in_hunk && /^--- / { old_path = path_of($0); next }
+    !in_hunk && /^\+\+\+ / { new_path = path_of($0); next }
     /^@@ / {
       split($2, o, ","); old = o[1] + 0; if (old < 0) old = -old
       split($3, n, ","); new = n[1] + 0; if (new < 0) new = -new
@@ -50,7 +56,7 @@ if [ "$mode" = "--check-lines" ]; then
     /^\\/ { next }
     /^-/ { print "LEFT:" old_path ":" old; old++; next }
     /^\+/ { print "RIGHT:" new_path ":" new; new++; next }
-    /^ / { old++; new++ }
+    { old++; new++ }
   ')
 
   missing=0

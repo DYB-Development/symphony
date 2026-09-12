@@ -354,6 +354,31 @@ check_lines >/dev/null 2>&1
 assert_equals "0" "$?" "reads a side however it is spelled"
 drop_diff
 
+LINES_DIR="$(mktemp -d "${TMPDIR:-/tmp}/review_lines_test.XXXXXX")"
+LINES_FILE="$LINES_DIR/review.json"
+cat > "$LINES_DIR/gh" <<'SH'
+#!/usr/bin/env bash
+cat <<'DIFF'
+diff --git a/db/quote.sql b/db/quote.sql
+--- a/db/quote.sql
++++ b/db/quote.sql
+@@ -1,3 +1,3 @@
+ select 1
+--- the old comment
++-- the new comment
+ from quotes
+DIFF
+SH
+chmod +x "$LINES_DIR/gh"
+cat > "$LINES_FILE" <<'JSON'
+{ "summary": "One finding.",
+  "comments": [ { "path": "db/quote.sql", "line": 2, "side": "RIGHT", "body": "a finding" } ],
+  "replies": [] }
+JSON
+check_lines >/dev/null 2>&1
+assert_equals "0" "$?" "reads a changed line whose own text begins with dashes"
+rm -rf "$LINES_DIR"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
