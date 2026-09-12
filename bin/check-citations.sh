@@ -99,6 +99,17 @@ while IFS= read -r citation; do
   run=$(printf '%s' "$citation" | jq -r .run)
   recorded=$(printf '%s' "$citation" | jq -r .output)
 
+  case "$run" in
+    "git show "*|"git log "*|"git cat-file "*|"git grep "*|"git status"*) ;;
+    "gh issue view "*|"gh pr view "*|"gh api "*) ;;
+    "grep "*|"rg "*|"sed "*|"awk "*|"cat "*|"head "*|"tail "*|"wc "*|"ls "*|"find "*|"jq "*) ;;
+    *)
+      printf 'fail  command is not a reader, so it was not run: %s\n' "$run"
+      failed=1
+      continue
+      ;;
+  esac
+
   again=$(eval "$run" 2>/dev/null) || again=""
 
   if [ "$again" = "$recorded" ]; then
