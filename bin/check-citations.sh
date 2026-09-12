@@ -129,7 +129,13 @@ done < <(jq -c '.claims[].evidence[] | select(.kind == "command")' "$ledger")
 
 while IFS= read -r citation; do
   run=$(printf '%s' "$citation" | jq -r .run)
-  looked_for=$(printf '%s' "$citation" | jq -r .looked_for)
+  looked_for=$(printf '%s' "$citation" | jq -r '.looked_for // ""')
+
+  if [ -z "$looked_for" ]; then
+    printf 'fail  search does not say what it looked for: %s\n' "$run"
+    failed=1
+    continue
+  fi
 
   case "$run" in
     "git grep "*|"git log "*|"grep "*|"rg "*|"find "*|"jq "*|"ls "*) ;;
