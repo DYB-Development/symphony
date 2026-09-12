@@ -52,7 +52,7 @@ if [ "$mode" = "--check-lines" ]; then
           c = substr(p, i, 1)
           if (c == "\\" && substr(p, i + 1, 1) ~ /[0-7]/) {
             oct = substr(p, i + 1, 3)
-            out = out sprintf("%c", strtonum("0" oct))
+            out = out sprintf("%c", (substr(oct, 1, 1) * 64) + (substr(oct, 2, 1) * 8) + substr(oct, 3, 1))
             i += 3
           } else if (c == "\\") {
             out = out substr(p, i + 1, 1)
