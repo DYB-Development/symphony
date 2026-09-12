@@ -29,5 +29,7 @@ assert_names 'Every Findings bullet that reports a finding' "cites the lines beh
 
 assert_names '~/.claude/bin/check-citations.sh' "checks the ledger before the draft goes back"
 
+assert_names 'A finding whose citation cannot be made to pass is cut from the draft.' "cuts a finding whose citation cannot pass"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

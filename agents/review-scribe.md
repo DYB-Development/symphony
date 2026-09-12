@@ -160,7 +160,12 @@ review of yours, in which case it is a **re-review**.
    ~/.claude/bin/check-citations.sh <repo root>/.review-<pr>.claims.json
    ```
 
-   Never return a draft while that check reports a failing citation.
+   Never return a draft while that check reports a failing citation. Fix the
+   citation where you can.
+
+   A finding whose citation cannot be made to pass is cut from the draft.
+   Its inline comment, its claim and the summary link naming it all go, and the
+   remaining `{{comment:N}}` tokens are renumbered.
 
 10. **Render it back and read it.** Run:
 
