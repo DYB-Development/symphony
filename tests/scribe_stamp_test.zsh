@@ -154,16 +154,16 @@ echo ""
 echo "scribe-stamp.sh review:"
 
 new_root
-commit_rules agents/review-scribe.md rules/review-checks.md rules/pr-review.md rules/draft-reading.md rules/writing-style.md
+commit_rules agents/review-scribe.md rules/review-checks.md rules/pr-review.md rules/draft-reading.md rules/claim-checking.md rules/writing-style.md
 assert_equals "Scribe: review-scribe \`$(sha_of agents/review-scribe.md)\`
-Rules: review-checks \`$(sha_of rules/review-checks.md)\`, pr-review \`$(sha_of rules/pr-review.md)\`, draft-reading \`$(sha_of rules/draft-reading.md)\`, writing-style \`$(sha_of rules/writing-style.md)\`" \
+Rules: review-checks \`$(sha_of rules/review-checks.md)\`, pr-review \`$(sha_of rules/pr-review.md)\`, draft-reading \`$(sha_of rules/draft-reading.md)\`, claim-checking \`$(sha_of rules/claim-checking.md)\`, writing-style \`$(sha_of rules/writing-style.md)\`" \
   "$("$STAMP" review claude-opus-5 | sed -n '3,4p')" \
   "names the review scribe, the checks it ran, the review rules it followed and the rules its draft was read against"
 drop_root
 
 new_root
 new_source
-commit_rules agents/review-scribe.md rules/review-checks.md rules/pr-review.md rules/draft-reading.md rules/writing-style.md
+commit_rules agents/review-scribe.md rules/review-checks.md rules/pr-review.md rules/draft-reading.md rules/claim-checking.md rules/writing-style.md
 assert_equals "
 Reviewed Against: \`acme/quotes@deadbee\`" \
   "$(cd "$SOURCE_DIR" && "$STAMP" review claude-opus-5 acme/quotes@deadbee | sed -n '6,7p')" \
@@ -276,7 +276,7 @@ echo ""
 echo "scribe-stamp.sh source form:"
 
 new_root
-commit_rules agents/review-scribe.md rules/review-checks.md rules/pr-review.md rules/draft-reading.md rules/writing-style.md
+commit_rules agents/review-scribe.md rules/review-checks.md rules/pr-review.md rules/draft-reading.md rules/claim-checking.md rules/writing-style.md
 "$STAMP" review claude-opus-5 deadbee >/dev/null 2>&1
 assert_equals "64" "$?" "refuses a source that does not name a repo and a commit"
 drop_root
