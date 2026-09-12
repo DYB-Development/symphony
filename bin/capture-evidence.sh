@@ -45,6 +45,13 @@ while [ "$index" -lt "$count" ]; do
   to=$(printf '%s' "$pointer" | jq -r .to)
   side=$(printf '%s' "$pointer" | jq -r .side)
 
+  if [ "$(printf '%s' "$pointer" | jq 'has("quote") or has("commit") or has("lines")')" = true ]; then
+    printf 'rejected  pointer carries what the tooling writes: %s\n' "$path"
+    unresolved=1
+    index=$((index + 1))
+    continue
+  fi
+
   commit=$head_commit
   [ "$side" = LEFT ] && commit=$base_commit
 
