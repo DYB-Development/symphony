@@ -34,5 +34,11 @@ assert_equals "yes" "$(section_named '## What the judge is given')" \
 assert_equals "yes" "$(section_named '## What the judge returns')" \
   "say the shape a verdict comes back in"
 
+echo ""
+echo "judge-claims.sh:"
+
+"$JUDGE" >/dev/null 2>&1
+assert_equals "64" "$?" "refuses to run without a claims file to judge"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
