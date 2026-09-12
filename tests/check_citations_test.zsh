@@ -31,6 +31,18 @@ section_named() {
 assert_equals "yes" "$(section_named '## What counts as a claim')" \
   "say what counts as a factual claim"
 
+assert_equals "yes" "$(section_named '## How a criterion citation is written')" \
+  "say how a citation to a ticket criterion is written"
+
+assert_equals "yes" "$(section_named '## How a command citation is written')" \
+  "say how a citation to a command and its output is written"
+
+assert_equals "yes" "$(section_named '## How a link citation is written')" \
+  "say how a citation to a page is written"
+
+assert_equals "yes" "$(section_named '## What a negative claim rests on')" \
+  "say what evidence a negative claim rests on"
+
 echo ""
 echo "check-citations.sh:"
 
