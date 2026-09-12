@@ -84,5 +84,12 @@ three" "$(jq -r '.claims[0].captured.lines' "$CLAIMS" 2>/dev/null)" \
   "records the lines a pointer names, read at that side's commit"
 drop_source
 
+new_source
+write_pointer 2 3
+capture >/dev/null 2>&1
+assert_equals "$HEAD_COMMIT" "$(jq -r '.claims[0].captured.commit' "$CLAIMS" 2>/dev/null)" \
+  "records the full commit each pointer was read at"
+drop_source
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
