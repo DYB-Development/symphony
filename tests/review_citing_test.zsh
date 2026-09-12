@@ -23,5 +23,7 @@ echo "the review scribe's citing step:"
 
 assert_names '.review-<pr>.claims.json' "writes the claim ledger beside the draft"
 
+assert_names 'at the pull request'\''s head or base commit' "cites the lines each inline comment is about"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

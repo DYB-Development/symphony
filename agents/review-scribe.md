@@ -147,6 +147,9 @@ review of yours, in which case it is a **re-review**.
    `<repo root>/.review-<pr>.claims.json`, and lists every factual claim the
    draft makes with the lines behind it.
 
+   Every inline comment carries at least one claim citing the lines it is about,
+   at the pull request's head or base commit.
+
 10. **Render it back and read it.** Run:
 
    ```
