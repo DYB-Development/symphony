@@ -43,6 +43,12 @@ assert_equals "yes" "$(section_named '## How a link citation is written')" \
 assert_equals "yes" "$(section_named '## What a negative claim rests on')" \
   "say what evidence a negative claim rests on"
 
+if grep -qF -- 'A cited command is run with no shell, as a plain command from that list.' "$RULES"; then
+  ok "say that a cited command runs with no shell"
+else
+  fail "say that a cited command runs with no shell"
+fi
+
 echo ""
 echo "check-citations.sh:"
 

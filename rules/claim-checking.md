@@ -98,9 +98,15 @@ the check runs it again and compares.
 - `run` is the whole command, as it was run.
 - `output` is what it printed, word for word.
 - **Only a command that reads is allowed**: `git show`, `git log`,
-  `git cat-file`, `git grep`, `git status`, `grep`, `rg`, `sed`, `awk`, `cat`,
-  `head`, `tail`, `wc`, `ls`, `find`, `jq`, and `gh issue view`, `gh pr view` or
-  `gh api` with no method but GET. Anything else is refused and never run.
+  `git cat-file`, `git grep`, `git status`, `grep`, `rg`, `cat`, `head`, `tail`,
+  `wc`, `ls`, and `gh issue view`, `gh pr view` or `gh api` with no method but
+  GET. Anything else is refused and never run.
+- A cited command is run with no shell, as a plain command from that list.
+  A command carrying a quote, a redirect, a pipe, a chain or a substitution is
+  refused, since none of those survive without a shell.
+- `sed`, `awk`, `find` and `jq` are not readers. Each can write a file through
+  its own options, such as `sed`'s `w` and `awk`'s `system`, so a list that
+  allowed them would not mean anything.
 - A command that writes a file, moves a branch, changes a ticket, or reaches
   anything remote beyond reading is refused, because a check must never change
   what it is checking.
