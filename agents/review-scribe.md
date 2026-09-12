@@ -148,9 +148,11 @@ review of yours, in which case it is a **re-review**.
    draft makes with the lines behind it.
 
    Every inline comment carries at least one claim citing the lines it is about,
-   at the pull request's head or base commit. Every Findings bullet that reports
-   a finding carries one too. A bullet saying `nothing found` or `nothing to
-   check` carries none, since a later unit covers those.
+   at the pull request's head or base commit.
+
+   Every Findings bullet that reports a finding carries a claim too. A bullet
+   saying `nothing found` or `nothing to check` carries none, since a later unit
+   covers those.
 
 10. **Render it back and read it.** Run:
 
