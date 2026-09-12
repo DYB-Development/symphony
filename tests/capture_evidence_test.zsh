@@ -162,7 +162,7 @@ drop_source
 new_source
 write_pointer 2 3
 capture >/dev/null 2>&1
-assert_equals "0" "\$?" "exits 0 when every pointer resolves"
+assert_equals "0" "$?" "exits 0 when every pointer resolves"
 drop_source
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
