@@ -426,6 +426,12 @@ check_lines >/dev/null 2>&1
 assert_equals "0" "$?" "matches a path git wrote in quotes with escapes"
 rm -rf "$LINES_DIR"
 
+new_diff
+printf '{ "summary": "Nothing to raise." }\n' > "$LINES_FILE"
+check_lines >/dev/null 2>&1
+assert_equals "70" "$?" "refuses a draft with no comments to check"
+drop_diff
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
