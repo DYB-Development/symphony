@@ -107,7 +107,7 @@ while IFS= read -r citation; do
   recorded=$(printf '%s' "$citation" | jq -r .output)
 
   case "$run" in
-    "sed -i"*|*" -delete"*|*" -exec"*)
+    "sed -i"*|*" -delete"*|*" -exec"*|*" -X "*|*" --method "*|*" -f "*|*" --field "*|*" --input "*)
       printf 'fail  command changes a file, so it was not run: %s\n' "$run"
       failed=1
       continue

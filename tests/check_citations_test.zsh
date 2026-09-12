@@ -292,5 +292,15 @@ code=$?
 assert_equals "0" "$?" "refuses a find that deletes, and never runs it"
 drop_source
 
+new_source
+jq -n --arg draft "$DRAFT" '{
+  draft: $draft,
+  claims: [ { text: "The loader reads two lines.", negative: false,
+    evidence: [ { kind: "command", run: "gh api repos/acme/quotes/issues -X POST -f title=hello", output: "" } ] } ]
+}' > "$LEDGER"
+check >/dev/null 2>&1
+assert_equals "1" "$?" "refuses a gh api call that is not a plain read"
+drop_source
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
