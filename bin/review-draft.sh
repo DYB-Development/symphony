@@ -6,6 +6,7 @@ usage() {
 usage: review-draft.sh --render <draft.json>
        review-draft.sh --link <draft.json> <comment-url>...
        review-draft.sh --post <owner/repo> <pr-number> <draft.json>
+       review-draft.sh --check-lines <draft.json> <owner/repo> <pr-number>
 
 Reads the draft review written by `review-scribe`. `--render` prints it for
 reading before any of it reaches the pull request. `--post` posts it, once I

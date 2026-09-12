@@ -279,6 +279,9 @@ check_lines >/dev/null 2>&1
 assert_equals "0" "$?" "matches a path holding regex characters as plain text"
 rm -rf "$LINES_DIR"
 
+"$DRAFT" 2>&1 | grep -q -- '--check-lines <draft.json> <owner/repo> <pr-number>'
+assert_equals "0" "$?" "documents the line check in its own usage"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
