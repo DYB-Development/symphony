@@ -31,5 +31,11 @@ section_named() {
 assert_equals "yes" "$(section_named '## What counts as a claim')" \
   "say what counts as a factual claim"
 
+echo ""
+echo "check-citations.sh:"
+
+"$CHECK" >/dev/null 2>&1
+assert_equals "64" "$?" "refuses to run without a ledger to check"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
