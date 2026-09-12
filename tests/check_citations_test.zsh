@@ -302,5 +302,17 @@ check >/dev/null 2>&1
 assert_equals "1" "$?" "refuses a gh api call that is not a plain read"
 drop_source
 
+new_source
+jq -n --arg draft "$DRAFT" '{
+  draft: $draft,
+  claims: [ { text: "The loader reads two lines.", negative: false,
+    evidence: [ { kind: "command", run: "grep one quote.rb > written.txt", output: "one" } ] } ]
+}' > "$LEDGER"
+check >/dev/null 2>&1
+code=$?
+[[ $code -eq 1 && ! -e "$SOURCE/written.txt" ]]
+assert_equals "0" "$?" "refuses a command that redirects or chains, and never runs it"
+drop_source
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
