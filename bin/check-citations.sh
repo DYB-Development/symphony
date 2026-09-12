@@ -23,6 +23,7 @@ jq -e . "$ledger" >/dev/null 2>&1 ||
   { echo "check-citations.sh: $ledger is not readable as a ledger, so nothing was checked" >&2; exit 70; }
 
 failed=0
+unchecked=0
 
 draft=$(jq -r '.draft' "$ledger")
 [ -r "$draft" ] ||
@@ -52,6 +53,12 @@ while IFS= read -r citation; do
   to=$(printf '%s' "$citation" | jq -r .to)
   quote=$(printf '%s' "$citation" | jq -r .quote)
 
+  if ! git cat-file -e "$commit^{commit}" 2>/dev/null; then
+    printf 'not checked  %s at %s\n' "$path" "$commit"
+    unchecked=1
+    continue
+  fi
+
   if ! file_at_commit=$(git show "$commit:$path" 2>/dev/null); then
     printf 'fail  %s:%s-%s\n' "$path" "$from" "$to"
     failed=1
@@ -68,4 +75,5 @@ while IFS= read -r citation; do
   fi
 done < <(jq -c '.claims[].evidence[] | select(.kind == "lines")' "$ledger")
 
+[ "$unchecked" -eq 0 ] || exit 70
 [ "$failed" -eq 0 ] || exit 1

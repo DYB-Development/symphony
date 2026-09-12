@@ -121,5 +121,17 @@ check >/dev/null 2>&1
 assert_equals "1" "$?" "fails a claim that carries no evidence"
 drop_source
 
+new_source
+jq -n --arg draft "$DRAFT" '{
+  draft: $draft,
+  claims: [
+    { text: "The loader reads two lines.", negative: false,
+      evidence: [ { kind: "lines", repo: "acme/quotes", commit: "0000000000000000000000000000000000000000", path: "quote.rb", from: 2, to: 3, quote: "two\nthree" } ] }
+  ]
+}' > "$LEDGER"
+check >/dev/null 2>&1
+assert_equals "70" "$?" "reports a cited commit it cannot read as not checked"
+drop_source
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
