@@ -33,5 +33,7 @@ assert_names 'A finding whose citation cannot be made to pass is cut from the dr
 
 assert_names 'Removed for a failed citation:' "names each claim it cut for a failed citation"
 
+assert_names 'Every inline comment has a claim whose pointer is that comment own path, line and side.' "points each finding at the lines its comment already names"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

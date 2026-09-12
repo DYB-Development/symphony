@@ -141,29 +141,30 @@ review of yours, in which case it is a **re-review**.
    Every key present, empty arrays where there is nothing. A reply job has an
    empty `comments` array and a `summary` of `null`.
 
-9. **Write the claim ledger beside it.** Read
+9. **Point each claim at the lines it is about.** Read
    `~/.claude/rules/claim-checking.md` (or `rules/claim-checking.md` in this
-   package) and follow it. The ledger sits next to the draft, at
-   `<repo root>/.review-<pr>.claims.json`, and lists every factual claim the
-   draft makes with the lines behind it.
+   package) and follow it. The claims file sits next to the draft, at
+   `<repo root>/.review-<pr>.claims.json`. Each claim holds its text word for
+   word and a pointer, and a pointer holds a path, a first and last line, and a
+   side. You write nothing else: no quote, no commit, no line of code.
 
-   Every inline comment carries at least one claim citing the lines it is about,
-   at the pull request's head or base commit.
+   Every inline comment has a claim whose pointer is that comment own path, line and side.
 
-   Every Findings bullet that reports a finding carries a claim too. A bullet
-   saying `nothing found` or `nothing to check` carries none, since a later unit
-   covers those.
+   Every Findings bullet that reports a finding has a claim pointing at the lines it is about.
 
-   Then check the ledger against the code it cites:
+   A bullet saying `nothing found` or `nothing to check` carries no claim yet,
+   since a later unit covers those.
+
+   Then have the tooling read the lines:
 
    ```
-   ~/.claude/bin/check-citations.sh <repo root>/.review-<pr>.claims.json
+   ~/.claude/bin/capture-evidence.sh <repo root>/.review-<pr>.claims.json <owner/repo> <n>
    ```
 
-   Never return a draft while that check reports a failing citation. Fix the
-   citation where you can.
+   Never return a draft while the capture reports an unresolved pointer. Fix the
+   pointer where you can.
 
-   A finding whose citation cannot be made to pass is cut from the draft.
+   A finding whose pointer cannot be resolved is cut from the draft.
    Its inline comment, its claim and the summary link naming it all go, and the
    remaining `{{comment:N}}` tokens are renumbered.
 
