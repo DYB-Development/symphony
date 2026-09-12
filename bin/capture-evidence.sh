@@ -76,6 +76,15 @@ while [ "$index" -lt "$count" ]; do
   commit=$head_commit
   [ "$side" = LEFT ] && commit=$base_commit
 
+  if ! git cat-file -e "$commit^{commit}" 2>/dev/null; then
+    git fetch -q --no-tags --depth 1 --all 2>/dev/null || true
+  fi
+
+  if ! git cat-file -e "$commit^{commit}" 2>/dev/null; then
+    printf 'not captured  %s could not be downloaded\n' "$commit"
+    exit 70
+  fi
+
   if ! file_at_commit=$(git show "$commit:$path" 2>/dev/null); then
     printf 'unresolved  %s is not at %s\n' "$path" "$commit"
     unresolved=1

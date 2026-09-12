@@ -140,5 +140,24 @@ capture >/dev/null 2>&1
 assert_equals "70" "$?" "reports a pull request it cannot read as not captured"
 drop_source
 
+new_source
+FORK="$WORK/fork"
+git clone -q "$SOURCE" "$FORK"
+printf 'one\ntwo\nthree\nfour\nfive\n' > "$FORK/quote.rb"
+git -C "$FORK" add quote.rb
+git -C "$FORK" -c user.email=t@e.com -c user.name=T commit -q -m second
+FORK_COMMIT="$(git -C "$FORK" rev-parse HEAD)"
+cat > "$WORK/gh" <<SH
+#!/usr/bin/env bash
+printf '%s\t%s\n' "$FORK_COMMIT" "$HEAD_COMMIT"
+SH
+chmod +x "$WORK/gh"
+git -C "$SOURCE" remote add fork "$FORK" 2>/dev/null
+write_pointer 5 5
+capture >/dev/null 2>&1
+assert_equals "five" "$(jq -r '.claims[0].captured.lines' "$CLAIMS" 2>/dev/null)" \
+  "downloads a commit the clone does not have, then reads it"
+drop_source
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
