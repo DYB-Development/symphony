@@ -37,5 +37,7 @@ assert_names "Every inline comment has a claim whose pointer is that comment's o
 
 assert_names '~/.claude/bin/review-draft.sh --check-lines' "checks each comment sits on a line the diff touches"
 
+assert_names '~/.claude/bin/judge-claims.sh' "has a second reader judge each claim against its evidence"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

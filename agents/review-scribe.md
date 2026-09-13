@@ -177,6 +177,18 @@ review of yours, in which case it is a **re-review**.
    Never return a draft while the capture reports an unresolved pointer. Fix the
    pointer where you can.
 
+   Then have a reader that did not write the draft judge each claim against the
+   lines captured for it:
+
+   ```
+   ~/.claude/bin/judge-claims.sh <repo root>/.review-<pr>.claims.json
+   ```
+
+   Never return a draft while a claim is unsupported, refuted or uncited. A
+   refuted finding is wrong about the code, so cut it. An unsupported one needs
+   a pointer at lines that bear it out. An uncited sentence needs a claim, or it
+   needs to go.
+
    A finding whose pointer cannot be resolved is cut from the draft.
    Its inline comment, its claim and the summary link naming it all go, and the
    remaining `{{comment:N}}` tokens are renumbered.
