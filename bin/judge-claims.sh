@@ -73,10 +73,10 @@ while [ "$index" -lt "$count" ]; do
   text=$(jq -r ".claims[$index].text" "$claims")
 
   block=$(printf '%s\n' "$reply" | awk -v want="$text" '
-    index($0, "\"" want "\"") && /^[0-9]+\. / { on = 1; next }
     on && /^[0-9]+\. / { exit }
-    on && /Verdict:/ { sub(/^ *Verdict: */, ""); verdict = $0; next }
-    on && /Why:/ { sub(/^ *Why: */, ""); why = $0; next }
+    index($0, "\"" want "\"") && /^[0-9]+\. / { on = 1; next }
+    on && verdict == "" && /Verdict:/ { sub(/^ *Verdict: */, ""); verdict = $0; next }
+    on && why == "" && /Why:/ { sub(/^ *Why: */, ""); why = $0; next }
     END { if (verdict != "") print verdict "\t" why }
   ')
 

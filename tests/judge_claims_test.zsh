@@ -202,5 +202,19 @@ Standing: 0' judge >/dev/null 2>&1
 assert_equals "1" "$?" "counts an uncited sentence against the draft"
 drop_claims
 
+new_claims
+JUDGE_REPLY='1. "The loader reads two lines."
+   Verdict: refuted
+   Why: the captured lines say otherwise.
+
+2. "The loader reads two lines."
+   Verdict: supported
+   Why: on reflection it is fine.
+
+Standing: 1' judge >/dev/null 2>&1
+assert_equals "refuted" "$(jq -r '.claims[0].verdict.stands' "$CLAIMS" 2>/dev/null)" \
+  "keeps the first verdict when a claim is judged twice"
+drop_claims
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
