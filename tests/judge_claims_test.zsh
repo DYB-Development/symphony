@@ -239,5 +239,19 @@ Standing: 0' judge >/dev/null 2>&1
 assert_equals "1" "$?" "reads an uncited list however it is laid out"
 drop_claims
 
+new_claims
+JUDGE_REPLY='1. "The loader reads two lines."
+   Verdict: supported
+   Why: the captured lines are two and three.
+
+Uncited:
+- ""
+- "The loader was rewritten last week."
+
+Standing: 0' judge >/dev/null 2>&1
+assert_equals "The loader was rewritten last week." "$(jq -r '.uncited[]' "$CLAIMS" 2>/dev/null)" \
+  "leaves an empty entry out of the uncited list"
+drop_claims
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
