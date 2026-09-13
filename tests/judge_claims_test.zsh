@@ -142,5 +142,20 @@ Nobody has run it since." "$(jq -r '.uncited[]' "$CLAIMS" 2>/dev/null)" \
   "carries the sentences the judge found uncited into the claims file"
 drop_claims
 
+new_claims
+jq '.claims += [ { text: "The loader reads four lines.", pointer: .claims[0].pointer, captured: .claims[0].captured } ]' "$CLAIMS" > "$CLAIMS.t" && mv "$CLAIMS.t" "$CLAIMS"
+JUDGE_REPLY='1. "The loader reads four lines."
+   Verdict: refuted
+   Why: the captured lines are two and three.
+
+2. "The loader reads two lines."
+   Verdict: supported
+   Why: the captured lines are two and three.
+
+Standing: 1' judge >/dev/null 2>&1
+assert_equals "supported" "$(jq -r '.claims[0].verdict.stands' "$CLAIMS" 2>/dev/null)" \
+  "matches each verdict to the claim it quotes, not to its place in the reply"
+drop_claims
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

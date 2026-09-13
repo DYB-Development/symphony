@@ -63,23 +63,35 @@ reply="$(claude -p --model opus --system-prompt "$rules" --tools "" --setting-so
 printf '%s\n' "$reply"
 
 standing=$(printf '%s\n' "$reply" | awk 'NF { last = $0 } END { print last }')
+fell=0
 
 printf '%s' "$standing" | grep -qx 'Standing: [0-9][0-9]*' ||
   { echo "judge-claims.sh: the judge's reply does not end with a count, so nothing was judged" >&2; exit 70; }
 
 index=0
 while [ "$index" -lt "$count" ]; do
-  number=$((index + 1))
-  verdict=$(printf '%s\n' "$reply" | awk -v n="^${number}\\. " '
-    $0 ~ n { on = 1; next }
+  text=$(jq -r ".claims[$index].text" "$claims")
+
+  block=$(printf '%s\n' "$reply" | awk -v want="$text" '
+    index($0, "\"" want "\"") && /^[0-9]+\. / { on = 1; next }
     on && /^[0-9]+\. / { exit }
-    on && /Verdict:/ { sub(/^ *Verdict: */, ""); print; exit }
+    on && /Verdict:/ { sub(/^ *Verdict: */, ""); verdict = $0; next }
+    on && /Why:/ { sub(/^ *Why: */, ""); why = $0; next }
+    END { if (verdict != "") print verdict "\t" why }
   ')
-  why=$(printf '%s\n' "$reply" | awk -v n="^${number}\\. " '
-    $0 ~ n { on = 1; next }
-    on && /^[0-9]+\. / { exit }
-    on && /Why:/ { sub(/^ *Why: */, ""); print; exit }
-  ')
+
+  verdict=$(printf '%s' "$block" | cut -f1)
+  why=$(printf '%s' "$block" | cut -f2)
+
+  case "$verdict" in
+    supported|unsupported|refuted) ;;
+    *)
+      echo "judge-claims.sh: no verdict came back for a claim, so nothing was judged" >&2
+      exit 70
+      ;;
+  esac
+
+  [ "$verdict" = supported ] || fell=$((fell + 1))
 
   updated=$(jq --argjson i "$index" --arg stands "$verdict" --arg why "$why" \
     '.claims[$i].verdict = { stands: $stands, why: $why }' "$claims")
@@ -103,4 +115,4 @@ fi
 updated=$(jq --argjson listed "$listed" '.uncited = $listed' "$claims")
 printf '%s\n' "$updated" > "$claims"
 
-[ "$standing" = "Standing: 0" ] || exit 1
+[ "$fell" -eq 0 ] || exit 1
