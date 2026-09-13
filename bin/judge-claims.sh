@@ -61,3 +61,31 @@ reply="$(claude -p --model opus --system-prompt "$rules" --tools "" --setting-so
   { echo "judge-claims.sh: the judge's run failed, so nothing was judged" >&2; exit 70; }
 
 printf '%s\n' "$reply"
+
+standing=$(printf '%s\n' "$reply" | awk 'NF { last = $0 } END { print last }')
+
+printf '%s' "$standing" | grep -qx 'Standing: [0-9][0-9]*' ||
+  { echo "judge-claims.sh: the judge's reply does not end with a count, so nothing was judged" >&2; exit 70; }
+
+index=0
+while [ "$index" -lt "$count" ]; do
+  number=$((index + 1))
+  verdict=$(printf '%s\n' "$reply" | awk -v n="^${number}\\. " '
+    $0 ~ n { on = 1; next }
+    on && /^[0-9]+\. / { exit }
+    on && /Verdict:/ { sub(/^ *Verdict: */, ""); print; exit }
+  ')
+  why=$(printf '%s\n' "$reply" | awk -v n="^${number}\\. " '
+    $0 ~ n { on = 1; next }
+    on && /^[0-9]+\. / { exit }
+    on && /Why:/ { sub(/^ *Why: */, ""); print; exit }
+  ')
+
+  updated=$(jq --argjson i "$index" --arg stands "$verdict" --arg why "$why" \
+    '.claims[$i].verdict = { stands: $stands, why: $why }' "$claims")
+  printf '%s\n' "$updated" > "$claims"
+
+  index=$((index + 1))
+done
+
+[ "$standing" = "Standing: 0" ] || exit 1
