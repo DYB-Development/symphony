@@ -104,5 +104,10 @@ JUDGE_REPLY='I had a look and it all seems fine to me.' judge >/dev/null 2>&1
 assert_equals "70" "$?" "reports a reply it cannot read as not judged"
 drop_claims
 
+new_claims
+JUDGE_EXIT=1 judge >/dev/null 2>&1
+assert_equals "70" "$?" "reports a judge run that failed as not judged, never as clean"
+drop_claims
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
