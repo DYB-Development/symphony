@@ -99,5 +99,10 @@ assert_equals "refuted" "$(jq -r '.claims[0].verdict.stands' "$CLAIMS" 2>/dev/nu
   "writes each verdict beside the evidence it was judged against"
 drop_claims
 
+new_claims
+JUDGE_REPLY='I had a look and it all seems fine to me.' judge >/dev/null 2>&1
+assert_equals "70" "$?" "reports a reply it cannot read as not judged"
+drop_claims
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
