@@ -101,9 +101,14 @@ while [ "$index" -lt "$count" ]; do
 done
 
 uncited=$(printf '%s\n' "$reply" | awk '
-  /^Uncited:/ { on = 1; next }
-  on && /^Standing:/ { exit }
-  on && /^- / { sub(/^- /, ""); sub(/^"/, ""); sub(/"$/, ""); print }
+  /^[[:space:]]*Uncited/ { on = 1; next }
+  on && /^[[:space:]]*Standing:/ { exit }
+  on && /^[[:space:]]*[-*] / {
+    sub(/^[[:space:]]*[-*] /, "")
+    sub(/^"/, "")
+    sub(/"$/, "")
+    if (length($0) > 0) print
+  }
 ')
 
 if [ -n "$uncited" ]; then
