@@ -88,4 +88,19 @@ while [ "$index" -lt "$count" ]; do
   index=$((index + 1))
 done
 
+uncited=$(printf '%s\n' "$reply" | awk '
+  /^Uncited:/ { on = 1; next }
+  on && /^Standing:/ { exit }
+  on && /^- / { sub(/^- /, ""); sub(/^"/, ""); sub(/"$/, ""); print }
+')
+
+if [ -n "$uncited" ]; then
+  listed=$(printf '%s\n' "$uncited" | jq -R . | jq -s .)
+else
+  listed='[]'
+fi
+
+updated=$(jq --argjson listed "$listed" '.uncited = $listed' "$claims")
+printf '%s\n' "$updated" > "$claims"
+
 [ "$standing" = "Standing: 0" ] || exit 1

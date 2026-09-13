@@ -127,5 +127,20 @@ Standing: 1' judge >/dev/null 2>&1
 assert_equals "1" "$?" "exits 1 when a claim does not stand"
 drop_claims
 
+new_claims
+JUDGE_REPLY='1. "The loader reads two lines."
+   Verdict: supported
+   Why: the captured lines are two and three.
+
+Uncited:
+- "The loader was rewritten last week."
+- "Nobody has run it since."
+
+Standing: 0' judge >/dev/null 2>&1
+assert_equals "The loader was rewritten last week.
+Nobody has run it since." "$(jq -r '.uncited[]' "$CLAIMS" 2>/dev/null)" \
+  "carries the sentences the judge found uncited into the claims file"
+drop_claims
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
