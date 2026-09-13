@@ -109,5 +109,23 @@ JUDGE_EXIT=1 judge >/dev/null 2>&1
 assert_equals "70" "$?" "reports a judge run that failed as not judged, never as clean"
 drop_claims
 
+new_claims
+JUDGE_REPLY='1. "The loader reads two lines."
+   Verdict: supported
+   Why: the captured lines are two and three.
+
+Standing: 0' judge >/dev/null 2>&1
+assert_equals "0" "$?" "exits 0 when every claim stands"
+drop_claims
+
+new_claims
+JUDGE_REPLY='1. "The loader reads two lines."
+   Verdict: unsupported
+   Why: the captured lines neither bear it out nor contradict it.
+
+Standing: 1' judge >/dev/null 2>&1
+assert_equals "1" "$?" "exits 1 when a claim does not stand"
+drop_claims
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
