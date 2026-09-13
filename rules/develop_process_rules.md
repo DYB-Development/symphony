@@ -71,7 +71,6 @@ where touching more than the unit under test is expected and correct.
 
 - **Always work on a feature branch and open a PR.** Confirm the target branch
   before any git operation (`git branch --show-current`).
-- **Keep PRs small and manageable** — typically **no more than 8–10 files.**
 - Keep the focus of a PR narrow. One concern per PR.
 - **All tests pass before opening the PR.**
 - **The linter and every other CI check pass before opening the PR.**
