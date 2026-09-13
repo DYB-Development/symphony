@@ -216,5 +216,16 @@ assert_equals "refuted" "$(jq -r '.claims[0].verdict.stands' "$CLAIMS" 2>/dev/nu
   "keeps the first verdict when a claim is judged twice"
 drop_claims
 
+new_claims
+JUDGE_REPLY='1. "The loader reads two lines."
+   Verdict: supported
+   Why: the captured lines are two and three.
+   Verdict: refuted
+
+Standing: 0' judge >/dev/null 2>&1
+assert_equals "supported" "$(jq -r '.claims[0].verdict.stands' "$CLAIMS" 2>/dev/null)" \
+  "keeps the first verdict in a block when a second follows it"
+drop_claims
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
