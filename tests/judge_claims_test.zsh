@@ -157,5 +157,38 @@ assert_equals "supported" "$(jq -r '.claims[0].verdict.stands' "$CLAIMS" 2>/dev/
   "matches each verdict to the claim it quotes, not to its place in the reply"
 drop_claims
 
+new_claims
+JUDGE_REPLY='Standing: 0' judge >/dev/null 2>&1
+assert_equals "70" "$?" "refuses a reply that counts nothing and judges nothing"
+drop_claims
+
+new_claims
+jq '.claims += [ { text: "The loader reads four lines.", pointer: .claims[0].pointer, captured: .claims[0].captured } ]' "$CLAIMS" > "$CLAIMS.t" && mv "$CLAIMS.t" "$CLAIMS"
+JUDGE_REPLY='1. "The loader reads two lines."
+   Verdict: supported
+   Why: the captured lines are two and three.
+
+Standing: 0' judge >/dev/null 2>&1
+assert_equals "70" "$?" "refuses a reply that leaves a claim unjudged"
+drop_claims
+
+new_claims
+JUDGE_REPLY='1. "The loader reads two lines."
+   Verdict: probably fine
+   Why: it looks alright to me.
+
+Standing: 0' judge >/dev/null 2>&1
+assert_equals "70" "$?" "refuses a verdict that is not one of the three"
+drop_claims
+
+new_claims
+JUDGE_REPLY='1. "The loader reads two lines."
+   Verdict: refuted
+   Why: the captured lines say otherwise.
+
+Standing: 0' judge >/dev/null 2>&1
+assert_equals "1" "$?" "counts what did not stand from the verdicts, not from the reply's own total"
+drop_claims
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
