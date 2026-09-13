@@ -115,4 +115,6 @@ fi
 updated=$(jq --argjson listed "$listed" '.uncited = $listed' "$claims")
 printf '%s\n' "$updated" > "$claims"
 
+[ -z "$uncited" ] || fell=$((fell + 1))
+
 [ "$fell" -eq 0 ] || exit 1
