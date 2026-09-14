@@ -116,6 +116,10 @@ review of yours, in which case it is a **re-review**.
    `{{comment:N}}`, where N is that comment's position in your `comments` array,
    counting from 1. A check with no finding carries no link.
 
+   A Missed changes finding has no inline comment and no link. Write its bullet
+   and the nested bullet for each file in the form `pr-review.md` gives, each
+   naming the path and line in the head commit that is now wrong.
+
    Raise every finding; there is no cap. When the list is long, say in the
    verdict that the PR needs reworking rather than reviewing.
 
@@ -167,6 +171,8 @@ review of yours, in which case it is a **re-review**.
    Every inline comment has a claim whose pointer is that comment's own path, line and side.
 
    Every Findings bullet that reports a finding has a claim pointing at the lines it is about.
+
+   Every nested Missed changes bullet has two claims on the `RIGHT` side: one pointing at the path and line it names, and one pointing at the code that line disagrees with.
 
    A bullet saying `nothing found` or `nothing to check` carries no claim yet,
    since a later unit covers those.
