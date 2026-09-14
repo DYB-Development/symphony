@@ -59,5 +59,12 @@ jq -nc '{hook_event_name: "PreToolUse", session_id: "s1", tool_name: "Bash", too
 assert_equals "" "$(ls -A "$LOGS")" "records nothing for a command run outside a subagent"
 drop_dir
 
+new_dir
+bash_payload a1 review-scribe '~/.claude/bin/judge-claims.sh /repo/.review-42.claims.json' | record 1000
+assert_equals $'1000\treview-scribe\t\truns judge-claims' \
+  "$(cat "$LOGS/a1.log" 2>&1)" \
+  "records a symphony script a subagent runs"
+drop_dir
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

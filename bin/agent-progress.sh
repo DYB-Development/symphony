@@ -22,7 +22,11 @@ case "${1:-}" in
     agent_type=$(printf '%s' "$payload" | jq -r '.agent_type // empty')
     command=$(printf '%s' "$payload" | jq -r '.tool_input.command // empty')
     step=$(printf '%s' "$command" | sed -nE 's/.*scribe-step\.sh[[:space:]]+"([^"]*)"[[:space:]]+"([^"]*)".*/\1	\2/p')
-    [ -n "$step" ] || exit 0
+    if [ -z "$step" ]; then
+      script=$(printf '%s' "$command" | sed -nE 's/.*\.claude\/bin\/([A-Za-z0-9_-]+)\.sh.*/\1/p')
+      [ -n "$script" ] || exit 0
+      step=$(printf '\truns %s' "$script")
+    fi
     mkdir -p "$log_dir"
     printf '%s\t%s\t%s\n' "$now" "$agent_type" "$step" >> "$log_dir/$agent_id.log"
     ;;
