@@ -73,5 +73,18 @@ assert_equals $'1000\treview-scribe\t\tfinished' \
   "records that a subagent finished"
 drop_dir
 
+status() {
+  AGENT_PROGRESS_DIR="$LOGS" AGENT_PROGRESS_NOW="$1" "$PROGRESS" 2>&1
+}
+
+echo "agent-progress.sh:"
+
+new_dir
+printf '1000\treview-scribe\tacme/quotes#42\t9. Point each claim\n1052\treview-scribe\t\truns judge-claims\n' > "$LOGS/a1.log"
+assert_equals "review-scribe acme/quotes#42 — runs judge-claims — 4m08s on this step, 5m00s in all" \
+  "$(status 1300)" \
+  "shows a running agent's target, latest step and how long it has taken"
+drop_dir
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

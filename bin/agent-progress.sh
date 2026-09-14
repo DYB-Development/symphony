@@ -25,6 +25,16 @@ step_for() {
   [ -z "$script" ] || printf '\truns %s' "$script"
 }
 
+show_progress() {
+  awk -F '\t' -v now="$now" '
+    function duration(seconds) { return sprintf("%dm%02ds", int(seconds / 60), seconds % 60) }
+    NR == 1 { started = $1 }
+    $3 != "" { target = " " $3 }
+    { type = $2; step = $4; at = $1 }
+    END { printf "%s%s — %s — %s on this step, %s in all\n", type, target, step, duration(now - at), duration(now - started) }
+  ' "$1"
+}
+
 case "${1:-}" in
   record)
     payload=$(cat)
@@ -39,6 +49,12 @@ case "${1:-}" in
     fi
     mkdir -p "$log_dir"
     printf '%s\t%s\t%s\n' "$now" "$agent_type" "$step" >> "$log_dir/$agent_id.log"
+    ;;
+  "")
+    for log in "$log_dir"/*.log; do
+      [ -f "$log" ] || continue
+      show_progress "$log"
+    done
     ;;
   *) usage ;;
 esac
