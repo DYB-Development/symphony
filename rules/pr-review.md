@@ -102,7 +102,8 @@ not touch.
 ## The summary comment
 
 The body of the review that carries the inline comments, so it sits above them
-and every finding it names links to the comment that raised it. Always these
+and every finding it names links to the comment that raised it, apart from a
+Missed changes finding, which has no comment. Always these
 sections, in this order, and never another:
 
 ```
@@ -144,6 +145,18 @@ either of the other two. Adding a check there means adding its bullet here, and
 the suite fails if the two ever disagree. A bullet naming a finding links the words that name it to the comment
 that raised it — `[the line item loop]({{comment:1}})`, where the number is the
 comment's position in the draft. A bullet with no finding carries no link.
+
+A Missed changes finding has no inline comment, because the file it is in is
+one the diff did not touch and GitHub takes a comment only on a line the diff
+touches. Its bullet says in one sentence how many files the diff left wrong.
+Under it, one nested bullet per file names the path and line, then gives one
+sentence saying what is now wrong and one saying what to change.
+
+```
+- ❌ **Missed changes** — the diff left two files wrong.
+  - `docs/notifications.md:142` — The example meta has no `visibility` key, which the feed now routes on. Add it to the example.
+  - `test/e2e/thread.test.ts:98` — The assertion checks for a test id the diff removed, so it cannot fail. Remove it.
+```
 
 **Conformance** is one ticked or unticked box per acceptance criterion, in the
 ticket's own order and words. With no ticket, its whole content is

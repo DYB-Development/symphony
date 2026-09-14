@@ -109,6 +109,13 @@ else
   fail "pr-review.md gives no unrun test suite as something a review did not check"
 fi
 
+findings_section="$(awk '/^\*\*Findings\*\* is one bullet per check/ { on = 1 } /^\*\*Conformance\*\* is/ { on = 0 } on' "$RULES/pr-review.md")"
+if [[ "$findings_section" == *"A Missed changes finding has no inline comment"* ]]; then
+  ok "pr-review.md keeps a Missed changes finding in the summary, never inline"
+else
+  fail "pr-review.md keeps a Missed changes finding in the summary, never inline"
+fi
+
 if grep -qF -- "- **Never run the code.**" "$SCRIPT_DIR/../agents/review-scribe.md"; then
   ok "review-scribe reads the code and runs nothing CI runs"
 else
