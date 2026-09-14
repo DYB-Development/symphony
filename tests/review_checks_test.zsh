@@ -35,6 +35,12 @@ else
   ok "the checks file names ${#CHECKS[@]} checks"
 fi
 
+if (( ${CHECKS[(Ie)Missed changes]} )); then
+  ok "review-checks.md defines a Missed changes check"
+else
+  fail "review-checks.md defines a Missed changes check"
+fi
+
 for reader in pr-review repo-audit; do
   missing=()
   for c in "${CHECKS[@]}"; do

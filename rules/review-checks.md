@@ -91,3 +91,10 @@ apart from success.
 schema change against a table in use, a backfill that is not safe to run twice,
 and a change that cannot be undone. Name what breaks if it runs while the old
 code is still live.
+
+**Missed changes** — a file that now says something the code no longer does: a
+doc describing the old behaviour, a test asserting on a name that no longer
+exists, and a config or caller still using something that was renamed or
+removed. In a pull request it is a file the diff did not touch and made wrong.
+In an audit it is a doc, test or config in the section that disagrees with the
+section's code. Name the line that is now wrong and the code it disagrees with.
