@@ -67,10 +67,10 @@ them**, and reported as that file says to report it. `state` carries its result,
 spelled `findings`, `nothing-found` or `nothing-to-check`; what those mean and
 why every check appears are in that file and are not restated here.
 
-The eight parts an audit file carries, in this order:
+The nine parts an audit file carries, in this order:
 
 `Security`, `Scalability`, `Design`, `Patterns`, `Dependencies`, `Tests`,
-`Failure modes`, `Migration safety`.
+`Failure modes`, `Migration safety`, `Missed changes`.
 
 Adding a check there means adding it here, and the suite fails if the two ever
 disagree.

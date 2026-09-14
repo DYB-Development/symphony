@@ -120,6 +120,7 @@ sections, in this order, and never another:
 - <✅ or ❌> **Tests** — <one sentence, or "nothing found", or "nothing to check">
 - <✅ or ❌> **Failure modes** — <one sentence, or "nothing found", or "nothing to check">
 - <✅ or ❌> **Migration safety** — <one sentence, or "nothing found", or "nothing to check">
+- <✅ or ❌> **Missed changes** — <one sentence, or "nothing found", or "nothing to check">
 
 ## Conformance
 
