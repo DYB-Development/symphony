@@ -35,6 +35,18 @@ else
   ok "the checks file names ${#CHECKS[@]} checks"
 fi
 
+if (( ${CHECKS[(Ie)Missed changes]} )); then
+  ok "review-checks.md defines a Missed changes check"
+else
+  fail "review-checks.md defines a Missed changes check"
+fi
+
+if grep -qF -- "a behaviour no test reaches is a finding on its own" "$RULES/review-checks.md"; then
+  ok "review-checks.md raises an untested behaviour without a defect"
+else
+  fail "review-checks.md raises an untested behaviour without a defect"
+fi
+
 for reader in pr-review repo-audit; do
   missing=()
   for c in "${CHECKS[@]}"; do
@@ -101,6 +113,39 @@ if [[ "$not_checked" != *"test suite"* ]]; then
   ok "pr-review.md gives no unrun test suite as something a review did not check"
 else
   fail "pr-review.md gives no unrun test suite as something a review did not check"
+fi
+
+findings_section="$(awk '/^\*\*Findings\*\* is one bullet per check/ { on = 1 } /^\*\*Conformance\*\* is/ { on = 0 } on' "$RULES/pr-review.md")"
+if [[ "$findings_section" == *"A Missed changes finding has no inline comment"* ]]; then
+  ok "pr-review.md keeps a Missed changes finding in the summary, never inline"
+else
+  fail "pr-review.md keeps a Missed changes finding in the summary, never inline"
+fi
+
+if [[ "$scribe_summary_step" == *"A Missed changes finding has no inline comment"* ]]; then
+  ok "review-scribe.md writes a Missed changes finding into the summary, never inline"
+else
+  fail "review-scribe.md writes a Missed changes finding into the summary, never inline"
+fi
+
+bar="$(awk '/^- \*\*The bar is correctness\.\*\*/ { on = 1; print; next } /^- / { on = 0 } on' "$RULES/pr-review.md")"
+if [[ "$bar" == *"no test reaches"* && "$bar" == *"Missed changes"* ]]; then
+  ok "pr-review.md lets an untested behaviour and a missed change past the correctness bar"
+else
+  fail "pr-review.md lets an untested behaviour and a missed change past the correctness bar"
+fi
+
+if grep -qF -- "- Any finding the code is not actually wrong without, apart from the two the bar in \`pr-review.md\` lets past." "$SCRIPT_DIR/../agents/review-scribe.md"; then
+  ok "review-scribe.md keeps an untested behaviour and a missed change when it cuts"
+else
+  fail "review-scribe.md keeps an untested behaviour and a missed change when it cuts"
+fi
+
+scribe_reading_step="$(awk '/^2\. \*\*Read enough of the repo/ { on = 1 } /^3\. / { on = 0 } on' "$SCRIPT_DIR/../agents/review-scribe.md")"
+if [[ "$scribe_reading_step" == *"git grep"* && "$scribe_reading_step" == *"Missed changes"* ]]; then
+  ok "review-scribe.md searches the head commit for what the diff left wrong"
+else
+  fail "review-scribe.md searches the head commit for what the diff left wrong"
 fi
 
 if grep -qF -- "- **Never run the code.**" "$SCRIPT_DIR/../agents/review-scribe.md"; then

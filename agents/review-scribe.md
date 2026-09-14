@@ -66,6 +66,19 @@ review of yours, in which case it is a **re-review**.
    file that does it the other way — find that file or drop the finding.
    Surveying the repo fills the review with opinions the diff did not earn.
 
+   The Missed changes check is the one that reads past the diff, and it reads
+   only what a search turns up. List every name the diff renames, removes, or
+   changes the meaning of: an identifier, a key, a route, a test id, and the
+   path of each file it changed. Search the head commit for each one:
+
+   ```
+   git fetch -q origin pull/<n>/head
+   git grep -n -- '<name>' <head sha>
+   ```
+
+   Read each hit in a file the diff did not touch, and each doc the search finds
+   describing a file the diff changed. Stop there.
+
 3. **Run every check** in the order `review-checks.md` gives, and record each
    one's result as that file says to. Run every one even when the diff looks like
    it only touches one of them.
@@ -93,7 +106,7 @@ review of yours, in which case it is a **re-review**.
    sentence each and at most four — and one sentence saying what to do instead.
    Never put the chain of cause into the header or the first sentence, and leave
    the steps out when the defect is visible in the line itself. There is no
-   severity — raise it only when the code is wrong without the fix. One comment
+   severity — raise it only when it meets the bar in `pr-review.md`. One comment
    per finding, on the line that causes it, in the current diff.
 
 6. **Write the summary** with its four sections — Verdict, Findings,
@@ -102,6 +115,10 @@ review of yours, in which case it is a **re-review**.
    check has a finding and ✅ when it has none. Link the words naming a finding to
    `{{comment:N}}`, where N is that comment's position in your `comments` array,
    counting from 1. A check with no finding carries no link.
+
+   A Missed changes finding has no inline comment and no link. Write its bullet
+   and the nested bullet for each file in the form `pr-review.md` gives, each
+   naming the path and line in the head commit that is now wrong.
 
    Raise every finding; there is no cap. When the list is long, say in the
    verdict that the PR needs reworking rather than reviewing.
@@ -155,6 +172,8 @@ review of yours, in which case it is a **re-review**.
 
    Every Findings bullet that reports a finding has a claim pointing at the lines it is about.
 
+   Every nested Missed changes bullet has two claims on the `RIGHT` side: one pointing at the path and line it names, and one pointing at the code that line disagrees with.
+
    A bullet saying `nothing found` or `nothing to check` carries no claim yet,
    since a later unit covers those.
 
@@ -204,7 +223,7 @@ review of yours, in which case it is a **re-review**.
      first sentence carries the chain of cause instead of naming the defect, or
      that runs past four steps, or that carries a question, a design, or praise.
    - Any pattern finding you cannot point at an existing file for.
-   - Any finding the code is not actually wrong without.
+   - Any finding the code is not actually wrong without, apart from the two the bar in `pr-review.md` lets past.
    - Any comment on a line the diff does not touch.
 
    Cutting a comment renumbers the `{{comment:N}}` tokens — fix them, or
