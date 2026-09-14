@@ -84,9 +84,9 @@ One finding, on the line that causes it. The whole comment:
   restatement of the defect and never a question.
 - **The bar is correctness.** A finding is raised only when the code is wrong
   without the fix. Anything below that bar is not raised at all — a preference,
-  a tidier alternative, a cost the author may reasonably decide to carry. Two
-  findings meet the bar without a defect in the code: a behaviour no test
-  reaches, under Tests, and a file the diff left wrong, under Missed changes.
+  a tidier alternative, a cost the author may reasonably decide to carry.
+  Two findings meet the bar without a defect in the code: a behaviour
+  no test reaches, under Tests, and a file the diff left wrong, under Missed changes.
 - **There is no severity.** One bar means one weight, and grading findings
   against each other only reopens the grey area the bar exists to close. A
   reader of a comment knows it has to be fixed, because that is the only kind
