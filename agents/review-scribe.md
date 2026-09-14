@@ -106,7 +106,7 @@ review of yours, in which case it is a **re-review**.
    sentence each and at most four — and one sentence saying what to do instead.
    Never put the chain of cause into the header or the first sentence, and leave
    the steps out when the defect is visible in the line itself. There is no
-   severity — raise it only when the code is wrong without the fix. One comment
+   severity — raise it only when it meets the bar in `pr-review.md`. One comment
    per finding, on the line that causes it, in the current diff.
 
 6. **Write the summary** with its four sections — Verdict, Findings,
@@ -223,7 +223,7 @@ review of yours, in which case it is a **re-review**.
      first sentence carries the chain of cause instead of naming the defect, or
      that runs past four steps, or that carries a question, a design, or praise.
    - Any pattern finding you cannot point at an existing file for.
-   - Any finding the code is not actually wrong without.
+   - Any finding the code is not actually wrong without, apart from the two the bar in `pr-review.md` lets past.
    - Any comment on a line the diff does not touch.
 
    Cutting a comment renumbers the `{{comment:N}}` tokens — fix them, or

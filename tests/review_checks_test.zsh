@@ -135,6 +135,12 @@ else
   fail "pr-review.md lets an untested behaviour and a missed change past the correctness bar"
 fi
 
+if grep -qF -- "- Any finding the code is not actually wrong without, apart from the two the bar in \`pr-review.md\` lets past." "$SCRIPT_DIR/../agents/review-scribe.md"; then
+  ok "review-scribe.md keeps an untested behaviour and a missed change when it cuts"
+else
+  fail "review-scribe.md keeps an untested behaviour and a missed change when it cuts"
+fi
+
 scribe_reading_step="$(awk '/^2\. \*\*Read enough of the repo/ { on = 1 } /^3\. / { on = 0 } on' "$SCRIPT_DIR/../agents/review-scribe.md")"
 if [[ "$scribe_reading_step" == *"git grep"* && "$scribe_reading_step" == *"Missed changes"* ]]; then
   ok "review-scribe.md searches the head commit for what the diff left wrong"
