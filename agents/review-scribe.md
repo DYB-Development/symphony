@@ -66,6 +66,19 @@ review of yours, in which case it is a **re-review**.
    file that does it the other way — find that file or drop the finding.
    Surveying the repo fills the review with opinions the diff did not earn.
 
+   The Missed changes check is the one that reads past the diff, and it reads
+   only what a search turns up. List every name the diff renames, removes, or
+   changes the meaning of: an identifier, a key, a route, a test id, and the
+   path of each file it changed. Search the head commit for each one:
+
+   ```
+   git fetch -q origin pull/<n>/head
+   git grep -n -- '<name>' <head sha>
+   ```
+
+   Read each hit in a file the diff did not touch, and each doc the search finds
+   describing a file the diff changed. Stop there.
+
 3. **Run every check** in the order `review-checks.md` gives, and record each
    one's result as that file says to. Run every one even when the diff looks like
    it only touches one of them.

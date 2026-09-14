@@ -116,6 +116,13 @@ else
   fail "pr-review.md keeps a Missed changes finding in the summary, never inline"
 fi
 
+scribe_reading_step="$(awk '/^2\. \*\*Read enough of the repo/ { on = 1 } /^3\. / { on = 0 } on' "$SCRIPT_DIR/../agents/review-scribe.md")"
+if [[ "$scribe_reading_step" == *"git grep"* && "$scribe_reading_step" == *"Missed changes"* ]]; then
+  ok "review-scribe.md searches the head commit for what the diff left wrong"
+else
+  fail "review-scribe.md searches the head commit for what the diff left wrong"
+fi
+
 if grep -qF -- "- **Never run the code.**" "$SCRIPT_DIR/../agents/review-scribe.md"; then
   ok "review-scribe reads the code and runs nothing CI runs"
 else
