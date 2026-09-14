@@ -31,7 +31,10 @@ show_progress() {
     NR == 1 { started = $1 }
     $3 != "" { target = " " $3 }
     { type = $2; step = $4; at = $1 }
-    END { printf "%s%s — %s — %s on this step, %s in all\n", type, target, step, duration(now - at), duration(now - started) }
+    END {
+      if (step == "finished") exit
+      printf "%s%s — %s — %s on this step, %s in all\n", type, target, step, duration(now - at), duration(now - started)
+    }
   ' "$1"
 }
 
