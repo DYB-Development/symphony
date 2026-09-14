@@ -66,5 +66,12 @@ assert_equals $'1000\treview-scribe\t\truns judge-claims' \
   "records a symphony script a subagent runs"
 drop_dir
 
+new_dir
+jq -nc '{hook_event_name: "SubagentStop", session_id: "s1", agent_id: "a1", agent_type: "review-scribe"}' | record 1000
+assert_equals $'1000\treview-scribe\t\tfinished' \
+  "$(cat "$LOGS/a1.log" 2>&1)" \
+  "records that a subagent finished"
+drop_dir
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
