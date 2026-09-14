@@ -41,6 +41,12 @@ else
   fail "review-checks.md defines a Missed changes check"
 fi
 
+if grep -qF -- "a behaviour no test reaches is a finding on its own" "$RULES/review-checks.md"; then
+  ok "review-checks.md raises an untested behaviour without a defect"
+else
+  fail "review-checks.md raises an untested behaviour without a defect"
+fi
+
 for reader in pr-review repo-audit; do
   missing=()
   for c in "${CHECKS[@]}"; do

@@ -78,9 +78,10 @@ state shared between examples. Also a test that mirrors the implementation
 instead of asserting behaviour, since it locks the implementation in and fails
 on a refactor that changed nothing.
 
-Also a behaviour the suite does not reach where the code gets it wrong. Name the
-missing test and the defect together — that is one finding, and the fix is one
-cycle: write the test, watch it fail, fix.
+Also a behaviour the suite does not reach, whether or not the code gets it right:
+a behaviour no test reaches is a finding on its own. Name the behaviour and the
+test that would reach it. Where the code also gets it wrong, name the defect in
+the same finding, and the fix is one cycle: write the test, watch it fail, fix.
 
 **Failure modes** — what happens when something outside this code fails: a
 call, a job, a dependency, a disk, a network. A failure swallowed, retried
