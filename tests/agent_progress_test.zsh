@@ -54,5 +54,10 @@ assert_equals $'1000\treview-scribe\tacme/quotes#42\t3. Run every check' \
   "records a step marker against the agent that ran it"
 drop_dir
 
+new_dir
+jq -nc '{hook_event_name: "PreToolUse", session_id: "s1", tool_name: "Bash", tool_input: {command: "~/.claude/bin/scribe-step.sh \"acme/quotes#42\" \"1. Read the diff\""}}' | record 1000
+assert_equals "" "$(ls -A "$LOGS")" "records nothing for a command run outside a subagent"
+drop_dir
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

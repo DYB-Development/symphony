@@ -18,6 +18,7 @@ case "${1:-}" in
   record)
     payload=$(cat)
     agent_id=$(printf '%s' "$payload" | jq -r '.agent_id // empty')
+    [ -n "$agent_id" ] || exit 0
     agent_type=$(printf '%s' "$payload" | jq -r '.agent_type // empty')
     command=$(printf '%s' "$payload" | jq -r '.tool_input.command // empty')
     step=$(printf '%s' "$command" | sed -nE 's/.*scribe-step\.sh[[:space:]]+"([^"]*)"[[:space:]]+"([^"]*)".*/\1	\2/p')
