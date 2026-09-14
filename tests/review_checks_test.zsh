@@ -128,6 +128,13 @@ else
   fail "review-scribe.md writes a Missed changes finding into the summary, never inline"
 fi
 
+bar="$(awk '/^- \*\*The bar is correctness\.\*\*/ { on = 1; print; next } /^- / { on = 0 } on' "$RULES/pr-review.md")"
+if [[ "$bar" == *"no test reaches"* && "$bar" == *"Missed changes"* ]]; then
+  ok "pr-review.md lets an untested behaviour and a missed change past the correctness bar"
+else
+  fail "pr-review.md lets an untested behaviour and a missed change past the correctness bar"
+fi
+
 scribe_reading_step="$(awk '/^2\. \*\*Read enough of the repo/ { on = 1 } /^3\. / { on = 0 } on' "$SCRIPT_DIR/../agents/review-scribe.md")"
 if [[ "$scribe_reading_step" == *"git grep"* && "$scribe_reading_step" == *"Missed changes"* ]]; then
   ok "review-scribe.md searches the head commit for what the diff left wrong"
