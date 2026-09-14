@@ -31,5 +31,28 @@ assert_equals "acme/quotes#42 · 3. Run every check" \
   "$("$STEP" "acme/quotes#42" "3. Run every check" 2>&1)" \
   "prints the target and the step it is given"
 
+PROGRESS="$SCRIPT_DIR/../bin/agent-progress.sh"
+
+new_dir() { LOGS="$(mktemp -d "${TMPDIR:-/tmp}/agent_progress_test.XXXXXX")"; }
+drop_dir() { rm -rf "$LOGS"; }
+
+bash_payload() {
+  jq -nc --arg id "$1" --arg type "$2" --arg command "$3" \
+    '{hook_event_name: "PreToolUse", session_id: "s1", agent_id: $id, agent_type: $type, tool_name: "Bash", tool_input: {command: $command}}'
+}
+
+record() {
+  AGENT_PROGRESS_DIR="$LOGS" AGENT_PROGRESS_NOW="$1" "$PROGRESS" record
+}
+
+echo "agent-progress.sh record:"
+
+new_dir
+bash_payload a1 review-scribe '~/.claude/bin/scribe-step.sh "acme/quotes#42" "3. Run every check"' | record 1000
+assert_equals $'1000\treview-scribe\tacme/quotes#42\t3. Run every check' \
+  "$(cat "$LOGS/a1.log" 2>&1)" \
+  "records a step marker against the agent that ran it"
+drop_dir
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
