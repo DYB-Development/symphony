@@ -54,10 +54,11 @@ case "${1:-}" in
     printf '%s\t%s\t%s\n' "$now" "$agent_type" "$step" >> "$log_dir/$agent_id.log"
     ;;
   "")
-    for log in "$log_dir"/*.log; do
+    running=$(for log in "$log_dir"/*.log; do
       [ -f "$log" ] || continue
       show_progress "$log"
-    done
+    done)
+    printf '%s\n' "${running:-No agents running.}"
     ;;
   *) usage ;;
 esac

@@ -88,7 +88,7 @@ drop_dir
 
 new_dir
 printf '1000\treview-scribe\tacme/quotes#42\t1. Read the diff\n1200\treview-scribe\t\tfinished\n' > "$LOGS/a1.log"
-assert_equals "" "$(status 1300)" "leaves out an agent that has finished"
+assert_equals "No agents running." "$(status 1300)" "leaves out an agent that has finished"
 drop_dir
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
