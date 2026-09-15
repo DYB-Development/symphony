@@ -37,6 +37,15 @@ review of yours, in which case it is a **re-review**.
 
 ## What you do
 
+Mark each numbered step below as you start it, before its first command:
+
+```
+~/.claude/bin/scribe-step.sh "<owner/repo>#<pr>" "<n>. <the step's bold title>"
+```
+
+Both arguments go in double quotes. It prints one line and changes nothing. It
+is how the person who ran you sees which step you are on.
+
 1. **Read the diff before writing a word.** The PR body tells you intent; only
    the diff tells you fact. Never raise a finding on code you have not read.
 

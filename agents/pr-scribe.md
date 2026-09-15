@@ -28,6 +28,15 @@ The input may be messy or thin; the diff is what you actually work from.
 
 ## What you do
 
+Mark each numbered step below as you start it, before its first command:
+
+```
+~/.claude/bin/scribe-step.sh "<owner/repo>@<branch>" "<n>. <the step's bold title>"
+```
+
+Both arguments go in double quotes. It prints one line and changes nothing. It
+is how the person who ran you sees which step you are on.
+
 1. **Establish ground truth before writing a word.** The spec tells you intent.
    Only the repo tells you fact. Never describe a change you have not read.
    ```

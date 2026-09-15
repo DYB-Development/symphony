@@ -33,6 +33,15 @@ may be thin; the repo is what you actually work from.
 
 ## What you do
 
+Mark each numbered step below as you start it, before its first command:
+
+```
+~/.claude/bin/scribe-step.sh "<owner/repo>" "<n>. <the step's bold title>"
+```
+
+Both arguments go in double quotes. It prints one line and changes nothing. It
+is how the person who ran you sees which step you are on.
+
 1. **Establish ground truth before writing a word.** Sections 02 and 04 are
    claims about what the repo already contains, and every unit in section 09 is
    sized against them. Never write an entry for code you have not read.

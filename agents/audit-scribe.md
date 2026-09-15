@@ -29,6 +29,15 @@ caller may say what they are worried about; read the code anyway.
 
 ## What you do
 
+Mark each numbered step below as you start it, before its first command:
+
+```
+~/.claude/bin/scribe-step.sh "<owner/repo>:<section>" "<n>. <the step's bold title>"
+```
+
+Both arguments go in double quotes. It prints one line and changes nothing. It
+is how the person who ran you sees which step you are on.
+
 1. **Measure the target before reading it.**
 
    ```
