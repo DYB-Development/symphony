@@ -55,9 +55,13 @@ rm -rf "$CONFIG"
 CONFIG="$(fresh_config)"
 CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" >/dev/null 2>&1
 
-assert_equals "SessionStart SubagentStart PostToolUse PreToolUse" \
+assert_equals "SessionStart SubagentStart PostToolUse PreToolUse SubagentStop" \
   "$(jq -r '[.hooks | keys_unsorted[]] | join(" ")' "$CONFIG/settings.json" | tr '\n' ' ' | sed 's/ $//')" \
   "registers a hook for each event the package needs"
+
+assert_equals "PreToolUse:Bash SubagentStop:*" \
+  "$(jq -r '[.hooks | to_entries[] | .key as $event | .value[] | select(any(.hooks[]; .command | endswith("/bin/agent-progress.sh record"))) | "\($event):\(.matcher)"] | sort | join(" ")' "$CONFIG/settings.json")" \
+  "runs the progress recorder on every Bash call and when a subagent stops"
 
 rm -rf "$CONFIG"
 

@@ -39,6 +39,21 @@
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/bin/decision-gate.sh check"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/agent-progress.sh record"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/agent-progress.sh record"
           }
         ]
       }
