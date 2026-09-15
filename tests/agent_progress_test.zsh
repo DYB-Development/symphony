@@ -91,5 +91,19 @@ printf '1000\treview-scribe\tacme/quotes#42\t1. Read the diff\n1200\treview-scri
 assert_equals "No agents running." "$(status 1300)" "leaves out an agent that has finished"
 drop_dir
 
+echo "scribes:"
+
+assert_marks_steps() {
+  local intro
+  intro="$(awk '/^## What you do/ { on = 1; next } /^1\. / { on = 0 } on' "$SCRIPT_DIR/../agents/$1.md")"
+  if [[ "$intro" == *'~/.claude/bin/scribe-step.sh "'* ]]; then
+    ok "$1 marks each step as it starts it"
+  else
+    fail "$1 marks each step as it starts it"
+  fi
+}
+
+assert_marks_steps review-scribe
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
