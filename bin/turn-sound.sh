@@ -15,4 +15,7 @@ case "${1:-}" in
     mkdir -p "$(dirname "$off_flag")"
     touch "$off_flag"
     ;;
+  on)
+    rm -f "$off_flag"
+    ;;
 esac
