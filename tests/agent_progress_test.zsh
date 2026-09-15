@@ -105,5 +105,7 @@ assert_marks_steps() {
 
 assert_marks_steps review-scribe
 
+assert_marks_steps pr-scribe
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
