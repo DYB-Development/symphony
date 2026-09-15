@@ -104,10 +104,21 @@ settings that are not its own alone:
 | `PreToolUse` | `decision-gate.sh check` | Refuses a commit while that choice is still unrecorded |
 | `PreToolUse` | `agent-progress.sh record` | Logs the step a subagent marks and each script it runs |
 | `SubagentStop` | `agent-progress.sh record` | Logs that a subagent finished |
+| `Stop` | `turn-sound.sh play` | Plays a sound when a session finishes its turn |
+| `Notification` | `turn-sound.sh play` | Plays the same sound when a session asks permission to run a tool |
 
 Skip the hooks and the package still loads, but the writing rules never reach a
 subagent, the decision gate never fires, and no progress is logged, all without
 saying so.
+
+To stop the sound in every open session, and to bring it back:
+
+```sh
+~/.claude/bin/turn-sound.sh off
+~/.claude/bin/turn-sound.sh on
+```
+
+It plays with `afplay`, so it is silent on a machine without it.
 
 To see which step each running scribe is on:
 
