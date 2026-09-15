@@ -9,6 +9,7 @@ case "${1:-}" in
   play)
     cat >/dev/null
     [ -e "$off_flag" ] && exit 0
+    command -v "$player" >/dev/null || exit 0
     "$player" "$sound_file"
     ;;
   off)

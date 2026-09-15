@@ -60,5 +60,10 @@ echo '{"hook_event_name":"Stop"}' | sound play
 assert_equals "/sounds/Glass.aiff" "$(played)" "plays again once turned back on"
 drop_dir
 
+new_dir
+echo '{"hook_event_name":"Stop"}' | TURN_SOUND_DIR="$WORK" TURN_SOUND_PLAYER="$WORK/no-such-player" "$SOUND" play 2>/dev/null
+assert_equals "0" "$?" "exits cleanly on a machine with no player"
+drop_dir
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
