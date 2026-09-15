@@ -23,6 +23,15 @@ caller gathered. It may be messy — that is fine, you clean it up.
 
 ## What you do
 
+Mark each numbered step below as you start it, before its first command:
+
+```
+~/.claude/bin/scribe-step.sh "<owner/repo>" "<n>. <the step's bold title>"
+```
+
+Both arguments go in double quotes. It prints one line and changes nothing. It
+is how the person who ran you sees which step you are on.
+
 1. **Pick the type** (exactly one) — `request`/`plan`/`breakdown`/`task`/`bug`/`chore`/`spike`.
    The type decides the template and the definition-of-done. A `plan` writes the
    plan *into the issue body* (never a committed doc); a `request` just captures it.
