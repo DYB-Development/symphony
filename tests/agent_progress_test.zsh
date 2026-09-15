@@ -109,5 +109,7 @@ assert_marks_steps pr-scribe
 
 assert_marks_steps issue-scribe
 
+assert_marks_steps plan-scribe
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
