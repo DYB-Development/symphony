@@ -3,10 +3,14 @@ set -euo pipefail
 
 usage() {
   cat >&2 <<'USAGE'
-usage: agent-progress.sh record < hook.json
+usage: agent-progress.sh
+       agent-progress.sh record < hook.json
 
-Keeps one progress log per running subagent. `record` is the hook: it appends a
-line whenever a subagent marks a step with scribe-step.sh.
+Shows each running subagent's target, the step it is on, how long it has been on
+that step and how long it has run. `record` is the hook: it appends a line to
+the subagent's log when it marks a step with scribe-step.sh, when it runs a
+script from ~/.claude/bin, and when it stops.
+Logs are kept in ~/.claude/agent-progress, one file per subagent.
 USAGE
   exit 64
 }

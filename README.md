@@ -92,9 +92,9 @@ commands can live alongside these.
 
 ### What the hooks do
 
-The plugin carries its hooks itself. A linked install merges the same four
-entries into your settings, replacing any it put there before, and leaving hooks
-and settings that are not its own alone:
+The plugin carries its hooks itself. A linked install merges the same entries
+into your settings, replacing any it put there before, and leaving hooks and
+settings that are not its own alone:
 
 | Event | Runs | Why |
 |---|---|---|
@@ -102,9 +102,18 @@ and settings that are not its own alone:
 | `SubagentStart` | `writing-style-hook.sh` | A subagent receives no rules of its own, so it gets them here |
 | `PostToolUse` | `decision-gate.sh arm` | Answering a question settles a choice, which has to be recorded |
 | `PreToolUse` | `decision-gate.sh check` | Refuses a commit while that choice is still unrecorded |
+| `PreToolUse` | `agent-progress.sh record` | Logs the step a subagent marks and each script it runs |
+| `SubagentStop` | `agent-progress.sh record` | Logs that a subagent finished |
 
 Skip the hooks and the package still loads, but the writing rules never reach a
-subagent and the decision gate never fires, both without saying so.
+subagent, the decision gate never fires, and no progress is logged, all without
+saying so.
+
+To see which step each running scribe is on:
+
+```sh
+~/.claude/bin/agent-progress.sh
+```
 
 ### Two more steps
 
