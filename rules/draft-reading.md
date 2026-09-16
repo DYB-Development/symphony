@@ -67,6 +67,12 @@ Write the draft to a file exactly as a person will see it, then run:
 ~/.claude/bin/read-draft.sh <file>
 ```
 
+**The file goes in a directory made for this run and no other.** Make it with
+`mktemp -d` inside the temporary directory you would otherwise use, and write
+every draft, copy and body file there. Scribes spawned at the same time share
+that temporary directory, so a draft written to a fixed name such as `body.md`
+is overwritten by the next scribe, and the wrong body is posted or filed.
+
 The script prints the reader's reply. Its exit code says what came back:
 
 - `0` — nothing was flagged.
