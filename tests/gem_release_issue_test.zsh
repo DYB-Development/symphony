@@ -74,6 +74,11 @@ print -r -- "bundle install failed" | "$OPEN_ISSUE" widget 0.2.0 >/dev/null 2>&1
 assert_contains "Release failed: widget 0.2.0" "$(cat "$GH_LOG")" "opens an issue titled with the gem and the version"
 drop_stub
 
+stub_gh
+print -r -- "bundle install failed" | "$OPEN_ISSUE" widget 0.2.0 >/dev/null 2>&1
+assert_contains "bundle install failed" "$(cat "$GH_LOG.body")" "carries what went wrong into the issue body"
+drop_stub
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
