@@ -55,6 +55,20 @@ entry() {
     }}}' >> "$TRANSCRIPT"
 }
 
+agent_entry() {
+  local agent="$1" type="$2" id="$3" branch="$4" cwd="$5" input="$6" output="$7" read="$8" write="$9"
+  jq -nc --arg agent "$agent" --arg type "$type" --arg id "$id" --arg branch "$branch" \
+    --arg cwd "$cwd" --argjson input "$input" --argjson output "$output" \
+    --argjson read "$read" --argjson write "$write" \
+    '{type: "assistant", agentId: $agent, attributionAgent: $type, gitBranch: $branch, cwd: $cwd,
+      message: {id: $id, usage: {
+        input_tokens: $input,
+        output_tokens: $output,
+        cache_read_input_tokens: $read,
+        cache_creation_input_tokens: $write
+      }}}' >> "$TRANSCRIPT"
+}
+
 echo "usage.sh:"
 
 new_repo
@@ -144,6 +158,12 @@ Output: 20
 Cache read: 30
 Cache write: 40
 Total: 100" "$("$USAGE")" "reads the project directory named for the repo"
+drop_repo
+
+new_repo
+agent_entry agent_1 pr-scribe msg_1 main "$REPO" 10 20 30 40
+assert_equals "pr-scribe — main — 100" "$("$USAGE" --runs)" \
+  "names a scribe run, the branch it ran on and what it cost"
 drop_repo
 
 echo ""
