@@ -174,6 +174,26 @@ assert_equals "pr-scribe — main — 100
 review-scribe — main — 4" "$("$USAGE" --runs)" "lists the runs oldest first"
 drop_repo
 
+new_repo
+agent_entry agent_1 pr-scribe msg_1 main "$REPO" 10 20 30 40
+agent_entry agent_1 pr-scribe msg_1 main "$REPO" 10 20 30 40
+assert_equals "pr-scribe — main — 100" "$("$USAGE" --runs)" \
+  "counts a run's message written across two entries once"
+drop_repo
+
+new_repo
+git -C "$REPO" symbolic-ref HEAD refs/heads/feature
+agent_entry agent_1 review-scribe msg_1 main "$REPO" 10 20 30 40
+assert_equals "review-scribe — main — 100" "$("$USAGE" --runs)" \
+  "keeps a run made while another branch was checked out"
+drop_repo
+
+new_repo
+agent_entry agent_1 pr-scribe msg_1 main "${REPO}-elsewhere" 10 20 30 40
+assert_equals "No scribe runs recorded for this repo." "$("$USAGE" --runs)" \
+  "leaves out a run made in another repo"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
