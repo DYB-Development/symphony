@@ -109,6 +109,13 @@ assert_equals "3" "$?" "exits with the nothing-to-release code when the version 
 drop_stub
 drop_gem
 
+new_gem widget 0.1.0
+published_none
+"$PREFLIGHT" >/dev/null 2>&1
+assert_equals "0" "$?" "releases a gem rubygems.org has never seen"
+drop_stub
+drop_gem
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
