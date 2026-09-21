@@ -206,6 +206,12 @@ the version is a run that says there is nothing to release and stops.
 The release tags the commit, pushes the tag, and pushes the gem. Nothing is done
 by hand and nothing is typed in.
 
+The same run can be started from the gem's Actions tab, under Release, with Run
+workflow. It reads the gemspec and compares it with rubygems.org exactly as a
+merge does, so a version already published is still a run that stops. Reach for
+it when a release failed and the fix was somewhere other than the gem, or when a
+version was merged before the gem was wired to the workflow.
+
 ### When it fails
 
 Before publishing, every check runs and one run names every problem it found
