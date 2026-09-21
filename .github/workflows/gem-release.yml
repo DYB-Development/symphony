@@ -6,7 +6,7 @@ on:
       ruby-version:
         description: The Ruby the release runs on.
         type: string
-        default: "3.3.5"
+        default: "ruby"
 
 jobs:
   release:
@@ -94,7 +94,7 @@ jobs:
           {
             echo '```'
             if [ -n "$failed_job" ]; then
-              gh run view --job "$failed_job" --log-failed | tail -n 200
+              gh run view --repo "$GITHUB_REPOSITORY" --job "$failed_job" --log-failed | tail -n 200
             else
               echo "The run failed before any job reported a failing step."
             fi

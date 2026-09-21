@@ -8,6 +8,10 @@ set -euo pipefail
 GEM="${1:?gem name}"
 VERSION="${2:?version}"
 
+# The scripts are checked out from another repository, so every call has to say
+# which repository it means.
+REPO="${GITHUB_REPOSITORY:?repository}"
+
 TITLE="Release failed: $GEM $VERSION"
 RUN_URL="${GITHUB_SERVER_URL:-https://github.com}/${GITHUB_REPOSITORY:-}/actions/runs/${GITHUB_RUN_ID:-}"
 
@@ -20,7 +24,7 @@ body() {
 }
 
 open_issue_for_this_version() {
-  gh issue list --state open --search "$TITLE in:title" --json number,title \
+  gh issue list --repo "$REPO" --state open --search "$TITLE in:title" --json number,title \
     | ruby -rjson -e '
         title = ARGV[0]
         match = JSON.parse($stdin.read).find { |issue| issue["title"] == title }
@@ -30,15 +34,21 @@ open_issue_for_this_version() {
 
 LABEL="release-failure"
 
-ensure_label() {
-  gh label create "$LABEL" --color b60205 --description "A gem release that did not reach rubygems.org" >/dev/null 2>&1 || true
+# The issue is what has to reach you, so a label that cannot be applied never
+# costs you the issue.
+label() {
+  gh label create "$LABEL" --repo "$REPO" --color b60205 \
+    --description "A gem release that did not reach rubygems.org" >/dev/null 2>&1 || true
+  gh issue edit "$1" --repo "$REPO" --add-label "$LABEL" >/dev/null 2>&1 || true
 }
 
 EXISTING="$(open_issue_for_this_version)"
 
 if [[ -n "$EXISTING" ]]; then
-  body | gh issue comment "$EXISTING" --body-file -
-else
-  ensure_label
-  body | gh issue create --title "$TITLE" --body-file - --label "$LABEL"
+  body | gh issue comment "$EXISTING" --repo "$REPO" --body-file -
+  exit 0
 fi
+
+URL="$(body | gh issue create --repo "$REPO" --title "$TITLE" --body-file -)"
+printf '%s\n' "$URL"
+label "${URL##*/}"
