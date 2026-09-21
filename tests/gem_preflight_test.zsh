@@ -131,6 +131,13 @@ assert_contains "Problems found (2)" "$("$PREFLIGHT" 2>&1)" "reports every probl
 drop_stub
 drop_gem
 
+new_gem widget 0.2.0
+published_none
+print -r -- "this is not ruby" > widget.gemspec
+assert_contains "widget.gemspec" "$("$PREFLIGHT" 2>&1)" "names the gemspec it could not read"
+drop_stub
+drop_gem
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
