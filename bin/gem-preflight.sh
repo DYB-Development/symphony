@@ -32,7 +32,9 @@ read_spec() {
 
 published_versions() {
   local name="$1" body
-  body="$(curl -sS -f "https://rubygems.org/api/v1/versions/${name}.json")" || return 0
+  # A gem rubygems.org has never seen answers 404, which is an answer rather
+  # than a problem, so the lookup keeps its complaints to itself.
+  body="$(curl -sS -f "https://rubygems.org/api/v1/versions/${name}.json" 2>/dev/null)" || return 0
   printf '%s' "$body" | ruby -rjson -e 'puts JSON.parse($stdin.read).map { |v| v["number"] }' 2>/dev/null
 }
 

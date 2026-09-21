@@ -83,6 +83,7 @@ published_none() {
   STUB_BIN="$(mktemp -d "${TMPDIR:-/tmp}/gem_preflight_stub.XXXXXX")"
   {
     print -r -- "#!/usr/bin/env bash"
+    print -r -- "echo 'curl: (22) The requested URL returned error: 404' >&2"
     print -r -- "exit 22"
   } > "$STUB_BIN/curl"
   chmod +x "$STUB_BIN/curl"
@@ -158,6 +159,13 @@ new_gem widget 0.2.0
 published_none
 sed -i "" 's|https://rubygems.org|https://gems.example.com|' widget.gemspec
 assert_contains "gems.example.com" "$("$PREFLIGHT" 2>&1)" "names a push host trusted publishing cannot reach"
+drop_stub
+drop_gem
+
+new_gem widget 0.1.0
+published_none
+assert_equals "widget 0.1.0" "$("$PREFLIGHT" 2>&1)" \
+  "says nothing about the lookup when rubygems.org has never heard of the gem"
 drop_stub
 drop_gem
 
