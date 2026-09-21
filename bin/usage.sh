@@ -5,11 +5,14 @@ usage() {
   cat >&2 <<'USAGE'
 usage: usage.sh
        usage.sh --render
+       usage.sh --runs
 
 Totals the tokens the session transcripts recorded for this repo on the current
 branch, broken down by input, output and cache. `--render` prints the PR body's
 Tokens Used section from those totals, and says `Not measured.` when no
-transcript names this branch.
+transcript names this branch. `--runs` lists every scribe run recorded for this
+repo instead, oldest first, each with the branch it ran on and what it cost,
+whichever branch is checked out now.
 Transcripts are read from the directories under $CLAUDE_CONFIG_DIR/projects, or
 ~/.claude/projects, whose names carry this repo's path, and from all of them when
 none does.
