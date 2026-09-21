@@ -55,6 +55,9 @@ echo "gem-release workflow:"
 assert_equals "workflow_call" "$(query "on" "$WORKFLOW")" \
   "is called by a gem's own workflow and triggered by nothing else"
 
+assert_contains "id-token" "$(query "jobs.release.permissions" "$WORKFLOW")" \
+  "asks for the token rubygems.org exchanges for a publishing credential"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
