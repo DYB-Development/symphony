@@ -118,6 +118,13 @@ assert_equals "v0.2.0" "$(git -C "$REMOTE" tag)" "tags the commit it published o
 drop_stub
 drop_gem
 
+new_gem
+stub_gem
+PUSH_FAILS=1 "$PUBLISH" widget 0.2.0 >/dev/null 2>&1
+assert_equals "" "$(git -C "$REMOTE" tag)" "leaves no tag behind when rubygems.org refuses the gem"
+drop_stub
+drop_gem
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
