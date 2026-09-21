@@ -5,11 +5,14 @@ usage() {
   cat >&2 <<'USAGE'
 usage: usage.sh
        usage.sh --render
+       usage.sh --runs
 
 Totals the tokens the session transcripts recorded for this repo on the current
 branch, broken down by input, output and cache. `--render` prints the PR body's
 Tokens Used section from those totals, and says `Not measured.` when no
-transcript names this branch.
+transcript names this branch. `--runs` lists every scribe run recorded for this
+repo instead, oldest first, each with the branch it ran on and what it cost,
+whichever branch is checked out now.
 Transcripts are read from the directories under $CLAUDE_CONFIG_DIR/projects, or
 ~/.claude/projects, whose names carry this repo's path, and from all of them when
 none does.
@@ -19,7 +22,7 @@ USAGE
 }
 
 case "${1:-}" in
-  "" | --render) ;;
+  "" | --render | --runs) ;;
   *) usage ;;
 esac
 
@@ -35,6 +38,10 @@ transcript_dirs() {
   local named
   named=$(find "$projects" -maxdepth 1 -type d -name "*${root//\//-}*" 2>/dev/null)
   printf '%s\n' "${named:-$projects}"
+}
+
+transcript_files() {
+  transcript_dirs | tr '\n' '\0' | xargs -0 grep -rlF --include='*.jsonl' "$root" 2>/dev/null
 }
 
 read_transcripts() {
@@ -53,19 +60,62 @@ read_transcripts() {
           (.message.usage.cache_creation_input_tokens // 0)
         ]
       | @tsv' "$transcript" 2>/dev/null || true
-  done < <(transcript_dirs | tr '\n' '\0' | xargs -0 grep -rlF --include='*.jsonl' "$root" 2>/dev/null)
+  done < <(transcript_files)
+}
+
+grouped='
+  function grouped(number,   digits, out) {
+    digits = sprintf("%d", number)
+    while (length(digits) > 3) {
+      out = "," substr(digits, length(digits) - 2) out
+      digits = substr(digits, 1, length(digits) - 3)
+    }
+    return digits out
+  }
+'
+
+read_runs() {
+  local transcript
+  while IFS= read -r transcript; do
+    jq -r --arg root "$root" '
+      select(type == "object")
+      | select(.type == "assistant")
+      | select((.attributionAgent // "") != "")
+      | select((.cwd // "") == $root or ((.cwd // "") | startswith($root + "/")))
+      | [
+          (.timestamp // ""),
+          .agentId,
+          .attributionAgent,
+          (.gitBranch // ""),
+          .message.id,
+          (.message.usage.input_tokens // 0),
+          (.message.usage.output_tokens // 0),
+          (.message.usage.cache_read_input_tokens // 0),
+          (.message.usage.cache_creation_input_tokens // 0)
+        ]
+      | @tsv' "$transcript" 2>/dev/null || true
+  done < <(transcript_files)
+}
+
+list_runs() {
+  sort -k1,1 | awk -F '\t' "$grouped"'
+    !counted[$5]++ {
+      if (!(seen[$2]++)) order[++runs] = $2
+      type[$2] = $3
+      branch[$2] = $4
+      total[$2] += $6 + $7 + $8 + $9
+    }
+    END {
+      for (index_ = 1; index_ <= runs; index_++) {
+        run = order[index_]
+        printf "%s — %s — %s\n", type[run], branch[run], grouped(total[run])
+      }
+    }
+  '
 }
 
 total_tokens() {
-  awk -F '\t' '
-    function grouped(number,   digits, out) {
-      digits = sprintf("%d", number)
-      while (length(digits) > 3) {
-        out = "," substr(digits, length(digits) - 2) out
-        digits = substr(digits, 1, length(digits) - 3)
-      }
-      return digits out
-    }
+  awk -F '\t' "$grouped"'
     !counted[$1]++ { input += $2; output += $3; read += $4; written += $5 }
     END {
       if (length(counted) == 0) exit
@@ -77,6 +127,12 @@ total_tokens() {
     }
   '
 }
+
+if [ "${1:-}" = "--runs" ]; then
+  runs=$(read_runs | list_runs)
+  printf '%s\n' "${runs:-No scribe runs recorded for this repo.}"
+  exit 0
+fi
 
 totals=$(read_transcripts | total_tokens)
 

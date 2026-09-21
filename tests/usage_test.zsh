@@ -55,6 +55,21 @@ entry() {
     }}}' >> "$TRANSCRIPT"
 }
 
+agent_entry() {
+  local agent="$1" type="$2" id="$3" branch="$4" cwd="$5" input="$6" output="$7" read="$8" write="$9"
+  local stamp="${10:-}"
+  jq -nc --arg agent "$agent" --arg type "$type" --arg id "$id" --arg branch "$branch" \
+    --arg cwd "$cwd" --argjson input "$input" --argjson output "$output" \
+    --argjson read "$read" --argjson write "$write" --arg stamp "$stamp" \
+    '{type: "assistant", agentId: $agent, attributionAgent: $type, timestamp: $stamp, gitBranch: $branch, cwd: $cwd,
+      message: {id: $id, usage: {
+        input_tokens: $input,
+        output_tokens: $output,
+        cache_read_input_tokens: $read,
+        cache_creation_input_tokens: $write
+      }}}' >> "$TRANSCRIPT"
+}
+
 echo "usage.sh:"
 
 new_repo
@@ -144,6 +159,39 @@ Output: 20
 Cache read: 30
 Cache write: 40
 Total: 100" "$("$USAGE")" "reads the project directory named for the repo"
+drop_repo
+
+new_repo
+agent_entry agent_1 pr-scribe msg_1 main "$REPO" 10 20 30 40
+assert_equals "pr-scribe — main — 100" "$("$USAGE" --runs)" \
+  "names a scribe run, the branch it ran on and what it cost"
+drop_repo
+
+new_repo
+agent_entry agent_2 review-scribe msg_2 main "$REPO" 1 1 1 1 2026-02-02T00:00:00Z
+agent_entry agent_1 pr-scribe msg_1 main "$REPO" 10 20 30 40 2026-01-01T00:00:00Z
+assert_equals "pr-scribe — main — 100
+review-scribe — main — 4" "$("$USAGE" --runs)" "lists the runs oldest first"
+drop_repo
+
+new_repo
+agent_entry agent_1 pr-scribe msg_1 main "$REPO" 10 20 30 40
+agent_entry agent_1 pr-scribe msg_1 main "$REPO" 10 20 30 40
+assert_equals "pr-scribe — main — 100" "$("$USAGE" --runs)" \
+  "counts a run's message written across two entries once"
+drop_repo
+
+new_repo
+git -C "$REPO" symbolic-ref HEAD refs/heads/feature
+agent_entry agent_1 review-scribe msg_1 main "$REPO" 10 20 30 40
+assert_equals "review-scribe — main — 100" "$("$USAGE" --runs)" \
+  "keeps a run made while another branch was checked out"
+drop_repo
+
+new_repo
+agent_entry agent_1 pr-scribe msg_1 main "${REPO}-elsewhere" 10 20 30 40
+assert_equals "No scribe runs recorded for this repo." "$("$USAGE" --runs)" \
+  "leaves out a run made in another repo"
 drop_repo
 
 echo ""
