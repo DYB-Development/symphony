@@ -48,12 +48,6 @@ check_tag_is_free() {
   finding "The tag $tag already exists but that version is not on rubygems.org, so an earlier release tagged the commit and then failed to push the gem. Delete the tag or raise the version."
 }
 
-check_built_gem_is_ignored() {
-  local built="pkg/$1-$2.gem"
-  git check-ignore -q "$built" && return 0
-  finding "Git does not ignore $built, so the release will build the gem and then refuse to go on because the working tree is dirty. Add pkg/ to .gitignore."
-}
-
 hand_to_workflow() {
   [[ -n "${GITHUB_OUTPUT:-}" ]] || return 0
   printf 'name=%s\nversion=%s\nrelease=%s\n' "$1" "$2" "$3" >> "$GITHUB_OUTPUT"
@@ -99,7 +93,6 @@ main() {
 
   check_push_host_is_rubygems "$push_host"
   check_tag_is_free "$version"
-  check_built_gem_is_ignored "$name" "$version"
 
   report || {
     hand_to_workflow "$name" "$version" "false"

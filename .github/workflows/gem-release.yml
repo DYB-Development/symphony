@@ -25,7 +25,6 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          persist-credentials: false
 
       - name: Check out the release scripts
         uses: actions/checkout@v6
@@ -60,9 +59,33 @@ jobs:
           fi
           exit "$status"
 
+      - name: Configure the rubygems.org credential
+        if: steps.preflight.outputs.release == 'true'
+        uses: rubygems/configure-rubygems-credentials@dc5a8d8553e6ee01fc26761a49e99e733d17954a # v2.1.0
+
       - name: Publish to rubygems.org
         if: steps.preflight.outputs.release == 'true'
-        uses: rubygems/release-gem@7f9650160c1a4e7989fdc9855807bdbd421d8b6b # v1.4.1
+        env:
+          GEM: ${{ steps.preflight.outputs.name }}
+          VERSION: ${{ steps.preflight.outputs.version }}
+        run: |
+          git config user.name "$(git log -1 --pretty=format:'%an')"
+          git config user.email "$(git log -1 --pretty=format:'%ae')"
+
+          set +e
+          .release-scripts/bin/gem-publish.sh "$GEM" "$VERSION" 2>&1 \
+            | tee "$RUNNER_TEMP/publish.log"
+          status=${PIPESTATUS[0]}
+          set -e
+          exit "$status"
+
+      - name: Keep what the release printed
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-log
+          path: ${{ runner.temp }}/*.log
+          if-no-files-found: ignore
 
   notify:
     needs: release
@@ -80,7 +103,15 @@ jobs:
         with:
           repository: ${{ job.workflow_repository }}
           ref: ${{ job.workflow_sha }}
+          path: .release-scripts
           persist-credentials: false
+
+      - name: Fetch what the release printed
+        uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          name: release-log
+          path: ${{ runner.temp }}/release-log
 
       - name: Open an issue naming what failed
         env:
@@ -88,20 +119,19 @@ jobs:
           GEM: ${{ needs.release.outputs.name }}
           VERSION: ${{ needs.release.outputs.version }}
         run: |
-          failed_job=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs" \
-            --jq '[.jobs[] | select(.conclusion == "failure")][0].id')
+          printed=$(cat "$RUNNER_TEMP"/release-log/*.log 2>/dev/null)
 
           {
             echo '```'
-            if [ -n "$failed_job" ]; then
-              gh run view --repo "$GITHUB_REPOSITORY" --job "$failed_job" --log-failed | tail -n 200
+            if [ -n "$printed" ]; then
+              printf '%s\n' "$printed" | tail -n 200
             else
-              echo "The run failed before any job reported a failing step."
+              echo "The release stopped before it printed anything."
             fi
             echo '```'
           } > "$RUNNER_TEMP/details.md"
 
-          bin/gem-release-issue.sh \
+          .release-scripts/bin/gem-release-issue.sh \
             "${GEM:-$(basename "$GITHUB_REPOSITORY")}" \
             "${VERSION:-unknown}" \
             < "$RUNNER_TEMP/details.md"

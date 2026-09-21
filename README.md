@@ -203,8 +203,10 @@ The workflow reads the gemspec on every push to `main`, compares the version
 with rubygems.org, and releases when it is higher. A push that does not change
 the version is a run that says there is nothing to release and stops.
 
-The release tags the commit, pushes the tag, and pushes the gem. Nothing is done
-by hand and nothing is typed in.
+The release builds the gem, pushes it to rubygems.org, and then tags the commit
+it was built from. Pushing first is deliberate: a rejected gem leaves no tag
+behind, so the next run is a clean retry. Nothing is done by hand and nothing is
+typed in.
 
 The same run can be started from the gem's Actions tab, under Release, with Run
 workflow. It reads the gemspec and compares it with rubygems.org exactly as a
@@ -216,11 +218,11 @@ version was merged before the gem was wired to the workflow.
 
 Before publishing, every check runs and one run names every problem it found
 rather than the first. It refuses a version whose tag already exists, a gemspec
-Ruby cannot read, a push host trusted publishing cannot authenticate against,
-and a built package git does not ignore.
+Ruby cannot read, and a push host trusted publishing cannot authenticate
+against.
 
 A failed release opens an issue in the gem's own repository, labelled
-`release-failure`, carrying the failing step's log. A second failure of the same
+`release-failure`, carrying what the release printed before it stopped. A second failure of the same
 version comments on that issue rather than opening another.
 
 ## Configuring it

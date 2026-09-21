@@ -126,7 +126,7 @@ drop_gem
 new_gem widget 0.2.0
 published_none
 git -c tag.gpgSign=false tag -m v0.2.0 v0.2.0
-print -r -- "" > .gitignore
+sed -i "" 's|https://rubygems.org|https://gems.example.com|' widget.gemspec
 assert_contains "Problems found (2)" "$("$PREFLIGHT" 2>&1)" "reports every problem in one run rather than the first"
 drop_stub
 drop_gem
