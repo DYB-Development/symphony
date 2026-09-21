@@ -97,6 +97,15 @@ Cache write: 40
 Total: 100" "$("$USAGE")" "leaves out a message recorded in another repo"
 drop_repo
 
+new_repo
+entry msg_1 main "$REPO/deep/nested" 10 20 30 40
+assert_equals "Input: 10
+Output: 20
+Cache read: 30
+Cache write: 40
+Total: 100" "$("$USAGE")" "counts a message recorded in a subdirectory of the repo"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
