@@ -1,0 +1,79 @@
+#!/usr/bin/env zsh
+# Tests for bin/gem-release-issue.sh. Every case runs against a gh that records
+# what it was asked to do instead of reaching GitHub.
+#
+# Usage: zsh tests/gem_release_issue_test.zsh
+setopt no_unset
+
+SCRIPT_DIR="${0:A:h}"
+OPEN_ISSUE="$SCRIPT_DIR/../bin/gem-release-issue.sh"
+
+PASS=0
+FAIL=0
+
+ok()   { printf '  \033[32m✓\033[0m %s\n' "$1"; PASS=$((PASS+1)); }
+fail() { printf '  \033[31m✗\033[0m %s\n' "$1"; FAIL=$((FAIL+1)); }
+
+assert_contains() {
+  local needle="$1" haystack="$2" label="$3"
+  if [[ "$haystack" == *"$needle"* ]]; then
+    ok "$label"
+  else
+    fail "$label"
+    printf '      wanted to find: %s\n' "${(qqq)needle}"
+    printf '      in:             %s\n' "${(qqq)haystack}"
+  fi
+}
+
+assert_lacks() {
+  local needle="$1" haystack="$2" label="$3"
+  if [[ "$haystack" != *"$needle"* ]]; then
+    ok "$label"
+  else
+    fail "$label"
+    printf '      did not want:   %s\n' "${(qqq)needle}"
+    printf '      in:             %s\n' "${(qqq)haystack}"
+  fi
+}
+
+# A gh that writes down every call and answers the issue search with $MATCHES.
+stub_gh() {
+  STUB_BIN="$(mktemp -d "${TMPDIR:-/tmp}/gem_release_issue.XXXXXX")"
+  GH_LOG="$STUB_BIN/calls"
+  : > "$GH_LOG"
+  cat > "$STUB_BIN/gh" <<STUB
+#!/usr/bin/env bash
+printf '%s\n' "\$*" >> "$GH_LOG"
+if [[ "\$1 \$2" == "issue list" ]]; then
+  printf '%s' '${1:-[]}'
+fi
+if [[ "\$*" == *--body-file\ -* ]]; then
+  cat >> "$GH_LOG.body"
+fi
+exit 0
+STUB
+  chmod +x "$STUB_BIN/gh"
+  : > "$GH_LOG.body"
+  path=("$STUB_BIN" $path)
+
+  export GITHUB_REPOSITORY="acme/widget"
+  export GITHUB_SERVER_URL="https://github.com"
+  export GITHUB_RUN_ID="12345"
+  export GITHUB_SHA="a1b2c3d"
+}
+
+drop_stub() {
+  path=(${path:#$STUB_BIN})
+  rm -rf "$STUB_BIN"
+}
+
+echo "gem-release-issue.sh:"
+
+stub_gh
+print -r -- "bundle install failed" | "$OPEN_ISSUE" widget 0.2.0 >/dev/null 2>&1
+assert_contains "Release failed: widget 0.2.0" "$(cat "$GH_LOG")" "opens an issue titled with the gem and the version"
+drop_stub
+
+echo ""
+printf '%d passed, %d failed\n' "$PASS" "$FAIL"
+[[ $FAIL -eq 0 ]]
