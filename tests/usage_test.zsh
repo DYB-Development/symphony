@@ -57,10 +57,11 @@ entry() {
 
 agent_entry() {
   local agent="$1" type="$2" id="$3" branch="$4" cwd="$5" input="$6" output="$7" read="$8" write="$9"
+  local stamp="${10:-}"
   jq -nc --arg agent "$agent" --arg type "$type" --arg id "$id" --arg branch "$branch" \
     --arg cwd "$cwd" --argjson input "$input" --argjson output "$output" \
-    --argjson read "$read" --argjson write "$write" \
-    '{type: "assistant", agentId: $agent, attributionAgent: $type, gitBranch: $branch, cwd: $cwd,
+    --argjson read "$read" --argjson write "$write" --arg stamp "$stamp" \
+    '{type: "assistant", agentId: $agent, attributionAgent: $type, timestamp: $stamp, gitBranch: $branch, cwd: $cwd,
       message: {id: $id, usage: {
         input_tokens: $input,
         output_tokens: $output,
@@ -164,6 +165,13 @@ new_repo
 agent_entry agent_1 pr-scribe msg_1 main "$REPO" 10 20 30 40
 assert_equals "pr-scribe — main — 100" "$("$USAGE" --runs)" \
   "names a scribe run, the branch it ran on and what it cost"
+drop_repo
+
+new_repo
+agent_entry agent_2 review-scribe msg_2 main "$REPO" 1 1 1 1 2026-02-02T00:00:00Z
+agent_entry agent_1 pr-scribe msg_1 main "$REPO" 10 20 30 40 2026-01-01T00:00:00Z
+assert_equals "pr-scribe — main — 100
+review-scribe — main — 4" "$("$USAGE" --runs)" "lists the runs oldest first"
 drop_repo
 
 echo ""
