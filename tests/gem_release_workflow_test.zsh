@@ -50,6 +50,15 @@ query() {
   ' "$2" "$1"
 }
 
+# Counts the steps of every job whose definition mentions something.
+steps_mentioning() {
+  ruby -ryaml -e '
+    doc = YAML.load_file(ARGV[0], aliases: true)
+    steps = doc["jobs"].values.flat_map { |job| job["steps"] || [] }
+    puts steps.count { |step| step.to_s.include?(ARGV[1]) }
+  ' "$1" "$2"
+}
+
 echo "gem-release workflow:"
 
 assert_equals "workflow_call" "$(query "on" "$WORKFLOW")" \
@@ -72,6 +81,9 @@ assert_contains "gh run view --repo" "$(query "jobs.notify.steps.1.run" "$WORKFL
 
 assert_equals "ruby" "$(query "on.workflow_call.inputs.ruby-version.default" "$WORKFLOW")" \
   "builds on the current Ruby by default, whose default gems match what a lockfile asks for"
+
+assert_equals "1" "$(steps_mentioning "$WORKFLOW" "gem-publish.sh")" \
+  "publishes with the script in this repository, which needs no rake task from the gem"
 
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
