@@ -61,6 +61,9 @@ assert_contains "id-token" "$(query "jobs.release.permissions" "$WORKFLOW")" \
 assert_contains "issues" "$(query "jobs.notify.permissions" "$WORKFLOW")" \
   "asks for the access it needs to open the failure issue"
 
+assert_equals "contents,id-token,issues,actions" "$(query "jobs.release.permissions" "$CALLER")" \
+  "grants the caller every permission the reusable workflow's jobs ask for"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
