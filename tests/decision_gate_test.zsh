@@ -50,6 +50,18 @@ drop_repo() {
   unset CLAUDE_DECISION_GATE_DIR
 }
 
+new_other_repo() {
+  OTHER="$(mktemp -d "${TMPDIR:-/tmp}/decision_gate_test.XXXXXX")"
+  git -C "$OTHER" init -q
+}
+
+drop_other_repo() {
+  rm -rf "$OTHER"
+  unset OTHER
+}
+
+decide_in() { (cd "$1" && "$DECIDE" "Which road?" "The left one, over the right.") >/dev/null; }
+
 arm()   { printf '{"session_id":"s1","tool_name":"AskUserQuestion"}' | "$GATE" arm; }
 check() {
   jq -nc --arg cmd "$1" '{session_id: "s1", tool_name: "Bash", tool_input: {command: $cmd}}' | "$GATE" check
@@ -98,6 +110,43 @@ arm >/dev/null
 assert_contains '"permissionDecision":"deny"' \
   "$(check 'git commit -m "explain what NO_DECISION=1 is for"')" \
   "still refuses when the override is only mentioned in the message"
+drop_repo
+
+new_repo
+new_other_repo
+arm >/dev/null
+decide_in "$OTHER"
+assert_equals "" "$(check "cd $OTHER && git commit -m \"wip\"")" \
+  "reads the decision log of the repo the commit names"
+drop_other_repo
+drop_repo
+
+new_repo
+new_other_repo
+arm >/dev/null
+check "cd $OTHER && NO_DECISION=1 git commit -m \"wip\"" >/dev/null
+assert_contains '"permissionDecision":"deny"' "$(check 'git commit -m "wip"')" \
+  "keeps refusing the repo the override was not used in"
+drop_other_repo
+drop_repo
+
+new_repo
+new_other_repo
+arm >/dev/null
+assert_contains '"permissionDecision":"deny"' \
+  "$( (export HOME="${OTHER:h}"; check "cd ~/${OTHER:t} && git commit -m \"wip\"") )" \
+  "finds the repo behind a path written from the home directory"
+drop_other_repo
+drop_repo
+
+new_repo
+new_other_repo
+arm >/dev/null
+"$DECIDE" "Which road?" "The left one, over the right." >/dev/null
+assert_contains '"permissionDecision":"deny"' \
+  "$(check "cd $OTHER && git commit -m \"wip\"")" \
+  "refuses the commit when only another repo's log grew"
+drop_other_repo
 drop_repo
 
 echo ""
