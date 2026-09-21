@@ -66,6 +66,16 @@ Cache write: 44,814
 Total: 69,972" "$("$USAGE")" "totals the tokens of one message on this branch"
 drop_repo
 
+new_repo
+entry msg_1 main "$REPO" 2 321 24835 44814
+entry msg_1 main "$REPO" 2 321 24835 44814
+assert_equals "Input: 2
+Output: 321
+Cache read: 24,835
+Cache write: 44,814
+Total: 69,972" "$("$USAGE")" "counts a message written across two entries once"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
