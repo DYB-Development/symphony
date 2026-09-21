@@ -64,6 +64,9 @@ assert_contains "issues" "$(query "jobs.notify.permissions" "$WORKFLOW")" \
 assert_equals "contents,id-token,issues,actions" "$(query "jobs.release.permissions" "$CALLER")" \
   "grants the caller every permission the reusable workflow's jobs ask for"
 
+assert_equals "push,workflow_dispatch" "$(query "on" "$CALLER")" \
+  "is run by a merge to main and by hand from the Actions tab"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
