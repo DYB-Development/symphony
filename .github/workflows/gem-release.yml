@@ -6,7 +6,7 @@ on:
       ruby-version:
         description: The Ruby the release runs on.
         type: string
-        default: "3.3.5"
+        default: "ruby"
 
 jobs:
   release:

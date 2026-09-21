@@ -70,6 +70,9 @@ assert_equals "push,workflow_dispatch" "$(query "on" "$CALLER")" \
 assert_contains "gh run view --repo" "$(query "jobs.notify.steps.1.run" "$WORKFLOW")" \
   "reads the failing log from the gem's repository, not the one the scripts came from"
 
+assert_equals "ruby" "$(query "on.workflow_call.inputs.ruby-version.default" "$WORKFLOW")" \
+  "builds on the current Ruby by default, whose default gems match what a lockfile asks for"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
