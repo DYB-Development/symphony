@@ -139,6 +139,16 @@ assert_contains '"permissionDecision":"deny"' \
 drop_other_repo
 drop_repo
 
+new_repo
+new_other_repo
+arm >/dev/null
+"$DECIDE" "Which road?" "The left one, over the right." >/dev/null
+assert_contains '"permissionDecision":"deny"' \
+  "$(check "cd $OTHER && git commit -m \"wip\"")" \
+  "refuses the commit when only another repo's log grew"
+drop_other_repo
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
