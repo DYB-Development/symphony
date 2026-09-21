@@ -87,6 +87,16 @@ Cache write: 40
 Total: 100" "$("$USAGE")" "leaves out a message recorded on another branch"
 drop_repo
 
+new_repo
+entry msg_1 main "$REPO" 10 20 30 40
+entry msg_2 main "${REPO}-elsewhere" 1 1 1 1
+assert_equals "Input: 10
+Output: 20
+Cache read: 30
+Cache write: 40
+Total: 100" "$("$USAGE")" "leaves out a message recorded in another repo"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
