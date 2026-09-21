@@ -47,6 +47,11 @@ check_built_gem_is_ignored() {
   finding "Git does not ignore $built, so the release will build the gem and then refuse to go on because the working tree is dirty. Add pkg/ to .gitignore."
 }
 
+hand_to_workflow() {
+  [[ -n "${GITHUB_OUTPUT:-}" ]] || return 0
+  printf 'name=%s\nversion=%s\nrelease=%s\n' "$1" "$2" "$3" >> "$GITHUB_OUTPUT"
+}
+
 report() {
   [[ ${#FINDINGS[@]} -eq 0 ]] && return 0
 
@@ -80,13 +85,19 @@ main() {
 
   if printf '%s\n' "$(published_versions "$name")" | grep -qxF "$version"; then
     printf 'Nothing to release: %s is already on rubygems.org.\n' "$version"
+    hand_to_workflow "$name" "$version" "false"
     return "$NOTHING_TO_RELEASE"
   fi
 
   check_tag_is_free "$version"
   check_built_gem_is_ignored "$name" "$version"
 
-  report
+  report || {
+    hand_to_workflow "$name" "$version" "false"
+    return 1
+  }
+
+  hand_to_workflow "$name" "$version" "true"
 }
 
 main "$@"

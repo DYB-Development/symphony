@@ -145,6 +145,15 @@ assert_contains "no gemspec" "$("$PREFLIGHT" 2>&1)" "says so when the directory 
 drop_stub
 drop_gem
 
+new_gem widget 0.2.0
+published_none
+GITHUB_OUTPUT="$REPO/outputs" "$PREFLIGHT" >/dev/null 2>&1
+assert_equals "name=widget
+version=0.2.0
+release=true" "$(cat "$REPO/outputs")" "hands the name, the version and the decision to the workflow"
+drop_stub
+drop_gem
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
