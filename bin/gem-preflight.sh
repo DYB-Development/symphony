@@ -59,6 +59,12 @@ main() {
   local spec_path
   spec_path="$(gemspec_path)"
 
+  if [[ -z "$spec_path" ]]; then
+    finding "This directory holds no gemspec, so there is no gem to release. Point the workflow at the directory the gemspec sits in."
+    report
+    return 1
+  fi
+
   local spec_fields
   if ! spec_fields="$(read_spec "$spec_path" 2>&1)"; then
     finding "Ruby could not read $spec_path, so nothing else could be checked: ${spec_fields}. Fix the gemspec and push again."

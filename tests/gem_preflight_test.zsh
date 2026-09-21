@@ -138,6 +138,13 @@ assert_contains "widget.gemspec" "$("$PREFLIGHT" 2>&1)" "names the gemspec it co
 drop_stub
 drop_gem
 
+new_gem widget 0.2.0
+published_none
+rm widget.gemspec
+assert_contains "no gemspec" "$("$PREFLIGHT" 2>&1)" "says so when the directory holds no gemspec"
+drop_stub
+drop_gem
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
