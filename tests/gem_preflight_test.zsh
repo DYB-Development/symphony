@@ -66,17 +66,47 @@ drop_gem() {
   rm -rf "$REPO"
 }
 
-# Answers the published-versions lookup without touching the network.
+# Answers the published-versions lookup with a curl that never leaves the machine.
 published() {
-  PUBLISHED_VERSIONS="$1"
-  export PUBLISHED_VERSIONS
+  local versions="$1"
+  STUB_BIN="$(mktemp -d "${TMPDIR:-/tmp}/gem_preflight_stub.XXXXXX")"
+  {
+    print -r -- "#!/usr/bin/env bash"
+    print -r -- "printf '%s' '$versions'"
+  } > "$STUB_BIN/curl"
+  chmod +x "$STUB_BIN/curl"
+  path=("$STUB_BIN" $path)
+}
+
+# A curl that answers the way rubygems.org answers for a gem it has never seen.
+published_none() {
+  STUB_BIN="$(mktemp -d "${TMPDIR:-/tmp}/gem_preflight_stub.XXXXXX")"
+  {
+    print -r -- "#!/usr/bin/env bash"
+    print -r -- "exit 22"
+  } > "$STUB_BIN/curl"
+  chmod +x "$STUB_BIN/curl"
+  path=("$STUB_BIN" $path)
+}
+
+drop_stub() {
+  path=(${path:#$STUB_BIN})
+  rm -rf "$STUB_BIN"
 }
 
 echo "gem-preflight.sh:"
 
 new_gem widget 0.2.0
-published "0.1.0"
+published '[{"number":"0.1.0"}]'
 assert_contains "widget 0.2.0" "$("$PREFLIGHT" 2>&1)" "names the gem and the version it read from the gemspec"
+drop_stub
+drop_gem
+
+new_gem widget 0.2.0
+published '[{"number":"0.2.0"},{"number":"0.1.0"}]'
+"$PREFLIGHT" >/dev/null 2>&1
+assert_equals "3" "$?" "exits with the nothing-to-release code when the version is already published"
+drop_stub
 drop_gem
 
 echo ""
