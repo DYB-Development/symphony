@@ -59,6 +59,11 @@ assert_contains "DYB-Development/symphony/.github/workflows/gem-release.yml" \
   "writes the caller workflow into the gem"
 drop_gem
 
+new_gem
+assert_contains "Workflow filename          gem-release.yml" "$("$SETUP" 2>&1)" \
+  "names the reusable workflow's filename, which is what the token carries"
+drop_gem
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
