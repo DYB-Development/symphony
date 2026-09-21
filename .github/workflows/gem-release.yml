@@ -1,0 +1,107 @@
+name: Release gem
+
+on:
+  workflow_call:
+    inputs:
+      ruby-version:
+        description: The Ruby the release runs on.
+        type: string
+        default: "3.3.5"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      id-token: write
+
+    outputs:
+      name: ${{ steps.preflight.outputs.name }}
+      version: ${{ steps.preflight.outputs.version }}
+
+    steps:
+      - name: Check out the gem
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check out the release scripts
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .release-scripts
+          persist-credentials: false
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ inputs.ruby-version }}
+          bundler-cache: true
+
+      - name: Decide whether there is a release to make
+        id: preflight
+        run: |
+          set +e
+          .release-scripts/bin/gem-preflight.sh 2>&1 | tee "$RUNNER_TEMP/preflight.log"
+          status=${PIPESTATUS[0]}
+          set -e
+
+          {
+            echo '```'
+            cat "$RUNNER_TEMP/preflight.log"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$status" = "3" ]; then
+            exit 0
+          fi
+          exit "$status"
+
+      - name: Publish to rubygems.org
+        if: steps.preflight.outputs.release == 'true'
+        uses: rubygems/release-gem@7f9650160c1a4e7989fdc9855807bdbd421d8b6b # v1.4.1
+
+  notify:
+    needs: release
+    if: failure()
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+
+    steps:
+      - name: Check out the release scripts
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          persist-credentials: false
+
+      - name: Open an issue naming what failed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GEM: ${{ needs.release.outputs.name }}
+          VERSION: ${{ needs.release.outputs.version }}
+        run: |
+          failed_job=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs" \
+            --jq '[.jobs[] | select(.conclusion == "failure")][0].id')
+
+          {
+            echo '```'
+            if [ -n "$failed_job" ]; then
+              gh run view --job "$failed_job" --log-failed | tail -n 200
+            else
+              echo "The run failed before any job reported a failing step."
+            fi
+            echo '```'
+          } > "$RUNNER_TEMP/details.md"
+
+          bin/gem-release-issue.sh \
+            "${GEM:-$(basename "$GITHUB_REPOSITORY")}" \
+            "${VERSION:-unknown}" \
+            < "$RUNNER_TEMP/details.md"

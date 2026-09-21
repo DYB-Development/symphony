@@ -171,6 +171,52 @@ Two things worth knowing. **Nothing posts without being read first** — a revie
 is drafted and rendered for a person, and an audit posts nothing at all.
 **Nothing merges or approves** — a review is always a comment.
 
+## Releasing a gem
+
+One workflow in this repo releases every gem, so no gem holds a copy of the
+release steps and no release needs an API key typed in.
+
+`.github/workflows/gem-release.yml` is called by a gem rather than run on its
+own. Registering it against a gem on rubygems.org lets GitHub hand RubyGems a
+short-lived token for that one run, which is what replaces the key.
+
+### Wiring a gem to it
+
+Run the setup script against the gem's working copy:
+
+```
+~/.claude/bin/gem-release-setup.sh ~/projects/gems/tally
+```
+
+It writes `.github/workflows/release.yml` into the gem and prints the trusted
+publisher to register, field by field. Register it at the address the script
+prints, commit the workflow, and the gem is wired.
+
+The fields matter in one non-obvious way: the workflow filename RubyGems wants
+is `gem-release.yml`, the workflow in this repo, not `release.yml`, the one in
+the gem. The token names the workflow that actually ran, and that is this one.
+
+### Releasing
+
+Raise the version in the gem's `version.rb`, open a pull request, and merge it.
+The workflow reads the gemspec on every push to `main`, compares the version
+with rubygems.org, and releases when it is higher. A push that does not change
+the version is a run that says there is nothing to release and stops.
+
+The release tags the commit, pushes the tag, and pushes the gem. Nothing is done
+by hand and nothing is typed in.
+
+### When it fails
+
+Before publishing, every check runs and one run names every problem it found
+rather than the first. It refuses a version whose tag already exists, a gemspec
+Ruby cannot read, a push host trusted publishing cannot authenticate against,
+and a built package git does not ignore.
+
+A failed release opens an issue in the gem's own repository, labelled
+`release-failure`, carrying the failing step's log. A second failure of the same
+version comments on that issue rather than opening another.
+
 ## Configuring it
 
 Everything works unset. These change what the package reads, and they belong in
