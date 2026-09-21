@@ -58,6 +58,9 @@ assert_equals "workflow_call" "$(query "on" "$WORKFLOW")" \
 assert_contains "id-token" "$(query "jobs.release.permissions" "$WORKFLOW")" \
   "asks for the token rubygems.org exchanges for a publishing credential"
 
+assert_contains "issues" "$(query "jobs.notify.permissions" "$WORKFLOW")" \
+  "asks for the access it needs to open the failure issue"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

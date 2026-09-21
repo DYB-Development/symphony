@@ -63,3 +63,45 @@ jobs:
       - name: Publish to rubygems.org
         if: steps.preflight.outputs.release == 'true'
         uses: rubygems/release-gem@7f9650160c1a4e7989fdc9855807bdbd421d8b6b # v1.4.1
+
+  notify:
+    needs: release
+    if: failure()
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+
+    steps:
+      - name: Check out the release scripts
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          persist-credentials: false
+
+      - name: Open an issue naming what failed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GEM: ${{ needs.release.outputs.name }}
+          VERSION: ${{ needs.release.outputs.version }}
+        run: |
+          failed_job=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/jobs" \
+            --jq '[.jobs[] | select(.conclusion == "failure")][0].id')
+
+          {
+            echo '```'
+            if [ -n "$failed_job" ]; then
+              gh run view --job "$failed_job" --log-failed | tail -n 200
+            else
+              echo "The run failed before any job reported a failing step."
+            fi
+            echo '```'
+          } > "$RUNNER_TEMP/details.md"
+
+          bin/gem-release-issue.sh \
+            "${GEM:-$(basename "$GITHUB_REPOSITORY")}" \
+            "${VERSION:-unknown}" \
+            < "$RUNNER_TEMP/details.md"
