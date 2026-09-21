@@ -55,9 +55,10 @@ is how the person who ran you sees which step you are on.
    If the branch is not pushed yet, push it (`git push -u origin <branch>`).
    Never rewrite commits — no amend, no rebase, no force-push.
 
-2. **Write all six sections** from `pr-body.md`, in its order. Every section
+2. **Write all seven sections** from `pr-body.md`, in its order. Every section
    appears in every body: **One Sentence Summary**, **ACs Covered**, **Decision
-   Log**, **Code Example**, **Out of Scope**, **Ticket Billed Against**. Never
+   Log**, **Code Example**, **Out of Scope**, **Ticket Billed Against**,
+   **Tokens Used**. Never
    drop one and never invent one that is not in `pr-body.md`. A section with
    nothing real to say keeps its heading and its whole content is the line
    `Not relevant.` — do not pad it, and do not manufacture a bullet to fill it.
@@ -115,16 +116,29 @@ is how the person who ran you sees which step you are on.
    ~/.claude/bin/ticket.sh --render
    ```
    It prints the whole `## Ticket Billed Against` section and you **paste that
-   output verbatim into the body**, last of the six. With no ticket recorded it
+   output verbatim into the body**, second to last of the seven. With no ticket
+   recorded it
    prints `Not specified.`, which you paste unchanged — never guess a ticket
    from the branch name, the commits, or the issue, and never record one
    yourself. A ticket named later is recorded by the session that learns it and
    reaches the body the next time you are spawned to update the PR.
 
-6. **Add the `Closes #<n>` trailer** on its own line at the end when there is an
-   issue. That trailer is machine-readable wiring, not a seventh section.
+6. **Render the tokens section; do not write it.** Like the Decision Log and
+   the ticket, this section is not yours to compose. Run:
+   ```
+   ~/.claude/bin/usage.sh --render
+   ```
+   It prints the whole `## Tokens Used` section and you **paste that output
+   verbatim into the body**, last of the seven. The numbers are what the session
+   transcripts recorded for this repo while this branch was checked out, so they
+   grow every time you are spawned to update the PR. Never total them yourself,
+   never adjust one, and never explain them in the body. With no transcript
+   naming the branch it prints `Not measured.`, which you paste unchanged.
 
-7. **Append the version stamp; do not write it.** Below `Closes #<n>`, under a
+7. **Add the `Closes #<n>` trailer** on its own line at the end when there is an
+   issue. That trailer is machine-readable wiring, not an eighth section.
+
+8. **Append the version stamp; do not write it.** Below `Closes #<n>`, under a
    `---` rule, run:
    ```
    ~/.claude/bin/scribe-stamp.sh pr "<your model id>"
@@ -138,15 +152,15 @@ is how the person who ran you sees which step you are on.
    over from another body, and never edit a `+` off a version: that `+` means
    the file had uncommitted edits, which is a fact about what ran.
 
-   The stamp is a trailer like `Closes #<n>`, not a seventh section. Its
+   The stamp is a trailer like `Closes #<n>`, not an eighth section. Its
    `## Generation Metadata` heading is printed by the script, so it is pasted
    like every other line and the one-sentence rule does not reach it.
 
-8. **Strip what is banned.** No test counts, no suite names, no pass/fail
+9. **Strip what is banned.** No test counts, no suite names, no pass/fail
    tallies, no "what changed" list restating the ACs, no design essay, no
    environment excuses, no restatement of the title or ticket key as a heading.
 
-9. **Self-check before opening.** Read the body back and cut:
+10. **Self-check before opening.** Read the body back and cut:
    - Any bullet with two sentences, a semicolon, a code span, or a nested block.
    - Any bullet explaining *how* rather than stating what is now true.
    - Decision Log is exempt from this cut when it came from `--render`:
@@ -155,6 +169,8 @@ is how the person who ran you sees which step you are on.
    - The Code Example, unless a caller will really write against that surface.
    - Ticket Billed Against is exempt from this cut: it is whatever
      `ticket.sh --render` printed.
+   - Tokens Used is exempt for the same reason: it is whatever
+     `usage.sh --render` printed.
    - Any Out of Scope bullet that does not point somewhere else.
 
    Cutting a section's last bullet leaves the heading with `Not relevant.` under
@@ -164,7 +180,7 @@ is how the person who ran you sees which step you are on.
    not cover stays unticked with one sentence saying what it still needs — not a
    paragraph, and not moved into another section.
 
-10. **Have the body read before you open it.** Read
+11. **Have the body read before you open it.** Read
    `~/.claude/rules/draft-reading.md` (or `rules/draft-reading.md` in this
    package) and follow it. Write the body to a temp file and hand it to the
    reader:
@@ -173,10 +189,11 @@ is how the person who ran you sees which step you are on.
    ```
    Rewrite each sentence the reader flagged or took to mean something you did
    not mean, in that file, then read it again. A rewrite changes how a sentence
-   reads and never what it claims. The Decision Log and Ticket Billed Against
-   are pasted from a script, so a sentence flagged in either stays as it is.
+   reads and never what it claims. The Decision Log, Ticket Billed Against and
+   Tokens Used are pasted from a script, so a sentence flagged in one of them
+   stays as it is.
 
-11. **Open or update it** from that same file:
+12. **Open or update it** from that same file:
    ```
    gh pr create --repo <owner/repo> --base main --head <branch> \
      --title "<imperative title>" --body-file <file>
