@@ -41,6 +41,12 @@ check_tag_is_free() {
   finding "The tag $tag already exists but that version is not on rubygems.org, so an earlier release tagged the commit and then failed to push the gem. Delete the tag or raise the version."
 }
 
+check_built_gem_is_ignored() {
+  local built="pkg/$1-$2.gem"
+  git check-ignore -q "$built" && return 0
+  finding "Git does not ignore $built, so the release will build the gem and then refuse to go on because the working tree is dirty. Add pkg/ to .gitignore."
+}
+
 report() {
   [[ ${#FINDINGS[@]} -eq 0 ]] && return 0
 
@@ -68,6 +74,7 @@ main() {
   fi
 
   check_tag_is_free "$version"
+  check_built_gem_is_ignored "$name" "$version"
 
   report
 }
