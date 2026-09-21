@@ -35,16 +35,21 @@ now do or no longer have to deal with.>
 ## Ticket Billed Against
 
 - <the ticket this work is billed against>
+
+## Tokens Used
+
+- <one total per line, input, output, cache read, cache write, and the total>
 ```
 
-All six sections appear in every body, always in that order. Nothing else,
+All seven sections appear in every body, always in that order. Nothing else,
 apart from the two trailers below.
 Never add a section that is not on this list, and never drop one — when Design
 Decisions, Code Example, or Out of Scope has nothing to say, the section stays
 and its whole content is the line `Not relevant.` Ticket Billed Against says
 `Not specified.` instead, since a missing ticket is a fact about the billing and
-not an empty section. One Sentence Summary and ACs Covered always have something
-to say.
+not an empty section. Tokens Used says `Not measured.` for the same reason, since
+no transcript naming the branch is a fact about the measurement. One Sentence
+Summary and ACs Covered always have something to say.
 
 ## Always use the PR Scribe (ironclad)
 
@@ -71,8 +76,8 @@ issue). It reads the rest from the repo.
 ## The `Closes #N` trailer
 
 A PR that resolves an issue ends with `Closes #<n>` on its own line after the
-last section. That trailer is machine-readable wiring, not a seventh section — it
-is one of the two things allowed outside the six.
+last section. That trailer is machine-readable wiring, not an eighth section — it
+is one of the two things allowed outside the seven.
 
 ## The version stamp
 
@@ -105,7 +110,7 @@ The model is named by its id, never its display name — `claude-opus-5[1m]`, no
 same model the same way, so the script refuses a display name outright.
 
 It is a trailer, not a section. Its `## Generation Metadata` heading comes from
-the script like the rest of it, so it is never counted among the six, never
+the script like the rest of it, so it is never counted among the seven, never
 written by hand, and the one-sentence rule does not reach it.
 
 ## One sentence means one sentence
@@ -189,6 +194,17 @@ whose ticket has not been named yet. A ticket found later is recorded with
 `~/.claude/bin/ticket.sh "<reference>"` and picked up the next time the Scribe
 updates the body, so the section is never edited by hand. A branch may carry
 more than one ticket, and one ticket may span several branches.
+
+**Tokens Used** — what this branch has cost so far, one line each for input,
+output, cache read, cache write and the total. This section is **generated, not
+written**: `~/.claude/bin/usage.sh --render` prints it from the session
+transcripts and the Scribe pastes that output verbatim. The numbers are every
+message the transcripts recorded for this repo while the branch was checked out,
+which includes each scribe run made on it. Work done on another branch is not in
+them, and neither is anything spent after the body was last written, so the
+section is a measurement taken at that moment rather than a final figure. With no
+transcript naming the branch it prints `Not measured.`, which is the honest
+answer when the work was done on a machine whose transcripts are not here.
 
 ## What does not go in a PR body
 
