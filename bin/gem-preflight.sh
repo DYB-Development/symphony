@@ -26,6 +26,7 @@ read_spec() {
     abort "unreadable" if spec.nil?
     puts spec.name
     puts spec.version
+    puts spec.metadata["allowed_push_host"].to_s
   ' "$1"
 }
 
@@ -33,6 +34,12 @@ published_versions() {
   local name="$1" body
   body="$(curl -sS -f "https://rubygems.org/api/v1/versions/${name}.json")" || return 0
   printf '%s' "$body" | ruby -rjson -e 'puts JSON.parse($stdin.read).map { |v| v["number"] }' 2>/dev/null
+}
+
+check_push_host_is_rubygems() {
+  local host="$1"
+  [[ -z "$host" || "$host" == "https://rubygems.org" ]] && return 0
+  finding "The gemspec pushes to $host, which trusted publishing does not authenticate against. Set allowed_push_host to https://rubygems.org or drop it."
 }
 
 check_tag_is_free() {
@@ -77,9 +84,10 @@ main() {
     return 1
   fi
 
-  local name version
+  local name version push_host
   name="$(printf '%s\n' "$spec_fields" | sed -n '1p')"
   version="$(printf '%s\n' "$spec_fields" | sed -n '2p')"
+  push_host="$(printf '%s\n' "$spec_fields" | sed -n '3p')"
 
   printf '%s %s\n' "$name" "$version"
 
@@ -89,6 +97,7 @@ main() {
     return "$NOTHING_TO_RELEASE"
   fi
 
+  check_push_host_is_rubygems "$push_host"
   check_tag_is_free "$version"
   check_built_gem_is_ignored "$name" "$version"
 

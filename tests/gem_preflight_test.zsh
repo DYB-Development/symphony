@@ -154,6 +154,13 @@ release=true" "$(cat "$REPO/outputs")" "hands the name, the version and the deci
 drop_stub
 drop_gem
 
+new_gem widget 0.2.0
+published_none
+sed -i "" 's|https://rubygems.org|https://gems.example.com|' widget.gemspec
+assert_contains "gems.example.com" "$("$PREFLIGHT" 2>&1)" "names a push host trusted publishing cannot reach"
+drop_stub
+drop_gem
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
