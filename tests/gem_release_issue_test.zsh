@@ -25,6 +25,17 @@ assert_contains() {
   fi
 }
 
+assert_equals() {
+  local expected="$1" actual="$2" label="$3"
+  if [[ "$expected" == "$actual" ]]; then
+    ok "$label"
+  else
+    fail "$label"
+    printf '      expected: %s\n' "${(qqq)expected}"
+    printf '      actual:   %s\n' "${(qqq)actual}"
+  fi
+}
+
 assert_lacks() {
   local needle="$1" haystack="$2" label="$3"
   if [[ "$haystack" != *"$needle"* ]]; then
@@ -46,6 +57,9 @@ stub_gh() {
 printf '%s\n' "\$*" >> "$GH_LOG"
 if [[ "\$1 \$2" == "issue list" ]]; then
   printf '%s' '${1:-[]}'
+fi
+if [[ "\$1 \$2" == "issue create" ]]; then
+  printf 'https://github.com/acme/widget/issues/1\n'
 fi
 if [[ "\$*" == *--body-file\ -* ]]; then
   cat >> "$GH_LOG.body"
@@ -86,7 +100,13 @@ drop_stub
 
 stub_gh
 print -r -- "bundle install failed" | "$OPEN_ISSUE" widget 0.2.0 >/dev/null 2>&1
-assert_contains "issue create --title Release failed: widget 0.2.0 --body-file - --label release-failure" "$(cat "$GH_LOG")" "labels the issue so every release failure can be listed at once"
+assert_contains "issue edit 1 --repo acme/widget --add-label release-failure" "$(cat "$GH_LOG")" "labels the issue it opened so every release failure can be listed at once"
+drop_stub
+
+stub_gh
+print -r -- "bundle install failed" | "$OPEN_ISSUE" widget 0.2.0 >/dev/null 2>&1
+assert_equals "0" "$(grep -cv -- "--repo acme/widget" "$GH_LOG")" \
+  "names the gem's repository on every call, since the scripts are checked out from another one"
 drop_stub
 
 echo ""
