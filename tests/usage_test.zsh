@@ -123,6 +123,18 @@ assert_equals "## Tokens Used
 Not measured." "$("$USAGE" --render)" "renders Not measured when no transcript names this branch"
 drop_repo
 
+new_repo
+"$USAGE" --everything >/dev/null 2>&1
+assert_equals "64" "$?" "exits with a usage code when given an argument it does not take"
+drop_repo
+
+OUTSIDE="$(cd "$(mktemp -d "${TMPDIR:-/tmp}/usage_test.XXXXXX")" && pwd -P)"
+cd "$OUTSIDE"
+"$USAGE" >/dev/null 2>&1
+assert_equals "69" "$?" "exits with a no-input code outside a git repository"
+cd "$SCRIPT_DIR"
+rm -rf "$OUTSIDE"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
