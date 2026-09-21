@@ -84,6 +84,11 @@ print -r -- "bundle install failed" | "$OPEN_ISSUE" widget 0.2.0 >/dev/null 2>&1
 assert_contains "issue comment 7" "$(cat "$GH_LOG")" "comments on the open issue for this version instead of opening a second"
 drop_stub
 
+stub_gh
+print -r -- "bundle install failed" | "$OPEN_ISSUE" widget 0.2.0 >/dev/null 2>&1
+assert_contains "issue create --title Release failed: widget 0.2.0 --body-file - --label release-failure" "$(cat "$GH_LOG")" "labels the issue so every release failure can be listed at once"
+drop_stub
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

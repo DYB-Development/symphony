@@ -28,10 +28,17 @@ open_issue_for_this_version() {
       ' "$TITLE"
 }
 
+LABEL="release-failure"
+
+ensure_label() {
+  gh label create "$LABEL" --color b60205 --description "A gem release that did not reach rubygems.org" >/dev/null 2>&1 || true
+}
+
 EXISTING="$(open_issue_for_this_version)"
 
 if [[ -n "$EXISTING" ]]; then
   body | gh issue comment "$EXISTING" --body-file -
 else
-  body | gh issue create --title "$TITLE" --body-file -
+  ensure_label
+  body | gh issue create --title "$TITLE" --body-file - --label "$LABEL"
 fi
