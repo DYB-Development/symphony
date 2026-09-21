@@ -116,6 +116,13 @@ assert_equals "0" "$?" "releases a gem rubygems.org has never seen"
 drop_stub
 drop_gem
 
+new_gem widget 0.2.0
+published_none
+git -c tag.gpgSign=false tag -m v0.2.0 v0.2.0
+assert_contains "v0.2.0" "$("$PREFLIGHT" 2>&1)" "names the release tag that already exists"
+drop_stub
+drop_gem
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

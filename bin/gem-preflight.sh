@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Read the gem in the current directory and report everything that would stop
-# it from being released.
+# it from being released. Every check runs, so one run names every problem.
 #
 # Usage: gem-preflight.sh
 #
@@ -8,6 +8,12 @@
 set -uo pipefail
 
 NOTHING_TO_RELEASE=3
+
+FINDINGS=()
+
+finding() {
+  FINDINGS+=("$1")
+}
 
 gemspec_path() {
   local found=( *.gemspec )
@@ -29,6 +35,20 @@ published_versions() {
   printf '%s' "$body" | ruby -rjson -e 'puts JSON.parse($stdin.read).map { |v| v["number"] }' 2>/dev/null
 }
 
+check_tag_is_free() {
+  local tag="v$1"
+  git rev-parse -q --verify "refs/tags/$tag" >/dev/null || return 0
+  finding "The tag $tag already exists but that version is not on rubygems.org, so an earlier release tagged the commit and then failed to push the gem. Delete the tag or raise the version."
+}
+
+report() {
+  [[ ${#FINDINGS[@]} -eq 0 ]] && return 0
+
+  printf '\nProblems found (%d):\n\n' "${#FINDINGS[@]}"
+  printf -- '- %s\n' "${FINDINGS[@]}"
+  return 1
+}
+
 main() {
   local spec_path
   spec_path="$(gemspec_path)"
@@ -46,6 +66,10 @@ main() {
     printf 'Nothing to release: %s is already on rubygems.org.\n' "$version"
     return "$NOTHING_TO_RELEASE"
   fi
+
+  check_tag_is_free "$version"
+
+  report
 }
 
 main "$@"
