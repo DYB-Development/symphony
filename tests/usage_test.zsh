@@ -106,6 +106,23 @@ Cache write: 40
 Total: 100" "$("$USAGE")" "counts a message recorded in a subdirectory of the repo"
 drop_repo
 
+new_repo
+entry msg_1 main "$REPO" 2 321 24835 44814
+assert_equals "## Tokens Used
+
+- Input: 2
+- Output: 321
+- Cache read: 24,835
+- Cache write: 44,814
+- Total: 69,972" "$("$USAGE" --render)" "renders the section as a bullet per total"
+drop_repo
+
+new_repo
+assert_equals "## Tokens Used
+
+Not measured." "$("$USAGE" --render)" "renders Not measured when no transcript names this branch"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
