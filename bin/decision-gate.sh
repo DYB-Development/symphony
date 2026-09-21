@@ -36,6 +36,7 @@ commit_root() {
   local dir
   dir=$(first_dir "git +-C +('[^']*'|\"[^\"]*\"|[^ ;&|]+)" "$1")
   [ -n "$dir" ] || dir=$(first_dir "(^|[;&|] *)cd +('[^']*'|\"[^\"]*\"|[^ ;&|]+)" "$1")
+  dir=${dir/#\~/$HOME}
   git -C "${dir:-.}" rev-parse --show-toplevel 2>/dev/null
 }
 

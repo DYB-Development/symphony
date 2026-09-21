@@ -130,6 +130,15 @@ assert_contains '"permissionDecision":"deny"' "$(check 'git commit -m "wip"')" \
 drop_other_repo
 drop_repo
 
+new_repo
+new_other_repo
+arm >/dev/null
+assert_contains '"permissionDecision":"deny"' \
+  "$( (export HOME="${OTHER:h}"; check "cd ~/${OTHER:t} && git commit -m \"wip\"") )" \
+  "finds the repo behind a path written from the home directory"
+drop_other_repo
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
