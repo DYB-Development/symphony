@@ -12,6 +12,7 @@ PACKAGE="pkg/$GEM-$VERSION.gem"
 
 build() {
   printf 'Building %s\n' "$PACKAGE"
+  mkdir -p "$(dirname "$PACKAGE")" || return 1
   gem build "$GEM.gemspec" --output "$PACKAGE"
 }
 

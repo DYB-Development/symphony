@@ -73,9 +73,8 @@ stub_gem() {
 printf '%s\n' "$*" >> "$GEM_LOG"
 case "$1" in
   build)
-    out="${!#}"
-    mkdir -p "$(dirname "$out")"
-    : > "$out"
+    # Writes only where a directory already is, the way gem build does.
+    : > "${!#}" || exit 1
     ;;
   push)
     if [ -n "${PUSH_FAILS:-}" ]; then
