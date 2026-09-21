@@ -76,6 +76,17 @@ Cache write: 44,814
 Total: 69,972" "$("$USAGE")" "counts a message written across two entries once"
 drop_repo
 
+new_repo
+git -C "$REPO" symbolic-ref HEAD refs/heads/feature
+entry msg_1 feature "$REPO" 10 20 30 40
+entry msg_2 main "$REPO" 1 1 1 1
+assert_equals "Input: 10
+Output: 20
+Cache read: 30
+Cache write: 40
+Total: 100" "$("$USAGE")" "leaves out a message recorded on another branch"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
