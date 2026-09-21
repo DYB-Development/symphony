@@ -1,0 +1,51 @@
+name: Release gem
+
+on:
+  workflow_call:
+    inputs:
+      ruby-version:
+        description: The Ruby the release runs on.
+        type: string
+        default: "3.3.5"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the gem
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Check out the release scripts
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .release-scripts
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ inputs.ruby-version }}
+          bundler-cache: true
+
+      - name: Decide whether there is a release to make
+        id: preflight
+        run: |
+          set +e
+          .release-scripts/bin/gem-preflight.sh 2>&1 | tee "$RUNNER_TEMP/preflight.log"
+          status=${PIPESTATUS[0]}
+          set -e
+
+          {
+            echo '```'
+            cat "$RUNNER_TEMP/preflight.log"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$status" = "3" ]; then
+            exit 0
+          fi
+          exit "$status"
