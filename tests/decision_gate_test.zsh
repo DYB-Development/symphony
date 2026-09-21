@@ -121,6 +121,15 @@ assert_equals "" "$(check "cd $OTHER && git commit -m \"wip\"")" \
 drop_other_repo
 drop_repo
 
+new_repo
+new_other_repo
+arm >/dev/null
+check "cd $OTHER && NO_DECISION=1 git commit -m \"wip\"" >/dev/null
+assert_contains '"permissionDecision":"deny"' "$(check 'git commit -m "wip"')" \
+  "keeps refusing the repo the override was not used in"
+drop_other_repo
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

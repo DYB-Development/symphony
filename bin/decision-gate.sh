@@ -17,7 +17,7 @@ USAGE
 marker_dir="${CLAUDE_DECISION_GATE_DIR:-$HOME/.claude/decision-gate}"
 
 marker_for() {
-  printf '%s/%s' "$marker_dir" "$(printf '%s' "$1" | shasum | cut -c1-40)"
+  printf '%s/%s' "$marker_dir" "$(printf '%s' "$*" | shasum | cut -c1-40)"
 }
 
 modified_at() {
@@ -60,10 +60,12 @@ case "${1:-}" in
     [ -n "$root" ] || exit 0
     armed=$(modified_at "$marker")
     [ "$(modified_at "$root/.decisions.md")" -lt "$armed" ] || exit 0
+    cleared=$(marker_for "$session" "$root")
+    [ "$(modified_at "$cleared")" -lt "$armed" ] || exit 0
     # Quoted spans are stripped first, so the override counts only as an
     # environment assignment on the command and never as prose in the message.
     unquoted=$(printf '%s' "$command" | sed "s/\"[^\"]*\"//g; s/'[^']*'//g")
-    case "$unquoted" in *NO_DECISION=1*) rm -f "$marker"; exit 0;; esac
+    case "$unquoted" in *NO_DECISION=1*) mkdir -p "$marker_dir"; : > "$cleared"; exit 0;; esac
     jq -nc '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $text}}' \
       --arg text "A question answered earlier in this session settled a choice between real options, and .decisions.md does not carry it yet. Record it before committing: ~/.claude/bin/decide.sh \"<the question>\" \"<the decision>\". If that answer settled nothing a reviewer needs, prefix this command with NO_DECISION=1."
     ;;
