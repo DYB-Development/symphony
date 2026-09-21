@@ -111,6 +111,13 @@ assert_contains "push pkg/widget-0.2.0.gem" "$(cat "$GEM_LOG")" "pushes the pack
 drop_stub
 drop_gem
 
+new_gem
+stub_gem
+"$PUBLISH" widget 0.2.0 >/dev/null 2>&1
+assert_equals "v0.2.0" "$(git -C "$REMOTE" tag)" "tags the commit it published on the remote"
+drop_stub
+drop_gem
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

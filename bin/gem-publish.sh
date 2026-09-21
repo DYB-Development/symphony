@@ -20,5 +20,23 @@ push() {
   gem push "$PACKAGE"
 }
 
+tag() {
+  local name="v$VERSION"
+
+  if git rev-parse -q --verify "refs/tags/$name" >/dev/null; then
+    printf 'The tag %s is already here\n' "$name"
+  else
+    printf 'Tagging %s\n' "$name"
+    git tag -m "$name" "$name" || return 1
+  fi
+
+  git push origin "refs/tags/$name"
+}
+
 build || exit 1
 push || exit 1
+
+tag || {
+  printf '%s %s is on rubygems.org but the tag did not reach the remote\n' "$GEM" "$VERSION" >&2
+  exit 1
+}
