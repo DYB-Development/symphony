@@ -10,7 +10,9 @@ Totals the tokens the session transcripts recorded for this repo on the current
 branch, broken down by input, output and cache. `--render` prints the PR body's
 Tokens Used section from those totals, and says `Not measured.` when no
 transcript names this branch.
-Transcripts are read from $CLAUDE_CONFIG_DIR/projects, or ~/.claude/projects.
+Transcripts are read from the directories under $CLAUDE_CONFIG_DIR/projects, or
+~/.claude/projects, whose names carry this repo's path, and from all of them when
+none does.
 See ~/.claude/rules/pr-body.md.
 USAGE
   exit 64
@@ -29,6 +31,12 @@ root=$(git rev-parse --show-toplevel) || {
 branch=$(git branch --show-current)
 projects="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects"
 
+transcript_dirs() {
+  local named
+  named=$(find "$projects" -maxdepth 1 -type d -name "*${root//\//-}*" 2>/dev/null)
+  printf '%s\n' "${named:-$projects}"
+}
+
 read_transcripts() {
   local transcript
   while IFS= read -r transcript; do
@@ -45,7 +53,7 @@ read_transcripts() {
           (.message.usage.cache_creation_input_tokens // 0)
         ]
       | @tsv' "$transcript" 2>/dev/null || true
-  done < <(find "$projects" -type f -name '*.jsonl' 2>/dev/null)
+  done < <(transcript_dirs | tr '\n' '\0' | xargs -0 grep -rlF --include='*.jsonl' "$root" 2>/dev/null)
 }
 
 total_tokens() {
