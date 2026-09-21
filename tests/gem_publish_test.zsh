@@ -104,6 +104,13 @@ assert_contains "build widget.gemspec" "$(cat "$GEM_LOG")" "builds the gem from 
 drop_stub
 drop_gem
 
+new_gem
+stub_gem
+"$PUBLISH" widget 0.2.0 >/dev/null 2>&1
+assert_contains "push pkg/widget-0.2.0.gem" "$(cat "$GEM_LOG")" "pushes the package it built"
+drop_stub
+drop_gem
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

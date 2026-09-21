@@ -15,4 +15,10 @@ build() {
   gem build "$GEM.gemspec" --output "$PACKAGE"
 }
 
-build
+push() {
+  printf 'Pushing %s to rubygems.org\n' "$PACKAGE"
+  gem push "$PACKAGE"
+}
+
+build || exit 1
+push || exit 1
