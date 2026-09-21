@@ -19,4 +19,19 @@ body() {
   cat
 }
 
-body | gh issue create --title "$TITLE" --body-file -
+open_issue_for_this_version() {
+  gh issue list --state open --search "$TITLE in:title" --json number,title \
+    | ruby -rjson -e '
+        title = ARGV[0]
+        match = JSON.parse($stdin.read).find { |issue| issue["title"] == title }
+        print match ? match["number"] : ""
+      ' "$TITLE"
+}
+
+EXISTING="$(open_issue_for_this_version)"
+
+if [[ -n "$EXISTING" ]]; then
+  body | gh issue comment "$EXISTING" --body-file -
+else
+  body | gh issue create --title "$TITLE" --body-file -
+fi
