@@ -206,14 +206,17 @@ cd "$SCRIPT_DIR"
 rm -rf "$OUTSIDE"
 
 new_repo
-TRANSCRIPT="$CLAUDE_CONFIG_DIR/projects/${${REPO//\//-}}/session.jsonl"
+TRANSCRIPT="$CLAUDE_CONFIG_DIR/projects/$(printf '%s' "$REPO" | tr -c 'a-zA-Z0-9' '-')/session.jsonl"
 mkdir -p "${TRANSCRIPT:h}"
 entry msg_1 main "$REPO" 10 20 30 40
+TRANSCRIPT="$CLAUDE_CONFIG_DIR/projects/another-repo/session.jsonl"
+mkdir -p "${TRANSCRIPT:h}"
+entry msg_2 main "$REPO" 1 1 1 1
 assert_equals "Input: 10
 Output: 20
 Cache read: 30
 Cache write: 40
-Total: 100" "$("$USAGE")" "reads the project directory named for the repo"
+Total: 100" "$("$USAGE")" "reads only the project directory named for a repo whose path holds an underscore"
 drop_repo
 
 new_repo
