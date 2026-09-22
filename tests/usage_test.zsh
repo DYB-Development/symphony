@@ -70,6 +70,32 @@ agent_entry() {
       }}}' >> "$TRANSCRIPT"
 }
 
+commit_at() {
+  local at="$1"
+  GIT_COMMITTER_DATE="$at" GIT_AUTHOR_DATE="$at" \
+    git -C "$REPO" -c user.name=t -c user.email=t@example.com \
+    commit -q --allow-empty -m "work"
+}
+
+checkout_at() {
+  local at="$1"
+  shift
+  GIT_COMMITTER_DATE="$at" git -C "$REPO" checkout -q "$@"
+}
+
+entry_at() {
+  local id="$1" branch="$2" cwd="$3" at="$4" input="$5" output="$6" read="$7" write="$8"
+  jq -nc --arg id "$id" --arg branch "$branch" --arg cwd "$cwd" --arg at "$at" \
+    --argjson input "$input" --argjson output "$output" \
+    --argjson read "$read" --argjson write "$write" \
+    '{type: "assistant", gitBranch: $branch, cwd: $cwd, timestamp: $at, message: {id: $id, usage: {
+      input_tokens: $input,
+      output_tokens: $output,
+      cache_read_input_tokens: $read,
+      cache_creation_input_tokens: $write
+    }}}' >> "$TRANSCRIPT"
+}
+
 echo "usage.sh:"
 
 new_repo
@@ -92,15 +118,11 @@ Total: 69,972" "$("$USAGE")" "counts a message written across two entries once"
 drop_repo
 
 new_repo
-git -C "$REPO" symbolic-ref HEAD refs/heads/feature
-entry msg_1 feature "$REPO" 10 20 30 40
-entry msg_2 main "$REPO" 1 1 1 1
-assert_equals "Input: 10
-Output: 20
-Cache read: 30
-Cache write: 40
-Total: 100" "$("$USAGE")" "leaves out a message recorded on another branch"
-drop_repo
+commit_at 2026-01-01T00:00:00Z
+checkout_at 2026-01-03T00:00:00Z -b feature
+entry_at msg_1 main "$REPO" 2026-01-02T00:00:00Z 1 1 1 1
+assert_equals "No tokens recorded for this branch." "$("$USAGE")" \
+  "leaves out a message recorded before this branch was checked out"
 
 new_repo
 entry msg_1 main "$REPO" 10 20 30 40
@@ -182,16 +204,28 @@ assert_equals "pr-scribe — main — 100" "$("$USAGE" --runs)" \
 drop_repo
 
 new_repo
-git -C "$REPO" symbolic-ref HEAD refs/heads/feature
-agent_entry agent_1 review-scribe msg_1 main "$REPO" 10 20 30 40
+commit_at 2026-01-01T00:00:00Z
+checkout_at 2026-01-03T00:00:00Z -b feature
+agent_entry agent_1 review-scribe msg_1 main "$REPO" 10 20 30 40 2026-01-02T00:00:00Z
 assert_equals "review-scribe — main — 100" "$("$USAGE" --runs)" \
-  "keeps a run made while another branch was checked out"
+  "names the branch a run worked on, not the branch checked out now"
 drop_repo
 
 new_repo
 agent_entry agent_1 pr-scribe msg_1 main "${REPO}-elsewhere" 10 20 30 40
 assert_equals "No scribe runs recorded for this repo." "$("$USAGE" --runs)" \
   "leaves out a run made in another repo"
+drop_repo
+
+new_repo
+commit_at 2026-01-01T00:00:00Z
+checkout_at 2026-01-02T00:00:00Z -b feature
+entry_at msg_1 main "$REPO" 2026-01-03T00:00:00Z 10 20 30 40
+assert_equals "Input: 10
+Output: 20
+Cache read: 30
+Cache write: 40
+Total: 100" "$("$USAGE")" "counts a message by the branch the worktree held when it was recorded"
 drop_repo
 
 echo ""
