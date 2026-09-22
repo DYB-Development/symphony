@@ -19,7 +19,7 @@ config="${1:-.}/config/database.yml"
 
 perl -pi -e '
   $section = $1 if /^(\w+):/;
-  s/^(\s*database: \S+)$/$1<%= worktree %>/ if $section eq "development";
+  s/^(\s*database: \S+)$/$1<%= worktree %>/ if $section =~ /^(development|test)$/;
 ' "$config"
 
 echo "$config"

@@ -68,6 +68,12 @@ assert_equals "    database: shop_development<%= worktree %>" "$(database_line s
   "adds the worktree suffix to a development database name"
 drop_app
 
+new_app
+"$WORKTREE_DB" "$APP" >/dev/null
+assert_equals "  database: shop_test<%= worktree %>" "$(database_line shop_test)" \
+  "adds the worktree suffix to the test database name"
+drop_app
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
