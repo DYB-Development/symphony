@@ -17,7 +17,10 @@ USAGE
 
 config="${1:-.}/config/database.yml"
 
-perl -pi -e '
+header='<% worktree = File.file?(Rails.root.join(".git")) ? "_#{Rails.root.basename.to_s.gsub(/\W/, "_")}" : "" %>'
+
+HEADER="$header" perl -pi -e '
+  print "$ENV{HEADER}\n" if $. == 1;
   $section = $1 if /^(\w+):/;
   s/^(\s*database: \S+)$/$1<%= worktree %>/ if $section =~ /^(development|test)$/;
 ' "$config"

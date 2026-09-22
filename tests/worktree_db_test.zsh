@@ -74,6 +74,13 @@ assert_equals "  database: shop_test<%= worktree %>" "$(database_line shop_test)
   "adds the worktree suffix to the test database name"
 drop_app
 
+new_app
+"$WORKTREE_DB" "$APP" >/dev/null
+assert_equals '<% worktree = File.file?(Rails.root.join(".git")) ? "_#{Rails.root.basename.to_s.gsub(/\W/, "_")}" : "" %>' \
+  "$(head -1 "$APP/config/database.yml")" \
+  "defines the suffix from the worktree folder on the first line"
+drop_app
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
