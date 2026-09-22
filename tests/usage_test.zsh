@@ -282,6 +282,20 @@ Cache write: 40
 Total: 100" "$("$USAGE")" "leaves out a run working in another worktree at the same moment"
 drop_repo
 
+new_repo
+commit_at 2026-01-01T00:00:00Z
+worktree_at 2026-01-02T00:00:00Z "$REPO/trees/feature" feature
+command_entry msg_1 main "$REPO" 2026-01-03T00:00:00Z \
+  "cd $REPO/trees/feature && bin/rails test" 10 20 30 40
+entry_at msg_2 main "$REPO" 2026-01-03T00:01:00Z 1 1 1 1
+cd "$REPO/trees/feature"
+assert_equals "Input: 11
+Output: 21
+Cache read: 31
+Cache write: 41
+Total: 104" "$("$USAGE")" "counts a later message in the run that named the worktree"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
