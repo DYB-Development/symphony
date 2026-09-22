@@ -122,6 +122,13 @@ another_transcript() {
   : > "$TRANSCRIPT"
 }
 
+edit_entry() {
+  local id="$1" cwd="$2" at="$3" file="$4"
+  jq -nc --arg id "$id" --arg cwd "$cwd" --arg at "$at" --arg file "$file" \
+    '{type: "user", cwd: $cwd, timestamp: $at, message: {id: $id},
+      toolUseResult: {bashEditDiff: {files: [{filePath: $file}]}}}' >> "$TRANSCRIPT"
+}
+
 echo "usage.sh:"
 
 new_repo
@@ -294,6 +301,19 @@ Output: 21
 Cache read: 31
 Cache write: 41
 Total: 104" "$("$USAGE")" "counts a later message in the run that named the worktree"
+drop_repo
+
+new_repo
+commit_at 2026-01-01T00:00:00Z
+worktree_at 2026-01-02T00:00:00Z "$REPO/trees/feature" feature
+edit_entry result_1 "$REPO" 2026-01-03T00:00:00Z "$REPO/trees/feature/app/models/quote.rb"
+entry_at msg_1 main "$REPO" 2026-01-03T00:01:00Z 10 20 30 40
+cd "$REPO/trees/feature"
+assert_equals "Input: 10
+Output: 20
+Cache read: 30
+Cache write: 40
+Total: 100" "$("$USAGE")" "takes the worktree from a file the run changed"
 drop_repo
 
 echo ""
