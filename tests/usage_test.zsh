@@ -117,6 +117,11 @@ command_entry() {
       }}}' >> "$TRANSCRIPT"
 }
 
+another_transcript() {
+  TRANSCRIPT="${TRANSCRIPT:h}/$1.jsonl"
+  : > "$TRANSCRIPT"
+}
+
 echo "usage.sh:"
 
 new_repo
@@ -260,6 +265,21 @@ Output: 20
 Cache read: 30
 Cache write: 40
 Total: 100" "$("$USAGE")" "counts a message whose command names the worktree holding this branch"
+drop_repo
+
+new_repo
+commit_at 2026-01-01T00:00:00Z
+worktree_at 2026-01-02T00:00:00Z "$REPO/trees/feature" feature
+command_entry msg_1 main "$REPO" 2026-01-03T00:00:00Z \
+  "cd $REPO/trees/feature && bin/rails test" 10 20 30 40
+another_transcript alongside
+command_entry msg_2 main "$REPO" 2026-01-03T00:00:01Z "cd $REPO && bin/rails test" 1 1 1 1
+cd "$REPO/trees/feature"
+assert_equals "Input: 10
+Output: 20
+Cache read: 30
+Cache write: 40
+Total: 100" "$("$USAGE")" "leaves out a run working in another worktree at the same moment"
 drop_repo
 
 echo ""
