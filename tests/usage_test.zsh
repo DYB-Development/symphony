@@ -96,6 +96,27 @@ entry_at() {
     }}}' >> "$TRANSCRIPT"
 }
 
+worktree_at() {
+  local at="$1" tree="$2" branch="$3"
+  GIT_COMMITTER_DATE="$at" git -C "$REPO" worktree add -q -b "$branch" "$tree" >/dev/null
+}
+
+command_entry() {
+  local id="$1" branch="$2" cwd="$3" at="$4" command="$5"
+  local input="$6" output="$7" read="$8" write="$9"
+  jq -nc --arg id "$id" --arg branch "$branch" --arg cwd "$cwd" --arg at "$at" \
+    --arg command "$command" --argjson input "$input" --argjson output "$output" \
+    --argjson read "$read" --argjson write "$write" \
+    '{type: "assistant", gitBranch: $branch, cwd: $cwd, timestamp: $at, message: {id: $id,
+      content: [{type: "tool_use", name: "Bash", input: {command: $command}}],
+      usage: {
+        input_tokens: $input,
+        output_tokens: $output,
+        cache_read_input_tokens: $read,
+        cache_creation_input_tokens: $write
+      }}}' >> "$TRANSCRIPT"
+}
+
 echo "usage.sh:"
 
 new_repo
@@ -226,6 +247,19 @@ Output: 20
 Cache read: 30
 Cache write: 40
 Total: 100" "$("$USAGE")" "counts a message by the branch the worktree held when it was recorded"
+drop_repo
+
+new_repo
+commit_at 2026-01-01T00:00:00Z
+worktree_at 2026-01-02T00:00:00Z "$REPO/trees/feature" feature
+command_entry msg_1 main "$REPO" 2026-01-03T00:00:00Z \
+  "cd $REPO/trees/feature && bin/rails test" 10 20 30 40
+cd "$REPO/trees/feature"
+assert_equals "Input: 10
+Output: 20
+Cache read: 30
+Cache write: 40
+Total: 100" "$("$USAGE")" "counts a message whose command names the worktree holding this branch"
 drop_repo
 
 echo ""
