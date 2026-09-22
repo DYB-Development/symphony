@@ -7,15 +7,20 @@ usage: usage.sh
        usage.sh --render
        usage.sh --runs
 
-Totals the tokens the session transcripts recorded for this repo on the current
-branch, broken down by input, output and cache. `--render` prints the PR body's
-Tokens Used section from those totals, and says `Not measured.` when no
-transcript names this branch. `--runs` lists every scribe run recorded for this
-repo instead, oldest first, each with the branch it ran on and what it cost,
-whichever branch is checked out now.
+Totals the tokens the session transcripts recorded for this branch, broken down
+by input, output and cache. `--render` prints the PR body's Tokens Used section
+from those totals, and says `Not measured.` when no transcript names this
+branch. `--runs` lists every scribe run recorded for this clone instead, oldest
+first, each with the branch it worked on and what it cost, whichever branch is
+checked out now.
+A message is charged to the branch the worktree it was working in held when it
+was recorded, read from that worktree's own reflog. The worktree comes from the
+absolute paths in that agent run's own tool records, carried forward to the
+messages after them, so two agents running at once are never charged for each
+other's tokens.
 Transcripts are read from the directories under $CLAUDE_CONFIG_DIR/projects, or
-~/.claude/projects, whose names carry this repo's path, and from all of them when
-none does.
+~/.claude/projects, whose names carry a path of this clone, and from all of them
+when none does.
 See ~/.claude/rules/pr-body.md.
 USAGE
   exit 64
@@ -34,32 +39,157 @@ root=$(git rev-parse --show-toplevel) || {
 branch=$(git branch --show-current)
 projects="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects"
 
+work=$(mktemp -d "${TMPDIR:-/tmp}/usage.XXXXXX")
+trap 'rm -rf "$work"' EXIT
+
+worktrees="$work/worktrees"
+timelines="$work/timelines"
+
+write_worktrees() {
+  {
+    printf '%s\n' "$root"
+    git worktree list --porcelain | sed -n 's/^worktree //p'
+  } | sort -u | awk 'NF { print length($0), $0 }' | sort -rn -k1,1 | cut -d' ' -f2-
+}
+
+write_timelines() {
+  local worktree checkouts
+  while IFS= read -r worktree; do
+    [ -d "$worktree" ] || continue
+    checkouts=$({ git -C "$worktree" reflog show --date=unix HEAD 2>/dev/null || true; } |
+      sed -nE 's/^[^ ]+ HEAD@\{([0-9]+)\}: checkout: moving from (.+) to (.+)$/\1 \2 \3/p')
+    if [ -z "$checkouts" ]; then
+      printf '%s\t0\t%s\n' "$worktree" "$(git -C "$worktree" branch --show-current)"
+      continue
+    fi
+    printf '%s\n' "$checkouts" | awk -v worktree="$worktree" '
+      { at[NR] = $1; from[NR] = $2; to[NR] = $3 }
+      END {
+        printf "%s\t0\t%s\n", worktree, from[NR]
+        for (entry = NR; entry >= 1; entry--) printf "%s\t%s\t%s\n", worktree, at[entry], to[entry]
+      }'
+  done < "$worktrees"
+}
+
+write_worktrees > "$worktrees"
+write_timelines > "$timelines"
+
 transcript_dirs() {
-  local named
-  named=$(find "$projects" -maxdepth 1 -type d -name "*${root//\//-}*" 2>/dev/null)
-  printf '%s\n' "${named:-$projects}"
+  local worktree named found=''
+  while IFS= read -r worktree; do
+    named=$(find "$projects" -maxdepth 1 -type d \
+      -name "*$(printf '%s' "$worktree" | tr -c 'a-zA-Z0-9' '-')*" 2>/dev/null) || named=''
+    [ -n "$named" ] && found+="$named"$'\n'
+  done < "$worktrees"
+  if [ -n "$found" ]; then
+    printf '%s' "$found" | sort -u
+  else
+    printf '%s\n' "$projects"
+  fi
 }
 
 transcript_files() {
-  transcript_dirs | tr '\n' '\0' | xargs -0 grep -rlF --include='*.jsonl' "$root" 2>/dev/null
+  local patterns=() worktree
+  while IFS= read -r worktree; do patterns+=(-e "$worktree"); done < "$worktrees"
+  transcript_dirs | grep -v '^$' | tr '\n' '\0' |
+    xargs -0 grep -rlF --include='*.jsonl' "${patterns[@]}" 2>/dev/null || true
 }
 
-read_transcripts() {
+extract=$(cat <<'JQ'
+def stamp:
+  if . == null or . == "" then 0
+  else (try (sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601) catch 0)
+  end;
+
+def worked_paths:
+  if .type == "assistant" then
+    [ .message.content // [] | .[]? | select(.type? == "tool_use") | .input
+      | ( ((.command // "") | scan("(?:^|[;&|(\\s])(?:cd|-C)\\s+([^\\s;&|)'\"]+)")),
+          (.file_path // empty) ) ]
+  else
+    [ (.toolUseResult | if type == "object" then (.bashEditDiff.files // [])[]?.filePath else empty end) ]
+  end
+  | flatten
+  | map(select(type == "string"));
+
+select(type == "object")
+| select(.type == "assistant" or .type == "user")
+| [ (if .type == "assistant" then (.message.id // "") else "" end),
+    (.timestamp | stamp),
+    (.cwd // ""),
+    (.agentId // ""),
+    (.attributionAgent // ""),
+    (.message.usage.input_tokens // 0),
+    (.message.usage.output_tokens // 0),
+    (.message.usage.cache_read_input_tokens // 0),
+    (.message.usage.cache_creation_input_tokens // 0),
+    (worked_paths | join("|"))
+  ]
+| @tsv
+JQ
+)
+
+attribute=$(cat <<'AWK'
+function under(path, directory) {
+  return path == directory || substr(path, 1, length(directory) + 1) == directory "/"
+}
+
+function worktree_of(path,   index_) {
+  for (index_ = 1; index_ <= worktrees; index_++)
+    if (under(path, worktree[index_])) return worktree[index_]
+  return ""
+}
+
+function branch_at(place, moment,   index_, held) {
+  held = ""
+  for (index_ = 1; index_ <= entries[place]; index_++)
+    if (at[place, index_] <= moment) held = branch[place, index_]
+  return held
+}
+
+BEGIN {
+  FS = OFS = "\t"
+  while ((getline line < worktrees_file) > 0)
+    if (line != "") worktree[++worktrees] = line
+  close(worktrees_file)
+  while ((getline line < timelines_file) > 0) {
+    if (line == "") continue
+    split(line, field, "\t")
+    place = field[1]
+    index_ = ++entries[place]
+    at[place, index_] = field[2] + 0
+    branch[place, index_] = field[3]
+  }
+  close(timelines_file)
+}
+
+{
+  found = ""
+  if ($10 != "") {
+    count = split($10, named, "|")
+    for (index_ = 1; index_ <= count; index_++) {
+      found = worktree_of(named[index_])
+      if (found != "") break
+    }
+  }
+
+  home = worktree_of($3)
+  if (found != "") working = found
+  else if (home == "") next
+  else if (working == "") working = home
+
+  if ($1 == "" || working == "") next
+
+  print $1, branch_at(working, $2 + 0), $4, $5, $6, $7, $8, $9, $2
+}
+AWK
+)
+
+attributed() {
   local transcript
   while IFS= read -r transcript; do
-    jq -r --arg branch "$branch" --arg root "$root" '
-      select(type == "object")
-      | select(.type == "assistant")
-      | select(.gitBranch == $branch)
-      | select((.cwd // "") == $root or ((.cwd // "") | startswith($root + "/")))
-      | [
-          .message.id,
-          (.message.usage.input_tokens // 0),
-          (.message.usage.output_tokens // 0),
-          (.message.usage.cache_read_input_tokens // 0),
-          (.message.usage.cache_creation_input_tokens // 0)
-        ]
-      | @tsv' "$transcript" 2>/dev/null || true
+    jq -r "$extract" "$transcript" 2>/dev/null |
+      awk -v worktrees_file="$worktrees" -v timelines_file="$timelines" "$attribute" || true
   done < <(transcript_files)
 }
 
@@ -74,49 +204,9 @@ grouped='
   }
 '
 
-read_runs() {
-  local transcript
-  while IFS= read -r transcript; do
-    jq -r --arg root "$root" '
-      select(type == "object")
-      | select(.type == "assistant")
-      | select((.attributionAgent // "") != "")
-      | select((.cwd // "") == $root or ((.cwd // "") | startswith($root + "/")))
-      | [
-          (.timestamp // ""),
-          .agentId,
-          .attributionAgent,
-          (.gitBranch // ""),
-          .message.id,
-          (.message.usage.input_tokens // 0),
-          (.message.usage.output_tokens // 0),
-          (.message.usage.cache_read_input_tokens // 0),
-          (.message.usage.cache_creation_input_tokens // 0)
-        ]
-      | @tsv' "$transcript" 2>/dev/null || true
-  done < <(transcript_files)
-}
-
-list_runs() {
-  sort -k1,1 | awk -F '\t' "$grouped"'
-    !counted[$5]++ {
-      if (!(seen[$2]++)) order[++runs] = $2
-      type[$2] = $3
-      branch[$2] = $4
-      total[$2] += $6 + $7 + $8 + $9
-    }
-    END {
-      for (index_ = 1; index_ <= runs; index_++) {
-        run = order[index_]
-        printf "%s — %s — %s\n", type[run], branch[run], grouped(total[run])
-      }
-    }
-  '
-}
-
 total_tokens() {
-  awk -F '\t' "$grouped"'
-    !counted[$1]++ { input += $2; output += $3; read += $4; written += $5 }
+  awk -F '\t' -v branch="$branch" "$grouped"'
+    $2 == branch && !counted[$1]++ { input += $5; output += $6; read += $7; written += $8 }
     END {
       if (length(counted) == 0) exit
       printf "Input: %s\n", grouped(input)
@@ -128,13 +218,33 @@ total_tokens() {
   '
 }
 
+list_runs() {
+  sort -t $'\t' -k9,9n | awk -F '\t' "$grouped"'
+    $4 != "" && !counted[$1]++ {
+      run = $3
+      if (!(seen[run]++)) order[++runs] = run
+      type[run] = $4
+      spent = $5 + $6 + $7 + $8
+      total[run] += spent
+      on[run, $2] += spent
+      if (on[run, $2] > most[run]) { most[run] = on[run, $2]; branch[run] = $2 }
+    }
+    END {
+      for (index_ = 1; index_ <= runs; index_++) {
+        run = order[index_]
+        printf "%s — %s — %s\n", type[run], branch[run], grouped(total[run])
+      }
+    }
+  '
+}
+
 if [ "${1:-}" = "--runs" ]; then
-  runs=$(read_runs | list_runs)
+  runs=$(attributed | list_runs)
   printf '%s\n' "${runs:-No scribe runs recorded for this repo.}"
   exit 0
 fi
 
-totals=$(read_transcripts | total_tokens)
+totals=$(attributed | total_tokens)
 
 if [ "${1:-}" = "--render" ]; then
   printf '## Tokens Used\n\n'

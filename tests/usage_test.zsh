@@ -70,6 +70,65 @@ agent_entry() {
       }}}' >> "$TRANSCRIPT"
 }
 
+commit_at() {
+  local at="$1"
+  GIT_COMMITTER_DATE="$at" GIT_AUTHOR_DATE="$at" \
+    git -C "$REPO" -c user.name=t -c user.email=t@example.com \
+    commit -q --allow-empty -m "work"
+}
+
+checkout_at() {
+  local at="$1"
+  shift
+  GIT_COMMITTER_DATE="$at" git -C "$REPO" checkout -q "$@"
+}
+
+entry_at() {
+  local id="$1" branch="$2" cwd="$3" at="$4" input="$5" output="$6" read="$7" write="$8"
+  jq -nc --arg id "$id" --arg branch "$branch" --arg cwd "$cwd" --arg at "$at" \
+    --argjson input "$input" --argjson output "$output" \
+    --argjson read "$read" --argjson write "$write" \
+    '{type: "assistant", gitBranch: $branch, cwd: $cwd, timestamp: $at, message: {id: $id, usage: {
+      input_tokens: $input,
+      output_tokens: $output,
+      cache_read_input_tokens: $read,
+      cache_creation_input_tokens: $write
+    }}}' >> "$TRANSCRIPT"
+}
+
+worktree_at() {
+  local at="$1" tree="$2" branch="$3"
+  GIT_COMMITTER_DATE="$at" git -C "$REPO" worktree add -q -b "$branch" "$tree" >/dev/null
+}
+
+command_entry() {
+  local id="$1" branch="$2" cwd="$3" at="$4" command="$5"
+  local input="$6" output="$7" read="$8" write="$9"
+  jq -nc --arg id "$id" --arg branch "$branch" --arg cwd "$cwd" --arg at "$at" \
+    --arg command "$command" --argjson input "$input" --argjson output "$output" \
+    --argjson read "$read" --argjson write "$write" \
+    '{type: "assistant", gitBranch: $branch, cwd: $cwd, timestamp: $at, message: {id: $id,
+      content: [{type: "tool_use", name: "Bash", input: {command: $command}}],
+      usage: {
+        input_tokens: $input,
+        output_tokens: $output,
+        cache_read_input_tokens: $read,
+        cache_creation_input_tokens: $write
+      }}}' >> "$TRANSCRIPT"
+}
+
+another_transcript() {
+  TRANSCRIPT="${TRANSCRIPT:h}/$1.jsonl"
+  : > "$TRANSCRIPT"
+}
+
+edit_entry() {
+  local id="$1" cwd="$2" at="$3" file="$4"
+  jq -nc --arg id "$id" --arg cwd "$cwd" --arg at "$at" --arg file "$file" \
+    '{type: "user", cwd: $cwd, timestamp: $at, message: {id: $id},
+      toolUseResult: {bashEditDiff: {files: [{filePath: $file}]}}}' >> "$TRANSCRIPT"
+}
+
 echo "usage.sh:"
 
 new_repo
@@ -92,15 +151,11 @@ Total: 69,972" "$("$USAGE")" "counts a message written across two entries once"
 drop_repo
 
 new_repo
-git -C "$REPO" symbolic-ref HEAD refs/heads/feature
-entry msg_1 feature "$REPO" 10 20 30 40
-entry msg_2 main "$REPO" 1 1 1 1
-assert_equals "Input: 10
-Output: 20
-Cache read: 30
-Cache write: 40
-Total: 100" "$("$USAGE")" "leaves out a message recorded on another branch"
-drop_repo
+commit_at 2026-01-01T00:00:00Z
+checkout_at 2026-01-03T00:00:00Z -b feature
+entry_at msg_1 main "$REPO" 2026-01-02T00:00:00Z 1 1 1 1
+assert_equals "No tokens recorded for this branch." "$("$USAGE")" \
+  "leaves out a message recorded before this branch was checked out"
 
 new_repo
 entry msg_1 main "$REPO" 10 20 30 40
@@ -151,14 +206,17 @@ cd "$SCRIPT_DIR"
 rm -rf "$OUTSIDE"
 
 new_repo
-TRANSCRIPT="$CLAUDE_CONFIG_DIR/projects/${${REPO//\//-}}/session.jsonl"
+TRANSCRIPT="$CLAUDE_CONFIG_DIR/projects/$(printf '%s' "$REPO" | tr -c 'a-zA-Z0-9' '-')/session.jsonl"
 mkdir -p "${TRANSCRIPT:h}"
 entry msg_1 main "$REPO" 10 20 30 40
+TRANSCRIPT="$CLAUDE_CONFIG_DIR/projects/another-repo/session.jsonl"
+mkdir -p "${TRANSCRIPT:h}"
+entry msg_2 main "$REPO" 1 1 1 1
 assert_equals "Input: 10
 Output: 20
 Cache read: 30
 Cache write: 40
-Total: 100" "$("$USAGE")" "reads the project directory named for the repo"
+Total: 100" "$("$USAGE")" "reads only the project directory named for a repo whose path holds an underscore"
 drop_repo
 
 new_repo
@@ -182,16 +240,83 @@ assert_equals "pr-scribe — main — 100" "$("$USAGE" --runs)" \
 drop_repo
 
 new_repo
-git -C "$REPO" symbolic-ref HEAD refs/heads/feature
-agent_entry agent_1 review-scribe msg_1 main "$REPO" 10 20 30 40
+commit_at 2026-01-01T00:00:00Z
+checkout_at 2026-01-03T00:00:00Z -b feature
+agent_entry agent_1 review-scribe msg_1 main "$REPO" 10 20 30 40 2026-01-02T00:00:00Z
 assert_equals "review-scribe — main — 100" "$("$USAGE" --runs)" \
-  "keeps a run made while another branch was checked out"
+  "names the branch a run worked on, not the branch checked out now"
 drop_repo
 
 new_repo
 agent_entry agent_1 pr-scribe msg_1 main "${REPO}-elsewhere" 10 20 30 40
 assert_equals "No scribe runs recorded for this repo." "$("$USAGE" --runs)" \
   "leaves out a run made in another repo"
+drop_repo
+
+new_repo
+commit_at 2026-01-01T00:00:00Z
+checkout_at 2026-01-02T00:00:00Z -b feature
+entry_at msg_1 main "$REPO" 2026-01-03T00:00:00Z 10 20 30 40
+assert_equals "Input: 10
+Output: 20
+Cache read: 30
+Cache write: 40
+Total: 100" "$("$USAGE")" "counts a message by the branch the worktree held when it was recorded"
+drop_repo
+
+new_repo
+commit_at 2026-01-01T00:00:00Z
+worktree_at 2026-01-02T00:00:00Z "$REPO/trees/feature" feature
+command_entry msg_1 main "$REPO" 2026-01-03T00:00:00Z \
+  "cd $REPO/trees/feature && bin/rails test" 10 20 30 40
+cd "$REPO/trees/feature"
+assert_equals "Input: 10
+Output: 20
+Cache read: 30
+Cache write: 40
+Total: 100" "$("$USAGE")" "counts a message whose command names the worktree holding this branch"
+drop_repo
+
+new_repo
+commit_at 2026-01-01T00:00:00Z
+worktree_at 2026-01-02T00:00:00Z "$REPO/trees/feature" feature
+command_entry msg_1 main "$REPO" 2026-01-03T00:00:00Z \
+  "cd $REPO/trees/feature && bin/rails test" 10 20 30 40
+another_transcript alongside
+command_entry msg_2 main "$REPO" 2026-01-03T00:00:01Z "cd $REPO && bin/rails test" 1 1 1 1
+cd "$REPO/trees/feature"
+assert_equals "Input: 10
+Output: 20
+Cache read: 30
+Cache write: 40
+Total: 100" "$("$USAGE")" "leaves out a run working in another worktree at the same moment"
+drop_repo
+
+new_repo
+commit_at 2026-01-01T00:00:00Z
+worktree_at 2026-01-02T00:00:00Z "$REPO/trees/feature" feature
+command_entry msg_1 main "$REPO" 2026-01-03T00:00:00Z \
+  "cd $REPO/trees/feature && bin/rails test" 10 20 30 40
+entry_at msg_2 main "$REPO" 2026-01-03T00:01:00Z 1 1 1 1
+cd "$REPO/trees/feature"
+assert_equals "Input: 11
+Output: 21
+Cache read: 31
+Cache write: 41
+Total: 104" "$("$USAGE")" "counts a later message in the run that named the worktree"
+drop_repo
+
+new_repo
+commit_at 2026-01-01T00:00:00Z
+worktree_at 2026-01-02T00:00:00Z "$REPO/trees/feature" feature
+edit_entry result_1 "$REPO" 2026-01-03T00:00:00Z "$REPO/trees/feature/app/models/quote.rb"
+entry_at msg_1 main "$REPO" 2026-01-03T00:01:00Z 10 20 30 40
+cd "$REPO/trees/feature"
+assert_equals "Input: 10
+Output: 20
+Cache read: 30
+Cache write: 40
+Total: 100" "$("$USAGE")" "takes the worktree from a file the run changed"
 drop_repo
 
 echo ""
