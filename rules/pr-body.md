@@ -199,10 +199,13 @@ more than one ticket, and one ticket may span several branches.
 output, cache read, cache write and the total. This section is **generated, not
 written**: `~/.claude/bin/usage.sh --render` prints it from the session
 transcripts and the Scribe pastes that output verbatim. The numbers are every
-message the transcripts recorded for this repo while the branch was checked out,
-which includes each scribe run made on it. Work done on another branch is not in
-them, and neither is anything spent after the body was last written, so the
-section is a measurement taken at that moment rather than a final figure. With no
+message the transcripts recorded while a worktree of this clone held the branch,
+which includes each scribe run made on it. A message is charged to the worktree
+its own agent run was working in, taken from the paths in that run's tool
+records, so two agents working two branches of one clone at once are not charged
+for each other's tokens. Work done on another branch is not in them, and neither
+is anything spent after the body was last written, so the section is a
+measurement taken at that moment rather than a final figure. With no
 transcript naming the branch it prints `Not measured.`, which is the honest
 answer when the work was done on a machine whose transcripts are not here.
 
