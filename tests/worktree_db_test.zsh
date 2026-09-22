@@ -81,6 +81,14 @@ assert_equals '<% worktree = File.file?(Rails.root.join(".git")) ? "_#{Rails.roo
   "defines the suffix from the worktree folder on the first line"
 drop_app
 
+new_app
+"$WORKTREE_DB" "$APP" >/dev/null
+once="$(cat "$APP/config/database.yml")"
+"$WORKTREE_DB" "$APP" >/dev/null
+assert_equals "$once" "$(cat "$APP/config/database.yml")" \
+  "changes nothing when the config was already converted"
+drop_app
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

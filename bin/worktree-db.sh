@@ -19,6 +19,11 @@ config="${1:-.}/config/database.yml"
 
 header='<% worktree = File.file?(Rails.root.join(".git")) ? "_#{Rails.root.basename.to_s.gsub(/\W/, "_")}" : "" %>'
 
+if grep -qxF "$header" "$config"; then
+  echo "$config"
+  exit 0
+fi
+
 HEADER="$header" perl -pi -e '
   print "$ENV{HEADER}\n" if $. == 1;
   $section = $1 if /^(\w+):/;
