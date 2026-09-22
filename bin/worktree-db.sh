@@ -17,6 +17,11 @@ USAGE
 
 config="${1:-.}/config/database.yml"
 
+[ -f "$config" ] || {
+  echo "worktree-db.sh: no database config at $config" >&2
+  exit 66
+}
+
 header='<% worktree = File.file?(Rails.root.join(".git")) ? "_#{Rails.root.basename.to_s.gsub(/\W/, "_")}" : "" %>'
 
 if grep -qxF "$header" "$config"; then

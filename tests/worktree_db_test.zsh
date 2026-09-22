@@ -89,6 +89,12 @@ assert_equals "$once" "$(cat "$APP/config/database.yml")" \
   "changes nothing when the config was already converted"
 drop_app
 
+new_app
+rm "$APP/config/database.yml"
+"$WORKTREE_DB" "$APP" >/dev/null 2>&1
+assert_equals "66" "$?" "refuses an app that has no database config"
+drop_app
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
