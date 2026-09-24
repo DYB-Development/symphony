@@ -373,6 +373,11 @@ result_entry answer_1 session_1 "$REPO" 2026-01-03T00:00:00Z '{"questions": [], 
 assert_equals "1767398400	session_1	answered	2" "$("$USAGE" --rows | grep '	answered	')" "prints the number of questions answered"
 drop_repo
 
+new_repo
+user_entry stop_1 session_1 "$REPO" 2026-01-03T00:00:00Z '[{"type": "text", "text": "[Request interrupted by user]"}]'
+assert_equals "1767398400	session_1	interrupted	1" "$("$USAGE" --rows | grep '	interrupted	')" "prints a row for a turn the owner interrupted"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

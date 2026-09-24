@@ -138,6 +138,9 @@ def effort:
     { kind: "typed", amount: (.message.content | gsub(pasted_block; "") | words) },
     { kind: "pasted", amount: (.message.content | pasted_blocks | length) },
     { kind: "pasted-words", amount: (.message.content | pasted_blocks | map(words) | add // 0) }
+  elif ([ .message.content | arrays | .[] | select(.type? == "text") | .text
+         | select(startswith("[Request interrupted by user")) ] | length > 0) then
+    { kind: "interrupted", amount: 1 }
   elif (.toolUseResult | type == "object" and has("answers")) then
     { kind: "answered", amount: (.toolUseResult.answers | length) }
   else empty end;
