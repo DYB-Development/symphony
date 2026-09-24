@@ -94,6 +94,11 @@ assert_equals "allow" "$(decision "$(bash_payload "git -C $LINKED commit -m wip"
   "a git commit pointed at a linked worktree is let through from the main clone"
 drop_clones
 
+new_clones
+assert_equals "deny" "$(decision "$(bash_payload "cd $MAIN && git pull" "$LINKED")")" \
+  "a git pull after a cd into the main clone is refused"
+drop_clones
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]

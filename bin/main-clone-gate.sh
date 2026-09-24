@@ -44,6 +44,7 @@ first_dir() {
 target_dir() {
   local command="$1" cwd="$2" dir
   dir=$(first_dir "git +-C +('[^']*'|\"[^\"]*\"|[^ ;&|]+)" "$command")
+  [ -n "$dir" ] || dir=$(first_dir "(^|[;&|] *)cd +('[^']*'|\"[^\"]*\"|[^ ;&|]+)" "$command")
   dir=${dir/#\~/$HOME}
   case "$dir" in
     "") printf '%s' "$cwd" ;;
