@@ -340,6 +340,11 @@ user_entry note_4 session_1 "$REPO" 2026-01-03T00:00:03Z '"This session is being
 assert_equals "" "$("$USAGE" --rows | grep '	prompt	')" "prints no prompt row for a message Claude Code sent on its own"
 drop_repo
 
+new_repo
+user_entry prompt_1 session_1 "$REPO" 2026-01-03T00:00:00Z '"fix the header please"'
+assert_equals "1767398400	session_1	typed	4" "$("$USAGE" --rows | grep '	typed	')" "prints the number of words typed in a prompt"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

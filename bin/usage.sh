@@ -123,8 +123,14 @@ def typed_prompt:
   and (.message.content | type == "string")
   and (.message.content | test("^\\s*(<task-notification>|<local-command-|<bash-std|Another Claude session sent a message|This session is being continued)") | not);
 
+def words:
+  [ scan("\\S+") ] | length;
+
 def effort:
-  if typed_prompt then { kind: "prompt", amount: 1 } else empty end;
+  if typed_prompt then
+    { kind: "prompt", amount: 1 },
+    { kind: "typed", amount: (.message.content | words) }
+  else empty end;
 
 def row($id; $kind; $amount):
   [ $id,
