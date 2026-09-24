@@ -126,6 +126,20 @@ assert_contains "git -C $MAIN worktree add -b <branch> $BASE/app-<branch>" "$rea
   "the refusal gives the command that makes a worktree next to the main clone"
 drop_clones
 
+matchers=("${(@f)$(jq -r '.hooks.PreToolUse[]
+  | select(any(.hooks[]; .command | contains("main-clone-gate.sh check"))) | .matcher' \
+  "$SCRIPT_DIR/../hooks/hooks.json")}")
+unrouted=()
+for tool in Bash Edit Write NotebookEdit; do
+  routed=0
+  for matcher in "${matchers[@]}"; do
+    [[ -n "$matcher" && "$tool" =~ "^($matcher)$" ]] && routed=1
+  done
+  (( routed )) || unrouted+=("$tool")
+done
+assert_equals "" "${unrouted[*]}" \
+  "the hooks send every edit and every shell command to the gate"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]

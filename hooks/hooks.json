@@ -38,11 +38,24 @@
         "hooks": [
           {
             "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/main-clone-gate.sh check"
+          },
+          {
+            "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/bin/decision-gate.sh check"
           },
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/bin/agent-progress.sh record"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/main-clone-gate.sh check"
           }
         ]
       }
