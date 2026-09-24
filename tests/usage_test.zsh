@@ -396,6 +396,16 @@ turn_entry turn_1 session_1 "$REPO" 2026-01-03T00:00:00Z 90000
 assert_equals "1767398400	session_1	turn	90000" "$("$USAGE" --rows | grep '	turn	')" "prints how long each of Claude's turns took"
 drop_repo
 
+new_repo
+commit_at 2026-01-01T00:00:00Z
+worktree_at 2026-01-02T00:00:00Z "$REPO/trees/feature" feature
+user_entry prompt_1 session_1 "$REPO" 2026-01-03T00:00:00Z '"on main"'
+another_transcript later
+user_entry prompt_2 session_2 "$REPO/trees/feature" 2026-01-04T00:00:00Z '"on feature"'
+cd "$REPO/trees/feature"
+assert_equals "1767484800	session_2	prompt	1" "$("$USAGE" --rows | grep '	prompt	')" "prints rows only for the branch checked out here"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
