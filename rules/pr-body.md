@@ -80,7 +80,7 @@ issue). It reads the rest from the repo.
 ## The `Closes #N` trailer
 
 A PR that resolves an issue ends with `Closes #<n>` on its own line after the
-last section. That trailer is machine-readable wiring, not an eighth section — it
+last section. That trailer is machine-readable wiring, not a ninth section — it
 is one of the two things allowed outside the eight.
 
 ## The version stamp
