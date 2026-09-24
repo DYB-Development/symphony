@@ -129,6 +129,14 @@ edit_entry() {
       toolUseResult: {bashEditDiff: {files: [{filePath: $file}]}}}' >> "$TRANSCRIPT"
 }
 
+user_entry() {
+  local uuid="$1" session="$2" cwd="$3" at="$4" content="$5"
+  jq -nc --arg uuid "$uuid" --arg session "$session" --arg cwd "$cwd" --arg at "$at" \
+    --argjson content "$content" \
+    '{type: "user", uuid: $uuid, sessionId: $session, isSidechain: false, cwd: $cwd, timestamp: $at,
+      message: {role: "user", content: $content}}' >> "$TRANSCRIPT"
+}
+
 echo "usage.sh:"
 
 new_repo
@@ -317,6 +325,11 @@ Output: 20
 Cache read: 30
 Cache write: 40
 Total: 100" "$("$USAGE")" "takes the worktree from a file the run changed"
+drop_repo
+
+new_repo
+user_entry prompt_1 session_1 "$REPO" 2026-01-03T00:00:00Z '"fix it"'
+assert_equals "1767398400	session_1	prompt	1" "$("$USAGE" --rows | grep '	prompt	')" "prints a row for a prompt typed on this branch"
 drop_repo
 
 echo ""
