@@ -53,6 +53,19 @@ assert_equals "Your active time: 5m" "$(rows 100 s1 turn 60000 400 s1 prompt 1 |
 
 assert_equals "Your active time: 10m" "$(rows 100 s1 turn 60000 3700 s1 prompt 1 | "$EFFORT" | grep '^Your active time:')" "counts no more than ten minutes of one gap"
 
+assert_equals "## Effort
+
+- Sessions: 1
+- Prompts: 1
+- Words typed: 3
+- Pasted blocks: 0
+- Words pasted: 0
+- Questions answered: 0
+- Interruptions: 0
+- Rejected tool calls: 0
+- Claude working time: 2m
+- Your active time: 5m" "$(rows 100 s1 turn 120000 400 s1 prompt 1 400 s1 typed 3 | "$EFFORT" --render)" "prints the PR body's Effort section"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

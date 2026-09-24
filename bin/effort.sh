@@ -4,17 +4,22 @@ set -euo pipefail
 usage() {
   cat >&2 <<'USAGE'
 usage: usage.sh --rows | effort.sh
+       usage.sh --rows | effort.sh --render
 
 Totals what the owner put into this branch from the rows `usage.sh --rows`
-prints on standard input.
+prints on standard input. `--render` prints the PR body's Effort section from
+those totals.
 See ~/.claude/rules/pr-body.md.
 USAGE
   exit 64
 }
 
-[ $# -eq 0 ] || usage
+case "${1:-}" in
+  "" | --render) ;;
+  *) usage ;;
+esac
 
-awk -F '\t' -v idle_cap=600 '
+totals=$(awk -F '\t' -v idle_cap=600 '
   function grouped(number,   digits, out) {
     digits = sprintf("%d", number)
     while (length(digits) > 3) {
@@ -50,4 +55,12 @@ awk -F '\t' -v idle_cap=600 '
     printf "Claude working time: %s\n", duration(total["turn"] / 1000)
     printf "Your active time: %s\n", duration(active)
   }
-'
+')
+
+if [ "${1:-}" = "--render" ]; then
+  printf '## Effort\n\n'
+  printf '%s\n' "$totals" | sed 's/^/- /'
+  exit 0
+fi
+
+printf '%s\n' "$totals"
