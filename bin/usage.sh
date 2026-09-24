@@ -132,6 +132,11 @@ def pasted_block:
 def pasted_blocks:
   [ match(pasted_block; "g") | .captures[0].string ];
 
+def rejections:
+  [ .message.content | arrays | .[] | select(.type? == "tool_result")
+    | select(.content | tostring | contains("The user doesn't want to proceed with this tool use")) ]
+  | length;
+
 def effort:
   if typed_prompt then
     { kind: "prompt", amount: 1 },
@@ -141,6 +146,8 @@ def effort:
   elif ([ .message.content | arrays | .[] | select(.type? == "text") | .text
          | select(startswith("[Request interrupted by user")) ] | length > 0) then
     { kind: "interrupted", amount: 1 }
+  elif rejections > 0 then
+    { kind: "rejected", amount: rejections }
   elif (.toolUseResult | type == "object" and has("answers")) then
     { kind: "answered", amount: (.toolUseResult.answers | length) }
   else empty end;

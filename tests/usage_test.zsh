@@ -378,6 +378,11 @@ user_entry stop_1 session_1 "$REPO" 2026-01-03T00:00:00Z '[{"type": "text", "tex
 assert_equals "1767398400	session_1	interrupted	1" "$("$USAGE" --rows | grep '	interrupted	')" "prints a row for a turn the owner interrupted"
 drop_repo
 
+new_repo
+result_entry reject_1 session_1 "$REPO" 2026-01-03T00:00:00Z '"User rejected tool use"' '[{"type": "tool_result", "is_error": true, "content": "The user doesn'"'"'t want to proceed with this tool use. The tool use was rejected."}]'
+assert_equals "1767398400	session_1	rejected	1" "$("$USAGE" --rows | grep '	rejected	')" "prints a row for a tool call the owner rejected"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
