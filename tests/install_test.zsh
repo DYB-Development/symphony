@@ -95,7 +95,7 @@ CONFIG="$(fresh_config)"
 CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" >/dev/null 2>&1
 CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" >/dev/null 2>&1
 
-assert_equals "1" \
+assert_equals "$(jq '.hooks.PreToolUse | length' "$ROOT/hooks/hooks.json")" \
   "$(jq '.hooks.PreToolUse | length' "$CONFIG/settings.json")" \
   "adds a hook once however often it runs"
 
