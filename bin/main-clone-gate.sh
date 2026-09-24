@@ -34,7 +34,7 @@ payload=$(cat)
 
 case "${1:-}" in
   check)
-    path=$(printf '%s' "$payload" | jq -r '.tool_input.file_path // empty')
+    path=$(printf '%s' "$payload" | jq -r '.tool_input.file_path // .tool_input.notebook_path // empty')
     [ -n "$path" ] || exit 0
     in_main_clone "$path" || exit 0
     refuse

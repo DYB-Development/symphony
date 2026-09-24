@@ -63,6 +63,13 @@ assert_equals "allow" "$(decision "$(edit_payload Write "$LINKED/notes.md" "$LIN
   "a write to a file in a linked worktree is let through"
 drop_clones
 
+new_clones
+notebook=$(jq -nc --arg path "$MAIN/book.ipynb" --arg cwd "$MAIN" \
+  '{session_id: "s", tool_name: "NotebookEdit", tool_input: {notebook_path: $path}, cwd: $cwd}')
+assert_equals "deny" "$(decision "$notebook")" \
+  "a notebook edit in the main clone is refused"
+drop_clones
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
