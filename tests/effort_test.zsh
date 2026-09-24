@@ -37,6 +37,8 @@ assert_equals "Sessions: 2" "$(rows 100 s1 prompt 1 160 s1 prompt 1 900 s2 promp
 
 assert_equals "Words typed: 1,250" "$(rows 100 s1 typed 1000 160 s1 typed 250 | "$EFFORT" | grep '^Words typed:')" "totals the words typed"
 
+assert_equals "Pasted blocks: 1,250" "$(rows 100 s1 pasted 1000 160 s1 pasted 250 | "$EFFORT" | grep '^Pasted blocks:')" "totals the blocks pasted"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

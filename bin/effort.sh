@@ -30,5 +30,6 @@ awk -F '\t' '
     printf "Sessions: %d\n", sessions
     printf "Prompts: %d\n", total["prompt"]
     printf "Words typed: %s\n", grouped(total["typed"])
+    printf "Pasted blocks: %s\n", grouped(total["pasted"])
   }
 '
