@@ -49,6 +49,8 @@ assert_equals "Rejected tool calls: 1,250" "$(rows 100 s1 rejected 1000 160 s1 r
 
 assert_equals "Claude working time: 1h 5m" "$(rows 100 s1 turn 3600000 5000 s1 turn 300000 | "$EFFORT" | grep '^Claude working time:')" "totals how long Claude's turns took"
 
+assert_equals "Your active time: 5m" "$(rows 100 s1 turn 60000 400 s1 prompt 1 | "$EFFORT" | grep '^Your active time:')" "counts the time between a turn ending and the next prompt"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

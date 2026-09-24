@@ -32,6 +32,8 @@ awk -F '\t' '
 
   { total[$3] += $4 }
   $3 == "prompt" && !seen[$2]++ { sessions++ }
+  $3 == "prompt" && ($2 in ended) { active += $1 - ended[$2]; delete ended[$2] }
+  $3 == "turn" { ended[$2] = $1 }
   END {
     printf "Sessions: %d\n", sessions
     printf "Prompts: %d\n", total["prompt"]
@@ -42,5 +44,6 @@ awk -F '\t' '
     printf "Interruptions: %s\n", grouped(total["interrupted"])
     printf "Rejected tool calls: %s\n", grouped(total["rejected"])
     printf "Claude working time: %s\n", duration(total["turn"] / 1000)
+    printf "Your active time: %s\n", duration(active)
   }
 '
