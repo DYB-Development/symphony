@@ -1,0 +1,60 @@
+#!/usr/bin/env zsh
+# Tests for bin/main-clone-gate.sh. Every case runs against a throwaway main
+# clone and a linked worktree of it, so no real repo is touched.
+#
+# Usage: zsh tests/main_clone_gate_test.zsh
+setopt no_unset
+
+SCRIPT_DIR="${0:A:h}"
+GATE="$SCRIPT_DIR/../bin/main-clone-gate.sh"
+
+PASS=0
+FAIL=0
+
+ok()   { printf '  \033[32m✓\033[0m %s\n' "$1"; PASS=$((PASS+1)); }
+fail() { printf '  \033[31m✗\033[0m %s\n' "$1"; FAIL=$((FAIL+1)); }
+
+assert_equals() {
+  local expected="$1" actual="$2" label="$3"
+  if [[ "$expected" == "$actual" ]]; then
+    ok "$label"
+  else
+    fail "$label"
+    printf '      expected: %s\n' "${(qqq)expected}"
+    printf '      actual:   %s\n' "${(qqq)actual}"
+  fi
+}
+
+new_clones() {
+  BASE="$(mktemp -d "${TMPDIR:-/tmp}/main_clone_gate_test.XXXXXX")"
+  BASE="${BASE:A}"
+  MAIN="$BASE/app"
+  LINKED="$BASE/app-feature"
+  git init -q "$MAIN"
+  git -C "$MAIN" commit -q --allow-empty -m init
+  git -C "$MAIN" worktree add -q -b feature "$LINKED"
+}
+
+drop_clones() {
+  rm -rf "$BASE"
+}
+
+edit_payload() {
+  jq -nc --arg tool "$1" --arg path "$2" --arg cwd "$3" \
+    '{session_id: "s", tool_name: $tool, tool_input: {file_path: $path}, cwd: $cwd}'
+}
+
+decision() {
+  printf '%s' "$1" | "$GATE" check | jq -r '.hookSpecificOutput.permissionDecision // "allow"'
+}
+
+echo "main-clone-gate.sh check:"
+
+new_clones
+assert_equals "deny" "$(decision "$(edit_payload Write "$MAIN/notes.md" "$MAIN")")" \
+  "a write to a file in the main clone is refused"
+drop_clones
+
+echo ""
+echo "$PASS passed, $FAIL failed"
+[[ $FAIL -eq 0 ]]
