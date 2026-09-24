@@ -45,6 +45,8 @@ assert_equals "Questions answered: 1,250" "$(rows 100 s1 answered 1000 160 s1 an
 
 assert_equals "Interruptions: 1,250" "$(rows 100 s1 interrupted 1000 160 s1 interrupted 250 | "$EFFORT" | grep '^Interruptions:')" "totals the turns interrupted"
 
+assert_equals "Rejected tool calls: 1,250" "$(rows 100 s1 rejected 1000 160 s1 rejected 250 | "$EFFORT" | grep '^Rejected tool calls:')" "totals the tool calls rejected"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
