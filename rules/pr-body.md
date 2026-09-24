@@ -39,16 +39,20 @@ now do or no longer have to deal with.>
 ## Tokens Used
 
 - <one total per line, input, output, cache read, cache write, and the total>
+
+## Effort
+
+- <one measure per line, from the sessions to the owner's active time>
 ```
 
-All seven sections appear in every body, always in that order. Nothing else,
+All eight sections appear in every body, always in that order. Nothing else,
 apart from the two trailers below.
 Never add a section that is not on this list, and never drop one — when Design
 Decisions, Code Example, or Out of Scope has nothing to say, the section stays
 and its whole content is the line `Not relevant.` Ticket Billed Against says
 `Not specified.` instead, since a missing ticket is a fact about the billing and
-not an empty section. Tokens Used says `Not measured.` for the same reason, since
-no transcript naming the branch is a fact about the measurement. One Sentence
+not an empty section. Tokens Used and Effort say `Not measured.` for the same
+reason, since no transcript naming the branch is a fact about the measurement. One Sentence
 Summary and ACs Covered always have something to say.
 
 ## Always use the PR Scribe (ironclad)
@@ -77,7 +81,7 @@ issue). It reads the rest from the repo.
 
 A PR that resolves an issue ends with `Closes #<n>` on its own line after the
 last section. That trailer is machine-readable wiring, not an eighth section — it
-is one of the two things allowed outside the seven.
+is one of the two things allowed outside the eight.
 
 ## The version stamp
 
@@ -110,7 +114,7 @@ The model is named by its id, never its display name — `claude-opus-5[1m]`, no
 same model the same way, so the script refuses a display name outright.
 
 It is a trailer, not a section. Its `## Generation Metadata` heading comes from
-the script like the rest of it, so it is never counted among the seven, never
+the script like the rest of it, so it is never counted among the eight, never
 written by hand, and the one-sentence rule does not reach it.
 
 ## One sentence means one sentence
@@ -208,6 +212,29 @@ is anything spent after the body was last written, so the section is a
 measurement taken at that moment rather than a final figure. With no
 transcript naming the branch it prints `Not measured.`, which is the honest
 answer when the work was done on a machine whose transcripts are not here.
+
+**Effort** — what the owner put into this branch, next to what it cost, so a
+reader can tell a one-off request from a branch the owner guided closely. One
+line each for the sessions, the prompts typed, the words typed, the blocks
+pasted, the words pasted, the questions answered, the turns interrupted, the
+tool calls rejected, the time Claude spent working, and the owner's active time.
+This section is **generated, not written**: `~/.claude/bin/usage.sh --rows |
+~/.claude/bin/effort.sh --render` prints it from the same transcripts as Tokens
+Used, charged to the branch the same way, and the Scribe pastes that output
+verbatim. A session counts when the owner typed a prompt in it on this branch,
+so a later session that fixes review comments adds to the same totals. Messages
+Claude Code sends on its own, such as background task notifications and
+messages from other sessions, are not prompts. Words pasted are counted apart
+from words typed, so a long description written out and a design pasted in
+both show. The owner's active time is the gap between the end of each of
+Claude's turns and the next prompt, with no more than ten minutes of any one
+gap counted, so a break is not counted as work. Conversations outside Claude
+Code, time spent reading the pull request on GitHub, and files attached to a
+prompt are not in it, since the transcripts do not record them apart from other
+things. A prompt typed before the session first works in the branch's worktree
+is charged to the branch the session was on, not this one. Like Tokens Used it
+is a measurement taken when the body was last written, and it prints
+`Not measured.` when no transcript names the branch.
 
 ## What does not go in a PR body
 
