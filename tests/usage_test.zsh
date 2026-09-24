@@ -345,6 +345,11 @@ user_entry prompt_1 session_1 "$REPO" 2026-01-03T00:00:00Z '"fix the header plea
 assert_equals "1767398400	session_1	typed	4" "$("$USAGE" --rows | grep '	typed	')" "prints the number of words typed in a prompt"
 drop_repo
 
+new_repo
+user_entry prompt_1 session_1 "$REPO" 2026-01-03T00:00:00Z '"build this\n\n<pasted_content id=\"a1\">\nthe header is blue\n</pasted_content id=\"a1\">\n<pasted_content id=\"b2\">\nthe footer is red\n</pasted_content id=\"b2\">"'
+assert_equals "1767398400	session_1	pasted	2" "$("$USAGE" --rows | grep '	pasted	')" "prints the number of blocks pasted into a prompt"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

@@ -129,7 +129,8 @@ def words:
 def effort:
   if typed_prompt then
     { kind: "prompt", amount: 1 },
-    { kind: "typed", amount: (.message.content | words) }
+    { kind: "typed", amount: (.message.content | words) },
+    { kind: "pasted", amount: ([ .message.content | scan("<pasted_content[ >]") ] | length) }
   else empty end;
 
 def row($id; $kind; $amount):
