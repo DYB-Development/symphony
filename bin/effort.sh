@@ -24,6 +24,12 @@ awk -F '\t' '
     return digits out
   }
 
+  function duration(seconds,   minutes) {
+    minutes = int(seconds / 60)
+    if (minutes < 60) return minutes "m"
+    return int(minutes / 60) "h " minutes % 60 "m"
+  }
+
   { total[$3] += $4 }
   $3 == "prompt" && !seen[$2]++ { sessions++ }
   END {
@@ -35,5 +41,6 @@ awk -F '\t' '
     printf "Questions answered: %s\n", grouped(total["answered"])
     printf "Interruptions: %s\n", grouped(total["interrupted"])
     printf "Rejected tool calls: %s\n", grouped(total["rejected"])
+    printf "Claude working time: %s\n", duration(total["turn"] / 1000)
   }
 '
