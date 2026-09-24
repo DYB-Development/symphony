@@ -16,7 +16,9 @@ USAGE
 
 awk -F '\t' '
   { total[$3] += $4 }
+  $3 == "prompt" && !seen[$2]++ { sessions++ }
   END {
+    printf "Sessions: %d\n", sessions
     printf "Prompts: %d\n", total["prompt"]
   }
 '

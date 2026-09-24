@@ -33,6 +33,8 @@ echo "effort.sh:"
 
 assert_equals "Prompts: 2" "$(rows 100 s1 prompt 1 160 s1 prompt 1 | "$EFFORT" | grep '^Prompts:')" "counts the prompts typed"
 
+assert_equals "Sessions: 2" "$(rows 100 s1 prompt 1 160 s1 prompt 1 900 s2 prompt 1 | "$EFFORT" | grep '^Sessions:')" "counts the sessions the prompts were typed in"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
