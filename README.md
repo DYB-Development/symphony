@@ -101,6 +101,7 @@ settings that are not its own alone:
 | `SessionStart` | `writing-style-hook.sh` | Carries the writing rules and the banned phrase list into the session |
 | `SubagentStart` | `writing-style-hook.sh` | A subagent receives no rules of its own, so it gets them here |
 | `PostToolUse` | `decision-gate.sh arm` | Answering a question settles a choice, which has to be recorded |
+| `PreToolUse` | `main-clone-gate.sh check` | Refuses an edit or a branch-changing git command aimed at a repo's main clone, which is kept for its owner |
 | `PreToolUse` | `decision-gate.sh check` | Refuses a commit while that choice is still unrecorded |
 | `PreToolUse` | `agent-progress.sh record` | Logs the step a subagent marks and each script it runs |
 | `SubagentStop` | `agent-progress.sh record` | Logs that a subagent finished |
@@ -108,8 +109,8 @@ settings that are not its own alone:
 | `Notification` | `turn-sound.sh play` | Plays the same sound when a session asks permission to run a tool |
 
 Skip the hooks and the package still loads, but the writing rules never reach a
-subagent, the decision gate never fires, and no progress is logged, all without
-saying so.
+subagent, the decision gate never fires, agents can work in the main clone, and
+no progress is logged, all without saying so.
 
 To stop the sound in every open session, and to bring it back:
 
