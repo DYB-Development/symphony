@@ -34,6 +34,24 @@ changes_files_or_branch() {
   printf '%s' "$1" | grep -Eq '(^|[;&|(]) *([A-Za-z_]+=[^ ]* +)*git( +-[Cc] +[^ ;&|]+)* +(commit|checkout|switch|merge|rebase|reset|stash|pull)([^A-Za-z-]|$)'
 }
 
+first_dir() {
+  printf '%s' "$2" \
+    | grep -Eo "$1" \
+    | head -1 \
+    | sed -E "s/^.*(-C|cd) +//; s/^['\"]//; s/['\"]$//"
+}
+
+target_dir() {
+  local command="$1" cwd="$2" dir
+  dir=$(first_dir "git +-C +('[^']*'|\"[^\"]*\"|[^ ;&|]+)" "$command")
+  dir=${dir/#\~/$HOME}
+  case "$dir" in
+    "") printf '%s' "$cwd" ;;
+    /*) printf '%s' "$dir" ;;
+    *)  printf '%s/%s' "$cwd" "$dir" ;;
+  esac
+}
+
 payload=$(cat)
 
 case "${1:-}" in
@@ -41,7 +59,8 @@ case "${1:-}" in
     command=$(printf '%s' "$payload" | jq -r '.tool_input.command // empty')
     if [ -n "$command" ]; then
       changes_files_or_branch "$command" || exit 0
-      in_main_clone "$(printf '%s' "$payload" | jq -r '.cwd // empty')" || exit 0
+      cwd=$(printf '%s' "$payload" | jq -r '.cwd // empty')
+      in_main_clone "$(target_dir "$command" "$cwd")" || exit 0
       refuse
       exit 0
     fi

@@ -89,6 +89,11 @@ assert_equals "" "${let_through[*]}" \
   "every other git command that changes files or the branch is refused in the main clone"
 drop_clones
 
+new_clones
+assert_equals "allow" "$(decision "$(bash_payload "git -C $LINKED commit -m wip" "$MAIN")")" \
+  "a git commit pointed at a linked worktree is let through from the main clone"
+drop_clones
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
