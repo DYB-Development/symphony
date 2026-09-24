@@ -137,6 +137,14 @@ user_entry() {
       message: {role: "user", content: $content}}' >> "$TRANSCRIPT"
 }
 
+result_entry() {
+  local uuid="$1" session="$2" cwd="$3" at="$4" result="$5" content="$6"
+  jq -nc --arg uuid "$uuid" --arg session "$session" --arg cwd "$cwd" --arg at "$at" \
+    --argjson result "$result" --argjson content "$content" \
+    '{type: "user", uuid: $uuid, sessionId: $session, isSidechain: false, cwd: $cwd, timestamp: $at,
+      message: {role: "user", content: $content}, toolUseResult: $result}' >> "$TRANSCRIPT"
+}
+
 echo "usage.sh:"
 
 new_repo
@@ -358,6 +366,11 @@ drop_repo
 new_repo
 user_entry prompt_1 session_1 "$REPO" 2026-01-03T00:00:00Z '"build this\n\n<pasted_content id=\"a1\">\nthe header is blue\n</pasted_content id=\"a1\">"'
 assert_equals "1767398400	session_1	typed	2" "$("$USAGE" --rows | grep '	typed	')" "leaves pasted words out of the words typed"
+drop_repo
+
+new_repo
+result_entry answer_1 session_1 "$REPO" 2026-01-03T00:00:00Z '{"questions": [], "answers": {"Which one?": "A", "How long?": "10 minutes"}}' '[{"type": "tool_result", "content": "answered"}]'
+assert_equals "1767398400	session_1	answered	2" "$("$USAGE" --rows | grep '	answered	')" "prints the number of questions answered"
 drop_repo
 
 echo ""

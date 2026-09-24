@@ -138,6 +138,8 @@ def effort:
     { kind: "typed", amount: (.message.content | gsub(pasted_block; "") | words) },
     { kind: "pasted", amount: (.message.content | pasted_blocks | length) },
     { kind: "pasted-words", amount: (.message.content | pasted_blocks | map(words) | add // 0) }
+  elif (.toolUseResult | type == "object" and has("answers")) then
+    { kind: "answered", amount: (.toolUseResult.answers | length) }
   else empty end;
 
 def row($id; $kind; $amount):
