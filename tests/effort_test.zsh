@@ -41,6 +41,8 @@ assert_equals "Pasted blocks: 1,250" "$(rows 100 s1 pasted 1000 160 s1 pasted 25
 
 assert_equals "Words pasted: 1,250" "$(rows 100 s1 pasted-words 1000 160 s1 pasted-words 250 | "$EFFORT" | grep '^Words pasted:')" "totals the words pasted"
 
+assert_equals "Questions answered: 1,250" "$(rows 100 s1 answered 1000 160 s1 answered 250 | "$EFFORT" | grep '^Questions answered:')" "totals the questions answered"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

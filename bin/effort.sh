@@ -32,5 +32,6 @@ awk -F '\t' '
     printf "Words typed: %s\n", grouped(total["typed"])
     printf "Pasted blocks: %s\n", grouped(total["pasted"])
     printf "Words pasted: %s\n", grouped(total["pasted-words"])
+    printf "Questions answered: %s\n", grouped(total["answered"])
   }
 '
