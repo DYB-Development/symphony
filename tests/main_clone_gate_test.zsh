@@ -99,6 +99,15 @@ assert_equals "deny" "$(decision "$(bash_payload "cd $MAIN && git pull" "$LINKED
   "a git pull after a cd into the main clone is refused"
 drop_clones
 
+new_clones
+refused=()
+for command in 'git status' 'git log --oneline' 'git diff' 'git fetch' "git worktree add -b other $BASE/app-other"; do
+  [[ "$(decision "$(bash_payload "$command" "$MAIN")")" == allow ]] || refused+=("$command")
+done
+assert_equals "" "${refused[*]}" \
+  "reading git state and adding a worktree stay allowed in the main clone"
+drop_clones
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
