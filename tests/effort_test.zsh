@@ -51,6 +51,8 @@ assert_equals "Claude working time: 1h 5m" "$(rows 100 s1 turn 3600000 5000 s1 t
 
 assert_equals "Your active time: 5m" "$(rows 100 s1 turn 60000 400 s1 prompt 1 | "$EFFORT" | grep '^Your active time:')" "counts the time between a turn ending and the next prompt"
 
+assert_equals "Your active time: 10m" "$(rows 100 s1 turn 60000 3700 s1 prompt 1 | "$EFFORT" | grep '^Your active time:')" "counts no more than ten minutes of one gap"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

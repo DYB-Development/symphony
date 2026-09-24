@@ -14,7 +14,7 @@ USAGE
 
 [ $# -eq 0 ] || usage
 
-awk -F '\t' '
+awk -F '\t' -v idle_cap=600 '
   function grouped(number,   digits, out) {
     digits = sprintf("%d", number)
     while (length(digits) > 3) {
@@ -32,7 +32,11 @@ awk -F '\t' '
 
   { total[$3] += $4 }
   $3 == "prompt" && !seen[$2]++ { sessions++ }
-  $3 == "prompt" && ($2 in ended) { active += $1 - ended[$2]; delete ended[$2] }
+  $3 == "prompt" && ($2 in ended) {
+    gap = $1 - ended[$2]
+    active += gap < idle_cap ? gap : idle_cap
+    delete ended[$2]
+  }
   $3 == "turn" { ended[$2] = $1 }
   END {
     printf "Sessions: %d\n", sessions
