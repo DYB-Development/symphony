@@ -45,7 +45,10 @@ edit_payload() {
 }
 
 decision() {
-  printf '%s' "$1" | "$GATE" check | jq -r '.hookSpecificOutput.permissionDecision // "allow"'
+  local reply
+  reply=$(printf '%s' "$1" | "$GATE" check)
+  [[ -n "$reply" ]] || { printf 'allow'; return; }
+  printf '%s' "$reply" | jq -r '.hookSpecificOutput.permissionDecision // "allow"'
 }
 
 echo "main-clone-gate.sh check:"
@@ -53,6 +56,11 @@ echo "main-clone-gate.sh check:"
 new_clones
 assert_equals "deny" "$(decision "$(edit_payload Write "$MAIN/notes.md" "$MAIN")")" \
   "a write to a file in the main clone is refused"
+drop_clones
+
+new_clones
+assert_equals "allow" "$(decision "$(edit_payload Write "$LINKED/notes.md" "$LINKED")")" \
+  "a write to a file in a linked worktree is let through"
 drop_clones
 
 echo ""
