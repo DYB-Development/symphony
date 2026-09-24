@@ -332,6 +332,14 @@ user_entry prompt_1 session_1 "$REPO" 2026-01-03T00:00:00Z '"fix it"'
 assert_equals "1767398400	session_1	prompt	1" "$("$USAGE" --rows | grep '	prompt	')" "prints a row for a prompt typed on this branch"
 drop_repo
 
+new_repo
+user_entry note_1 session_1 "$REPO" 2026-01-03T00:00:00Z '"<task-notification>\n<task-id>a1</task-id>\n</task-notification>"'
+user_entry note_2 session_1 "$REPO" 2026-01-03T00:00:01Z '"Another Claude session sent a message:\n<agent-message from=\"a1\">done</agent-message>"'
+user_entry note_3 session_1 "$REPO" 2026-01-03T00:00:02Z '"<local-command-stdout>ok</local-command-stdout>"'
+user_entry note_4 session_1 "$REPO" 2026-01-03T00:00:03Z '"This session is being continued from a previous conversation that ran out of context."'
+assert_equals "" "$("$USAGE" --rows | grep '	prompt	')" "prints no prompt row for a message Claude Code sent on its own"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

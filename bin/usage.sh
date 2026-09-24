@@ -120,7 +120,8 @@ def typed_prompt:
   and (.isSidechain | not)
   and (.agentId == null)
   and (.isMeta | not)
-  and (.message.content | type == "string");
+  and (.message.content | type == "string")
+  and (.message.content | test("^\\s*(<task-notification>|<local-command-|<bash-std|Another Claude session sent a message|This session is being continued)") | not);
 
 def effort:
   if typed_prompt then { kind: "prompt", amount: 1 } else empty end;
