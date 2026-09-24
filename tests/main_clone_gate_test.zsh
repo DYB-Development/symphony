@@ -80,6 +80,15 @@ assert_equals "deny" "$(decision "$(bash_payload 'git commit -m wip' "$MAIN")")"
   "a git commit run in the main clone is refused"
 drop_clones
 
+new_clones
+let_through=()
+for sub in checkout switch merge rebase reset stash pull; do
+  [[ "$(decision "$(bash_payload "git $sub" "$MAIN")")" == deny ]] || let_through+=("$sub")
+done
+assert_equals "" "${let_through[*]}" \
+  "every other git command that changes files or the branch is refused in the main clone"
+drop_clones
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]

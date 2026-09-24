@@ -31,7 +31,7 @@ refuse() {
 }
 
 changes_files_or_branch() {
-  printf '%s' "$1" | grep -Eq '(^|[;&|(]) *([A-Za-z_]+=[^ ]* +)*git( +-[Cc] +[^ ;&|]+)* +commit([^A-Za-z-]|$)'
+  printf '%s' "$1" | grep -Eq '(^|[;&|(]) *([A-Za-z_]+=[^ ]* +)*git( +-[Cc] +[^ ;&|]+)* +(commit|checkout|switch|merge|rebase|reset|stash|pull)([^A-Za-z-]|$)'
 }
 
 payload=$(cat)
