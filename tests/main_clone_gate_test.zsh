@@ -44,6 +44,17 @@ edit_payload() {
     '{session_id: "s", tool_name: $tool, tool_input: {file_path: $path}, cwd: $cwd}'
 }
 
+assert_contains() {
+  local needle="$1" haystack="$2" label="$3"
+  if [[ "$haystack" == *"$needle"* ]]; then
+    ok "$label"
+  else
+    fail "$label"
+    printf '      wanted to find: %s\n' "${(qqq)needle}"
+    printf '      in:             %s\n' "${(qqq)haystack}"
+  fi
+}
+
 bash_payload() {
   jq -nc --arg command "$1" --arg cwd "$2" \
     '{session_id: "s", tool_name: "Bash", tool_input: {command: $command}, cwd: $cwd}'
@@ -106,6 +117,13 @@ for command in 'git status' 'git log --oneline' 'git diff' 'git fetch' "git work
 done
 assert_equals "" "${refused[*]}" \
   "reading git state and adding a worktree stay allowed in the main clone"
+drop_clones
+
+new_clones
+reason=$(printf '%s' "$(edit_payload Write "$MAIN/notes.md" "$MAIN")" | "$GATE" check \
+  | jq -r '.hookSpecificOutput.permissionDecisionReason')
+assert_contains "git -C $MAIN worktree add -b <branch> $BASE/app-<branch>" "$reason" \
+  "the refusal gives the command that makes a worktree next to the main clone"
 drop_clones
 
 echo ""

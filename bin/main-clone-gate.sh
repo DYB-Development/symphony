@@ -18,16 +18,19 @@ nearest_dir() {
   printf '%s' "$path"
 }
 
-in_main_clone() {
+main_clone_root() {
   local dir paths
   dir=$(nearest_dir "$1")
-  paths=$(git -C "$dir" rev-parse --path-format=absolute --git-dir --git-common-dir 2>/dev/null) || return 1
-  [ "$(printf '%s\n' "$paths" | sed -n 1p)" = "$(printf '%s\n' "$paths" | sed -n 2p)" ]
+  paths=$(git -C "$dir" rev-parse --path-format=absolute --git-dir --git-common-dir --show-toplevel 2>/dev/null) || return 1
+  [ "$(printf '%s\n' "$paths" | sed -n 1p)" = "$(printf '%s\n' "$paths" | sed -n 2p)" ] || return 1
+  printf '%s\n' "$paths" | sed -n 3p
 }
 
 refuse() {
+  local root="$1" worktree
+  worktree="$(dirname "$root")/$(basename "$root")-<branch>"
   jq -nc '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $text}}' \
-    --arg text "This is the main clone of the repo, which is kept for its owner alone."
+    --arg text "$root is the main clone of this repo, which is kept for its owner alone. Make a worktree next to it and do the work there: git -C $root worktree add -b <branch> $worktree, writing any / in the branch as - in the folder name. See ~/.claude/rules/agent-worktrees.md."
 }
 
 changes_files_or_branch() {
@@ -61,14 +64,14 @@ case "${1:-}" in
     if [ -n "$command" ]; then
       changes_files_or_branch "$command" || exit 0
       cwd=$(printf '%s' "$payload" | jq -r '.cwd // empty')
-      in_main_clone "$(target_dir "$command" "$cwd")" || exit 0
-      refuse
+      root=$(main_clone_root "$(target_dir "$command" "$cwd")") || exit 0
+      refuse "$root"
       exit 0
     fi
     path=$(printf '%s' "$payload" | jq -r '.tool_input.file_path // .tool_input.notebook_path // empty')
     [ -n "$path" ] || exit 0
-    in_main_clone "$path" || exit 0
-    refuse
+    root=$(main_clone_root "$path") || exit 0
+    refuse "$root"
     ;;
   *) usage ;;
 esac
