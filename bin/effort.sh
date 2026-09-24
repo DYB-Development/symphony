@@ -15,10 +15,20 @@ USAGE
 [ $# -eq 0 ] || usage
 
 awk -F '\t' '
+  function grouped(number,   digits, out) {
+    digits = sprintf("%d", number)
+    while (length(digits) > 3) {
+      out = "," substr(digits, length(digits) - 2) out
+      digits = substr(digits, 1, length(digits) - 3)
+    }
+    return digits out
+  }
+
   { total[$3] += $4 }
   $3 == "prompt" && !seen[$2]++ { sessions++ }
   END {
     printf "Sessions: %d\n", sessions
     printf "Prompts: %d\n", total["prompt"]
+    printf "Words typed: %s\n", grouped(total["typed"])
   }
 '
