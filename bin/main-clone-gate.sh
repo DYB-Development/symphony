@@ -30,10 +30,21 @@ refuse() {
     --arg text "This is the main clone of the repo, which is kept for its owner alone."
 }
 
+changes_files_or_branch() {
+  printf '%s' "$1" | grep -Eq '(^|[;&|(]) *([A-Za-z_]+=[^ ]* +)*git( +-[Cc] +[^ ;&|]+)* +commit([^A-Za-z-]|$)'
+}
+
 payload=$(cat)
 
 case "${1:-}" in
   check)
+    command=$(printf '%s' "$payload" | jq -r '.tool_input.command // empty')
+    if [ -n "$command" ]; then
+      changes_files_or_branch "$command" || exit 0
+      in_main_clone "$(printf '%s' "$payload" | jq -r '.cwd // empty')" || exit 0
+      refuse
+      exit 0
+    fi
     path=$(printf '%s' "$payload" | jq -r '.tool_input.file_path // .tool_input.notebook_path // empty')
     [ -n "$path" ] || exit 0
     in_main_clone "$path" || exit 0

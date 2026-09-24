@@ -44,6 +44,11 @@ edit_payload() {
     '{session_id: "s", tool_name: $tool, tool_input: {file_path: $path}, cwd: $cwd}'
 }
 
+bash_payload() {
+  jq -nc --arg command "$1" --arg cwd "$2" \
+    '{session_id: "s", tool_name: "Bash", tool_input: {command: $command}, cwd: $cwd}'
+}
+
 decision() {
   local reply
   reply=$(printf '%s' "$1" | "$GATE" check)
@@ -68,6 +73,11 @@ notebook=$(jq -nc --arg path "$MAIN/book.ipynb" --arg cwd "$MAIN" \
   '{session_id: "s", tool_name: "NotebookEdit", tool_input: {notebook_path: $path}, cwd: $cwd}')
 assert_equals "deny" "$(decision "$notebook")" \
   "a notebook edit in the main clone is refused"
+drop_clones
+
+new_clones
+assert_equals "deny" "$(decision "$(bash_payload 'git commit -m wip' "$MAIN")")" \
+  "a git commit run in the main clone is refused"
 drop_clones
 
 echo ""
