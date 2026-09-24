@@ -138,7 +138,9 @@ def rejections:
   | length;
 
 def effort:
-  if typed_prompt then
+  if .type == "system" then
+    { kind: "turn", amount: (.durationMs // 0) }
+  elif typed_prompt then
     { kind: "prompt", amount: 1 },
     { kind: "typed", amount: (.message.content | gsub(pasted_block; "") | words) },
     { kind: "pasted", amount: (.message.content | pasted_blocks | length) },
@@ -170,7 +172,7 @@ def row($id; $kind; $amount):
   | @tsv;
 
 select(type == "object")
-| select(.type == "assistant" or .type == "user")
+| select(.type == "assistant" or .type == "user" or .subtype == "turn_duration")
 | . as $entry
 | if .type == "assistant" then row(.message.id // ""; "tokens"; 0) else row(""; ""; 0) end,
   (effort | . as $effort | $entry | row("\(.uuid // ""):\($effort.kind)"; $effort.kind; $effort.amount))

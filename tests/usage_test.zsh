@@ -145,6 +145,14 @@ result_entry() {
       message: {role: "user", content: $content}, toolUseResult: $result}' >> "$TRANSCRIPT"
 }
 
+turn_entry() {
+  local uuid="$1" session="$2" cwd="$3" at="$4" milliseconds="$5"
+  jq -nc --arg uuid "$uuid" --arg session "$session" --arg cwd "$cwd" --arg at "$at" \
+    --argjson milliseconds "$milliseconds" \
+    '{type: "system", subtype: "turn_duration", uuid: $uuid, sessionId: $session, cwd: $cwd,
+      timestamp: $at, durationMs: $milliseconds}' >> "$TRANSCRIPT"
+}
+
 echo "usage.sh:"
 
 new_repo
@@ -381,6 +389,11 @@ drop_repo
 new_repo
 result_entry reject_1 session_1 "$REPO" 2026-01-03T00:00:00Z '"User rejected tool use"' '[{"type": "tool_result", "is_error": true, "content": "The user doesn'"'"'t want to proceed with this tool use. The tool use was rejected."}]'
 assert_equals "1767398400	session_1	rejected	1" "$("$USAGE" --rows | grep '	rejected	')" "prints a row for a tool call the owner rejected"
+drop_repo
+
+new_repo
+turn_entry turn_1 session_1 "$REPO" 2026-01-03T00:00:00Z 90000
+assert_equals "1767398400	session_1	turn	90000" "$("$USAGE" --rows | grep '	turn	')" "prints how long each of Claude's turns took"
 drop_repo
 
 echo ""
