@@ -8,7 +8,7 @@ usage: usage.sh --rows | effort.sh
 
 Totals what the owner put into this branch from the rows `usage.sh --rows`
 prints on standard input. `--render` prints the PR body's Effort section from
-those totals.
+those totals, and says `Not measured.` when no row names this branch.
 See ~/.claude/rules/pr-body.md.
 USAGE
   exit 64
@@ -44,6 +44,7 @@ totals=$(awk -F '\t' -v idle_cap=600 '
   }
   $3 == "turn" { ended[$2] = $1 }
   END {
+    if (NR == 0) exit
     printf "Sessions: %d\n", sessions
     printf "Prompts: %d\n", total["prompt"]
     printf "Words typed: %s\n", grouped(total["typed"])
@@ -59,8 +60,12 @@ totals=$(awk -F '\t' -v idle_cap=600 '
 
 if [ "${1:-}" = "--render" ]; then
   printf '## Effort\n\n'
-  printf '%s\n' "$totals" | sed 's/^/- /'
+  if [ -n "$totals" ]; then
+    printf '%s\n' "$totals" | sed 's/^/- /'
+  else
+    printf 'Not measured.\n'
+  fi
   exit 0
 fi
 
-printf '%s\n' "$totals"
+printf '%s\n' "${totals:-No effort recorded for this branch.}"

@@ -66,6 +66,10 @@ assert_equals "## Effort
 - Claude working time: 2m
 - Your active time: 5m" "$(rows 100 s1 turn 120000 400 s1 prompt 1 400 s1 typed 3 | "$EFFORT" --render)" "prints the PR body's Effort section"
 
+assert_equals "## Effort
+
+Not measured." "$(printf '' | "$EFFORT" --render)" "says Not measured. when no row names the branch"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
