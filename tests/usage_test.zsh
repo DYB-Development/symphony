@@ -355,6 +355,11 @@ user_entry prompt_1 session_1 "$REPO" 2026-01-03T00:00:00Z '"build this\n\n<past
 assert_equals "1767398400	session_1	pasted-words	4" "$("$USAGE" --rows | grep '	pasted-words	')" "prints the number of words pasted into a prompt"
 drop_repo
 
+new_repo
+user_entry prompt_1 session_1 "$REPO" 2026-01-03T00:00:00Z '"build this\n\n<pasted_content id=\"a1\">\nthe header is blue\n</pasted_content id=\"a1\">"'
+assert_equals "1767398400	session_1	typed	2" "$("$USAGE" --rows | grep '	typed	')" "leaves pasted words out of the words typed"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

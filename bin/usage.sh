@@ -126,14 +126,17 @@ def typed_prompt:
 def words:
   [ scan("\\S+") ] | length;
 
+def pasted_block:
+  "<pasted_content[^>]*>([\\s\\S]*?)</pasted_content[^>]*>";
+
 def pasted_blocks:
-  [ match("<pasted_content[^>]*>([\\s\\S]*?)</pasted_content[^>]*>"; "g") | .captures[0].string ];
+  [ match(pasted_block; "g") | .captures[0].string ];
 
 def effort:
   if typed_prompt then
     { kind: "prompt", amount: 1 },
-    { kind: "typed", amount: (.message.content | words) },
-    { kind: "pasted", amount: ([ .message.content | scan("<pasted_content[ >]") ] | length) },
+    { kind: "typed", amount: (.message.content | gsub(pasted_block; "") | words) },
+    { kind: "pasted", amount: (.message.content | pasted_blocks | length) },
     { kind: "pasted-words", amount: (.message.content | pasted_blocks | map(words) | add // 0) }
   else empty end;
 
