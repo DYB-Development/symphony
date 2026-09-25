@@ -21,6 +21,9 @@ was recorded, read from that worktree's own reflog. The worktree comes from the
 absolute paths in that agent run's own tool records, carried forward to the
 messages after them, so two agents running at once are never charged for each
 other's tokens.
+A worktree of this branch that has been removed is still found when its folder
+sat next to the main clone and was named after the clone and the branch, with
+any / in the branch written as -.
 Transcripts are read from the directories under $CLAUDE_CONFIG_DIR/projects, or
 ~/.claude/projects, whose names carry a path of this clone, and from all of them
 when none does.
@@ -48,9 +51,13 @@ trap 'rm -rf "$work"' EXIT
 worktrees="$work/worktrees"
 timelines="$work/timelines"
 
+main_clone=$(git worktree list --porcelain | sed -n '1s/^worktree //p')
+named="$main_clone-${branch//\//-}"
+
 write_worktrees() {
   {
     printf '%s\n' "$root"
+    [ -n "$branch" ] && printf '%s\n' "$named"
     git worktree list --porcelain | sed -n 's/^worktree //p'
   } | sort -u | awk 'NF { print length($0), $0 }' | sort -rn -k1,1 | cut -d' ' -f2-
 }
@@ -58,7 +65,10 @@ write_worktrees() {
 write_timelines() {
   local worktree checkouts
   while IFS= read -r worktree; do
-    [ -d "$worktree" ] || continue
+    if [ ! -d "$worktree" ]; then
+      [ "$worktree" = "$named" ] && printf '%s\t0\t%s\n' "$worktree" "$branch"
+      continue
+    fi
     checkouts=$({ git -C "$worktree" reflog show --date=unix HEAD 2>/dev/null || true; } |
       sed -nE 's/^[^ ]+ HEAD@\{([0-9]+)\}: checkout: moving from (.+) to (.+)$/\1 \2 \3/p')
     if [ -z "$checkouts" ]; then
