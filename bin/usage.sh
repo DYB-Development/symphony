@@ -21,6 +21,9 @@ was recorded, read from that worktree's own reflog. The worktree comes from the
 absolute paths in that agent run's own tool records, carried forward to the
 messages after them, so two agents running at once are never charged for each
 other's tokens.
+A worktree of this branch that has been removed is still found when its folder
+sat next to the main clone and was named after the clone and the branch, with
+any / in the branch written as -.
 Transcripts are read from the directories under $CLAUDE_CONFIG_DIR/projects, or
 ~/.claude/projects, whose names carry a path of this clone, and from all of them
 when none does.
