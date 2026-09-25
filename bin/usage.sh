@@ -6,13 +6,16 @@ usage() {
 usage: usage.sh
        usage.sh --render
        usage.sh --runs
+       usage.sh --rows
 
 Totals the tokens the session transcripts recorded for this branch, broken down
 by input, output and cache. `--render` prints the PR body's Tokens Used section
 from those totals, and says `Not measured.` when no transcript names this
 branch. `--runs` lists every scribe run recorded for this clone instead, oldest
 first, each with the branch it worked on and what it cost, whichever branch is
-checked out now.
+checked out now. `--rows` prints what the owner put into this branch instead,
+one row per measure, oldest first, as the time, the session, the kind of
+measure and its amount, separated by tabs.
 A message is charged to the branch the worktree it was working in held when it
 was recorded, read from that worktree's own reflog. The worktree comes from the
 absolute paths in that agent run's own tool records, carried forward to the
@@ -27,7 +30,7 @@ USAGE
 }
 
 case "${1:-}" in
-  "" | --render | --runs) ;;
+  "" | --render | --runs | --rows) ;;
   *) usage ;;
 esac
 
@@ -112,9 +115,47 @@ def worked_paths:
   | flatten
   | map(select(type == "string"));
 
-select(type == "object")
-| select(.type == "assistant" or .type == "user")
-| [ (if .type == "assistant" then (.message.id // "") else "" end),
+def typed_prompt:
+  .type == "user"
+  and (.isSidechain | not)
+  and (.agentId == null)
+  and (.isMeta | not)
+  and (.message.content | type == "string")
+  and (.message.content | test("^\\s*(<task-notification>|<local-command-|<bash-std|Another Claude session sent a message|This session is being continued)") | not);
+
+def words:
+  [ scan("\\S+") ] | length;
+
+def pasted_block:
+  "<pasted_content[^>]*>([\\s\\S]*?)</pasted_content[^>]*>";
+
+def pasted_blocks:
+  [ match(pasted_block; "g") | .captures[0].string ];
+
+def rejections:
+  [ .message.content | arrays | .[] | select(.type? == "tool_result")
+    | select(.content | tostring | contains("The user doesn't want to proceed with this tool use")) ]
+  | length;
+
+def effort:
+  if .type == "system" then
+    { kind: "turn", amount: (.durationMs // 0) }
+  elif typed_prompt then
+    { kind: "prompt", amount: 1 },
+    { kind: "typed", amount: (.message.content | gsub(pasted_block; "") | words) },
+    { kind: "pasted", amount: (.message.content | pasted_blocks | length) },
+    { kind: "pasted-words", amount: (.message.content | pasted_blocks | map(words) | add // 0) }
+  elif ([ .message.content | arrays | .[] | select(.type? == "text") | .text
+         | select(startswith("[Request interrupted by user")) ] | length > 0) then
+    { kind: "interrupted", amount: 1 }
+  elif rejections > 0 then
+    { kind: "rejected", amount: rejections }
+  elif (.toolUseResult | type == "object" and has("answers")) then
+    { kind: "answered", amount: (.toolUseResult.answers | length) }
+  else empty end;
+
+def row($id; $kind; $amount):
+  [ $id,
     (.timestamp | stamp),
     (.cwd // ""),
     (.agentId // ""),
@@ -123,9 +164,18 @@ select(type == "object")
     (.message.usage.output_tokens // 0),
     (.message.usage.cache_read_input_tokens // 0),
     (.message.usage.cache_creation_input_tokens // 0),
-    (worked_paths | join("|"))
+    (worked_paths | join("|")),
+    $kind,
+    $amount,
+    (.sessionId // "")
   ]
-| @tsv
+  | @tsv;
+
+select(type == "object")
+| select(.type == "assistant" or .type == "user" or .subtype == "turn_duration")
+| . as $entry
+| if .type == "assistant" then row(.message.id // ""; "tokens"; 0) else row(""; ""; 0) end,
+  (effort | . as $effort | $entry | row("\(.uuid // ""):\($effort.kind)"; $effort.kind; $effort.amount))
 JQ
 )
 
@@ -180,7 +230,7 @@ BEGIN {
 
   if ($1 == "" || working == "") next
 
-  print $1, branch_at(working, $2 + 0), $4, $5, $6, $7, $8, $9, $2
+  print $1, branch_at(working, $2 + 0), $4, $5, $6, $7, $8, $9, $2, $11, $12, $13
 }
 AWK
 )
@@ -206,7 +256,7 @@ grouped='
 
 total_tokens() {
   awk -F '\t' -v branch="$branch" "$grouped"'
-    $2 == branch && !counted[$1]++ { input += $5; output += $6; read += $7; written += $8 }
+    $2 == branch && $10 == "tokens" && !counted[$1]++ { input += $5; output += $6; read += $7; written += $8 }
     END {
       if (length(counted) == 0) exit
       printf "Input: %s\n", grouped(input)
@@ -220,7 +270,7 @@ total_tokens() {
 
 list_runs() {
   sort -t $'\t' -k9,9n | awk -F '\t' "$grouped"'
-    $4 != "" && !counted[$1]++ {
+    $4 != "" && $10 == "tokens" && !counted[$1]++ {
       run = $3
       if (!(seen[run]++)) order[++runs] = run
       type[run] = $4
@@ -237,6 +287,18 @@ list_runs() {
     }
   '
 }
+
+list_rows() {
+  awk -F '\t' -v branch="$branch" '
+    BEGIN { OFS = "\t" }
+    $2 == branch && $10 != "tokens" && $10 != "" && !counted[$1]++ { print $9, $12, $10, $11 }
+  ' | sort -t $'\t' -k1,1n -s
+}
+
+if [ "${1:-}" = "--rows" ]; then
+  attributed | list_rows
+  exit 0
+fi
 
 if [ "${1:-}" = "--runs" ]; then
   runs=$(attributed | list_runs)

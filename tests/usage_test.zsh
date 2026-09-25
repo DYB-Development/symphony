@@ -129,6 +129,30 @@ edit_entry() {
       toolUseResult: {bashEditDiff: {files: [{filePath: $file}]}}}' >> "$TRANSCRIPT"
 }
 
+user_entry() {
+  local uuid="$1" session="$2" cwd="$3" at="$4" content="$5"
+  jq -nc --arg uuid "$uuid" --arg session "$session" --arg cwd "$cwd" --arg at "$at" \
+    --argjson content "$content" \
+    '{type: "user", uuid: $uuid, sessionId: $session, isSidechain: false, cwd: $cwd, timestamp: $at,
+      message: {role: "user", content: $content}}' >> "$TRANSCRIPT"
+}
+
+result_entry() {
+  local uuid="$1" session="$2" cwd="$3" at="$4" result="$5" content="$6"
+  jq -nc --arg uuid "$uuid" --arg session "$session" --arg cwd "$cwd" --arg at "$at" \
+    --argjson result "$result" --argjson content "$content" \
+    '{type: "user", uuid: $uuid, sessionId: $session, isSidechain: false, cwd: $cwd, timestamp: $at,
+      message: {role: "user", content: $content}, toolUseResult: $result}' >> "$TRANSCRIPT"
+}
+
+turn_entry() {
+  local uuid="$1" session="$2" cwd="$3" at="$4" milliseconds="$5"
+  jq -nc --arg uuid "$uuid" --arg session "$session" --arg cwd "$cwd" --arg at "$at" \
+    --argjson milliseconds "$milliseconds" \
+    '{type: "system", subtype: "turn_duration", uuid: $uuid, sessionId: $session, cwd: $cwd,
+      timestamp: $at, durationMs: $milliseconds}' >> "$TRANSCRIPT"
+}
+
 echo "usage.sh:"
 
 new_repo
@@ -317,6 +341,69 @@ Output: 20
 Cache read: 30
 Cache write: 40
 Total: 100" "$("$USAGE")" "takes the worktree from a file the run changed"
+drop_repo
+
+new_repo
+user_entry prompt_1 session_1 "$REPO" 2026-01-03T00:00:00Z '"fix it"'
+assert_equals "1767398400	session_1	prompt	1" "$("$USAGE" --rows | grep '	prompt	')" "prints a row for a prompt typed on this branch"
+drop_repo
+
+new_repo
+user_entry note_1 session_1 "$REPO" 2026-01-03T00:00:00Z '"<task-notification>\n<task-id>a1</task-id>\n</task-notification>"'
+user_entry note_2 session_1 "$REPO" 2026-01-03T00:00:01Z '"Another Claude session sent a message:\n<agent-message from=\"a1\">done</agent-message>"'
+user_entry note_3 session_1 "$REPO" 2026-01-03T00:00:02Z '"<local-command-stdout>ok</local-command-stdout>"'
+user_entry note_4 session_1 "$REPO" 2026-01-03T00:00:03Z '"This session is being continued from a previous conversation that ran out of context."'
+assert_equals "" "$("$USAGE" --rows | grep '	prompt	')" "prints no prompt row for a message Claude Code sent on its own"
+drop_repo
+
+new_repo
+user_entry prompt_1 session_1 "$REPO" 2026-01-03T00:00:00Z '"fix the header please"'
+assert_equals "1767398400	session_1	typed	4" "$("$USAGE" --rows | grep '	typed	')" "prints the number of words typed in a prompt"
+drop_repo
+
+new_repo
+user_entry prompt_1 session_1 "$REPO" 2026-01-03T00:00:00Z '"build this\n\n<pasted_content id=\"a1\">\nthe header is blue\n</pasted_content id=\"a1\">\n<pasted_content id=\"b2\">\nthe footer is red\n</pasted_content id=\"b2\">"'
+assert_equals "1767398400	session_1	pasted	2" "$("$USAGE" --rows | grep '	pasted	')" "prints the number of blocks pasted into a prompt"
+drop_repo
+
+new_repo
+user_entry prompt_1 session_1 "$REPO" 2026-01-03T00:00:00Z '"build this\n\n<pasted_content id=\"a1\">\nthe header is blue\n</pasted_content id=\"a1\">"'
+assert_equals "1767398400	session_1	pasted-words	4" "$("$USAGE" --rows | grep '	pasted-words	')" "prints the number of words pasted into a prompt"
+drop_repo
+
+new_repo
+user_entry prompt_1 session_1 "$REPO" 2026-01-03T00:00:00Z '"build this\n\n<pasted_content id=\"a1\">\nthe header is blue\n</pasted_content id=\"a1\">"'
+assert_equals "1767398400	session_1	typed	2" "$("$USAGE" --rows | grep '	typed	')" "leaves pasted words out of the words typed"
+drop_repo
+
+new_repo
+result_entry answer_1 session_1 "$REPO" 2026-01-03T00:00:00Z '{"questions": [], "answers": {"Which one?": "A", "How long?": "10 minutes"}}' '[{"type": "tool_result", "content": "answered"}]'
+assert_equals "1767398400	session_1	answered	2" "$("$USAGE" --rows | grep '	answered	')" "prints the number of questions answered"
+drop_repo
+
+new_repo
+user_entry stop_1 session_1 "$REPO" 2026-01-03T00:00:00Z '[{"type": "text", "text": "[Request interrupted by user]"}]'
+assert_equals "1767398400	session_1	interrupted	1" "$("$USAGE" --rows | grep '	interrupted	')" "prints a row for a turn the owner interrupted"
+drop_repo
+
+new_repo
+result_entry reject_1 session_1 "$REPO" 2026-01-03T00:00:00Z '"User rejected tool use"' '[{"type": "tool_result", "is_error": true, "content": "The user doesn'"'"'t want to proceed with this tool use. The tool use was rejected."}]'
+assert_equals "1767398400	session_1	rejected	1" "$("$USAGE" --rows | grep '	rejected	')" "prints a row for a tool call the owner rejected"
+drop_repo
+
+new_repo
+turn_entry turn_1 session_1 "$REPO" 2026-01-03T00:00:00Z 90000
+assert_equals "1767398400	session_1	turn	90000" "$("$USAGE" --rows | grep '	turn	')" "prints how long each of Claude's turns took"
+drop_repo
+
+new_repo
+commit_at 2026-01-01T00:00:00Z
+worktree_at 2026-01-02T00:00:00Z "$REPO/trees/feature" feature
+user_entry prompt_1 session_1 "$REPO" 2026-01-03T00:00:00Z '"on main"'
+another_transcript later
+user_entry prompt_2 session_2 "$REPO/trees/feature" 2026-01-04T00:00:00Z '"on feature"'
+cd "$REPO/trees/feature"
+assert_equals "1767484800	session_2	prompt	1" "$("$USAGE" --rows | grep '	prompt	')" "prints rows only for the branch checked out here"
 drop_repo
 
 echo ""
