@@ -207,7 +207,10 @@ message the transcripts recorded while a worktree of this clone held the branch,
 which includes each scribe run made on it. A message is charged to the worktree
 its own agent run was working in, taken from the paths in that run's tool
 records, so two agents working two branches of one clone at once are not charged
-for each other's tokens. Work done on another branch is not in them, and neither
+for each other's tokens. A worktree of the branch that has since been removed is
+still counted when its folder followed the naming rule in
+`~/.claude/rules/agent-worktrees.md`, and is not counted when it had any other
+name. Work done on another branch is not in them, and neither
 is anything spent after the body was last written, so the section is a
 measurement taken at that moment rather than a final figure. With no
 transcript naming the branch it prints `Not measured.`, which is the honest
