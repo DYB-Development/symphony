@@ -48,9 +48,13 @@ trap 'rm -rf "$work"' EXIT
 worktrees="$work/worktrees"
 timelines="$work/timelines"
 
+main_clone=$(git worktree list --porcelain | sed -n '1s/^worktree //p')
+named="$main_clone-${branch//\//-}"
+
 write_worktrees() {
   {
     printf '%s\n' "$root"
+    [ -n "$branch" ] && printf '%s\n' "$named"
     git worktree list --porcelain | sed -n 's/^worktree //p'
   } | sort -u | awk 'NF { print length($0), $0 }' | sort -rn -k1,1 | cut -d' ' -f2-
 }
@@ -58,7 +62,10 @@ write_worktrees() {
 write_timelines() {
   local worktree checkouts
   while IFS= read -r worktree; do
-    [ -d "$worktree" ] || continue
+    if [ ! -d "$worktree" ]; then
+      [ "$worktree" = "$named" ] && printf '%s\t0\t%s\n' "$worktree" "$branch"
+      continue
+    fi
     checkouts=$({ git -C "$worktree" reflog show --date=unix HEAD 2>/dev/null || true; } |
       sed -nE 's/^[^ ]+ HEAD@\{([0-9]+)\}: checkout: moving from (.+) to (.+)$/\1 \2 \3/p')
     if [ -z "$checkouts" ]; then

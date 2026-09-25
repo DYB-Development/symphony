@@ -436,6 +436,16 @@ cd "$REPO/trees/feature"
 assert_equals "1767398400	session_1	typed	3" "$("$USAGE" --rows | grep '	typed	')" "counts a prompt's words on the branch its turn ends in"
 drop_repo
 
+new_repo
+commit_at 2026-01-01T00:00:00Z
+worktree_at 2026-01-02T00:00:00Z "$REPO-feature" feature
+user_entry prompt_1 session_1 "$REPO-feature" 2026-01-03T00:00:00Z '"build the header"'
+git -C "$REPO" worktree remove "$REPO-feature"
+git -C "$REPO" worktree add -q "$REPO/trees/again" feature 2>/dev/null
+cd "$REPO/trees/again"
+assert_equals "1767398400	session_1	prompt	1" "$("$USAGE" --rows | grep '	prompt	')" "counts a prompt from a removed worktree named after the branch"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
