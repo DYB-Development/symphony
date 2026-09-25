@@ -406,6 +406,36 @@ cd "$REPO/trees/feature"
 assert_equals "1767484800	session_2	prompt	1" "$("$USAGE" --rows | grep '	prompt	')" "prints rows only for the branch checked out here"
 drop_repo
 
+new_repo
+commit_at 2026-01-01T00:00:00Z
+worktree_at 2026-01-02T00:00:00Z "$REPO/trees/feature" feature
+user_entry prompt_1 session_1 "$REPO" 2026-01-03T00:00:00Z '"build the header"'
+command_entry msg_1 main "$REPO" 2026-01-03T00:01:00Z "cd $REPO/trees/feature && git status" 1 1 1 1
+turn_entry turn_1 session_1 "$REPO" 2026-01-03T00:02:00Z 120000
+cd "$REPO/trees/feature"
+assert_equals "1767398400	session_1	prompt	1" "$("$USAGE" --rows | grep '	prompt	')" "counts a prompt on the branch its turn ends in"
+drop_repo
+
+new_repo
+commit_at 2026-01-01T00:00:00Z
+worktree_at 2026-01-02T00:00:00Z "$REPO/trees/feature" feature
+command_entry msg_1 feature "$REPO" 2026-01-03T00:00:00Z "cd $REPO/trees/feature && git status" 1 1 1 1
+user_entry prompt_1 session_1 "$REPO" 2026-01-03T00:01:00Z '"pr merged"'
+command_entry msg_2 main "$REPO" 2026-01-03T00:02:00Z "cd $REPO && git worktree list" 1 1 1 1
+turn_entry turn_1 session_1 "$REPO" 2026-01-03T00:03:00Z 120000
+assert_equals "1767398460	session_1	prompt	1" "$("$USAGE" --rows | grep '	prompt	')" "counts a prompt on the main clone's branch when its turn ends there"
+drop_repo
+
+new_repo
+commit_at 2026-01-01T00:00:00Z
+worktree_at 2026-01-02T00:00:00Z "$REPO/trees/feature" feature
+user_entry prompt_1 session_1 "$REPO" 2026-01-03T00:00:00Z '"build the header"'
+command_entry msg_1 main "$REPO" 2026-01-03T00:01:00Z "cd $REPO/trees/feature && git status" 1 1 1 1
+turn_entry turn_1 session_1 "$REPO" 2026-01-03T00:02:00Z 120000
+cd "$REPO/trees/feature"
+assert_equals "1767398400	session_1	typed	3" "$("$USAGE" --rows | grep '	typed	')" "counts a prompt's words on the branch its turn ends in"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

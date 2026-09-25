@@ -231,8 +231,9 @@ Claude's turns and the next prompt, with no more than ten minutes of any one
 gap counted, so a break is not counted as work. Conversations outside Claude
 Code, time spent reading the pull request on GitHub, and files attached to a
 prompt are not in it, since the transcripts do not record them apart from other
-things. A prompt typed before the session first works in the branch's worktree
-is charged to the branch the session was on, not this one. Like Tokens Used it
+things. A prompt is charged to the branch of the worktree its turn ends in, so
+the prompt that asks for a branch counts on that branch even when the session
+was elsewhere when it was typed. Like Tokens Used it
 is a measurement taken when the body was last written, and it prints
 `Not measured.` when no transcript names the branch.
 

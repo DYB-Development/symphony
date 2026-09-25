@@ -190,6 +190,17 @@ function worktree_of(path,   index_) {
   return ""
 }
 
+function typed_in_prompt(kind) {
+  return kind == "prompt" || kind == "typed" || kind == "pasted" || kind == "pasted-words"
+}
+
+function release(   index_) {
+  if (working != "")
+    for (index_ = 1; index_ <= held; index_++)
+      print held_id[index_], branch_at(working, held_at[index_]), held_rest[index_]
+  held = 0
+}
+
 function branch_at(place, moment,   index_, held) {
   held = ""
   for (index_ = 1; index_ <= entries[place]; index_++)
@@ -228,10 +239,22 @@ BEGIN {
   else if (home == "") next
   else if (working == "") working = home
 
+  if ($11 == "prompt" || $11 == "turn") release()
   if ($1 == "" || working == "") next
 
-  print $1, branch_at(working, $2 + 0), $4, $5, $6, $7, $8, $9, $2, $11, $12, $13
+  rest = $4 OFS $5 OFS $6 OFS $7 OFS $8 OFS $9 OFS $2 OFS $11 OFS $12 OFS $13
+  if (typed_in_prompt($11)) {
+    held++
+    held_id[held] = $1
+    held_at[held] = $2 + 0
+    held_rest[held] = rest
+    next
+  }
+
+  print $1, branch_at(working, $2 + 0), rest
 }
+
+END { release() }
 AWK
 )
 
