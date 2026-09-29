@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat >&2 <<'USAGE'
+usage: worktree-done.sh <worktree>
+
+Cleans up a linked worktree once its branch is merged. The main clone is
+refused.
+USAGE
+  exit 64
+}
+
+[ $# -eq 1 ] || usage
+
+worktree="$(cd "$1" && pwd -P)"
+
+[ -f "$worktree/.git" ] || {
+  echo "worktree-done.sh: $worktree is not a linked worktree" >&2
+  exit 65
+}
