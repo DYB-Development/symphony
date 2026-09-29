@@ -130,6 +130,13 @@ assert_equals "" "$(grep -xE 'shop_development|shop_test|shop_test_app_feature_t
   "leaves the main clone's databases and any whose name only starts the same"
 drop_clones
 
+new_rails_clones
+printf %s
+ shop_development shop_test shop_test_app_feature > "$DATABASES"
+PATH="$BASE/stubs:$PATH" "$WORKTREE_DONE" "$LINKED" >/dev/null 2>&1
+assert_equals "gone" "$([[ -d $LINKED ]] && echo there || echo gone)" "removes a worktree whose development database was never created"
+drop_clones
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
