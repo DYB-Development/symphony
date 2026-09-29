@@ -25,6 +25,14 @@ worktree="$(cd "$1" && pwd -P)"
   exit 65
 }
 
+git -C "$worktree" fetch -q origin
+merged_into="$(git -C "$worktree" symbolic-ref -q --short refs/remotes/origin/HEAD || echo origin/main)"
+
+git -C "$worktree" merge-base --is-ancestor HEAD "$merged_into" || {
+  echo "worktree-done.sh: $worktree has commits not merged into $merged_into" >&2
+  exit 65
+}
+
 branch="$(git -C "$worktree" branch --show-current)"
 main="$(git -C "$worktree" worktree list --porcelain | awk 'NR == 1 { print $2 }')"
 

@@ -65,6 +65,12 @@ touch "$LINKED/unsaved.txt"
 assert_equals "there" "$([[ -d $LINKED ]] && echo there || echo gone)" "keeps a worktree with changes not committed"
 drop_clones
 
+new_clones
+git -C "$LINKED" commit -q --allow-empty -m "Work not merged"
+"$WORKTREE_DONE" "$LINKED" >/dev/null 2>&1
+assert_equals "there" "$([[ -d $LINKED ]] && echo there || echo gone)" "keeps a worktree whose commits are not on the remote's main branch"
+drop_clones
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
