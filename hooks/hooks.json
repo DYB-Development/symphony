@@ -78,6 +78,11 @@
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/bin/turn-sound.sh play",
             "async": true
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/stray-test-workers.sh",
+            "async": true
           }
         ]
       }

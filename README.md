@@ -106,6 +106,7 @@ settings that are not its own alone:
 | `PreToolUse` | `agent-progress.sh record` | Logs the step a subagent marks and each script it runs |
 | `SubagentStop` | `agent-progress.sh record` | Logs that a subagent finished |
 | `Stop` | `turn-sound.sh play` | Plays a sound when a session finishes its turn |
+| `Stop` | `stray-test-workers.sh` | Stops any Rails test worker whose test run has gone, since nothing else will and it can run for days |
 | `Notification` | `turn-sound.sh play` | Plays the same sound when a session asks permission to run a tool |
 
 Skip the hooks and the package still loads, but the writing rules never reach a
