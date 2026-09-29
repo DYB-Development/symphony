@@ -54,6 +54,11 @@ new_clones
 assert_equals "gone" "$([[ -d $LINKED ]] && echo there || echo gone)" "removes a worktree whose branch is merged"
 drop_clones
 
+new_clones
+"$WORKTREE_DONE" "$LINKED" >/dev/null 2>&1
+assert_equals "" "$(git -C "$MAIN" branch --list feature)" "deletes the branch the worktree held"
+drop_clones
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]

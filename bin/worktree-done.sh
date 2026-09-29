@@ -20,6 +20,8 @@ worktree="$(cd "$1" && pwd -P)"
   exit 65
 }
 
+branch="$(git -C "$worktree" branch --show-current)"
 main="$(git -C "$worktree" worktree list --porcelain | awk 'NR == 1 { print $2 }')"
 
 git -C "$main" worktree remove "$worktree"
+[ -z "$branch" ] || git -C "$main" branch -q -D "$branch"
