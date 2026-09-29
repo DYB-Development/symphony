@@ -117,6 +117,12 @@ assert_equals "shop_test_app_feature_0 shop_test_app_feature_1" "$(grep '_[0-9]$
   "drops the numbered copies of the test database made for parallel tests"
 drop_clones
 
+new_rails_clones
+touch "$LINKED/unsaved.txt"
+PATH="$BASE/stubs:$PATH" "$WORKTREE_DONE" "$LINKED" >/dev/null 2>&1
+assert_equals "" "$(cat "$DROPPED")" "keeps the databases of a worktree with changes not committed"
+drop_clones
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
