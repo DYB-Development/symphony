@@ -37,6 +37,39 @@ new_clones() {
   LINKED="$BASE/app-feature"
 }
 
+new_rails_clones() {
+  BASE="$(mktemp -d "${TMPDIR:-/tmp}/worktree_done_test.XXXXXX")"
+  BASE="${BASE:A}"
+  git init -q --bare -b main "$BASE/origin.git"
+  git clone -q "$BASE/origin.git" "$BASE/app" 2>/dev/null
+  mkdir -p "$BASE/app/config" "$BASE/app/bin" "$BASE/stubs"
+  echo '<% worktree = "" %>' > "$BASE/app/config/database.yml"
+  cat > "$BASE/app/bin/rails" <<'RAILS'
+#!/usr/bin/env bash
+echo "shop_${RAILS_ENV}_app_feature"
+RAILS
+  chmod +x "$BASE/app/bin/rails"
+  git -C "$BASE/app" add config bin
+  git -C "$BASE/app" commit -q -m init
+  git -C "$BASE/app" push -q origin main
+  git -C "$BASE/app" worktree add -q -b feature "$BASE/app-feature"
+  MAIN="$BASE/app"
+  LINKED="$BASE/app-feature"
+  DATABASES="$BASE/databases"
+  DROPPED="$BASE/dropped"
+  printf '%s\n' shop_development shop_test shop_development_app_feature shop_test_app_feature > "$DATABASES"
+  touch "$DROPPED"
+  cat > "$BASE/stubs/psql" <<PSQL
+#!/usr/bin/env bash
+cat "$DATABASES"
+PSQL
+  cat > "$BASE/stubs/dropdb" <<DROPDB
+#!/usr/bin/env bash
+echo "\${@: -1}" >> "$DROPPED"
+DROPDB
+  chmod +x "$BASE/stubs/psql" "$BASE/stubs/dropdb"
+}
+
 drop_clones() {
   cd "$SCRIPT_DIR"
   rm -rf "$BASE"
@@ -69,6 +102,12 @@ new_clones
 git -C "$LINKED" commit -q --allow-empty -m "Work not merged"
 "$WORKTREE_DONE" "$LINKED" >/dev/null 2>&1
 assert_equals "there" "$([[ -d $LINKED ]] && echo there || echo gone)" "keeps a worktree whose commits are not on the remote's main branch"
+drop_clones
+
+new_rails_clones
+PATH="$BASE/stubs:$PATH" "$WORKTREE_DONE" "$LINKED" >/dev/null 2>&1
+assert_equals "shop_development_app_feature shop_test_app_feature" "$(sort "$DROPPED" | tr '\n' ' ' | sed 's/ $//')" \
+  "drops the development and test databases the worktree's app names"
 drop_clones
 
 echo ""

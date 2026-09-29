@@ -36,5 +36,15 @@ git -C "$worktree" merge-base --is-ancestor HEAD "$merged_into" || {
 branch="$(git -C "$worktree" branch --show-current)"
 main="$(git -C "$worktree" worktree list --porcelain | awk 'NR == 1 { print $2 }')"
 
+if grep -qF '<% worktree' "$worktree/config/database.yml" 2>/dev/null; then
+  named="$(cd "$worktree" && for env in development test; do
+    RAILS_ENV="$env" bin/rails runner 'puts ActiveRecord::Base.configurations.configs_for(env_name: Rails.env, include_hidden: true).map(&:database)'
+  done)"
+  existing="$(psql -lqtA | cut -d'|' -f1)"
+  for name in $named; do
+    grep -xF "$name" <<<"$existing" | while read -r database; do dropdb --if-exists "$database"; done
+  done
+fi
+
 git -C "$main" worktree remove "$worktree"
 [ -z "$branch" ] || git -C "$main" branch -q -D "$branch"
