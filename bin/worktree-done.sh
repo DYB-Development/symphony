@@ -42,7 +42,7 @@ if grep -qF '<% worktree' "$worktree/config/database.yml" 2>/dev/null; then
   done)"
   existing="$(psql -lqtA | cut -d'|' -f1)"
   for name in $named; do
-    grep -xF "$name" <<<"$existing" | while read -r database; do dropdb --if-exists "$database"; done
+    grep -xE "$name(_[0-9]+)?" <<<"$existing" | while read -r database; do dropdb --if-exists "$database"; done
   done
 fi
 

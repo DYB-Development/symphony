@@ -110,6 +110,13 @@ assert_equals "shop_development_app_feature shop_test_app_feature" "$(sort "$DRO
   "drops the development and test databases the worktree's app names"
 drop_clones
 
+new_rails_clones
+printf '%s\n' shop_test_app_feature_0 shop_test_app_feature_1 >> "$DATABASES"
+PATH="$BASE/stubs:$PATH" "$WORKTREE_DONE" "$LINKED" >/dev/null 2>&1
+assert_equals "shop_test_app_feature_0 shop_test_app_feature_1" "$(grep '_[0-9]$' "$DROPPED" | sort | tr '\n' ' ' | sed 's/ $//')" \
+  "drops the numbered copies of the test database made for parallel tests"
+drop_clones
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
