@@ -27,6 +27,25 @@ in the main clone is edited, and its branch is never changed.
 A Rails app needs its own databases per worktree first. See
 `~/.claude/rules/worktree-databases.md`.
 
+## When the branch is merged
+
+**The moment its pull request is confirmed merged, the worktree is cleaned up.**
+It is the same step that deletes `start_here.md`, `.decisions.md` and `.ticket`,
+and it is required, not something to ask about:
+
+```
+~/.claude/bin/worktree-done.sh ~/projects/app-feature-quotes
+```
+
+The script removes the worktree, deletes its local branch, and drops the
+development and test databases its app names, including the numbered copies
+made for parallel tests. It refuses the main clone, a worktree with changes not
+committed, and a worktree with commits not yet on the remote's main branch, and
+in each case it changes nothing.
+
+A worktree left behind after its branch merges keeps its databases, and those
+build up into hundreds that nothing else will remove.
+
 ## What holds it in place
 
 `main-clone-gate.sh` runs before every file edit and every shell command, and

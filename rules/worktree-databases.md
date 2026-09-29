@@ -36,6 +36,10 @@ A new worktree starts with empty databases, so it runs `bin/rails db:prepare`
 before its first server start or test run. Seed data from the main clone does
 not carry over.
 
+A worktree's databases are dropped when the worktree is cleaned up after its
+branch merges, by `~/.claude/bin/worktree-done.sh`. See
+`~/.claude/rules/agent-worktrees.md`.
+
 ## If it already happened
 
 A `db/schema.rb` changed by a migration from another worktree holds nothing from
