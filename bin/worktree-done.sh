@@ -5,8 +5,12 @@ usage() {
   cat >&2 <<'USAGE'
 usage: worktree-done.sh <worktree>
 
-Cleans up a linked worktree once its branch is merged. The main clone is
-refused.
+Cleans up a linked worktree once its branch is merged into the remote's main
+branch. It drops the development and test databases the worktree's Rails app
+names, including the numbered copies made for parallel tests, then removes the
+worktree and deletes its local branch. It refuses the main clone, a worktree
+with changes not committed, and a worktree with commits not yet merged, and
+changes nothing when it refuses.
 USAGE
   exit 64
 }
