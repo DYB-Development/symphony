@@ -59,6 +59,12 @@ new_clones
 assert_equals "" "$(git -C "$MAIN" branch --list feature)" "deletes the branch the worktree held"
 drop_clones
 
+new_clones
+touch "$LINKED/unsaved.txt"
+"$WORKTREE_DONE" "$LINKED" >/dev/null 2>&1
+assert_equals "there" "$([[ -d $LINKED ]] && echo there || echo gone)" "keeps a worktree with changes not committed"
+drop_clones
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]

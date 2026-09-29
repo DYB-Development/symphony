@@ -20,6 +20,11 @@ worktree="$(cd "$1" && pwd -P)"
   exit 65
 }
 
+[ -z "$(git -C "$worktree" status --porcelain)" ] || {
+  echo "worktree-done.sh: $worktree has changes not committed" >&2
+  exit 65
+}
+
 branch="$(git -C "$worktree" branch --show-current)"
 main="$(git -C "$worktree" worktree list --porcelain | awk 'NR == 1 { print $2 }')"
 
