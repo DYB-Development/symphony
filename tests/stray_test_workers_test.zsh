@@ -55,6 +55,14 @@ sleep 0.5
 assert_equals "running" "$(running watched)" "leaves a Rails test worker whose test run is still going"
 stop_leftovers
 
+( (exec -a "Rails test worker 9 - $MARK stubborn" bash -c 'trap "" TERM; while :; do sleep 1; done') & )
+sleep 0.5
+STRAY_TEST_WORKERS_GRACE=1 "$STRAY_TEST_WORKERS" >/dev/null 2>&1
+sleep 0.5
+assert_equals "stopped" "$(running stubborn)" "forces a worker that ignores being asked to stop"
+pkill -9 -f "$MARK" 2>/dev/null
+stop_leftovers
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
