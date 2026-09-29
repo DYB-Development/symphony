@@ -48,6 +48,13 @@ sleep 0.5
 assert_equals "stopped" "$(running orphaned)" "stops a Rails test worker whose parent has gone"
 stop_leftovers
 
+(exec -a "Rails test worker 9 - $MARK watched" sleep 300) &
+sleep 0.5
+"$STRAY_TEST_WORKERS" >/dev/null 2>&1
+sleep 0.5
+assert_equals "running" "$(running watched)" "leaves a Rails test worker whose test run is still going"
+stop_leftovers
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
