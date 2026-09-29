@@ -49,6 +49,11 @@ new_clones
 assert_equals "65" "$?" "refuses the main clone"
 drop_clones
 
+new_clones
+"$WORKTREE_DONE" "$LINKED" >/dev/null 2>&1
+assert_equals "gone" "$([[ -d $LINKED ]] && echo there || echo gone)" "removes a worktree whose branch is merged"
+drop_clones
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]

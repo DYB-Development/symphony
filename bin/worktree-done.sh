@@ -19,3 +19,7 @@ worktree="$(cd "$1" && pwd -P)"
   echo "worktree-done.sh: $worktree is not a linked worktree" >&2
   exit 65
 }
+
+main="$(git -C "$worktree" worktree list --porcelain | awk 'NR == 1 { print $2 }')"
+
+git -C "$main" worktree remove "$worktree"
