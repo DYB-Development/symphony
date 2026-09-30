@@ -90,6 +90,15 @@ assert_equals "$once" "$(cat "$APP/config/database.yml")" \
 drop_app
 
 new_app
+"$WORKTREE_DB" "$APP" >/dev/null
+current="$(cat "$APP/config/database.yml")"
+perl -pi -e '$_ = q{<% worktree = File.file?(Rails.root.join(".git")) ? "_#{Rails.root.basename.to_s.gsub(/\W/, "_")}" : "" %>} . "\n" if $. == 1' "$APP/config/database.yml"
+"$WORKTREE_DB" "$APP" >/dev/null
+assert_equals "$current" "$(cat "$APP/config/database.yml")" \
+  "replaces only the first line of a config converted before names were kept short"
+drop_app
+
+new_app
 rm "$APP/config/database.yml"
 "$WORKTREE_DB" "$APP" >/dev/null 2>&1
 assert_equals "66" "$?" "refuses an app that has no database config"
