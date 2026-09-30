@@ -263,6 +263,9 @@ assert_equals "0" "$?" "hands the reader the plan without its units, which are r
 grep -qF 'turned off or rolled back' "$PLAN_SCRIBE"
 assert_equals "1" "$?" "does not write a rollback sentence for each stage"
 
+grep -qF 'That is the Patterns check' "$PLAN_SCRIBE"
+assert_equals "0" "$?" "names the existing pattern each new piece follows"
+
 echo ""
 echo "the feature plan rules:"
 

@@ -20,8 +20,9 @@ Also read `~/.claude/rules/issue-schema.md` — section 09's units are written a
 `type:task` issue bodies and have to match that template exactly — and
 `~/.claude/rules/writing-style.md`, which applies to every word you write.
 
-**And read `~/.claude/rules/review-checks.md`**, for the two checks a plan is
-written to pass. Design is answered in section 04 and Dependencies in section 07;
+**And read `~/.claude/rules/review-checks.md`**, for the three checks a plan is
+written to pass. Design and Patterns are answered in section 04 and Dependencies
+in section 07;
 the Tests check does not apply to a plan, and the rest belong to a review or an
 audit where there is code to point at.
 
@@ -69,6 +70,14 @@ is how the person who ran you sees which step you are on.
      right and name the join between the new work and the built work, and with it
      the coupling this shape introduces and the change it will make harder later.
      That is the Design check, answered while it is still free to answer.
+   - In section 04's table, name for every new or changed piece the existing
+     file whose pattern it follows. Before you place a new piece, find how the
+     repo already does the same kind of thing — how data is recalculated, how a
+     page reads it, how a route is guarded — and follow it. Where you do not,
+     the departure is an open decision in section 08 whose options include
+     following the file that does it. That is the Patterns check. A pattern you
+     listed in section 02 and then built beside is the failure this check
+     exists to catch.
    - Section 07 carries an entry for every dependency the plan takes — what it
      is, what it does that nothing already here does, and what it costs. That is
      the Dependencies check. A dependency with no entry is one nobody weighed.
