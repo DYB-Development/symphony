@@ -66,11 +66,13 @@ Date     <the date it was written>
 
 ## Which checks a plan is written to pass
 
-Two of the checks in `~/.claude/rules/review-checks.md` apply when a feature is
-planned rather than when a diff is read, because both are about a shape that is
+Three of the checks in `~/.claude/rules/review-checks.md` apply when a feature is
+planned rather than when a diff is read, because each is about a shape that is
 expensive to change once it exists:
 
 - **Design** — answered in section 04, under the model diagram.
+- **Patterns** — answered in section 04, in the table of where the files go,
+  and any departure is an open decision in section 08.
 - **Dependencies** — answered in section 07, one entry each.
 
 **The Tests check does not apply to a plan.** A plan has no tests to look at, and
@@ -131,6 +133,15 @@ Two parts:
   a file, and it stays out of every issue for exactly the reason the what-not-how
   rule gives.
 
+  The table also answers the **Patterns** check from
+  `~/.claude/rules/review-checks.md`. Every `New` row names the existing file
+  whose pattern it follows, and every `Built` row that is changed says how it
+  is used the way it already works. A row with no precedent in the repo says so
+  in a few words. A new piece that does what the repo already does another way
+  is a departure, and every departure is an open decision in section 08. A plan
+  that lists a pattern in section 02 and then builds beside it without saying so
+  has failed this check.
+
 ### 05 How it runs
 
 A flow diagram of the paths the feature adds, then one named paragraph per path.
@@ -163,7 +174,9 @@ What must be answered before the work starts, in two parts:
 
 - **The open decisions.** Each is a question with the real options and a
   recommendation, written so I can settle it by picking one. Most plans have one;
-  a plan with five open decisions is not a plan yet.
+  a plan with five open decisions is not a plan yet. Every departure from an
+  existing pattern that section 04 names is one of them, and its options always
+  include following the pattern, naming the file that does it.
 - **Answers that change the design.** Questions for someone outside the repo — a
   vendor, an API's documentation, another team. Each names the unit it would
   change and why it is a redesign rather than a bug fix if it comes back wrong.
