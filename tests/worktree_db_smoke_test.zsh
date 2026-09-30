@@ -62,6 +62,10 @@ long_name="$(development_database "$HOME_DIR/shop-feature-move-every-guarantee-p
 assert_equals "fits" "$( (( ${#long_name} <= 59 )) && echo fits || echo "${#long_name} characters")" \
   "a worktree with a long folder name gets a database name Postgres will not cut short"
 
+git -C "$MAIN" worktree add -q "$HOME_DIR/shop-feature-move-every-guarantee-product-onto-its-other-offer"
+assert_equals "different" "$([[ "$long_name" != "$(development_database "$HOME_DIR/shop-feature-move-every-guarantee-product-onto-its-other-offer")" ]] && echo different || echo same)" \
+  "two long folder names that differ only near the end get different databases"
+
 rm -rf "$HOME_DIR"
 
 echo ""
