@@ -22,7 +22,12 @@ config="${1:-.}/config/database.yml"
   exit 66
 }
 
-header='<% worktree = File.file?(Rails.root.join(".git")) ? "_#{Rails.root.basename.to_s.gsub(/\W/, "_")}" : "" %>'
+longest="$(perl -ne '$section = $1 if /^(\w+):/; print length($1), "\n" if $section =~ /^(development|test)$/ && /^\s*database: ([^\s<]+)/' "$config" | sort -n | tail -1)"
+room=$((59 - ${longest:-0}))
+
+template='<% require "digest"; worktree = File.file?(Rails.root.join(".git")) ? "_#{Rails.root.basename.to_s.gsub(/\W/, "_")}" : ""; worktree = "#{worktree[0, KEEP]}_#{Digest::SHA256.hexdigest(worktree)[0, 8]}" if worktree.length > ROOM %>'
+header="${template//KEEP/$((room - 9))}"
+header="${header//ROOM/$room}"
 
 if grep -qxF "$header" "$config"; then
   echo "$config"

@@ -76,9 +76,9 @@ drop_app
 
 new_app
 "$WORKTREE_DB" "$APP" >/dev/null
-assert_equals '<% worktree = File.file?(Rails.root.join(".git")) ? "_#{Rails.root.basename.to_s.gsub(/\W/, "_")}" : "" %>' \
+assert_equals '<% require "digest"; worktree = File.file?(Rails.root.join(".git")) ? "_#{Rails.root.basename.to_s.gsub(/\W/, "_")}" : ""; worktree = "#{worktree[0, 28]}_#{Digest::SHA256.hexdigest(worktree)[0, 8]}" if worktree.length > 37 %>' \
   "$(head -1 "$APP/config/database.yml")" \
-  "defines the suffix from the worktree folder on the first line"
+  "defines the suffix from the worktree folder on the first line, short enough for the longest database name"
 drop_app
 
 new_app
