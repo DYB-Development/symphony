@@ -76,9 +76,9 @@ drop_app
 
 new_app
 "$WORKTREE_DB" "$APP" >/dev/null
-assert_equals '<% worktree = File.file?(Rails.root.join(".git")) ? "_#{Rails.root.basename.to_s.gsub(/\W/, "_")}" : "" %>' \
+assert_equals '<% require "digest"; worktree = File.file?(Rails.root.join(".git")) ? "_#{Rails.root.basename.to_s.gsub(/\W/, "_")}" : ""; worktree = "#{worktree[0, 28]}_#{Digest::SHA256.hexdigest(worktree)[0, 8]}" if worktree.length > 37 %>' \
   "$(head -1 "$APP/config/database.yml")" \
-  "defines the suffix from the worktree folder on the first line"
+  "defines the suffix from the worktree folder on the first line, short enough for the longest database name"
 drop_app
 
 new_app
@@ -87,6 +87,15 @@ once="$(cat "$APP/config/database.yml")"
 "$WORKTREE_DB" "$APP" >/dev/null
 assert_equals "$once" "$(cat "$APP/config/database.yml")" \
   "changes nothing when the config was already converted"
+drop_app
+
+new_app
+"$WORKTREE_DB" "$APP" >/dev/null
+current="$(cat "$APP/config/database.yml")"
+perl -pi -e '$_ = q{<% worktree = File.file?(Rails.root.join(".git")) ? "_#{Rails.root.basename.to_s.gsub(/\W/, "_")}" : "" %>} . "\n" if $. == 1' "$APP/config/database.yml"
+"$WORKTREE_DB" "$APP" >/dev/null
+assert_equals "$current" "$(cat "$APP/config/database.yml")" \
+  "replaces only the first line of a config converted before names were kept short"
 drop_app
 
 new_app

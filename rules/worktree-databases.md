@@ -21,6 +21,13 @@ already has. A linked worktree's suffix is its folder name, so a worktree at
 `shop-console` uses `shop_development_shop_console`. Staging and production are
 left alone. Running it on a config it already converted changes nothing.
 
+Postgres cuts a database name at 63 characters, so a long folder name is cut
+short to fit the app's longest database name and ends in a short hash of the
+full name. Two worktrees whose names differ only near the end still get
+different databases. An app converted before names were kept short needs the
+script run once more, on a feature branch, which replaces only the first line
+of its config.
+
 ## When to run it
 
 **Before creating a worktree of a Rails app, check its `config/database.yml`.**

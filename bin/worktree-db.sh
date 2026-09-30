@@ -7,8 +7,11 @@ usage: worktree-db.sh [<app-dir>]
 
 Rewrites a Rails app's config/database.yml so every git worktree of the app
 gets its own development and test databases. The main clone keeps the names it
-has, and a linked worktree adds its folder name to each of them. The app
-directory defaults to the current one. Nothing is committed.
+has, and a linked worktree adds its folder name to each of them. A folder name
+too long for Postgres's 63-character limit is cut short and ends in a short hash
+of the full name. Run on a config converted before names were kept short, it
+replaces only the first line. The app directory defaults to the current one.
+Nothing is committed.
 USAGE
   exit 64
 }
@@ -22,9 +25,20 @@ config="${1:-.}/config/database.yml"
   exit 66
 }
 
-header='<% worktree = File.file?(Rails.root.join(".git")) ? "_#{Rails.root.basename.to_s.gsub(/\W/, "_")}" : "" %>'
+longest="$(perl -ne '$section = $1 if /^(\w+):/; print length($1), "\n" if $section =~ /^(development|test)$/ && /^\s*database: ([^\s<]+)/' "$config" | sort -n | tail -1)"
+room=$((59 - ${longest:-0}))
+
+template='<% require "digest"; worktree = File.file?(Rails.root.join(".git")) ? "_#{Rails.root.basename.to_s.gsub(/\W/, "_")}" : ""; worktree = "#{worktree[0, KEEP]}_#{Digest::SHA256.hexdigest(worktree)[0, 8]}" if worktree.length > ROOM %>'
+header="${template//KEEP/$((room - 9))}"
+header="${header//ROOM/$room}"
 
 if grep -qxF "$header" "$config"; then
+  echo "$config"
+  exit 0
+fi
+
+if head -1 "$config" | grep -qF '<% worktree = '; then
+  HEADER="$header" perl -pi -e '$_ = "$ENV{HEADER}\n" if $. == 1' "$config"
   echo "$config"
   exit 0
 fi
