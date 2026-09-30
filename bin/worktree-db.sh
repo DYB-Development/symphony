@@ -7,8 +7,11 @@ usage: worktree-db.sh [<app-dir>]
 
 Rewrites a Rails app's config/database.yml so every git worktree of the app
 gets its own development and test databases. The main clone keeps the names it
-has, and a linked worktree adds its folder name to each of them. The app
-directory defaults to the current one. Nothing is committed.
+has, and a linked worktree adds its folder name to each of them. A folder name
+too long for Postgres's 63-character limit is cut short and ends in a short hash
+of the full name. Run on a config converted before names were kept short, it
+replaces only the first line. The app directory defaults to the current one.
+Nothing is committed.
 USAGE
   exit 64
 }
