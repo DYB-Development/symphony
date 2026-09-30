@@ -34,6 +34,12 @@ if grep -qxF "$header" "$config"; then
   exit 0
 fi
 
+if head -1 "$config" | grep -qF '<% worktree = '; then
+  HEADER="$header" perl -pi -e '$_ = "$ENV{HEADER}\n" if $. == 1' "$config"
+  echo "$config"
+  exit 0
+fi
+
 HEADER="$header" perl -pi -e '
   print "$ENV{HEADER}\n" if $. == 1;
   $section = $1 if /^(\w+):/;
