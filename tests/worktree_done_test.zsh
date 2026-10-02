@@ -43,7 +43,7 @@ new_rails_clones() {
   git init -q --bare -b main "$BASE/origin.git"
   git clone -q "$BASE/origin.git" "$BASE/app" 2>/dev/null
   mkdir -p "$BASE/app/config" "$BASE/app/bin" "$BASE/stubs"
-  echo '<% worktree = "" %>' > "$BASE/app/config/database.yml"
+  echo "${1:-<% worktree = \"\" %>}" > "$BASE/app/config/database.yml"
   cat > "$BASE/app/bin/rails" <<'RAILS'
 #!/usr/bin/env bash
 echo "shop_${RAILS_ENV}_app_feature"
@@ -115,6 +115,12 @@ printf '%s\n' shop_test_app_feature_0 shop_test_app_feature_1 >> "$DATABASES"
 PATH="$BASE/stubs:$PATH" "$WORKTREE_DONE" "$LINKED" >/dev/null 2>&1
 assert_equals "shop_test_app_feature_0 shop_test_app_feature_1" "$(grep '_[0-9]$' "$DROPPED" | sort | tr '\n' ' ' | sed 's/ $//')" \
   "drops the numbered copies of the test database made for parallel tests"
+drop_clones
+
+new_rails_clones '<% require "digest"; worktree = "" %>'
+PATH="$BASE/stubs:$PATH" "$WORKTREE_DONE" "$LINKED" >/dev/null 2>&1
+assert_equals "shop_development_app_feature shop_test_app_feature" "$(sort "$DROPPED" | tr '\n' ' ' | sed 's/ $//')" \
+  "drops the databases of an app whose config keeps long names short"
 drop_clones
 
 new_rails_clones

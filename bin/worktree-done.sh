@@ -40,7 +40,7 @@ git -C "$worktree" merge-base --is-ancestor HEAD "$merged_into" || {
 branch="$(git -C "$worktree" branch --show-current)"
 main="$(git -C "$worktree" worktree list --porcelain | awk 'NR == 1 { print $2 }')"
 
-if grep -qF '<% worktree' "$worktree/config/database.yml" 2>/dev/null; then
+if head -1 "$worktree/config/database.yml" 2>/dev/null | grep -qF 'worktree = '; then
   named="$(cd "$worktree" && for env in development test; do
     RAILS_ENV="$env" bin/rails runner 'puts ActiveRecord::Base.configurations.configs_for(env_name: Rails.env, include_hidden: true).map(&:database)'
   done)"
