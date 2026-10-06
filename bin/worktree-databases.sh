@@ -13,6 +13,7 @@ USAGE
 }
 
 [ $# -eq 2 ] || usage
+[ "$1" = create ] || usage
 [ -e "$2/.git" ] || usage
 
 worktree="$(cd "$2" && pwd -P)"

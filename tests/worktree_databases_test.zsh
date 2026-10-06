@@ -69,6 +69,11 @@ assert_equals "64" "$?" "prints its usage and exits 64 for a path that is not a 
 rm -rf "$NOT_A_CHECKOUT"
 drop_clones
 
+new_package_clones
+PATH="$BASE/stubs:$PATH" "$WORKTREE_DATABASES" destroy "$LINKED" >/dev/null 2>&1
+assert_equals "64 " "$? $(cat "$RUNS")" "prints its usage, exits 64 and runs nothing for an action it does not know"
+drop_clones
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
