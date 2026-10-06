@@ -18,11 +18,11 @@ USAGE
 
 kind=all
 if [ "${1:-}" = --kind ] && [ $# -ge 2 ]; then
+  [ "$2" = rails ] || [ "$2" = package ] || usage
   kind="$2"
   shift 2
 fi
 
-[ "$kind" = all ] || [ "$kind" = rails ] || [ "$kind" = package ] || usage
 [ $# -eq 2 ] || usage
 [ "$1" = create ] || [ "$1" = drop ] || usage
 [ -e "$2/.git" ] || usage

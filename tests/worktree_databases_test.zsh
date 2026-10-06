@@ -146,6 +146,11 @@ PATH="$BASE/stubs:$PATH" "$WORKTREE_DATABASES" --kind django create "$LINKED" >/
 assert_equals "64 " "$? $(runs)" "prints its usage, exits 64 and runs nothing for a kind it does not know"
 drop_clones
 
+new_both_clones
+PATH="$BASE/stubs:$PATH" "$WORKTREE_DATABASES" --kind all create "$LINKED" >/dev/null 2>&1
+assert_equals "64 " "$? $(runs)" "refuses a kind named all, which is not a kind of app"
+drop_clones
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
