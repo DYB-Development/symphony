@@ -23,6 +23,16 @@ is_package_app() {
   jq -e '.scripts["worktree:db:create"] and .scripts["worktree:db:drop"]' "$worktree/package.json" >/dev/null 2>&1
 }
 
+is_converted_rails_app() {
+  head -1 "$worktree/config/database.yml" 2>/dev/null | grep -qF 'worktree = '
+}
+
+if [ "$action" = create ] && is_converted_rails_app; then
+  for env in development test; do
+    (cd "$worktree" && RAILS_ENV="$env" bin/rails db:prepare)
+  done
+fi
+
 if is_package_app; then
   (cd "$worktree" && bun run "worktree:db:$action")
 fi
