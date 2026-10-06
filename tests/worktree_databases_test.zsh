@@ -111,6 +111,16 @@ assert_equals "0 has not been converted" "$? $(cat "$RUNS")$(grep -o 'has not be
   "creates nothing for a Rails app whose config lacks the worktree header and says it has not been converted"
 drop_clones
 
+new_rails_clones
+echo '{"scripts": {"worktree:db:create": "x", "worktree:db:drop": "x"}}' > "$LINKED/package.json"
+mkdir -p "$BASE/stubs"
+printf '#!/usr/bin/env bash\necho "bun $*" >> "%s"\n' "$RUNS" > "$BASE/stubs/bun"
+chmod +x "$BASE/stubs/bun"
+PATH="$BASE/stubs:$PATH" "$WORKTREE_DATABASES" create "$LINKED" >/dev/null 2>&1
+assert_equals "development db:prepare test db:prepare bun run worktree:db:create" "$(tr '\n' ' ' < "$RUNS" | sed 's/ $//')" \
+  "creates the databases of both a Rails app and a package app in one worktree"
+drop_clones
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
