@@ -135,6 +135,12 @@ assert_equals "development db:prepare test db:prepare" "$(runs)" \
   "creates the Rails app's databases alone when told the Rails kind"
 drop_clones
 
+new_both_clones
+PATH="$BASE/stubs:$PATH" "$WORKTREE_DATABASES" --kind package create "$LINKED" >/dev/null 2>&1
+assert_equals "bun run worktree:db:create" "$(runs)" \
+  "creates the package app's databases alone when told the package kind"
+drop_clones
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]

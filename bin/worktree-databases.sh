@@ -36,11 +36,11 @@ is_converted_rails_app() {
   head -1 "$worktree/config/database.yml" 2>/dev/null | grep -qF 'worktree = '
 }
 
-if [ "$action" = create ] && is_converted_rails_app; then
+if [ "$kind" != package ] && [ "$action" = create ] && is_converted_rails_app; then
   for env in development test; do
     (cd "$worktree" && RAILS_ENV="$env" bin/rails db:prepare)
   done
-elif [ "$action" = create ] && [ -f "$worktree/config/database.yml" ]; then
+elif [ "$kind" != package ] && [ "$action" = create ] && [ -f "$worktree/config/database.yml" ]; then
   echo "worktree-databases.sh: the Rails app in $worktree has not been converted, so its databases are shared; run worktree-db.sh on it first" >&2
 fi
 
