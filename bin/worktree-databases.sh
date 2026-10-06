@@ -44,6 +44,14 @@ if [ "$kind" != package ] && [ "$action" = create ] && is_converted_rails_app; t
   done
 elif [ "$kind" != package ] && [ "$action" = create ] && [ -f "$worktree/config/database.yml" ]; then
   echo "worktree-databases.sh: the Rails app in $worktree has not been converted, so its databases are shared; run worktree-db.sh on it first" >&2
+elif [ "$kind" != package ] && [ "$action" = drop ] && is_converted_rails_app; then
+  named="$(cd "$worktree" && for env in development test; do
+    RAILS_ENV="$env" bin/rails runner 'puts ActiveRecord::Base.configurations.configs_for(env_name: Rails.env, include_hidden: true).map(&:database)'
+  done)"
+  existing="$(psql -lqtA | cut -d'|' -f1)"
+  for name in $named; do
+    { grep -xE "$name(_[0-9]+)?" <<<"$existing" || true; } | while read -r database; do dropdb --if-exists "$database"; done
+  done
 fi
 
 if [ "$kind" != rails ] && is_package_app; then

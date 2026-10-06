@@ -54,13 +54,25 @@ new_rails_clones() {
   echo "${1:-<% worktree = \"\" %>}" > "$BASE/app/config/database.yml"
   cat > "$BASE/app/bin/rails" <<RAILS
 #!/usr/bin/env bash
-echo "\$RAILS_ENV \$*" >> "$RUNS"
+if [ "\$1" = runner ]; then
+  echo "shop_\${RAILS_ENV}_app_feature"
+else
+  echo "\$RAILS_ENV \$*" >> "$RUNS"
+fi
 RAILS
   chmod +x "$BASE/app/bin/rails"
   git -C "$BASE/app" add config bin
   git -C "$BASE/app" commit -q -m init
   git -C "$BASE/app" worktree add -q -b feature "$BASE/app-feature"
   LINKED="$BASE/app-feature"
+  DATABASES="$BASE/databases"
+  DROPPED="$BASE/dropped"
+  printf '%s\n' shop_development shop_test shop_development_app_feature shop_test_app_feature shop_test_app_feature_0 > "$DATABASES"
+  touch "$DROPPED"
+  mkdir -p "$BASE/stubs"
+  printf '#!/usr/bin/env bash\ncat "%s"\n' "$DATABASES" > "$BASE/stubs/psql"
+  printf '#!/usr/bin/env bash\necho "${@: -1}" >> "%s"\n' "$DROPPED" > "$BASE/stubs/dropdb"
+  chmod +x "$BASE/stubs/psql" "$BASE/stubs/dropdb"
 }
 
 new_both_clones() {
@@ -149,6 +161,13 @@ drop_clones
 new_both_clones
 PATH="$BASE/stubs:$PATH" "$WORKTREE_DATABASES" --kind all create "$LINKED" >/dev/null 2>&1
 assert_equals "64 " "$? $(runs)" "refuses a kind named all, which is not a kind of app"
+drop_clones
+
+new_rails_clones
+PATH="$BASE/stubs:$PATH" "$WORKTREE_DATABASES" --kind rails drop "$LINKED" >/dev/null 2>&1
+assert_equals "shop_development_app_feature shop_test_app_feature shop_test_app_feature_0 there" \
+  "$(sort "$DROPPED" | tr '\n' ' ')$([[ -d $LINKED ]] && echo there || echo gone)" \
+  "drops a Rails app's databases and their numbered copies and leaves the worktree in place"
 drop_clones
 
 echo ""
