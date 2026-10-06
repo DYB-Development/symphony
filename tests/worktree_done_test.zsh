@@ -170,6 +170,12 @@ assert_equals "$LINKED run worktree:db:drop" "$(cat "$RUNS")" \
   "runs a package app's drop script from the worktree before removing it"
 drop_clones
 
+new_package_clones
+touch "$LINKED/unsaved.txt"
+PATH="$BASE/stubs:$PATH" "$WORKTREE_DONE" "$LINKED" >/dev/null 2>&1
+assert_equals "" "$(cat "$RUNS")" "runs no drop script for a worktree the cleanup refuses"
+drop_clones
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
