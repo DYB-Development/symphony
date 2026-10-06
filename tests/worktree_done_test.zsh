@@ -190,6 +190,16 @@ assert_equals "1 there feature the package app" \
   "keeps the worktree and its branch and names the kind when a drop fails"
 drop_clones
 
+new_package_clones
+cp "$BASE/stubs/bun" "$BASE/working-bun"
+printf '#!/usr/bin/env bash\nexit 1\n' > "$BASE/stubs/bun"
+PATH="$BASE/stubs:$PATH" "$WORKTREE_DONE" "$LINKED" >/dev/null 2>&1
+cp "$BASE/working-bun" "$BASE/stubs/bun"
+PATH="$BASE/stubs:$PATH" "$WORKTREE_DONE" "$LINKED" >/dev/null 2>&1
+assert_equals "$LINKED run worktree:db:drop gone" "$(cat "$RUNS") $([[ -d $LINKED ]] && echo there || echo gone)" \
+  "drops the databases and removes the worktree when cleanup runs again after a failed drop is fixed"
+drop_clones
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
