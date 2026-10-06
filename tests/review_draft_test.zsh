@@ -279,6 +279,24 @@ check_lines >/dev/null 2>&1
 assert_equals "0" "$?" "matches a path holding regex characters as plain text"
 rm -rf "$LINES_DIR"
 
+LINES_DIR="$(mktemp -d "${TMPDIR:-/tmp}/review_lines_test.XXXXXX")"
+LINES_FILE="$LINES_DIR/review.json"
+cat > "$LINES_DIR/gh" <<'SH'
+#!/usr/bin/env bash
+printf '%s\n' 'diff --git a/app/models/quote.rb b/app/models/quote.rb' \
+  '--- /dev/null' '+++ b/app/models/quote.rb' '@@ -0,0 +1,20000 @@'
+for i in $(seq 1 20000); do printf '+line %s\n' "$i"; done
+SH
+chmod +x "$LINES_DIR/gh"
+cat > "$LINES_FILE" <<'JSON'
+{ "summary": "One finding.",
+  "comments": [ { "path": "app/models/quote.rb", "line": 1, "side": "RIGHT", "body": "a finding" } ],
+  "replies": [] }
+JSON
+check_lines >/dev/null 2>&1
+assert_equals "0" "$?" "passes a comment matched early in a diff too long for one pipe write"
+rm -rf "$LINES_DIR"
+
 "$DRAFT" 2>&1 | grep -q -- '--check-lines <draft.json> <owner/repo> <pr-number>'
 assert_equals "0" "$?" "documents the line check in its own usage"
 
