@@ -170,6 +170,13 @@ assert_equals "shop_development_app_feature shop_test_app_feature shop_test_app_
   "drops a Rails app's databases and their numbered copies and leaves the worktree in place"
 drop_clones
 
+new_rails_clones
+printf '#!/usr/bin/env bash\nexit 1\n' > "$LINKED/bin/rails"
+OUTPUT="$("$WORKTREE_DATABASES" create "$LINKED" 2>&1)"
+assert_equals "1 the Rails app in $LINKED" "$? $(grep -o "the Rails app in $LINKED" <<<"$OUTPUT" | head -1)" \
+  "exits non-zero and names the kind and the worktree when a create fails"
+drop_clones
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
