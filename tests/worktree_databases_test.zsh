@@ -62,6 +62,13 @@ PATH="$BASE/stubs:$PATH" "$WORKTREE_DATABASES" create "$LINKED" >/dev/null 2>&1
 assert_equals "0 " "$? $(cat "$RUNS")" "runs nothing for an app missing either script and exits successfully"
 drop_clones
 
+new_package_clones
+NOT_A_CHECKOUT="$(mktemp -d "${TMPDIR:-/tmp}/not_a_checkout.XXXXXX")"
+PATH="$BASE/stubs:$PATH" "$WORKTREE_DATABASES" create "$NOT_A_CHECKOUT" >/dev/null 2>&1
+assert_equals "64" "$?" "prints its usage and exits 64 for a path that is not a git checkout"
+rm -rf "$NOT_A_CHECKOUT"
+drop_clones
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
