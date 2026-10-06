@@ -1,0 +1,62 @@
+#!/usr/bin/env zsh
+# Tests for bin/worktree-databases.sh. Every case runs against a throwaway main
+# clone and linked worktree, with bun replaced by a stub that records each run.
+#
+# Usage: zsh tests/worktree_databases_test.zsh
+setopt no_unset
+
+SCRIPT_DIR="${0:A:h}"
+WORKTREE_DATABASES="$SCRIPT_DIR/../bin/worktree-databases.sh"
+
+PASS=0
+FAIL=0
+
+ok()   { printf '  \033[32m✓\033[0m %s\n' "$1"; PASS=$((PASS+1)); }
+fail() { printf '  \033[31m✗\033[0m %s\n' "$1"; FAIL=$((FAIL+1)); }
+
+assert_equals() {
+  local expected="$1" actual="$2" label="$3"
+  if [[ "$expected" == "$actual" ]]; then
+    ok "$label"
+  else
+    fail "$label"
+    printf '      expected: %s\n' "${(qqq)expected}"
+    printf '      actual:   %s\n' "${(qqq)actual}"
+  fi
+}
+
+new_package_clones() {
+  BASE="$(mktemp -d "${TMPDIR:-/tmp}/worktree_databases_test.XXXXXX")"
+  BASE="${BASE:A}"
+  git init -q -b main "$BASE/app"
+  echo "${1:-{\"scripts\": {\"worktree:db:create\": \"x\", \"worktree:db:drop\": \"x\"}}}" > "$BASE/app/package.json"
+  git -C "$BASE/app" add package.json
+  git -C "$BASE/app" commit -q -m init
+  git -C "$BASE/app" worktree add -q -b feature "$BASE/app-feature"
+  LINKED="$BASE/app-feature"
+  RUNS="$BASE/runs"
+  touch "$RUNS"
+  mkdir -p "$BASE/stubs"
+  cat > "$BASE/stubs/bun" <<BUN
+#!/usr/bin/env bash
+echo "\$(pwd -P) \$*" >> "$RUNS"
+BUN
+  chmod +x "$BASE/stubs/bun"
+}
+
+drop_clones() {
+  cd "$SCRIPT_DIR"
+  rm -rf "$BASE"
+}
+
+echo "worktree-databases.sh:"
+
+new_package_clones
+PATH="$BASE/stubs:$PATH" "$WORKTREE_DATABASES" create "$LINKED" >/dev/null 2>&1
+assert_equals "$LINKED run worktree:db:create" "$(cat "$RUNS")" \
+  "runs the app's create script with Bun from the worktree's root"
+drop_clones
+
+echo ""
+echo "$PASS passed, $FAIL failed"
+[[ $FAIL -eq 0 ]]
