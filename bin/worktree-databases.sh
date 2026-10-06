@@ -8,6 +8,9 @@ usage: worktree-databases.sh create|drop <worktree>
 Creates or drops the databases of every app found in a worktree. An app whose
 root package.json has both a worktree:db:create and a worktree:db:drop script
 is handled by running the matching script with Bun from the worktree's root.
+On create, a Rails app whose config/database.yml carries the header
+worktree-db.sh writes has its development and test databases prepared, and a
+Rails app without that header is reported as not converted.
 USAGE
   exit 64
 }
