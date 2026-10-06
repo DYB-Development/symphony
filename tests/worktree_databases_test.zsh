@@ -105,6 +105,12 @@ assert_equals "development db:prepare test db:prepare" "$(tr '\n' ' ' < "$RUNS" 
   "prepares the development and test databases of a Rails app whose config carries the worktree header"
 drop_clones
 
+new_rails_clones 'development:'
+OUTPUT="$("$WORKTREE_DATABASES" create "$LINKED" 2>&1)"
+assert_equals "0 has not been converted" "$? $(cat "$RUNS")$(grep -o 'has not been converted' <<<"$OUTPUT")" \
+  "creates nothing for a Rails app whose config lacks the worktree header and says it has not been converted"
+drop_clones
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
