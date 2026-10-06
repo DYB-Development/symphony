@@ -15,6 +15,12 @@ USAGE
   exit 64
 }
 
+kind=all
+if [ "${1:-}" = --kind ] && [ $# -ge 2 ]; then
+  kind="$2"
+  shift 2
+fi
+
 [ $# -eq 2 ] || usage
 [ "$1" = create ] || [ "$1" = drop ] || usage
 [ -e "$2/.git" ] || usage
@@ -38,6 +44,6 @@ elif [ "$action" = create ] && [ -f "$worktree/config/database.yml" ]; then
   echo "worktree-databases.sh: the Rails app in $worktree has not been converted, so its databases are shared; run worktree-db.sh on it first" >&2
 fi
 
-if is_package_app; then
+if [ "$kind" != rails ] && is_package_app; then
   (cd "$worktree" && bun run "worktree:db:$action")
 fi
