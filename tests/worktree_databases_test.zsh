@@ -141,6 +141,11 @@ assert_equals "bun run worktree:db:create" "$(runs)" \
   "creates the package app's databases alone when told the package kind"
 drop_clones
 
+new_both_clones
+PATH="$BASE/stubs:$PATH" "$WORKTREE_DATABASES" --kind django create "$LINKED" >/dev/null 2>&1
+assert_equals "64 " "$? $(runs)" "prints its usage, exits 64 and runs nothing for a kind it does not know"
+drop_clones
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
