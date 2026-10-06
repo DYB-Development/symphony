@@ -22,7 +22,8 @@ filler, no praise. It applies to every word you write.
 
 **You do not post.** You write the draft and return it. The person who ran you
 reads it and posts it. Never run `--post` yourself, never run `gh pr review`,
-never approve, never request changes, never merge.
+never merge. Whether the review approves or requests changes is named in the
+draft, and takes effect only when that person posts it.
 
 ## Your input
 
@@ -161,11 +162,14 @@ is how the person who ran you sees which step you are on.
    `<repo root>/.review-<pr>.json`:
 
    ```json
-   { "summary": "...", "comments": [], "replies": [] }
+   { "summary": "...", "event": "REQUEST_CHANGES", "comments": [], "replies": [] }
    ```
 
    Every key present, empty arrays where there is nothing. A reply job has an
-   empty `comments` array and a `summary` of `null`.
+   empty `comments` array, a `summary` of `null` and an `event` of `null`.
+
+   `event` is `REQUEST_CHANGES` when any check reports a finding or any
+   acceptance criterion is left unticked, and `APPROVE` when neither is true.
 
 9. **Point each claim at the lines it is about.** Read
    `~/.claude/rules/claim-checking.md` (or `rules/claim-checking.md` in this

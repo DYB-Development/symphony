@@ -15,8 +15,9 @@ then the summary becomes that review's body with each `{{comment:N}}` token
 pointing at the comment it names, and any replies land on the threads they
 answer. `--link` does that substitution on its own.
 
-`--post` never approves and never requests changes. Every review it posts is
-event COMMENT.
+`--post` posts the review with the event the draft names, `APPROVE` or
+`REQUEST_CHANGES`, and with event COMMENT when the draft names none. `--render`
+prints that event last.
 See ~/.claude/rules/pr-review.md.
 USAGE
   exit 64

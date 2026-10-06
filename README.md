@@ -171,7 +171,8 @@ Three files appear in a repo as you work, and none of them should be committed:
 
 Two things worth knowing. **Nothing posts without being read first** — a review
 is drafted and rendered for a person, and an audit posts nothing at all.
-**Nothing merges or approves** — a review is always a comment.
+**Nothing merges** — a review approves or requests changes only once its
+draft has been read and posted.
 
 ## Releasing a gem
 
