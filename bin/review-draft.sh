@@ -90,7 +90,7 @@ if [ "$mode" = "--check-lines" ]; then
     path=$(jq -r ".comments[$i].path" "$draft")
     line=$(jq -r ".comments[$i].line" "$draft")
     side=$(jq -r ".comments[$i].side // \"RIGHT\"" "$draft" | tr '[:lower:]' '[:upper:]')
-    if printf '%s\n' "$touched" | grep -qxF -- "$side:$path:$line"; then
+    if grep -qxF -- "$side:$path:$line" <<<"$touched"; then
       printf 'on the diff  %s:%s\n' "$path" "$line"
     else
       printf 'fail  %s:%s is not a line this diff touches\n' "$path" "$line"
