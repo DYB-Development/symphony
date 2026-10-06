@@ -70,6 +70,28 @@ DROPDB
   chmod +x "$BASE/stubs/psql" "$BASE/stubs/dropdb"
 }
 
+new_package_clones() {
+  BASE="$(mktemp -d "${TMPDIR:-/tmp}/worktree_done_test.XXXXXX")"
+  BASE="${BASE:A}"
+  git init -q --bare -b main "$BASE/origin.git"
+  git clone -q "$BASE/origin.git" "$BASE/app" 2>/dev/null
+  echo '{"scripts": {"worktree:db:create": "x", "worktree:db:drop": "x"}}' > "$BASE/app/package.json"
+  git -C "$BASE/app" add package.json
+  git -C "$BASE/app" commit -q -m init
+  git -C "$BASE/app" push -q origin main
+  git -C "$BASE/app" worktree add -q -b feature "$BASE/app-feature"
+  MAIN="$BASE/app"
+  LINKED="$BASE/app-feature"
+  RUNS="$BASE/runs"
+  touch "$RUNS"
+  mkdir -p "$BASE/stubs"
+  cat > "$BASE/stubs/bun" <<BUN
+#!/usr/bin/env bash
+echo "\$(pwd -P) \$*" >> "$RUNS"
+BUN
+  chmod +x "$BASE/stubs/bun"
+}
+
 drop_clones() {
   cd "$SCRIPT_DIR"
   rm -rf "$BASE"
@@ -140,6 +162,18 @@ new_rails_clones
 printf '%s\n' shop_development shop_test shop_test_app_feature > "$DATABASES"
 PATH="$BASE/stubs:$PATH" "$WORKTREE_DONE" "$LINKED" >/dev/null 2>&1
 assert_equals "gone" "$([[ -d $LINKED ]] && echo there || echo gone)" "removes a worktree whose development database was never created"
+drop_clones
+
+new_package_clones
+PATH="$BASE/stubs:$PATH" "$WORKTREE_DONE" "$LINKED" >/dev/null 2>&1
+assert_equals "$LINKED run worktree:db:drop" "$(cat "$RUNS")" \
+  "runs a package app's drop script from the worktree before removing it"
+drop_clones
+
+new_package_clones
+touch "$LINKED/unsaved.txt"
+PATH="$BASE/stubs:$PATH" "$WORKTREE_DONE" "$LINKED" >/dev/null 2>&1
+assert_equals "" "$(cat "$RUNS")" "runs no drop script for a worktree the cleanup refuses"
 drop_clones
 
 echo ""

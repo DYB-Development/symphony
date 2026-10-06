@@ -50,5 +50,7 @@ if head -1 "$worktree/config/database.yml" 2>/dev/null | grep -qF 'worktree = ';
   done
 fi
 
+"$(dirname "${BASH_SOURCE[0]}")/worktree-databases.sh" drop "$worktree"
+
 git -C "$main" worktree remove "$worktree"
 [ -z "$branch" ] || git -C "$main" branch -q -D "$branch"
