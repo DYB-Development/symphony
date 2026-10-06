@@ -24,8 +24,16 @@ git -C ~/projects/app worktree add -b feature/quotes ~/projects/app-feature-quot
 Every edit, test run and commit for that branch happens in that folder. Nothing
 in the main clone is edited, and its branch is never changed.
 
-A Rails app needs its own databases per worktree first. See
-`~/.claude/rules/worktree-databases.md`.
+**Right after making the worktree, create its databases:**
+
+```
+~/.claude/bin/worktree-databases.sh create ~/projects/app-feature-quotes
+```
+
+It creates the databases of every app in the worktree that gives each worktree
+its own, a Rails app or a package app, and does nothing for any other app. See
+`~/.claude/rules/worktree-databases.md` for what makes an app one of those two
+kinds.
 
 ## When the branch is merged
 
@@ -37,9 +45,11 @@ and it is required, not something to ask about:
 ~/.claude/bin/worktree-done.sh ~/projects/app-feature-quotes
 ```
 
-The script removes the worktree, deletes its local branch, and drops the
-development and test databases its app names, including the numbered copies
-made for parallel tests. It refuses the main clone, a worktree with changes not
+The script drops the development and test databases of every Rails app and
+package app in the worktree, including a Rails app's numbered copies made for
+parallel tests, then removes the worktree and deletes its local branch. A drop
+that fails stops it before anything is removed, so it can be run again once the
+failure is fixed. It refuses the main clone, a worktree with changes not
 committed, and a worktree with commits not yet on the remote's main branch, and
 in each case it changes nothing.
 
