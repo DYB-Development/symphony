@@ -15,8 +15,9 @@ then the summary becomes that review's body with each `{{comment:N}}` token
 pointing at the comment it names, and any replies land on the threads they
 answer. `--link` does that substitution on its own.
 
-`--post` never approves and never requests changes. Every review it posts is
-event COMMENT.
+`--post` posts the review with the event the draft names, `APPROVE` or
+`REQUEST_CHANGES`, and with event COMMENT when the draft names none. `--render`
+prints that event last.
 See ~/.claude/rules/pr-review.md.
 USAGE
   exit 64
@@ -109,7 +110,7 @@ if [ "$mode" = "--post" ]; then
   pr=$3
   draft=$4
 
-  review=$(jq '{ event: "COMMENT", body: "Review in progress.", comments: .comments }' "$draft" \
+  review=$(jq '{ event: (.event // "COMMENT"), body: "Review in progress.", comments: .comments }' "$draft" \
     | gh api "repos/$repo/pulls/$pr/reviews" -X POST --input - --jq '.id')
 
   urls=()
@@ -164,3 +165,5 @@ jq -r '.comments | to_entries[]
 printf '\nReplies (%s)\n' "$(jq -r '.replies | length' "$draft")"
 jq -r '.replies | to_entries[]
   | "\n\(.key + 1). in reply to comment \(.value.in_reply_to)\n" + (.value.body | split("\n") | map(if . == "" then . else "   " + . end) | join("\n"))' "$draft"
+
+printf '\nEvent: %s\n' "$(jq -r '.event // "COMMENT"' "$draft")"

@@ -187,6 +187,7 @@ writes it as one JSON file:
 ```json
 {
   "summary": "## Verdict\n\n...",
+  "event": "REQUEST_CHANGES",
   "comments": [
     { "path": "app/models/quote.rb", "line": 42, "side": "RIGHT", "body": "**Scalability — a query per line item**\n\n..." }
   ],
@@ -201,8 +202,11 @@ writes it as one JSON file:
 inline comments up as one review, then makes the summary that review's body with
 each `{{comment:N}}` token replaced by the url of the comment it names.
 
-**A review never approves and never requests changes.** Every review posted is
-event COMMENT; approving and merging are mine.
+**A review is posted only once I have read its draft.** The draft names its
+event, and `--render` shows it. A review that raises any finding, or leaves any
+acceptance criterion unticked, requests changes. A review that raises nothing
+approves. A draft that only replies names no event. Merging is mine, and a review never
+merges.
 
 ## Re-reviewing
 
