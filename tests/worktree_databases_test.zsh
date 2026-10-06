@@ -184,6 +184,12 @@ assert_equals "bun run worktree:db:create" "$(runs)" \
   "still creates the package app's databases when the Rails app's create fails"
 drop_clones
 
+new_package_clones
+OUTPUT="$(PATH=/usr/bin:/bin "$WORKTREE_DATABASES" create "$LINKED" 2>&1)"
+assert_equals "1 Bun is needed" "$? $(grep -o 'Bun is needed' <<<"$OUTPUT")" \
+  "exits non-zero and says Bun is needed when a package app is created without Bun installed"
+drop_clones
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]

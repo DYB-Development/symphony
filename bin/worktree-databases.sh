@@ -59,6 +59,10 @@ drop_rails() {
 }
 
 run_package_script() {
+  command -v bun >/dev/null || {
+    echo "worktree-databases.sh: Bun is needed to run the package app's worktree:db:$action script, and it is not installed" >&2
+    return 1
+  }
   (cd "$worktree" && bun run "worktree:db:$action")
 }
 
