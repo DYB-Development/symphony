@@ -109,7 +109,7 @@ if [ "$mode" = "--post" ]; then
   pr=$3
   draft=$4
 
-  review=$(jq '{ event: "COMMENT", body: "Review in progress.", comments: .comments }' "$draft" \
+  review=$(jq '{ event: (.event // "COMMENT"), body: "Review in progress.", comments: .comments }' "$draft" \
     | gh api "repos/$repo/pulls/$pr/reviews" -X POST --input - --jq '.id')
 
   urls=()

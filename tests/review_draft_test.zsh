@@ -132,9 +132,9 @@ stub_gh() {
   cat > "$STUB_DIR/gh" <<'STUB'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >> "$GH_LOG"
-case "$*" in *"--input -"*) cat >/dev/null 2>&1 ;; esac
 case "$*" in
-  *"reviews -X POST"*) printf '4242\n' ;;
+  *"reviews -X POST"*) cat > "${GH_LOG%/*}/review"; printf '4242\n' ;;
+  *"--input -"*) cat >/dev/null 2>&1; printf 'https://github.com/o/r/pull/1#x\n' ;;
   *"/comments --paginate"*) : ;;
   *) printf 'https://github.com/o/r/pull/1#x\n' ;;
 esac
@@ -181,6 +181,19 @@ assert_equals "111
 222" \
   "$(grep -o 'comments/[0-9]*/replies' "$GH_LOG" | sed 's|comments/||; s|/replies||')" \
   "posts one reply to each thread the draft answers"
+drop_gh
+drop_draft
+
+write_draft <<'JSON'
+{ "summary": "One finding.", "event": "REQUEST_CHANGES", "comments": [], "replies": [] }
+JSON
+stub_gh
+( "$DRAFT" --post o/r 1 "$DRAFT_FILE" >/dev/null 2>&1 & pid=$!
+  ( sleep 10; kill -9 $pid 2>/dev/null ) & watch=$!
+  wait $pid 2>/dev/null; kill $watch 2>/dev/null )
+assert_equals "REQUEST_CHANGES" \
+  "$(jq -r '.event' "$STUB_DIR/review")" \
+  "posts the review with the event the draft names"
 drop_gh
 drop_draft
 
