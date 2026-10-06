@@ -164,3 +164,5 @@ jq -r '.comments | to_entries[]
 printf '\nReplies (%s)\n' "$(jq -r '.replies | length' "$draft")"
 jq -r '.replies | to_entries[]
   | "\n\(.key + 1). in reply to comment \(.value.in_reply_to)\n" + (.value.body | split("\n") | map(if . == "" then . else "   " + . end) | join("\n"))' "$draft"
+
+printf '\nEvent: %s\n' "$(jq -r '.event // "COMMENT"' "$draft")"

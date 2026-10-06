@@ -99,6 +99,14 @@ echo ""
 echo "review-draft.sh --link:"
 
 write_draft <<'JSON'
+{ "summary": "One finding.", "event": "REQUEST_CHANGES", "comments": [], "replies": [] }
+JSON
+assert_equals "Event: REQUEST_CHANGES" \
+  "$("$DRAFT" --render "$DRAFT_FILE" | tail -1)" \
+  "prints the event the review will be posted with"
+drop_draft
+
+write_draft <<'JSON'
 {
   "summary": "Scalability: [the line item loop]({{comment:1}}). Security: [the team filter]({{comment:2}}).",
   "comments": [],
