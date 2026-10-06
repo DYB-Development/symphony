@@ -57,6 +57,11 @@ assert_equals "$LINKED run worktree:db:create" "$(cat "$RUNS")" \
   "runs the app's create script with Bun from the worktree's root"
 drop_clones
 
+new_package_clones '{"scripts": {"worktree:db:create": "x"}}'
+PATH="$BASE/stubs:$PATH" "$WORKTREE_DATABASES" create "$LINKED" >/dev/null 2>&1
+assert_equals "0 " "$? $(cat "$RUNS")" "runs nothing for an app missing either script and exits successfully"
+drop_clones
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]

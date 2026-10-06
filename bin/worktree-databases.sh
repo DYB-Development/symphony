@@ -16,4 +16,10 @@ USAGE
 
 worktree="$(cd "$2" && pwd -P)"
 
-(cd "$worktree" && bun run worktree:db:create)
+is_package_app() {
+  jq -e '.scripts["worktree:db:create"] and .scripts["worktree:db:drop"]' "$worktree/package.json" >/dev/null 2>&1
+}
+
+if is_package_app; then
+  (cd "$worktree" && bun run worktree:db:create)
+fi
