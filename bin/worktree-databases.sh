@@ -3,17 +3,25 @@ set -euo pipefail
 
 usage() {
   cat >&2 <<'USAGE'
-usage: worktree-databases.sh create|drop <worktree>
+usage: worktree-databases.sh [--kind rails|package] create|drop <worktree>
 
 Creates or drops the databases of every app found in a worktree. An app whose
 root package.json has both a worktree:db:create and a worktree:db:drop script
 is handled by running the matching script with Bun from the worktree's root.
 On create, a Rails app whose config/database.yml carries the header
 worktree-db.sh writes has its development and test databases prepared, and a
-Rails app without that header is reported as not converted.
+Rails app without that header is reported as not converted. Given --kind, it
+acts on the apps of that kind alone.
 USAGE
   exit 64
 }
+
+kind=all
+if [ "${1:-}" = --kind ] && [ $# -ge 2 ]; then
+  [ "$2" = rails ] || [ "$2" = package ] || usage
+  kind="$2"
+  shift 2
+fi
 
 [ $# -eq 2 ] || usage
 [ "$1" = create ] || [ "$1" = drop ] || usage
@@ -30,14 +38,14 @@ is_converted_rails_app() {
   head -1 "$worktree/config/database.yml" 2>/dev/null | grep -qF 'worktree = '
 }
 
-if [ "$action" = create ] && is_converted_rails_app; then
+if [ "$kind" != package ] && [ "$action" = create ] && is_converted_rails_app; then
   for env in development test; do
     (cd "$worktree" && RAILS_ENV="$env" bin/rails db:prepare)
   done
-elif [ "$action" = create ] && [ -f "$worktree/config/database.yml" ]; then
+elif [ "$kind" != package ] && [ "$action" = create ] && [ -f "$worktree/config/database.yml" ]; then
   echo "worktree-databases.sh: the Rails app in $worktree has not been converted, so its databases are shared; run worktree-db.sh on it first" >&2
 fi
 
-if is_package_app; then
+if [ "$kind" != rails ] && is_package_app; then
   (cd "$worktree" && bun run "worktree:db:$action")
 fi

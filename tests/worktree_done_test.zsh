@@ -176,6 +176,12 @@ PATH="$BASE/stubs:$PATH" "$WORKTREE_DONE" "$LINKED" >/dev/null 2>&1
 assert_equals "" "$(cat "$RUNS")" "runs no drop script for a worktree the cleanup refuses"
 drop_clones
 
+new_package_clones
+PATH="$BASE/stubs:$PATH" "$WORKTREE_DONE" --kind rails "$LINKED" >/dev/null 2>&1
+assert_equals "64 there" "$? $([[ -d $LINKED ]] && echo there || echo gone)" \
+  "refuses an option naming one kind, since cleanup always drops every kind"
+drop_clones
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
