@@ -177,6 +177,13 @@ assert_equals "1 the Rails app in $LINKED" "$? $(grep -o "the Rails app in $LINK
   "exits non-zero and names the kind and the worktree when a create fails"
 drop_clones
 
+new_both_clones
+printf '#!/usr/bin/env bash\nexit 1\n' > "$LINKED/bin/rails"
+PATH="$BASE/stubs:$PATH" "$WORKTREE_DATABASES" create "$LINKED" >/dev/null 2>&1
+assert_equals "bun run worktree:db:create" "$(runs)" \
+  "still creates the package app's databases when the Rails app's create fails"
+drop_clones
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
