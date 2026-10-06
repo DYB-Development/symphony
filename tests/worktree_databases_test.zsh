@@ -44,6 +44,25 @@ BUN
   chmod +x "$BASE/stubs/bun"
 }
 
+new_rails_clones() {
+  BASE="$(mktemp -d "${TMPDIR:-/tmp}/worktree_databases_test.XXXXXX")"
+  BASE="${BASE:A}"
+  RUNS="$BASE/runs"
+  touch "$RUNS"
+  git init -q -b main "$BASE/app"
+  mkdir -p "$BASE/app/config" "$BASE/app/bin"
+  echo "${1:-<% worktree = \"\" %>}" > "$BASE/app/config/database.yml"
+  cat > "$BASE/app/bin/rails" <<RAILS
+#!/usr/bin/env bash
+echo "\$RAILS_ENV \$*" >> "$RUNS"
+RAILS
+  chmod +x "$BASE/app/bin/rails"
+  git -C "$BASE/app" add config bin
+  git -C "$BASE/app" commit -q -m init
+  git -C "$BASE/app" worktree add -q -b feature "$BASE/app-feature"
+  LINKED="$BASE/app-feature"
+}
+
 drop_clones() {
   cd "$SCRIPT_DIR"
   rm -rf "$BASE"
@@ -78,6 +97,28 @@ drop_clones
 new_package_clones
 PATH="$BASE/stubs:$PATH" "$WORKTREE_DATABASES" destroy "$LINKED" >/dev/null 2>&1
 assert_equals "64 " "$? $(cat "$RUNS")" "prints its usage, exits 64 and runs nothing for an action it does not know"
+drop_clones
+
+new_rails_clones
+"$WORKTREE_DATABASES" create "$LINKED" >/dev/null 2>&1
+assert_equals "development db:prepare test db:prepare" "$(tr '\n' ' ' < "$RUNS" | sed 's/ $//')" \
+  "prepares the development and test databases of a Rails app whose config carries the worktree header"
+drop_clones
+
+new_rails_clones 'development:'
+OUTPUT="$("$WORKTREE_DATABASES" create "$LINKED" 2>&1)"
+assert_equals "0 has not been converted" "$? $(cat "$RUNS")$(grep -o 'has not been converted' <<<"$OUTPUT")" \
+  "creates nothing for a Rails app whose config lacks the worktree header and says it has not been converted"
+drop_clones
+
+new_rails_clones
+echo '{"scripts": {"worktree:db:create": "x", "worktree:db:drop": "x"}}' > "$LINKED/package.json"
+mkdir -p "$BASE/stubs"
+printf '#!/usr/bin/env bash\necho "bun $*" >> "%s"\n' "$RUNS" > "$BASE/stubs/bun"
+chmod +x "$BASE/stubs/bun"
+PATH="$BASE/stubs:$PATH" "$WORKTREE_DATABASES" create "$LINKED" >/dev/null 2>&1
+assert_equals "development db:prepare test db:prepare bun run worktree:db:create" "$(tr '\n' ' ' < "$RUNS" | sed 's/ $//')" \
+  "creates the databases of both a Rails app and a package app in one worktree"
 drop_clones
 
 echo ""
