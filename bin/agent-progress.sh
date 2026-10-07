@@ -24,19 +24,10 @@ log_dir="${AGENT_PROGRESS_DIR:-$HOME/.claude/agent-progress}"
 agents_dir="${AGENT_PROGRESS_AGENTS:-$(dirname "$0")/../agents}"
 now="${AGENT_PROGRESS_NOW:-$(date +%s)}"
 
-position_for() {
-  printf '%s' "$1" | sed -nE 's/.*scribe-step\.sh[[:space:]]+"[^"]*"[[:space:]]+"[^"]*"[[:space:]]+"([^"]*)".*/\1/p'
-}
-
-step_for() {
-  local command=$1 marked script
-  marked=$(printf '%s' "$command" | sed -nE 's/.*scribe-step\.sh[[:space:]]+"([^"]*)"[[:space:]]+"([^"]*)".*/\1	\2/p')
-  if [ -n "$marked" ]; then
-    printf '%s' "$marked"
-    return
-  fi
-  script=$(printf '%s' "$command" | sed -nE 's/.*\.claude\/bin\/([A-Za-z0-9_-]+)\.sh.*/\1/p')
-  [ -z "$script" ] || printf '\truns %s' "$script"
+script_run() {
+  local script
+  script=$(printf '%s' "$1" | sed -nE 's/.*\.claude\/bin\/([A-Za-z0-9_-]+)\.sh.*/\1/p')
+  [ -z "$script" ] || [ "$script" = scribe-step ] || printf '\truns %s' "$script"
 }
 
 marks_printed() {
@@ -126,9 +117,9 @@ case "${1:-}" in
         done < <(marks_printed "$(printf '%s' "$payload" | jq -r '.tool_response.stdout // empty')")
         ;;
       *)
-        step=$(step_for "$command")
+        step=$(script_run "$command")
         [ -n "$step" ] || exit 0
-        append "$step" "$(position_for "$command")"
+        append "$step"
         ;;
     esac
     ;;

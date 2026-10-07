@@ -73,17 +73,8 @@ assert_equals $'1000\treview-scribe\tacme/quotes#42\t2. Read the ticket\ts1\n100
 drop_dir
 
 new_dir
-bash_payload a1 review-scribe '~/.claude/bin/scribe-step.sh "acme/quotes#42" "3. Run every check"' | record 1000
-assert_equals $'1000\treview-scribe\tacme/quotes#42\t3. Run every check\ts1' \
-  "$(cat "$LOGS/a1.log" 2>&1)" \
-  "records a step marker against the agent that ran it and the session it runs in"
-drop_dir
-
-new_dir
-bash_payload a1 review-scribe '~/.claude/bin/scribe-step.sh "acme/quotes#42" "3. Run every check" "4/9 Dependencies"' | record 1000
-assert_equals $'1000\treview-scribe\tacme/quotes#42\t3. Run every check\ts1\t4/9 Dependencies' \
-  "$(cat "$LOGS/a1.log" 2>&1)" \
-  "records a position inside the step when the marker carries one"
+bash_payload a1 review-scribe '~/.claude/bin/scribe-step.sh "$S" "3. Run every check"' | record 1000
+assert_equals "" "$(ls -A "$LOGS")" "records no mark before its command has run"
 drop_dir
 
 new_dir
