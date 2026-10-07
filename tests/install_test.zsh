@@ -99,6 +99,9 @@ assert_equals "my-line.sh left unchanged: true" \
   "$(jq -r .statusLine.command "$CONFIG/settings.json") left unchanged: $([[ "$output" == *"already set to my-line.sh, left unchanged"* ]] && echo true || echo false)" \
   "leaves a status line that is already set and says it did"
 
+assert_equals "null" "$(jq -r .statusLine.refreshInterval "$CONFIG/settings.json")" \
+  "adds no refresh interval to another tool's status line"
+
 rm -rf "$CONFIG"
 
 CONFIG="$(fresh_config)"
