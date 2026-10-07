@@ -263,24 +263,24 @@ assert_says rules/draft-reading.md \
   "every scribe marks each read of its draft as a position out of three"
 
 assert_says agents/review-scribe.md \
-  Marking\ each\ check\ is\ required,\ never\ skipped,\ and\ is\ the\ first\ thing\ you\ do\ for\ it. \
-  the\ review\ scribe\ makes\ marking\ each\ check\ required\ and\ first
+  'Marking each check is required, never skipped, and is the first thing you do for it.' \
+  "the review scribe makes marking each check required and first"
 
 assert_says agents/review-scribe.md \
-  Marking\ each\ finding\ is\ required,\ never\ skipped,\ and\ is\ the\ first\ thing\ you\ do\ for\ it. \
-  the\ review\ scribe\ makes\ marking\ each\ finding\ required\ and\ first
+  'Marking each finding is required, never skipped, and is the first thing you do for it.' \
+  "the review scribe makes marking each finding required and first"
 
 assert_says agents/review-scribe.md \
-  Marking\ each\ claim\ is\ required,\ never\ skipped,\ and\ is\ the\ first\ thing\ you\ do\ for\ it. \
-  the\ review\ scribe\ makes\ marking\ each\ claim\ required\ and\ first
+  'Marking each claim is required, never skipped, and is the first thing you do for it.' \
+  "the review scribe makes marking each claim required and first"
 
 assert_says agents/plan-scribe.md \
-  Marking\ each\ section\ is\ required,\ never\ skipped,\ and\ is\ the\ first\ thing\ you\ do\ for\ it. \
-  the\ plan\ scribe\ makes\ marking\ each\ section\ required\ and\ first
+  'Marking each section is required, never skipped, and is the first thing you do for it.' \
+  "the plan scribe makes marking each section required and first"
 
 assert_says rules/draft-reading.md \
-  Marking\ each\ read\ is\ required,\ never\ skipped,\ and\ is\ the\ first\ thing\ you\ do\ for\ it. \
-  every\ scribe\ makes\ marking\ each\ read\ of\ its\ draft\ required\ and\ first
+  'Marking each read is required, never skipped, and is the first thing you do for it.' \
+  "every scribe makes marking each read of its draft required and first"
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
