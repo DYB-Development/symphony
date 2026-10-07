@@ -270,5 +270,9 @@ assert_says agents/review-scribe.md \
   Marking\ each\ finding\ is\ required,\ never\ skipped,\ and\ is\ the\ first\ thing\ you\ do\ for\ it. \
   the\ review\ scribe\ makes\ marking\ each\ finding\ required\ and\ first
 
+assert_says agents/review-scribe.md \
+  Marking\ each\ claim\ is\ required,\ never\ skipped,\ and\ is\ the\ first\ thing\ you\ do\ for\ it. \
+  the\ review\ scribe\ makes\ marking\ each\ claim\ required\ and\ first
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

@@ -191,6 +191,7 @@ is how the person who ran you sees which step you are on.
    ```
    ~/.claude/bin/scribe-step.sh "<owner/repo>#<pr>" "9. Point each claim at the lines it is about" "<k>/<K> claim"
    ```
+   Marking each claim is required, never skipped, and is the first thing you do for it.
 
    A pointer holds a path, a first and last line, and a side.
 
