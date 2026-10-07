@@ -32,6 +32,40 @@ code=$?
 assert_equals "64 owner-turn.sh: the kind is one of permission, question, pull request or plan" "$code $output" \
   "refuses a kind that is not one of the four, naming them"
 
+# A repo of acme/widget and an empty record, both thrown away by drop_record.
+new_record() {
+  WORK="$(mktemp -d "${TMPDIR:-/tmp}/owner_turn_test.XXXXXX")"
+  REPO="$WORK/widget"
+  git init -q "$REPO"
+  git -C "$REPO" remote add origin git@github.com:acme/widget.git
+  export OWNER_TURN_DIR="$WORK/record"
+}
+
+drop_record() {
+  rm -rf "$WORK"
+  unset OWNER_TURN_DIR
+}
+
+record_bash() {
+  jq -nc --arg session "$1" --arg cwd "$REPO" --arg command "$2" \
+    '{hook_event_name: "PreToolUse", session_id: $session, cwd: $cwd, tool_name: "Bash", tool_input: {command: $command}}' \
+    | OWNER_TURN_NOW="${3:-1000}" "$TURN" record
+}
+
+entries() {
+  local files=("$OWNER_TURN_DIR"/entries/*.json(N))
+  if (( $#files )); then jq -sc 'sort_by(.arrived)' $files; else echo '[]'; fi
+}
+
+echo ""
+echo "owner-turn.sh record:"
+
+new_record
+record_bash s1 '~/.claude/bin/owner-turn.sh "plan" "Review plan #110" "https://github.com/acme/widget/issues/110"'
+assert_equals '[{"kind":"plan","wanted":"Review plan #110","link":"https://github.com/acme/widget/issues/110","session":"s1","repo":"acme/widget","arrived":1000}]' \
+  "$(entries)" "records an entry with its kind, what is wanted, its link, the session, the repo and when it arrived"
+drop_record
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
