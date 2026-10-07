@@ -55,7 +55,7 @@ rm -rf "$CONFIG"
 CONFIG="$(fresh_config)"
 CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" >/dev/null 2>&1
 
-assert_equals "SessionStart SubagentStart PostToolUse PreToolUse SubagentStop Stop Notification" \
+assert_equals "SessionStart SubagentStart PostToolUse PreToolUse SubagentStop Stop Notification UserPromptSubmit" \
   "$(jq -r '[.hooks | keys_unsorted[]] | join(" ")' "$CONFIG/settings.json" | tr '\n' ' ' | sed 's/ $//')" \
   "registers a hook for each event the package needs"
 
@@ -66,6 +66,10 @@ assert_equals "PreToolUse:Bash SubagentStop:*" \
 assert_equals "PreToolUse:AskUserQuestion" \
   "$(jq -r '[.hooks | to_entries[] | .key as $event | .value[] | select(any(.hooks[]; .command | endswith("/bin/one-question-gate.sh check"))) | "\($event):\(.matcher)"] | sort | join(" ")' "$CONFIG/settings.json")" \
   "checks every question prompt for more than one question before it is shown"
+
+assert_equals "PreToolUse:AskUserQuestion PreToolUse:Bash UserPromptSubmit:null" \
+  "$(jq -r '[.hooks | to_entries[] | .key as $event | .value[] | select(any(.hooks[]; .command | endswith("/bin/owner-turn.sh record"))) | "\($event):\(.matcher)"] | sort | join(" ")' "$CONFIG/settings.json")" \
+  "records the owner's turn on every question prompt, every Bash call and every prompt the owner sends"
 
 assert_equals "Notification:permission_prompt:true Stop:null:true" \
   "$(jq -r '[.hooks | to_entries[] | .key as $event | .value[] | . as $entry | .hooks[] | select(.command | endswith("/bin/turn-sound.sh play")) | "\($event):\($entry.matcher):\(.async)"] | sort | join(" ")' "$CONFIG/settings.json")" \

@@ -33,6 +33,7 @@ new_repo() {
   git init -q -b "$1" "$REPO"
   git -C "$REPO" remote add origin git@github.com:acme/widget.git
   export STATUS_LINE_DIR="$WORK/cache"
+  export OWNER_TURN_DIR="$WORK/owner-turn"
   GH_LOG="$WORK/calls"
   : > "$GH_LOG"
   COUNTS="$WORK/counts"
@@ -56,11 +57,11 @@ STUB
 drop_repo() {
   path=(${path:#$WORK/bin})
   rm -rf "$WORK"
-  unset STATUS_LINE_DIR
+  unset STATUS_LINE_DIR OWNER_TURN_DIR
 }
 
 status_line() {
-  jq -nc --arg dir "$REPO" '{workspace: {current_dir: $dir}}' | "$STATUS_LINE" 2>&1
+  jq -nc --arg dir "$REPO" '{session_id: "s1", workspace: {current_dir: $dir}}' | "$STATUS_LINE" 2>&1
 }
 
 echo "status-line.sh:"
@@ -90,6 +91,21 @@ STATUS_LINE_NOW=1000 status_line >/dev/null
 printf '4\t8' > "$COUNTS"
 assert_equals "Quote builder █████░░░░░ 4/8 · stage 2 of 4 — Enrich" "$(STATUS_LINE_NOW=1060 status_line)" \
   "shows a closed unit in the count a minute after the last read"
+drop_repo
+
+new_repo 12-quote-lines
+jq -nc --arg cwd "$REPO" \
+  '{hook_event_name: "PreToolUse", session_id: "s1", cwd: $cwd, tool_name: "AskUserQuestion", tool_input: {questions: [{question: "Which road?"}]}}' \
+  | "$SCRIPT_DIR/../bin/owner-turn.sh" record
+assert_equals "▶ question · Which road?  Quote builder ███░░░░░░░ 3/8 · stage 2 of 4 — Enrich" "$(status_line)" \
+  "shows the session's flag before the plan progress on the same line"
+drop_repo
+
+new_repo main
+jq -nc --arg cwd "$REPO" \
+  '{hook_event_name: "PreToolUse", session_id: "s1", cwd: $cwd, tool_name: "AskUserQuestion", tool_input: {questions: [{question: "Which road?"}]}}' \
+  | "$SCRIPT_DIR/../bin/owner-turn.sh" record
+assert_equals "▶ question · Which road?" "$(status_line)" "shows the session's flag on a branch with no plan"
 drop_repo
 
 echo ""

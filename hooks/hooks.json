@@ -47,6 +47,10 @@
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/bin/agent-progress.sh record"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/owner-turn.sh record"
           }
         ]
       },
@@ -65,6 +69,10 @@
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/bin/one-question-gate.sh check"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/owner-turn.sh record"
           }
         ]
       }
@@ -104,6 +112,16 @@
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/bin/turn-sound.sh play",
             "async": true
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/owner-turn.sh record"
           }
         ]
       }

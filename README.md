@@ -73,6 +73,10 @@ and leaves one that is already set alone. On a branch whose name starts with a
 task issue's number, the status line shows the progress of the plan that issue
 is listed under: the plan's title, a bar, the closed units out of all units, and
 the task's stage. It asks GitHub at most once a minute for each repo and branch.
+Before the plan's progress it shows a flag for each item this session has waited
+on the owner for since the owner's last prompt, such as a question or a pull
+request to review. An agent marks a pull request or plan with
+`~/.claude/bin/owner-turn.sh "<kind>" "<what is wanted>" ["<link>"]`.
 
 Commands are run as `/review`. A file edited in this clone takes effect in the
 next session, with no reinstall, which is what makes this the mode to use while
@@ -110,6 +114,9 @@ settings that are not its own alone:
 | `PreToolUse` | `main-clone-gate.sh check` | Refuses an edit or a branch-changing git command aimed at a repo's main clone, which is kept for its owner |
 | `PreToolUse` | `decision-gate.sh check` | Refuses a commit while that choice is still unrecorded |
 | `PreToolUse` | `agent-progress.sh record` | Logs the step a subagent marks and each script it runs |
+| `PreToolUse` | `one-question-gate.sh check` | Refuses a question prompt that asks more than one question |
+| `PreToolUse` | `owner-turn.sh record` | Records a question prompt, and each item an agent marks with `owner-turn.sh`, as something the owner is waited on for |
+| `UserPromptSubmit` | `owner-turn.sh record` | Records when the owner last prompted, which ends that session's flag in the status line |
 | `SubagentStop` | `agent-progress.sh record` | Logs that a subagent finished |
 | `Stop` | `turn-sound.sh play` | Plays a sound when a session finishes its turn |
 | `Stop` | `stray-test-workers.sh` | Stops any Rails test worker whose test run has gone, since nothing else will and it can run for days |
