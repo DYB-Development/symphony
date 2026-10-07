@@ -94,7 +94,7 @@ echo "status-line.sh:"
 
 new_repo 12-quote-lines
 assert_equals $'Quote builder · stage 2 of 4 — Enrich\n'"$SQUARES 3/8" "$(status_line)" \
-  "shows the plan's title and the task's stage above a bar and the closed units out of all units"
+  "shows the plan's title and the task's stage above the stage squares and the closed units out of all units"
 drop_repo
 
 new_repo 12-quote-lines
@@ -133,6 +133,13 @@ STATUS_LINE_NOW=1000 status_line >/dev/null
 STATUS_LINE_NOW=1059 status_line >/dev/null
 assert_equals "1" "$(grep -c '/parent' "$GH_LOG")" \
   "asks GitHub once for refreshes within the same minute"
+drop_repo
+
+new_repo 12-quote-lines
+STATUS_LINE_NOW=1000 status_line >/dev/null
+STATUS_LINE_NOW=1059 status_line >/dev/null
+assert_equals "1" "$(grep -c '/sub_issues' "$GH_LOG")" \
+  "asks GitHub once for the stage counts for refreshes within the same minute"
 drop_repo
 
 new_repo 12-quote-lines
