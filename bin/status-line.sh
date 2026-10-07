@@ -48,6 +48,11 @@ working_part() {
   "$(dirname "$0")/working-line.sh" show "$session"
 }
 
+agents_part() {
+  [ -n "$session" ] || return 0
+  "$(dirname "$0")/agent-progress.sh" line "$session"
+}
+
 flag_part() {
   [ -n "$session" ] || return 0
   "$(dirname "$0")/owner-turn.sh" flags "$session"
@@ -59,4 +64,4 @@ dir=$(printf '%s' "$input" | jq -r '.workspace.current_dir // .cwd // empty')
 branch=$(git -C "$dir" branch --show-current)
 task=${branch%%[!0-9]*}
 
-printf '%s\n%s\n%s\n' "$(working_part)" "$(flag_part)" "$(plan_part)" | awk 'NF'
+printf '%s\n%s\n%s\n%s\n' "$(working_part)" "$(agents_part)" "$(flag_part)" "$(plan_part)" | awk 'NF'
