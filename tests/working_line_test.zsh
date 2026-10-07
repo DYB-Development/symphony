@@ -42,6 +42,12 @@ assert_equals "● working · Run every test suite" "$("$WORKING" show s1)" \
   "shows a working marker and the description of the session's tool call"
 drop_record
 
+new_record
+tool_call s1 Bash "Run every test suite"
+tool_call s1 Bash "Push the branch"
+assert_equals "● working · Push the branch" "$("$WORKING" show s1)" "changes to the description of each new tool call"
+drop_record
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
