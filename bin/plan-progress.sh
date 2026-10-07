@@ -27,7 +27,7 @@ stage=$(gh api "repos/$repo/issues/$task" --jq .body \
   | grep -o 'stage [0-9] of [0-9][^.]*' || true)
 
 stages=$(gh api "repos/$repo/issues/$plan/sub_issues" --paginate \
-  | jq -r '.[] | [(.body // "" | capture("stage (?<n>[0-9]+) of").n), .state] | @tsv' \
+  | jq -r '.[] | [(.body // "" | capture("## Part of\\s*\\n[^\\n]*stage (?<n>[0-9]+) of").n), .state] | @tsv' \
   | awk -F'\t' '{ total[$1]++; if ($2 == "closed") closed[$1]++ }
       END { for (n in total) printf "%d:%d/%d\n", n, closed[n], total[n] }' \
   | sort -n | paste -sd' ' -)
