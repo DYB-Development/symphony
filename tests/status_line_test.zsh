@@ -26,7 +26,8 @@ assert_equals() {
 }
 
 GREEN=$'\e[32m■\e[0m'
-SQUARES="$GREEN■■■"
+YELLOW=$'\e[33m■\e[0m'
+SQUARES="$GREEN$YELLOW■■"
 
 unit() {
   jq -nc --arg state "$1" --arg stage "$2" '{state: $state, body: ("## Part of\nQuote building, " + $stage + ".\n")}'
@@ -104,6 +105,12 @@ new_repo 12-quote-lines
 { unit closed "stage 1 of 1 — End to end"; unit closed "stage 1 of 1 — End to end"; } | jq -sc . > "$UNITS"
 assert_equals "$GREEN 3/8" "$(status_line | sed -n 2p)" \
   "shows a stage's square green when every unit of that stage is closed"
+drop_repo
+
+new_repo 12-quote-lines
+{ unit closed "stage 1 of 1 — End to end"; unit open "stage 1 of 1 — End to end"; } | jq -sc . > "$UNITS"
+assert_equals "$YELLOW 3/8" "$(status_line | sed -n 2p)" \
+  "shows a stage's square yellow when some but not all units of that stage are closed"
 drop_repo
 
 new_repo feature/quote-lines

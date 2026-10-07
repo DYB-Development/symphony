@@ -34,6 +34,8 @@ read_progress() {
 stage_square() {
   if [ "${1%/*}" = "${1#*/}" ]; then
     printf '\033[32m■\033[0m'
+  elif [ "${1%/*}" -gt 0 ]; then
+    printf '\033[33m■\033[0m'
   else
     printf '■'
   fi
