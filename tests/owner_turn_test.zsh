@@ -127,6 +127,12 @@ else
   fail "the pull request scribe records a pull request entry with its link once the PR is opened or updated"
 fi
 
+if grep -qF '~/.claude/bin/owner-turn.sh "plan" "Review plan #<n>" "<the artifact URL>"' "$SCRIPT_DIR/../agents/plan-scribe.md"; then
+  ok "the plan scribe records a plan entry with its link once the plan is published"
+else
+  fail "the plan scribe records a plan entry with its link once the plan is published"
+fi
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
