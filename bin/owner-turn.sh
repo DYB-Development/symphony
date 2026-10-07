@@ -59,6 +59,10 @@ record() {
   write_entry "$kind" "$wanted" "$link" "$session" "$cwd"
 }
 
+flag_text() {
+  if [ -n "$3" ]; then printf '▶ %s · %s · %s\n' "$1" "$2" "$3"; else printf '▶ %s · %s\n' "$1" "$2"; fi
+}
+
 flags() {
   local session=$1 files=()
   shopt -s nullglob
@@ -69,8 +73,8 @@ flags() {
   jq -sr --arg session "$session" --argjson after "$last_prompt" '
     map(select(.session == $session and .arrived > $after))
     | sort_by(.arrived)[]
-    | "▶ \(.kind) · \(.wanted)" + (if .link == "" then "" else " · \(.link)" end)
-  ' "${files[@]}"
+    | [.kind, .wanted, .link] | @tsv
+  ' "${files[@]}" | while IFS=$'\t' read -r kind wanted link; do flag_text "$kind" "$wanted" "$link"; done
 }
 
 case "${1:-}" in
@@ -84,3 +88,5 @@ valid_kind "$1" || {
   printf 'owner-turn.sh: the kind is one of %s\n' "$kinds" >&2
   exit 64
 }
+
+flag_text "$1" "$2" "${3:-}"

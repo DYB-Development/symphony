@@ -32,6 +32,10 @@ code=$?
 assert_equals "64 owner-turn.sh: the kind is one of permission, question, pull request or plan" "$code $output" \
   "refuses a kind that is not one of the four, naming them"
 
+assert_equals "▶ pull request · Review PR #135 · https://github.com/acme/widget/pull/135" \
+  "$("$TURN" "pull request" "Review PR #135" "https://github.com/acme/widget/pull/135" 2>&1)" \
+  "prints the entry it marks"
+
 # A repo of acme/widget and an empty record, both thrown away by drop_record.
 new_record() {
   WORK="$(mktemp -d "${TMPDIR:-/tmp}/owner_turn_test.XXXXXX")"
