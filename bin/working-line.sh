@@ -20,7 +20,7 @@ record() {
   payload=$(cat)
   session=$(printf '%s' "$payload" | jq -r '.session_id // empty')
   [ -n "$session" ] || return 0
-  description=$(printf '%s' "$payload" | jq -r '.tool_input.description // empty')
+  description=$(printf '%s' "$payload" | jq -r '.tool_input.description // .tool_name // empty')
   mkdir -p "$record_dir"
   printf '%s\n' "$description" > "$record_dir/$session"
 }

@@ -48,6 +48,11 @@ tool_call s1 Bash "Push the branch"
 assert_equals "● working · Push the branch" "$("$WORKING" show s1)" "changes to the description of each new tool call"
 drop_record
 
+new_record
+tool_call s1 Read ""
+assert_equals "● working · Read" "$("$WORKING" show s1)" "shows the tool's name for a tool call with no description"
+drop_record
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
