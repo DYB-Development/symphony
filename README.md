@@ -77,6 +77,9 @@ Above the plan's progress it shows a flag for each item this session has waited
 on the owner for since the owner's last prompt, one to a line, such as a question or a pull
 request to review. An agent marks a pull request or plan with
 `~/.claude/bin/owner-turn.sh "<kind>" "<what is wanted>" ["<link>"]`.
+When a turn ends while the owner is waited on, the same flags, worded the same
+way, are the last lines of the turn's output in the terminal. A turn that ends
+with nothing waiting on the owner prints no flag.
 While the session works, the top line says what it is doing, taken from the
 description of its most recent tool call, and it goes away when the turn ends.
 Under it, each running scribe of the session shows its type and target above a
@@ -122,6 +125,7 @@ settings that are not its own alone:
 | `PreToolUse` | `one-question-gate.sh check` | Refuses a question prompt that asks more than one question |
 | `PreToolUse` | `owner-turn.sh record` | Records a question prompt, and each item an agent marks with `owner-turn.sh`, as something the owner is waited on for |
 | `UserPromptSubmit` | `owner-turn.sh record` | Records when the owner last prompted, which ends that session's flag in the status line |
+| `Stop` | `owner-turn.sh stop` | Shows the session's flags as the last lines of the turn when the owner is waited on |
 | `PreToolUse` | `working-line.sh record` | Keeps the description of the session's most recent tool call as its working line |
 | `Stop` | `working-line.sh record` | Clears the working line when the session ends its turn |
 | `SubagentStop` | `agent-progress.sh record` | Logs that a subagent finished |
