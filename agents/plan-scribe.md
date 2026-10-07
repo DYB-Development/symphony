@@ -172,6 +172,11 @@ is how the person who ran you sees which step you are on.
    ```
    ~/.claude/bin/owner-turn.sh "plan" "Review plan #<n>" "<the artifact URL>"
    ```
+   Then open the page in the owner's browser:
+   ```
+   open "<the artifact URL>"
+   ```
+   Do this step again after every republish, so the page opens once for each publish. A run that stops before it publishes reaches neither command.
 
 11. **Return** the issue URL, the artifact URL, the unit count, and the open
    decisions from section 08 as a short list. Then `Still flagged:` with each
