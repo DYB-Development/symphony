@@ -140,7 +140,7 @@ if [ -n "$existing" ]; then
   echo "  already set to $existing, left unchanged"
 else
   with_status_line="$(jq --arg command "$SYMPHONY_DIR/bin/status-line.sh" '
-    .statusLine = {type: "command", command: $command}
+    .statusLine = {type: "command", command: $command, refreshInterval: 2}
   ' "$SETTINGS")"
   printf '%s\n' "$with_status_line" > "$SETTINGS"
   echo "  set in $SETTINGS"

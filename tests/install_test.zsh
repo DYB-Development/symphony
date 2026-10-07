@@ -87,6 +87,9 @@ assert_equals "command $ROOT/bin/status-line.sh" \
   "$(jq -r '"\(.statusLine.type) \(.statusLine.command)"' "$CONFIG/settings.json")" \
   "sets the status line to the package's command when none is set"
 
+assert_equals "2" "$(jq -r .statusLine.refreshInterval "$CONFIG/settings.json")" \
+  "sets the status line it adds to refresh every 2 seconds"
+
 rm -rf "$CONFIG"
 
 CONFIG="$(fresh_config)"
