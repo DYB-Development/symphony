@@ -40,7 +40,11 @@ echo "\$count" > "$WORK/count"
 cat "$WORK/answers/\$count"
 STUB
   printf '#!/usr/bin/env bash\nprintf "%%s\\n" "$*" >> "%s/opened"\n' "$WORK" > "$WORK/bin/open"
-  printf '#!/usr/bin/env bash\nprintf "%%s\\n" "$*" >> "%s/slept"\n' "$WORK" > "$WORK/bin/sleep"
+  cat > "$WORK/bin/sleep" <<STUB
+#!/usr/bin/env bash
+printf '%s\n' "\$*" >> "$WORK/slept"
+[ "\$(wc -l < "$WORK/slept")" -lt 20 ] || { echo "still waiting after 20 rounds"; kill "\$PPID"; }
+STUB
   chmod +x "$WORK/bin/"*
   path=("$WORK/bin" $path)
 }
@@ -60,6 +64,10 @@ echo "pr-wait.sh:"
 
 stub "$(pr MERGED test:SUCCESS)"
 assert_equals "PR #5 was merged" "$("$WAIT" acme/widget 5 2>&1 | tail -1)" "exits saying the pull request was merged"
+drop_stub
+
+stub "$(pr CLOSED test:SUCCESS)"
+assert_equals "PR #5 was closed" "$("$WAIT" acme/widget 5 2>&1 | tail -1)" "exits saying the pull request was closed"
 drop_stub
 
 echo ""

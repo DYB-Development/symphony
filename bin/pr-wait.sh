@@ -22,5 +22,7 @@ while true; do
   state=$(gh pr view "$pr" --repo "$repo" --json state,url,statusCheckRollup | jq -r '.state')
   case "$state" in
     MERGED) printf 'PR #%s was merged\n' "$pr"; exit 0 ;;
+    CLOSED) printf 'PR #%s was closed\n' "$pr"; exit 0 ;;
   esac
+  sleep 30
 done
