@@ -39,6 +39,11 @@ record() {
   payload=$(cat)
   session=$(printf '%s' "$payload" | jq -r '.session_id // empty')
   cwd=$(printf '%s' "$payload" | jq -r '.cwd // empty')
+  if [ "$(printf '%s' "$payload" | jq -r '.hook_event_name // empty')" = UserPromptSubmit ]; then
+    mkdir -p "$record_dir/prompts"
+    printf '%s\n' "$now" > "$record_dir/prompts/$session"
+    return 0
+  fi
   if [ "$(printf '%s' "$payload" | jq -r '.tool_name // empty')" = AskUserQuestion ]; then
     wanted=$(printf '%s' "$payload" | jq -r '.tool_input.questions[0].question // empty')
     write_entry question "$wanted" "" "$session" "$cwd"
@@ -58,8 +63,10 @@ flags() {
   shopt -s nullglob
   files=("$record_dir"/entries/*.json)
   [ ${#files[@]} -gt 0 ] || return 0
-  jq -sr --arg session "$session" '
-    map(select(.session == $session))
+  local last_prompt=0
+  [ -f "$record_dir/prompts/$session" ] && last_prompt=$(cat "$record_dir/prompts/$session")
+  jq -sr --arg session "$session" --argjson after "$last_prompt" '
+    map(select(.session == $session and .arrived > $after))
     | sort_by(.arrived)[]
     | "▶ \(.kind) · \(.wanted)" + (if .link == "" then "" else " · \(.link)" end)
   ' "${files[@]}"

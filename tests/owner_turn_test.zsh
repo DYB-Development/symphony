@@ -94,6 +94,14 @@ record_bash s1 '~/.claude/bin/owner-turn.sh "question" "Which road?"'
 assert_equals "▶ question · Which road?" "$("$TURN" flags s1)" "leaves the link off a flag for an entry with none"
 drop_record
 
+new_record
+record_bash s1 '~/.claude/bin/owner-turn.sh "question" "Which road?"' 1000
+jq -nc --arg cwd "$REPO" '{hook_event_name: "UserPromptSubmit", session_id: "s1", cwd: $cwd, prompt: "The left one"}' \
+  | OWNER_TURN_NOW=1010 "$TURN" record
+assert_equals "flags: [] entries: 1" "flags: [$("$TURN" flags s1)] entries: $(entries | jq length)" \
+  "stops showing the flag once the owner sends the next prompt, and keeps every entry"
+drop_record
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
