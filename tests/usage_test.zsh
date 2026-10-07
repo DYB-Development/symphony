@@ -399,6 +399,17 @@ drop_repo
 new_repo
 commit_at 2026-01-01T00:00:00Z
 worktree_at 2026-01-02T00:00:00Z "$REPO/trees/feature" feature
+turn_entry turn_0 session_1 "$REPO" 2026-01-03T00:00:00Z 60000
+user_entry prompt_1 session_1 "$REPO" 2026-01-03T00:05:00Z '"pr merged"'
+command_entry msg_1 main "$REPO" 2026-01-03T00:06:00Z "cd $REPO/trees/feature && git status" 1 1 1 1
+turn_entry turn_1 session_1 "$REPO" 2026-01-03T00:07:00Z 120000
+cd "$REPO/trees/feature"
+assert_equals "1767398700	session_1	waited	300" "$("$USAGE" --rows | grep '	waited	')" "charges the wait before a prompt to the branch its turn ends in, wherever the turn before ended"
+drop_repo
+
+new_repo
+commit_at 2026-01-01T00:00:00Z
+worktree_at 2026-01-02T00:00:00Z "$REPO/trees/feature" feature
 user_entry prompt_1 session_1 "$REPO" 2026-01-03T00:00:00Z '"on main"'
 another_transcript later
 user_entry prompt_2 session_2 "$REPO/trees/feature" 2026-01-04T00:00:00Z '"on feature"'
