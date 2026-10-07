@@ -136,6 +136,13 @@ assert_equals $'review-scribe acme/quotes#42\n███████░░░ 9/1
   "keeps the bar and the step when the scribe runs a script without marking a step"
 drop_dir
 
+new_dir
+new_agents
+printf '1000\tExplore\t\truns plan-progress\ts1\n' > "$LOGS/a1.log"
+assert_equals "Explore · runs plan-progress" "$(lines s1)" \
+  "shows an agent with no numbered steps by its type, target and last step, with no bar"
+drop_dir
+
 echo "scribes:"
 
 assert_marks_steps() {

@@ -54,9 +54,10 @@ latest_step() {
   awk -F '\t' '
     $3 != "" { target = $3 }
     $4 == "finished" { finished = 1 }
+    $4 != "" && $4 != "finished" { last = $4 }
     $4 != "" && $4 != "finished" && $4 !~ /^runs / { step = $4; position = $6 }
     { type = $2; if ($5 != "") session = $5 }
-    END { if (!finished) printf "%s\037%s\037%s\037%s\037%s\n", type, target, step, position, session }
+    END { if (!finished) printf "%s\037%s\037%s\037%s\037%s\037%s\n", type, target, step, position, session, last }
   ' "$1"
 }
 
@@ -67,13 +68,17 @@ bar() {
 }
 
 show_line() {
-  local type target step position session n title total
-  IFS=$'\037' read -r type target step position session < <(latest_step "$2") || return 0
+  local type target step position session last n title total
+  IFS=$'\037' read -r type target step position session last < <(latest_step "$2") || return 0
   [ "$session" = "$1" ] || return 0
-  printf '%s %s\n' "$type" "$target"
   n=${step%%.*}
   title=${step#*. }
   total=$(grep -cE '^[0-9]+\. \*\*' "$agents_dir/$type.md" 2>/dev/null || true)
+  if [[ ! "$n" =~ ^[0-9]+$ ]] || [ "${total:-0}" -eq 0 ]; then
+    printf '%s%s · %s\n' "$type" "${target:+ $target}" "$last"
+    return 0
+  fi
+  printf '%s%s\n' "$type" "${target:+ $target}"
   local k=0 of=1 fraction=${position%% *}
   if [[ "$fraction" =~ ^([0-9]+)/([0-9]+)$ ]]; then k=${BASH_REMATCH[1]}; of=${BASH_REMATCH[2]}; fi
   printf '%s %s/%s · %s%s\n' "$(bar $(( ((n - 1) * of + k) * 10 / (of * total) )))" "$n" "$total" "$title" "${position:+ · $position}"
