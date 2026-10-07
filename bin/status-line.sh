@@ -47,7 +47,7 @@ plan_part() {
   local progress title closed total stage stages counts squares=""
   progress=$(read_progress)
   [ -n "$progress" ] || return 0
-  IFS=$'\t' read -r title closed total stage stages <<< "$progress"
+  IFS=$'\t' read -r title closed total stage stages criteria <<< "$progress"
   for counts in $stages; do
     squares+=$(stage_square "${counts#*:}")
   done

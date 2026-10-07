@@ -22,9 +22,16 @@ parent=$(gh api "repos/$repo/issues/$task/parent" \
   --jq '[.number, .title, .sub_issues_summary.completed, .sub_issues_summary.total] | @tsv')
 plan=${parent%%$'\t'*}
 counts=${parent#*$'\t'}
-stage=$(gh api "repos/$repo/issues/$task" --jq .body \
+body=$(gh api "repos/$repo/issues/$task" --jq .body)
+stage=$(printf '%s\n' "$body" \
   | awk '/^## Part of/ { getline; print; exit }' \
   | grep -o 'stage [0-9] of [0-9][^.]*' || true)
+criteria=$(printf '%s\n' "$body" | awk '
+  /^## / { inside = ($0 == "## Acceptance criteria") }
+  inside && /^- \[x\] / { ticked++ }
+  inside && /^- \[[ x]\] / { total++ }
+  END { printf "%d/%d", ticked, total }
+')
 
 stages=$(gh api "repos/$repo/issues/$plan/sub_issues" --paginate \
   | jq -r '.[] | [(.body // "" | capture("## Part of\\s*\\n[^\\n]*stage (?<n>[0-9]+) of").n), .state] | @tsv' \
@@ -32,4 +39,4 @@ stages=$(gh api "repos/$repo/issues/$plan/sub_issues" --paginate \
       END { for (n in total) printf "%d:%d/%d\n", n, closed[n], total[n] }' \
   | sort -n | paste -sd' ' -)
 
-printf '%s\t%s\t%s\n' "$counts" "$stage" "$stages"
+printf '%s\t%s\t%s\t%s\n' "$counts" "$stage" "$stages" "$criteria"

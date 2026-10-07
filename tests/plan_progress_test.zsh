@@ -48,7 +48,7 @@ case "$*" in
       unit open "stage 4 of 4 — Harden"
     } | jq -sc . ;;
   "api repos/acme/widget/issues/12 --jq .body")
-    printf '## Part of\nQuote building, stage 2 of 4 — Enrich.\n\n## How it fits\n' ;;
+    printf '## Part of\nQuote building, stage 2 of 4 — Enrich.\n\n## How it fits\n\n## Acceptance criteria\n- [x] A rep can quote.\n- [ ] A rep can save.\n- [ ] A rep can send.\n\n## Out of scope\n- [ ] not a criterion\n' ;;
   "api repos/acme/widget/issues/14/parent --jq "*)
     printf '8\tQuote export\t1\t1\n' ;;
   "api repos/acme/widget/issues/14 --jq .body")
@@ -83,6 +83,11 @@ drop_stub
 stub_gh
 assert_equals "3:1/1" "$("$READER" acme/widget 14 2>&1 | cut -f5)" \
   "takes each unit's stage from its Part of line"
+drop_stub
+
+stub_gh
+assert_equals "1/3" "$("$READER" acme/widget 12 2>&1 | cut -f6)" \
+  "prints how many of the task's acceptance criteria are ticked out of all of them"
 drop_stub
 
 stub_gh
