@@ -155,6 +155,35 @@ printf '1000\treview-scribe\tacme/quotes#42\t3. Run every check\ts1\n1200\trevie
 assert_equals "" "$(lines s1)" "shows nothing for a subagent that has stopped"
 drop_dir
 
+zmodload zsh/datetime
+# Sets a file's modification time to $2 seconds ago.
+age() { touch -t "$(strftime %Y%m%d%H%M.%S $(( EPOCHSECONDS - $2 )))" "$1"; }
+
+new_dir
+new_agents
+printf '1000\treview-scribe\tacme/quotes#42\t3. Run every check\ts1\n' > "$LOGS/a1.log"
+age "$LOGS/a1.log" 3700
+assert_equals "" "$(lines s1)" "stops showing an agent that has recorded nothing for an hour"
+drop_dir
+
+new_dir
+printf '1000\treview-scribe\t\tfinished\ts1\n' > "$LOGS/old.log"
+age "$LOGS/old.log" 90000
+jq -nc '{hook_event_name: "SubagentStop", session_id: "s1", agent_id: "a2", agent_type: "pr-scribe"}' | record 1000
+assert_equals "a2.log" "$(ls "$LOGS")" "removes a finished agent's log a day after it finished"
+drop_dir
+
+new_dir
+new_agents
+for n in {1..10000}; do print -r -- $'1000\treview-scribe\t\tfinished\ts0' > "$LOGS/old$n.log"; done
+print -rl -- "$LOGS"/old*.log | xargs touch -t "$(strftime %Y%m%d%H%M.%S $(( EPOCHSECONDS - 7200 )))"
+printf '1000\treview-scribe\tacme/quotes#42\t3. Run every check\ts1\n' > "$LOGS/a1.log"
+started=$EPOCHREALTIME
+lines s1 >/dev/null
+elapsed=$(( EPOCHREALTIME - started ))
+assert_equals "1" "$(( elapsed < 1 ))" "shows agent steps in under a second with ten thousand earlier logs"
+drop_dir
+
 echo "scribes:"
 
 assert_marks_steps() {
