@@ -65,6 +65,13 @@ assert_equals "0 saved:no" "$code saved:$([[ -e "$WORK/saved" ]] && echo yes || 
   "succeeds without saving the issue when the criterion is already ticked"
 drop_stub
 
+stub_gh
+output=$("$TICK" acme/widget 12 9 2>&1)
+code=$?
+assert_equals "1 tick-criterion.sh: #12 has 3 acceptance criteria, so there is no criterion 9" "$code $output" \
+  "fails naming the position and how many criteria the issue has when the position is past the last"
+drop_stub
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

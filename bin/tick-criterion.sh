@@ -19,6 +19,16 @@ repo=$1 issue=$2 position=$3
 
 body=$(gh api "repos/$repo/issues/$issue" --jq .body)
 
+count=$(printf '%s\n' "$body" | awk '
+  /^## / { inside = ($0 == "## Acceptance criteria") }
+  inside && /^- \[[ x]\] / { seen++ }
+  END { print seen + 0 }
+')
+if [ "$position" -gt "$count" ]; then
+  printf 'tick-criterion.sh: #%s has %s acceptance criteria, so there is no criterion %s\n' "$issue" "$count" "$position" >&2
+  exit 1
+fi
+
 ticked=$(printf '%s\n' "$body" | awk -v want="$position" '
   /^## / { inside = ($0 == "## Acceptance criteria") }
   inside && /^- \[[ x]\] / { seen++; if (seen == want) sub(/^- \[ \]/, "- [x]") }
