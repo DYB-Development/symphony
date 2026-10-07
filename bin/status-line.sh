@@ -44,7 +44,7 @@ stage_square() {
 plan_part() {
   [ -n "$task" ] || return 0
   repo=$(git -C "$dir" remote get-url origin | sed -E 's#^.*github\.com[:/]##; s#\.git$##')
-  local progress title closed total stage stages counts squares=""
+  local progress title closed total stage stages criteria counts squares=""
   progress=$(read_progress)
   [ -n "$progress" ] || return 0
   IFS=$'\t' read -r title closed total stage stages criteria <<< "$progress"
@@ -52,6 +52,16 @@ plan_part() {
     squares+=$(stage_square "${counts#*:}")
   done
   printf '%s · %s\n%s %s/%s\n' "$title" "$stage" "$squares" "$closed" "$total"
+  criteria_bar "${criteria:-0/0}"
+}
+
+criteria_bar() {
+  local ticked=${1%/*} all=${1#*/} filled
+  [ "$all" -gt 0 ] || return 0
+  filled=$(( ticked * 10 / all ))
+  printf '%s%s %s/%s criteria\n' \
+    "$(printf '%*s' "$filled" '' | sed 's/ /█/g')" \
+    "$(printf '%*s' $(( 10 - filled )) '' | sed 's/ /░/g')" "$ticked" "$all"
 }
 
 working_part() {

@@ -51,6 +51,8 @@ new_repo() {
   : > "$GH_LOG"
   COUNTS="$WORK/counts"
   printf '3\t8' > "$COUNTS"
+  TASK_BODY="$WORK/task-body"
+  printf '## Part of\nQuote building, stage 2 of 4 — Enrich.\n' > "$TASK_BODY"
   UNITS="$WORK/units"
   {
     unit closed "stage 1 of 4 — End to end"
@@ -72,7 +74,7 @@ case "\$*" in
   "api repos/acme/widget/issues/7/sub_issues --paginate")
     cat "$UNITS" ;;
   "api repos/acme/widget/issues/12 --jq .body")
-    printf '## Part of\nQuote building, stage 2 of 4 — Enrich.\n' ;;
+    cat "$TASK_BODY" ;;
   *) echo "gh: Not Found (HTTP 404)" >&2; exit 1 ;;
 esac
 STUB
@@ -179,6 +181,12 @@ for n in {1..11}; do printf '%d. **Step %d.** Do it.\n' $n $n; done > "$AGENT_PR
 printf '1000\treview-scribe\tacme/widget#142\t3. Run every check\ts1\n' > "$AGENT_PROGRESS_DIR/a1.log"
 assert_equals $'● working · Review PR #142\nreview-scribe acme/widget#142\n█░░░░░░░░░ 3/11 · Run every check\nQuote builder · stage 2 of 4 — Enrich\n'"$SQUARES 3/8" "$(status_line)" \
   "shows each running agent's lines under the working line"
+drop_repo
+
+new_repo 12-quote-lines
+printf '## Part of\nQuote building, stage 2 of 4 — Enrich.\n\n## Acceptance criteria\n- [x] A rep can quote.\n- [ ] A rep can save.\n- [ ] A rep can send.\n- [ ] A rep can print.\n' > "$TASK_BODY"
+assert_equals "██░░░░░░░░ 1/4 criteria" "$(status_line | tail -1)" \
+  "shows a second bar of the task's ticked acceptance criteria out of all of them"
 drop_repo
 
 echo ""
