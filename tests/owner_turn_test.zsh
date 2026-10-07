@@ -74,6 +74,12 @@ assert_equals '[{"kind":"question","wanted":"Which road?","link":"","session":"s
   "$(entries)" "records a question entry when a session asks the owner a question"
 drop_record
 
+new_record
+record_bash s1 '~/.claude/bin/owner-turn.sh "plan" "Review plan #110"'
+record_bash s1 '~/.claude/bin/owner-turn.sh "pull request" "Review PR #135"'
+assert_equals "2" "$(entries | jq length)" "records two items waiting in one session as two entries"
+drop_record
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
