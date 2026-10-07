@@ -218,6 +218,18 @@ assert_marks_steps plan-scribe
 
 assert_marks_steps audit-scribe
 
+assert_requires_marks() {
+  local intro
+  intro="$(awk '/^## What you do/ { on = 1; next } /^1\. / { on = 0 } on' "$SCRIPT_DIR/../agents/$1.md")"
+  if [[ "$intro" == *"Marking a step is required, never skipped, and is the first thing you do in it, even when the step runs no other command."* ]]; then
+    ok "$1 makes marking a step required and first in that step"
+  else
+    fail "$1 makes marking a step required and first in that step"
+  fi
+}
+
+assert_requires_marks review-scribe
+
 assert_says() {
   if grep -qF -- "$2" "$SCRIPT_DIR/../$1"; then ok "$3"; else fail "$3"; fi
 }
