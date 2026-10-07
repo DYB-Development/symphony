@@ -203,6 +203,11 @@ assert_equals $'\e[32m■\e[0m\e[33m■\e[0m\e[90m■\e[0m\e[90m■\e[0m 3/8\n�
   "shows the plan bar and the criteria bar on their own lines"
 drop_repo
 
+new_repo 12-quote-lines
+assert_equals $'\e[32m■\e[0m\e[33m■\e[0m\e[90m■\e[0m\e[90m■\e[0m 3/8' "$(status_line | tail -1)" \
+  "shows only the plan bar for a task with no acceptance criteria"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
