@@ -67,6 +67,11 @@ jq -nc '{hook_event_name: "Stop", session_id: "s1"}' | "$WORKING" record
 assert_equals "" "$("$WORKING" show s1)" "shows no working line once the session's turn ends"
 drop_record
 
+new_record
+tool_call s2 Bash "Run every test suite"
+assert_equals "" "$("$WORKING" show s1)" "never shows one session's working line for another session"
+drop_record
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
