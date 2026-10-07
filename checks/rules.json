@@ -176,6 +176,34 @@
     {
       "file": "agents/review-scribe.md",
       "contains": "~/.claude/bin/judge-claims.sh"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "~/.claude/bin/read-draft.sh"
+    },
+    {
+      "file": "agents/issue-scribe.md",
+      "contains": "~/.claude/bin/read-draft.sh"
+    },
+    {
+      "file": "agents/pr-scribe.md",
+      "contains": "~/.claude/bin/read-draft.sh"
+    },
+    {
+      "file": "agents/plan-scribe.md",
+      "contains": "~/.claude/bin/read-draft.sh"
+    },
+    {
+      "file": "agents/audit-scribe.md",
+      "contains": "~/.claude/bin/read-draft.sh"
+    },
+    {
+      "file": "rules/draft-reading.md",
+      "absent": "Flag: none"
+    },
+    {
+      "file": "rules/draft-reading.md",
+      "contains": "only the sentences you rewrote"
     }
   ]
 }
