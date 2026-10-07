@@ -50,6 +50,11 @@ show_progress() {
   ' "$1"
 }
 
+recent_logs() {
+  [ -d "$log_dir" ] || return 0
+  find "$log_dir" -name '*.log' -mmin -60
+}
+
 latest_step() {
   awk -F '\t' '
     $3 != "" { target = $3 }
@@ -87,8 +92,7 @@ show_line() {
 case "${1:-}" in
   line)
     [ $# -eq 2 ] || usage
-    for log in "$log_dir"/*.log; do
-      [ -f "$log" ] || continue
+    recent_logs | while IFS= read -r log; do
       show_line "$2" "$log"
     done
     ;;
@@ -110,8 +114,7 @@ case "${1:-}" in
     printf '%s\t%s\t%s\t%s%s\n' "$now" "$agent_type" "$step" "$session" "${position:+$'\t'$position}" >> "$log_dir/$agent_id.log"
     ;;
   "")
-    running=$(for log in "$log_dir"/*.log; do
-      [ -f "$log" ] || continue
+    running=$(recent_logs | while IFS= read -r log; do
       show_progress "$log"
     done)
     printf '%s\n' "${running:-No agents running.}"

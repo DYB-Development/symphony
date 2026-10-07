@@ -155,6 +155,17 @@ printf '1000\treview-scribe\tacme/quotes#42\t3. Run every check\ts1\n1200\trevie
 assert_equals "" "$(lines s1)" "shows nothing for a subagent that has stopped"
 drop_dir
 
+zmodload zsh/datetime
+# Sets a file's modification time to $2 seconds ago.
+age() { touch -t "$(strftime %Y%m%d%H%M.%S $(( EPOCHSECONDS - $2 )))" "$1"; }
+
+new_dir
+new_agents
+printf '1000\treview-scribe\tacme/quotes#42\t3. Run every check\ts1\n' > "$LOGS/a1.log"
+age "$LOGS/a1.log" 3700
+assert_equals "" "$(lines s1)" "stops showing an agent that has recorded nothing for an hour"
+drop_dir
+
 echo "scribes:"
 
 assert_marks_steps() {
