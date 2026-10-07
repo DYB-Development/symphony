@@ -17,6 +17,7 @@ USAGE
 dir=$(jq -r '.workspace.current_dir // .cwd // empty')
 branch=$(git -C "$dir" branch --show-current)
 task=${branch%%[!0-9]*}
+[ -n "$task" ] || exit 0
 repo=$(git -C "$dir" remote get-url origin | sed -E 's#^.*github\.com[:/]##; s#\.git$##')
 
 IFS=$'\t' read -r title closed total stage < <("$(dirname "$0")/plan-progress.sh" "$repo" "$task")

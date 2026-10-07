@@ -68,6 +68,10 @@ assert_equals "Quote builder ███░░░░░░░ 3/8 · stage 2 of 4 
   "shows the plan's title, a bar, the closed units out of all units, and the task's stage"
 drop_repo
 
+new_repo feature/quote-lines
+assert_equals "" "$(status_line)" "shows no plan progress on a branch whose name has no leading issue number"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
