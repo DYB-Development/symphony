@@ -66,6 +66,14 @@ assert_equals '[{"kind":"plan","wanted":"Review plan #110","link":"https://githu
   "$(entries)" "records an entry with its kind, what is wanted, its link, the session, the repo and when it arrived"
 drop_record
 
+new_record
+jq -nc --arg cwd "$REPO" \
+  '{hook_event_name: "PreToolUse", session_id: "s1", cwd: $cwd, tool_name: "AskUserQuestion", tool_input: {questions: [{question: "Which road?"}]}}' \
+  | OWNER_TURN_NOW=1000 "$TURN" record
+assert_equals '[{"kind":"question","wanted":"Which road?","link":"","session":"s1","repo":"acme/widget","arrived":1000}]' \
+  "$(entries)" "records a question entry when a session asks the owner a question"
+drop_record
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

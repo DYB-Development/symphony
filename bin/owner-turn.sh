@@ -39,6 +39,11 @@ record() {
   payload=$(cat)
   session=$(printf '%s' "$payload" | jq -r '.session_id // empty')
   cwd=$(printf '%s' "$payload" | jq -r '.cwd // empty')
+  if [ "$(printf '%s' "$payload" | jq -r '.tool_name // empty')" = AskUserQuestion ]; then
+    wanted=$(printf '%s' "$payload" | jq -r '.tool_input.questions[0].question // empty')
+    write_entry question "$wanted" "" "$session" "$cwd"
+    return 0
+  fi
   command=$(printf '%s' "$payload" | jq -r '.tool_input.command // empty')
   args=$(printf '%s' "$command" \
     | sed -nE 's/.*owner-turn\.sh[[:space:]]+"([^"]*)"[[:space:]]+"([^"]*)"([[:space:]]+"([^"]*)")?.*/\1\t\2\t\4/p')
