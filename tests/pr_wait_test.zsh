@@ -88,6 +88,11 @@ assert_equals "PR #5 was merged, opened 1 time" "$(printf '%s' "$output" | tail 
   "keeps waiting after the checks pass until the merge, opening the pull request once"
 drop_stub
 
+stub "$(pr OPEN '')" "$(pr OPEN '')" "$(pr MERGED '')"
+"$WAIT" acme/widget 5 >/dev/null 2>&1
+assert_equals "30 30" "$(tr '\n' ' ' < "$WORK/slept" | sed 's/ $//')" "waits 30 seconds between each question to GitHub"
+drop_stub
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
