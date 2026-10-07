@@ -197,5 +197,9 @@ assert_says agents/plan-scribe.md \
   '~/.claude/bin/scribe-step.sh "<owner/repo>" "3. Write all ten sections" "<k>/10 <the section>"' \
   "the plan scribe marks each of its ten sections as a position inside the step"
 
+assert_says rules/draft-reading.md \
+  '~/.claude/bin/scribe-step.sh "<target>" "<n>. <the step'"'"'s bold title>" "<r>/3 read"' \
+  "every scribe marks each read of its draft as a position out of three"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
