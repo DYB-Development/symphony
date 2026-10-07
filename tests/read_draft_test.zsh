@@ -171,24 +171,5 @@ assert_equals "opus" \
   "reads on the model that read a draft fastest when both were timed"
 drop_reader
 
-echo ""
-echo "scribes that have their draft read:"
-
-for scribe in review-scribe issue-scribe pr-scribe plan-scribe audit-scribe; do
-  grep -qF '~/.claude/bin/read-draft.sh' "$SCRIPT_DIR/../agents/$scribe.md"
-  assert_equals "0" "$?" "$scribe has its draft read before it goes out"
-done
-
-echo ""
-echo "the reading rules:"
-
-READING_RULES="$SCRIPT_DIR/../rules/draft-reading.md"
-
-grep -qF 'Flag: none' "$READING_RULES"
-assert_equals "1" "$?" "ask the reader for the flagged sentences and nothing else"
-
-grep -qF 'only the sentences you rewrote' "$READING_RULES"
-assert_equals "0" "$?" "hand a later read only the sentences that were rewritten"
-
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

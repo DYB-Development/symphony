@@ -1,0 +1,221 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "file": "agents/pr-scribe.md",
+      "contains": "~/.claude/bin/owner-turn.sh \"pull request\" \"Review PR #<n>\" \"<the PR URL>\""
+    },
+    {
+      "file": "agents/plan-scribe.md",
+      "contains": "~/.claude/bin/owner-turn.sh \"plan\" \"Review plan #<n>\" \"<the artifact URL>\""
+    },
+    {
+      "file": "commands/feature-plan.md",
+      "contains": "~/.claude/bin/plan-link.sh <owner/repo> <plan-issue> <task-issue>"
+    },
+    {
+      "file": "agents/plan-scribe.md",
+      "contains": "~/.claude/bin/render-plan.sh"
+    },
+    {
+      "file": "agents/plan-scribe.md",
+      "absent": "gh issue list"
+    },
+    {
+      "file": "agents/plan-scribe.md",
+      "absent": "gh label list"
+    },
+    {
+      "file": "agents/plan-scribe.md",
+      "absent": "issue-bootstrap"
+    },
+    {
+      "file": "agents/plan-scribe.md",
+      "contains": "awk '/^## 09 /{skip=1} /^## 10 /{skip=0} !skip'"
+    },
+    {
+      "file": "agents/plan-scribe.md",
+      "absent": "turned off or rolled back"
+    },
+    {
+      "file": "agents/plan-scribe.md",
+      "contains": "That is the Patterns check"
+    },
+    {
+      "file": "rules/feature-plan.md",
+      "absent": "turned off or rolled back"
+    },
+    {
+      "file": "rules/feature-plan.md",
+      "contains": "~/.claude/bin/render-plan.sh"
+    },
+    {
+      "file": "rules/feature-plan.md",
+      "contains": "**Patterns** — answered in section 04"
+    },
+    {
+      "file": "commands/feature-plan.md",
+      "contains": "~/.claude/bin/render-plan.sh"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>#<pr>\" \"<n>. <the step's bold title>\""
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "Marking a step is required, never skipped, and is the first thing you do in it, even when the step runs no other command."
+    },
+    {
+      "file": "agents/pr-scribe.md",
+      "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>@<branch>\" \"<n>. <the step's bold title>\""
+    },
+    {
+      "file": "agents/pr-scribe.md",
+      "contains": "Marking a step is required, never skipped, and is the first thing you do in it, even when the step runs no other command."
+    },
+    {
+      "file": "agents/issue-scribe.md",
+      "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>\" \"<n>. <the step's bold title>\""
+    },
+    {
+      "file": "agents/issue-scribe.md",
+      "contains": "Marking a step is required, never skipped, and is the first thing you do in it, even when the step runs no other command."
+    },
+    {
+      "file": "agents/plan-scribe.md",
+      "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>\" \"<n>. <the step's bold title>\""
+    },
+    {
+      "file": "agents/plan-scribe.md",
+      "contains": "Marking a step is required, never skipped, and is the first thing you do in it, even when the step runs no other command."
+    },
+    {
+      "file": "agents/audit-scribe.md",
+      "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>:<section>\" \"<n>. <the step's bold title>\""
+    },
+    {
+      "file": "agents/audit-scribe.md",
+      "contains": "Marking a step is required, never skipped, and is the first thing you do in it, even when the step runs no other command."
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>#<pr>\" \"3. Run every check\" \"<k>/9 <the check>\""
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>#<pr>\" \"5. Write each inline comment\" \"<k>/<K> finding\""
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>#<pr>\" \"9. Point each claim at the lines it is about\" \"<k>/<K> claim\""
+    },
+    {
+      "file": "agents/plan-scribe.md",
+      "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>\" \"3. Write all ten sections\" \"<k>/10 <the section>\""
+    },
+    {
+      "file": "rules/draft-reading.md",
+      "contains": "~/.claude/bin/scribe-step.sh \"<target>\" \"<n>. <the step's bold title>\" \"<r>/3 read\""
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "Marking each check is required, never skipped, and is the first thing you do for it."
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "Marking each finding is required, never skipped, and is the first thing you do for it."
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "Marking each claim is required, never skipped, and is the first thing you do for it."
+    },
+    {
+      "file": "agents/plan-scribe.md",
+      "contains": "Marking each section is required, never skipped, and is the first thing you do for it."
+    },
+    {
+      "file": "rules/draft-reading.md",
+      "contains": "Marking each read is required, never skipped, and is the first thing you do for it."
+    },
+    {
+      "file": "rules/draft-reading.md",
+      "contains": "mktemp -d"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": ".review-<pr>.claims.json"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "a side"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "Every Findings bullet that reports a finding"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "~/.claude/bin/capture-evidence.sh"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "A finding whose pointer cannot be resolved is cut from the draft."
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "Cut for an unresolved pointer:"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "Every inline comment has a claim whose pointer is that comment's own path, line and side."
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "~/.claude/bin/review-draft.sh --check-lines"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "~/.claude/bin/judge-claims.sh"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "~/.claude/bin/read-draft.sh"
+    },
+    {
+      "file": "agents/issue-scribe.md",
+      "contains": "~/.claude/bin/read-draft.sh"
+    },
+    {
+      "file": "agents/pr-scribe.md",
+      "contains": "~/.claude/bin/read-draft.sh"
+    },
+    {
+      "file": "agents/plan-scribe.md",
+      "contains": "~/.claude/bin/read-draft.sh"
+    },
+    {
+      "file": "agents/audit-scribe.md",
+      "contains": "~/.claude/bin/read-draft.sh"
+    },
+    {
+      "file": "rules/draft-reading.md",
+      "absent": "Flag: none"
+    },
+    {
+      "file": "rules/draft-reading.md",
+      "contains": "only the sentences you rewrote"
+    },
+    {
+      "file": "rules/review-checks.md",
+      "contains": "a behaviour no test reaches is a finding on its own"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "- Any finding the code is not actually wrong without, apart from the two the bar in `pr-review.md` lets past."
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "- **Never run the code.**"
+    }
+  ]
+}

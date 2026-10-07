@@ -333,6 +333,11 @@ directory your team shares.
 Every file named `*_test.zsh` anywhere under the repo root is a suite and is
 picked up with no registration.
 
+Wording that an agent, rule or command file must contain, or must not, is not
+tested sentence by sentence. It is a rule in `checks/rules.json`, a versioned
+list that `bin/check-content.sh` checks in one suite run. Adding a requirement
+is one reviewed line in that list.
+
 No suite calls the network by default. `READ_DRAFT_SMOKE=1 ./run_tests.sh` also
 sends one sentence to a real reader, which needs `claude` logged in and is billed
 like any other run. `RENDER_PLAN_SMOKE=owner/repo#N ./run_tests.sh` renders that
