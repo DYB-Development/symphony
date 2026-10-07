@@ -173,6 +173,17 @@ jq -nc '{hook_event_name: "SubagentStop", session_id: "s1", agent_id: "a2", agen
 assert_equals "a2.log" "$(ls "$LOGS")" "removes a finished agent's log a day after it finished"
 drop_dir
 
+new_dir
+new_agents
+for n in {1..10000}; do print -r -- $'1000\treview-scribe\t\tfinished\ts0' > "$LOGS/old$n.log"; done
+print -rl -- "$LOGS"/old*.log | xargs touch -t "$(strftime %Y%m%d%H%M.%S $(( EPOCHSECONDS - 7200 )))"
+printf '1000\treview-scribe\tacme/quotes#42\t3. Run every check\ts1\n' > "$LOGS/a1.log"
+started=$EPOCHREALTIME
+lines s1 >/dev/null
+elapsed=$(( EPOCHREALTIME - started ))
+assert_equals "1" "$(( elapsed < 1 ))" "shows agent steps in under a second with ten thousand earlier logs"
+drop_dir
+
 echo "scribes:"
 
 assert_marks_steps() {
