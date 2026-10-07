@@ -37,7 +37,7 @@ stage_square() {
   elif [ "${1%/*}" -gt 0 ]; then
     printf '\033[33m■\033[0m'
   else
-    printf '■'
+    printf '\033[90m■\033[0m'
   fi
 }
 
