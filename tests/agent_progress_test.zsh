@@ -149,6 +149,12 @@ printf '1000\treview-scribe\tacme/quotes#42\t3. Run every check\ts2\n' > "$LOGS/
 assert_equals "" "$(lines s1)" "never shows a subagent running in another session"
 drop_dir
 
+new_dir
+new_agents
+printf '1000\treview-scribe\tacme/quotes#42\t3. Run every check\ts1\n1200\treview-scribe\t\tfinished\ts1\n' > "$LOGS/a1.log"
+assert_equals "" "$(lines s1)" "shows nothing for a subagent that has stopped"
+drop_dir
+
 echo "scribes:"
 
 assert_marks_steps() {
