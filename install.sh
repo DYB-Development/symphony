@@ -132,3 +132,16 @@ merged="$(jq --argjson ours "$ours" --arg mine "$SYMPHONY_DIR/bin/" '
 
 printf '%s\n' "$merged" > "$SETTINGS"
 echo "  merged into $SETTINGS"
+
+echo ""
+echo "Status line:"
+existing="$(jq -r '.statusLine.command // empty' "$SETTINGS")"
+if [ -n "$existing" ]; then
+  echo "  already set to $existing, left unchanged"
+else
+  with_status_line="$(jq --arg command "$SYMPHONY_DIR/bin/status-line.sh" '
+    .statusLine = {type: "command", command: $command}
+  ' "$SETTINGS")"
+  printf '%s\n' "$with_status_line" > "$SETTINGS"
+  echo "  set in $SETTINGS"
+fi

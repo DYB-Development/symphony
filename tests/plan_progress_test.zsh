@@ -1,0 +1,67 @@
+#!/usr/bin/env zsh
+# Tests for bin/plan-progress.sh. Every case runs against a stub gh, so nothing
+# reaches GitHub.
+#
+# Usage: zsh tests/plan_progress_test.zsh
+setopt no_unset
+
+SCRIPT_DIR="${0:A:h}"
+READER="$SCRIPT_DIR/../bin/plan-progress.sh"
+
+PASS=0
+FAIL=0
+
+ok()   { printf '  \033[32m✓\033[0m %s\n' "$1"; PASS=$((PASS+1)); }
+fail() { printf '  \033[31m✗\033[0m %s\n' "$1"; FAIL=$((FAIL+1)); }
+
+assert_equals() {
+  local expected="$1" actual="$2" label="$3"
+  if [[ "$expected" == "$actual" ]]; then
+    ok "$label"
+  else
+    fail "$label"
+    printf '      expected: %s\n' "${(qqq)expected}"
+    printf '      actual:   %s\n' "${(qqq)actual}"
+  fi
+}
+
+# A gh where task 12 sits under plan 7, "Quote builder", with 3 of 8 units
+# closed, and task 13 sits under no plan.
+stub_gh() {
+  STUB_BIN="$(mktemp -d "${TMPDIR:-/tmp}/plan_progress_test.XXXXXX")"
+  cat > "$STUB_BIN/gh" <<'STUB'
+#!/usr/bin/env bash
+case "$*" in
+  "api repos/acme/widget/issues/12/parent --jq "*)
+    printf 'Quote builder\t3\t8\n' ;;
+  "api repos/acme/widget/issues/12 --jq .body")
+    printf '## Part of\nQuote building, stage 2 of 4 — Enrich.\n\n## How it fits\n' ;;
+  "api repos/acme/widget/issues/13/parent --jq "*)
+    echo "gh: Not Found (HTTP 404)" >&2; exit 1 ;;
+esac
+STUB
+  chmod +x "$STUB_BIN/gh"
+  path=("$STUB_BIN" $path)
+}
+
+drop_stub() {
+  path=(${path:#$STUB_BIN})
+  rm -rf "$STUB_BIN"
+}
+
+echo "plan-progress.sh:"
+
+stub_gh
+assert_equals $'Quote builder\t3\t8\tstage 2 of 4 — Enrich' "$("$READER" acme/widget 12 2>&1)" \
+  "prints the plan's title, its closed and total units, and the task's stage"
+drop_stub
+
+stub_gh
+output=$("$READER" acme/widget 13 2>/dev/null)
+code=$?
+assert_equals "1 " "$code $output" "prints nothing and fails for a task listed under no plan"
+drop_stub
+
+echo ""
+printf '%d passed, %d failed\n' "$PASS" "$FAIL"
+[[ $FAIL -eq 0 ]]

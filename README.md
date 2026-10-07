@@ -68,6 +68,12 @@ Links `rules`, `agents` and `bin` into `~/.claude`, links each command into
 to `<path>.backup` first, and running it again changes nothing. Set
 `CLAUDE_CONFIG_DIR` to install somewhere other than `~/.claude`.
 
+It also sets the status line to `bin/status-line.sh` when no status line is set,
+and leaves one that is already set alone. On a branch whose name starts with a
+task issue's number, the status line shows the progress of the plan that issue
+is listed under: the plan's title, a bar, the closed units out of all units, and
+the task's stage. It asks GitHub at most once a minute for each repo and branch.
+
 Commands are run as `/review`. A file edited in this clone takes effect in the
 next session, with no reinstall, which is what makes this the mode to use while
 changing the rules themselves.
