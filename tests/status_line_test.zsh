@@ -35,13 +35,15 @@ new_repo() {
   export STATUS_LINE_DIR="$WORK/cache"
   GH_LOG="$WORK/calls"
   : > "$GH_LOG"
+  COUNTS="$WORK/counts"
+  printf '3\t8' > "$COUNTS"
   mkdir -p "$WORK/bin"
   cat > "$WORK/bin/gh" <<STUB
 #!/usr/bin/env bash
 printf '%s\n' "\$*" >> "$GH_LOG"
 case "\$*" in
   "api repos/acme/widget/issues/12/parent --jq "*)
-    printf 'Quote builder\t3\t8\n' ;;
+    printf 'Quote builder\t%s\n' "\$(cat "$COUNTS")" ;;
   "api repos/acme/widget/issues/12 --jq .body")
     printf '## Part of\nQuote building, stage 2 of 4 — Enrich.\n' ;;
   *) echo "gh: Not Found (HTTP 404)" >&2; exit 1 ;;
@@ -81,6 +83,13 @@ STATUS_LINE_NOW=1000 status_line >/dev/null
 STATUS_LINE_NOW=1059 status_line >/dev/null
 assert_equals "1" "$(grep -c '/parent' "$GH_LOG")" \
   "asks GitHub once for refreshes within the same minute"
+drop_repo
+
+new_repo 12-quote-lines
+STATUS_LINE_NOW=1000 status_line >/dev/null
+printf '4\t8' > "$COUNTS"
+assert_equals "Quote builder █████░░░░░ 4/8 · stage 2 of 4 — Enrich" "$(STATUS_LINE_NOW=1060 status_line)" \
+  "shows a closed unit in the count a minute after the last read"
 drop_repo
 
 echo ""
