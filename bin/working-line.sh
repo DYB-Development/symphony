@@ -21,6 +21,10 @@ record() {
   session=$(printf '%s' "$payload" | jq -r '.session_id // empty')
   [ -n "$session" ] || return 0
   [ -z "$(printf '%s' "$payload" | jq -r '.agent_id // empty')" ] || return 0
+  if [ "$(printf '%s' "$payload" | jq -r '.hook_event_name // empty')" = Stop ]; then
+    rm -f "$record_dir/$session"
+    return 0
+  fi
   description=$(printf '%s' "$payload" | jq -r '.tool_input.description // .tool_name // empty')
   mkdir -p "$record_dir"
   printf '%s\n' "$description" > "$record_dir/$session"

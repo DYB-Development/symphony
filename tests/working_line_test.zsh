@@ -61,6 +61,12 @@ assert_equals "● working · Open PR for issue 141" "$("$WORKING" show s1)" \
   "keeps the working line when one of the session's subagents makes a tool call"
 drop_record
 
+new_record
+tool_call s1 Bash "Run every test suite"
+jq -nc '{hook_event_name: "Stop", session_id: "s1"}' | "$WORKING" record
+assert_equals "" "$("$WORKING" show s1)" "shows no working line once the session's turn ends"
+drop_record
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
