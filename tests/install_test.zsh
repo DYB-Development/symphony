@@ -102,6 +102,14 @@ assert_equals "my-line.sh left unchanged: true" \
 rm -rf "$CONFIG"
 
 CONFIG="$(fresh_config)"
+jq -n --arg command "$ROOT/bin/status-line.sh" '{statusLine: {type: "command", command: $command}}' > "$CONFIG/settings.json"
+CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" >/dev/null 2>&1
+assert_equals "2" "$(jq -r .statusLine.refreshInterval "$CONFIG/settings.json")" \
+  "sets the package's own status line to refresh every 2 seconds when it is already set"
+
+rm -rf "$CONFIG"
+
+CONFIG="$(fresh_config)"
 cat > "$CONFIG/settings.json" <<'JSON'
 {
   "model": "opus",
