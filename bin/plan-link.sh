@@ -16,5 +16,10 @@ USAGE
 
 repo=$1 plan=$2 task=$3
 
+if gh api "repos/$repo/issues/$plan/sub_issues" --paginate --jq '.[].number' | grep -qx "$task"; then
+  printf '#%s is already listed under #%s\n' "$task" "$plan"
+  exit 0
+fi
+
 id=$(gh api "repos/$repo/issues/$task" --jq .id)
 gh api -X POST "repos/$repo/issues/$plan/sub_issues" -F "sub_issue_id=$id" >/dev/null

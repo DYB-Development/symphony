@@ -57,6 +57,13 @@ assert_contains "api -X POST repos/acme/widget/issues/7/sub_issues -F sub_issue_
   "lists the task issue under the plan as a sub-issue"
 drop_stub
 
+stub_gh $'3\n12\n'
+"$LINK" acme/widget 7 12 >/dev/null 2>&1
+code=$?
+assert_contains "0 0" "$code $(grep -c -- '-X POST' "$GH_LOG")" \
+  "succeeds without adding a task issue already listed under the plan"
+drop_stub
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
