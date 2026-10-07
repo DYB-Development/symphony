@@ -58,6 +58,13 @@ assert_equals "${BODY/- \[ \] A rep can send./- [x] A rep can send.}" "$(cat "$W
   "ticks the criterion at that position and leaves every other line unchanged"
 drop_stub
 
+stub_gh
+"$TICK" acme/widget 12 2 >/dev/null 2>&1
+code=$?
+assert_equals "0 saved:no" "$code saved:$([[ -e "$WORK/saved" ]] && echo yes || echo no)" \
+  "succeeds without saving the issue when the criterion is already ticked"
+drop_stub
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

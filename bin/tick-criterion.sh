@@ -19,8 +19,15 @@ repo=$1 issue=$2 position=$3
 
 body=$(gh api "repos/$repo/issues/$issue" --jq .body)
 
-printf '%s\n' "$body" | awk -v want="$position" '
+ticked=$(printf '%s\n' "$body" | awk -v want="$position" '
   /^## / { inside = ($0 == "## Acceptance criteria") }
   inside && /^- \[[ x]\] / { seen++; if (seen == want) sub(/^- \[ \]/, "- [x]") }
   { print }
-' | gh api -X PATCH "repos/$repo/issues/$issue" -F body=@- >/dev/null
+')
+
+if [ "$ticked" = "$body" ]; then
+  printf 'Criterion %s on #%s is already ticked\n' "$position" "$issue"
+  exit 0
+fi
+
+printf '%s\n' "$ticked" | gh api -X PATCH "repos/$repo/issues/$issue" -F body=@- >/dev/null
