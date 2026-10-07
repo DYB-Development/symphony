@@ -43,7 +43,10 @@ this session already believes.
    `type:breakdown` that slices the units into `type:task` issues. The units are
    already written as issue bodies, so the breakdown copies them rather than
    rewriting them — hand each to an `issue-scribe` with the unit's body inlined
-   and its `Blocked by` wired to the issue numbers the earlier units got.
+   and its `Blocked by` wired to the issue numbers the earlier units got. List
+   each task issue under the plan as soon as it is filed, with
+   `~/.claude/bin/plan-link.sh <owner/repo> <plan-issue> <task-issue>`, so the
+   plan's progress can be counted.
 
 ## Rules
 
