@@ -56,6 +56,86 @@
     {
       "file": "commands/feature-plan.md",
       "contains": "~/.claude/bin/render-plan.sh"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>#<pr>\" \"<n>. <the step's bold title>\""
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "Marking a step is required, never skipped, and is the first thing you do in it, even when the step runs no other command."
+    },
+    {
+      "file": "agents/pr-scribe.md",
+      "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>@<branch>\" \"<n>. <the step's bold title>\""
+    },
+    {
+      "file": "agents/pr-scribe.md",
+      "contains": "Marking a step is required, never skipped, and is the first thing you do in it, even when the step runs no other command."
+    },
+    {
+      "file": "agents/issue-scribe.md",
+      "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>\" \"<n>. <the step's bold title>\""
+    },
+    {
+      "file": "agents/issue-scribe.md",
+      "contains": "Marking a step is required, never skipped, and is the first thing you do in it, even when the step runs no other command."
+    },
+    {
+      "file": "agents/plan-scribe.md",
+      "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>\" \"<n>. <the step's bold title>\""
+    },
+    {
+      "file": "agents/plan-scribe.md",
+      "contains": "Marking a step is required, never skipped, and is the first thing you do in it, even when the step runs no other command."
+    },
+    {
+      "file": "agents/audit-scribe.md",
+      "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>:<section>\" \"<n>. <the step's bold title>\""
+    },
+    {
+      "file": "agents/audit-scribe.md",
+      "contains": "Marking a step is required, never skipped, and is the first thing you do in it, even when the step runs no other command."
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>#<pr>\" \"3. Run every check\" \"<k>/9 <the check>\""
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>#<pr>\" \"5. Write each inline comment\" \"<k>/<K> finding\""
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>#<pr>\" \"9. Point each claim at the lines it is about\" \"<k>/<K> claim\""
+    },
+    {
+      "file": "agents/plan-scribe.md",
+      "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>\" \"3. Write all ten sections\" \"<k>/10 <the section>\""
+    },
+    {
+      "file": "rules/draft-reading.md",
+      "contains": "~/.claude/bin/scribe-step.sh \"<target>\" \"<n>. <the step's bold title>\" \"<r>/3 read\""
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "Marking each check is required, never skipped, and is the first thing you do for it."
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "Marking each finding is required, never skipped, and is the first thing you do for it."
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "Marking each claim is required, never skipped, and is the first thing you do for it."
+    },
+    {
+      "file": "agents/plan-scribe.md",
+      "contains": "Marking each section is required, never skipped, and is the first thing you do for it."
+    },
+    {
+      "file": "rules/draft-reading.md",
+      "contains": "Marking each read is required, never skipped, and is the first thing you do for it."
     }
   ]
 }
