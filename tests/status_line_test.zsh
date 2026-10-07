@@ -189,6 +189,14 @@ assert_equals "██░░░░░░░░ 1/4 criteria" "$(status_line | tai
   "shows a second bar of the task's ticked acceptance criteria out of all of them"
 drop_repo
 
+new_repo 12-quote-lines
+printf '## Part of\nQuote building, stage 2 of 4 — Enrich.\n\n## Acceptance criteria\n- [x] A rep can quote.\n- [ ] A rep can save.\n' > "$TASK_BODY"
+STATUS_LINE_NOW=1000 status_line >/dev/null
+printf '## Part of\nQuote building, stage 2 of 4 — Enrich.\n\n## Acceptance criteria\n- [x] A rep can quote.\n- [x] A rep can save.\n' > "$TASK_BODY"
+assert_equals "██████████ 2/2 criteria" "$(STATUS_LINE_NOW=1060 status_line | tail -1)" \
+  "shows a newly ticked criterion in the second bar a minute after the last read"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
