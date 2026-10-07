@@ -250,9 +250,16 @@ BEGIN {
   else if (working == "") working = home
 
   if ($11 == "prompt" || $11 == "turn") release()
+  if ($11 == "turn") turn_ended[$13] = $2 + 0
   if ($1 == "" || working == "") next
 
   rest = $4 OFS $5 OFS $6 OFS $7 OFS $8 OFS $9 OFS $2 OFS $11 OFS $12 OFS $13
+  if ($11 == "prompt" && ($13 in turn_ended)) {
+    held++
+    held_id[held] = $1 ":waited"
+    held_at[held] = $2 + 0
+    held_rest[held] = $4 OFS $5 OFS $6 OFS $7 OFS $8 OFS $9 OFS $2 OFS "waited" OFS ($2 - turn_ended[$13]) OFS $13
+  }
   if (typed_in_prompt($11)) {
     held++
     held_id[held] = $1

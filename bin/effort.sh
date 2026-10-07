@@ -37,12 +37,7 @@ totals=$(awk -F '\t' -v idle_cap=600 '
 
   { total[$3] += $4 }
   $3 == "prompt" && !seen[$2]++ { sessions++ }
-  $3 == "prompt" && ($2 in ended) {
-    gap = $1 - ended[$2]
-    active += gap < idle_cap ? gap : idle_cap
-    delete ended[$2]
-  }
-  $3 == "turn" { ended[$2] = $1 }
+  $3 == "waited" { active += $4 < idle_cap ? $4 : idle_cap }
   END {
     if (NR == 0) exit
     printf "Sessions: %d\n", sessions
