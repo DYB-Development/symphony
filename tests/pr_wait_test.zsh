@@ -76,6 +76,12 @@ assert_equals "https://github.com/acme/widget/pull/5" "$(cat "$WORK/opened" 2>/d
   "opens the pull request in the browser once every check passes"
 drop_stub
 
+stub "$(pr OPEN test:FAILURE,lint:SUCCESS)"
+output=$("$WAIT" acme/widget 5 2>&1)
+assert_equals "1 CI failed on PR #5: test opened:" "$? $(printf '%s' "$output" | tail -1) opened:$(cat "$WORK/opened" 2>/dev/null)" \
+  "exits naming the failed check and opens nothing when a check fails"
+drop_stub
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

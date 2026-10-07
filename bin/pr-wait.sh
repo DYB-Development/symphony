@@ -26,6 +26,11 @@ while true; do
     MERGED) printf 'PR #%s was merged\n' "$pr"; exit 0 ;;
     CLOSED) printf 'PR #%s was closed\n' "$pr"; exit 0 ;;
   esac
+  failed=$(printf '%s' "$view" | jq -r '[.statusCheckRollup[] | select(.conclusion == "FAILURE" or .conclusion == "CANCELLED" or .conclusion == "TIMED_OUT") | .name] | join(", ")')
+  if [ -n "$failed" ]; then
+    printf 'CI failed on PR #%s: %s\n' "$pr" "$failed"
+    exit 1
+  fi
   passed=$(printf '%s' "$view" | jq '(.statusCheckRollup | length) > 0 and all(.statusCheckRollup[]; .conclusion == "SUCCESS")')
   if [ "$opened" -eq 0 ] && [ "$passed" = true ]; then
     open "$(printf '%s' "$view" | jq -r '.url')"
