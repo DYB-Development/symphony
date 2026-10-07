@@ -139,20 +139,5 @@ assert_equals "" "$(stop_turn s1)" "prints nothing when a turn ends with nothing
 drop_record
 
 echo ""
-echo "the scribes:"
-
-if grep -qF '~/.claude/bin/owner-turn.sh "pull request" "Review PR #<n>" "<the PR URL>"' "$SCRIPT_DIR/../agents/pr-scribe.md"; then
-  ok "the pull request scribe records a pull request entry with its link once the PR is opened or updated"
-else
-  fail "the pull request scribe records a pull request entry with its link once the PR is opened or updated"
-fi
-
-if grep -qF '~/.claude/bin/owner-turn.sh "plan" "Review plan #<n>" "<the artifact URL>"' "$SCRIPT_DIR/../agents/plan-scribe.md"; then
-  ok "the plan scribe records a plan entry with its link once the plan is published"
-else
-  fail "the plan scribe records a plan entry with its link once the plan is published"
-fi
-
-echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

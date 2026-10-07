@@ -1,4 +1,13 @@
 {
   "version": 1,
-  "rules": []
+  "rules": [
+    {
+      "file": "agents/pr-scribe.md",
+      "contains": "~/.claude/bin/owner-turn.sh \"pull request\" \"Review PR #<n>\" \"<the PR URL>\""
+    },
+    {
+      "file": "agents/plan-scribe.md",
+      "contains": "~/.claude/bin/owner-turn.sh \"plan\" \"Review plan #<n>\" \"<the artifact URL>\""
+    }
+  ]
 }
