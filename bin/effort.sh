@@ -43,6 +43,7 @@ totals=$(awk -F '\t' -v idle_cap=600 '
     delete ended[$2]
   }
   $3 == "turn" { ended[$2] = $1 }
+  $3 == "waited" { active += $4 < idle_cap ? $4 : idle_cap }
   END {
     if (NR == 0) exit
     printf "Sessions: %d\n", sessions

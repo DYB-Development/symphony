@@ -53,6 +53,8 @@ assert_equals "Your active time: 5m" "$(rows 100 s1 turn 60000 400 s1 prompt 1 |
 
 assert_equals "Your active time: 10m" "$(rows 100 s1 turn 60000 3700 s1 prompt 1 | "$EFFORT" | grep '^Your active time:')" "counts no more than ten minutes of one gap"
 
+assert_equals "Your active time: 5m" "$(rows 400 s1 waited 300 | "$EFFORT" | grep '^Your active time:')" "counts the wait recorded before a prompt"
+
 assert_equals "## Effort
 
 - Sessions: 1
