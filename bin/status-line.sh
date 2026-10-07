@@ -31,16 +31,32 @@ read_progress() {
   printf '%s\n' "$progress"
 }
 
-dir=$(jq -r '.workspace.current_dir // .cwd // empty')
+join_lines() {
+  awk 'NF { printf "%s%s", (n++ ? "  " : ""), $0 }'
+}
+
+plan_part() {
+  [ -n "$task" ] || return 0
+  repo=$(git -C "$dir" remote get-url origin | sed -E 's#^.*github\.com[:/]##; s#\.git$##')
+  local progress title closed total stage filled bar
+  progress=$(read_progress)
+  [ -n "$progress" ] || return 0
+  IFS=$'\t' read -r title closed total stage <<< "$progress"
+  filled=$(( closed * 10 / total ))
+  bar=$(printf '%*s' "$filled" '' | sed 's/ /█/g')$(printf '%*s' $(( 10 - filled )) '' | sed 's/ /░/g')
+  printf '%s %s %s/%s · %s' "$title" "$bar" "$closed" "$total" "$stage"
+}
+
+flag_part() {
+  [ -n "$session" ] || return 0
+  "$(dirname "$0")/owner-turn.sh" flags "$session" | join_lines
+}
+
+input=$(cat)
+session=$(printf '%s' "$input" | jq -r '.session_id // empty')
+dir=$(printf '%s' "$input" | jq -r '.workspace.current_dir // .cwd // empty')
 branch=$(git -C "$dir" branch --show-current)
 task=${branch%%[!0-9]*}
-[ -n "$task" ] || exit 0
-repo=$(git -C "$dir" remote get-url origin | sed -E 's#^.*github\.com[:/]##; s#\.git$##')
 
-progress=$(read_progress)
-[ -n "$progress" ] || exit 0
-IFS=$'\t' read -r title closed total stage <<< "$progress"
-
-filled=$(( closed * 10 / total ))
-bar=$(printf '%*s' "$filled" '' | sed 's/ /█/g')$(printf '%*s' $(( 10 - filled )) '' | sed 's/ /░/g')
-printf '%s %s %s/%s · %s\n' "$title" "$bar" "$closed" "$total" "$stage"
+line=$(printf '%s\n%s\n' "$(flag_part)" "$(plan_part)" | join_lines)
+[ -z "$line" ] || printf '%s\n' "$line"
