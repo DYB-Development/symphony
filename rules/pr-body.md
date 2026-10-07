@@ -77,6 +77,21 @@ Your job before spawning is the pointer, not the prose: hand it the repo, the
 branch, and the issue number (or the acceptance criteria inlined if there is no
 issue). It reads the rest from the repo.
 
+## Watch the pull request once it is open
+
+**The moment the Scribe returns the URL, start the watch as a background
+command:**
+
+```
+~/.claude/bin/pr-wait.sh <owner/repo> <pr-number>
+```
+
+It runs no model while it waits. It opens the pull request in the owner's
+browser once every CI check passes, and exits naming the check when one fails.
+Otherwise it keeps waiting and exits saying whether the pull request was merged
+or closed. Its exit wakes the session, which then cleans up a merged branch as
+`~/.claude/rules/agent-worktrees.md` says, or fixes the failed check.
+
 ## The `Closes #N` trailer
 
 A PR that resolves an issue ends with `Closes #<n>` on its own line after the
