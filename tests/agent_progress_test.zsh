@@ -185,5 +185,9 @@ assert_says agents/review-scribe.md \
   '~/.claude/bin/scribe-step.sh "<owner/repo>#<pr>" "3. Run every check" "<k>/9 <the check>"' \
   "the review scribe marks each of its nine checks as a position inside the step"
 
+assert_says agents/review-scribe.md \
+  '~/.claude/bin/scribe-step.sh "<owner/repo>#<pr>" "5. Write each inline comment" "<k>/<K> finding"' \
+  "the review scribe marks each finding as a position inside the step that writes inline comments"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

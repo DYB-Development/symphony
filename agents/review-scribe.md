@@ -121,7 +121,11 @@ is how the person who ran you sees which step you are on.
    Never put the chain of cause into the header or the first sentence, and leave
    the steps out when the defect is visible in the line itself. There is no
    severity — raise it only when it meets the bar in `pr-review.md`. One comment
-   per finding, on the line that causes it, in the current diff.
+   per finding, on the line that causes it, in the current diff. Mark each
+   finding as you start its comment, where K is the number of findings:
+   ```
+   ~/.claude/bin/scribe-step.sh "<owner/repo>#<pr>" "5. Write each inline comment" "<k>/<K> finding"
+   ```
 
 6. **Write the summary** with its four sections — Verdict, Findings,
    Conformance, Not checked — and never another. Findings has one bullet per
