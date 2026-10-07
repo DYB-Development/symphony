@@ -243,48 +243,5 @@ MD
 assert_equals "0" "$?" "lays out the contents beside the plan, with the plan under its masthead"
 drop_issue
 
-echo ""
-echo "the plan scribe:"
-
-PLAN_SCRIBE="$SCRIPT_DIR/../agents/plan-scribe.md"
-
-grep -qF '~/.claude/bin/render-plan.sh' "$PLAN_SCRIBE"
-assert_equals "0" "$?" "publishes the page the render script builds from the filed issue"
-
-grep -qF 'gh issue list' "$PLAN_SCRIBE"
-assert_equals "1" "$?" "does not survey the repo's open issues"
-
-grep -qE 'gh label list|issue-bootstrap' "$PLAN_SCRIBE"
-assert_equals "1" "$?" "does not look up or create labels"
-
-grep -qF "awk '/^## 09 /{skip=1} /^## 10 /{skip=0} !skip'" "$PLAN_SCRIBE"
-assert_equals "0" "$?" "hands the reader the plan without its units, which are read when they are filed"
-
-grep -qF 'turned off or rolled back' "$PLAN_SCRIBE"
-assert_equals "1" "$?" "does not write a rollback sentence for each stage"
-
-grep -qF 'That is the Patterns check' "$PLAN_SCRIBE"
-assert_equals "0" "$?" "names the existing pattern each new piece follows"
-
-echo ""
-echo "the feature plan rules:"
-
-FEATURE_PLAN="$SCRIPT_DIR/../rules/feature-plan.md"
-
-grep -qF 'turned off or rolled back' "$FEATURE_PLAN"
-assert_equals "1" "$?" "leave rollback and production failure to standard practice"
-
-grep -qF '~/.claude/bin/render-plan.sh' "$FEATURE_PLAN"
-assert_equals "0" "$?" "build every plan's page with the render script"
-
-grep -qF '**Patterns** — answered in section 04' "$FEATURE_PLAN"
-assert_equals "0" "$?" "hold a plan to the Patterns check in section 04"
-
-echo ""
-echo "the feature plan command:"
-
-grep -qF '~/.claude/bin/render-plan.sh' "$SCRIPT_DIR/../commands/feature-plan.md"
-assert_equals "0" "$?" "republishes a settled plan's page with the render script"
-
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

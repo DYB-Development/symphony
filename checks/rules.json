@@ -12,6 +12,50 @@
     {
       "file": "commands/feature-plan.md",
       "contains": "~/.claude/bin/plan-link.sh <owner/repo> <plan-issue> <task-issue>"
+    },
+    {
+      "file": "agents/plan-scribe.md",
+      "contains": "~/.claude/bin/render-plan.sh"
+    },
+    {
+      "file": "agents/plan-scribe.md",
+      "absent": "gh issue list"
+    },
+    {
+      "file": "agents/plan-scribe.md",
+      "absent": "gh label list"
+    },
+    {
+      "file": "agents/plan-scribe.md",
+      "absent": "issue-bootstrap"
+    },
+    {
+      "file": "agents/plan-scribe.md",
+      "contains": "awk '/^## 09 /{skip=1} /^## 10 /{skip=0} !skip'"
+    },
+    {
+      "file": "agents/plan-scribe.md",
+      "absent": "turned off or rolled back"
+    },
+    {
+      "file": "agents/plan-scribe.md",
+      "contains": "That is the Patterns check"
+    },
+    {
+      "file": "rules/feature-plan.md",
+      "absent": "turned off or rolled back"
+    },
+    {
+      "file": "rules/feature-plan.md",
+      "contains": "~/.claude/bin/render-plan.sh"
+    },
+    {
+      "file": "rules/feature-plan.md",
+      "contains": "**Patterns** — answered in section 04"
+    },
+    {
+      "file": "commands/feature-plan.md",
+      "contains": "~/.claude/bin/render-plan.sh"
     }
   ]
 }
