@@ -278,5 +278,9 @@ assert_says agents/plan-scribe.md \
   Marking\ each\ section\ is\ required,\ never\ skipped,\ and\ is\ the\ first\ thing\ you\ do\ for\ it. \
   the\ plan\ scribe\ makes\ marking\ each\ section\ required\ and\ first
 
+assert_says rules/draft-reading.md \
+  Marking\ each\ read\ is\ required,\ never\ skipped,\ and\ is\ the\ first\ thing\ you\ do\ for\ it. \
+  every\ scribe\ makes\ marking\ each\ read\ of\ its\ draft\ required\ and\ first
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
