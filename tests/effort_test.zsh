@@ -49,11 +49,12 @@ assert_equals "Rejected tool calls: 1,250" "$(rows 100 s1 rejected 1000 160 s1 r
 
 assert_equals "Claude working time: 1h 5m" "$(rows 100 s1 turn 3600000 5000 s1 turn 300000 | "$EFFORT" | grep '^Claude working time:')" "totals how long Claude's turns took"
 
-assert_equals "Your active time: 5m" "$(rows 100 s1 turn 60000 400 s1 prompt 1 | "$EFFORT" | grep '^Your active time:')" "counts the time between a turn ending and the next prompt"
 
-assert_equals "Your active time: 10m" "$(rows 100 s1 turn 60000 3700 s1 prompt 1 | "$EFFORT" | grep '^Your active time:')" "counts no more than ten minutes of one gap"
+assert_equals "Your active time: 10m" "$(rows 3700 s1 waited 3600 | "$EFFORT" | grep '^Your active time:')" "counts no more than ten minutes of one wait"
 
 assert_equals "Your active time: 5m" "$(rows 400 s1 waited 300 | "$EFFORT" | grep '^Your active time:')" "counts the wait recorded before a prompt"
+
+assert_equals "Your active time: 5m" "$(rows 100 s1 turn 60000 400 s1 prompt 1 400 s1 waited 300 | "$EFFORT" | grep '^Your active time:')" "counts a wait once when the turn before it is on this branch too"
 
 assert_equals "## Effort
 
@@ -66,7 +67,7 @@ assert_equals "## Effort
 - Interruptions: 0
 - Rejected tool calls: 0
 - Claude working time: 2m
-- Your active time: 5m" "$(rows 100 s1 turn 120000 400 s1 prompt 1 400 s1 typed 3 | "$EFFORT" --render)" "prints the PR body's Effort section"
+- Your active time: 5m" "$(rows 100 s1 turn 120000 400 s1 prompt 1 400 s1 waited 300 400 s1 typed 3 | "$EFFORT" --render)" "prints the PR body's Effort section"
 
 assert_equals "## Effort
 
