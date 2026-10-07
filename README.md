@@ -71,8 +71,11 @@ to `<path>.backup` first, and running it again changes nothing. Set
 It also sets the status line to `bin/status-line.sh` when no status line is set,
 and leaves one that is already set alone. On a branch whose name starts with a
 task issue's number, the status line shows the progress of the plan that issue
-is listed under: the plan's title, a bar, the closed units out of all units, and
-the task's stage. It asks GitHub at most once a minute for each repo and branch.
+is listed under: the plan's title, the task's stage, one square per stage of the
+plan in stage order, and the closed units out of all units. A stage's square is
+green when every unit of that stage is closed, yellow when some are, and grey
+when none are. A unit's stage is read from the `Part of` line of its issue. It
+asks GitHub at most once a minute for each repo and branch.
 Above the plan's progress it shows a flag for each item this session has waited
 on the owner for since the owner's last prompt, one to a line, such as a question or a pull
 request to review. An agent marks a pull request or plan with

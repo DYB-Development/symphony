@@ -31,16 +31,27 @@ read_progress() {
   printf '%s\n' "$progress"
 }
 
+stage_square() {
+  if [ "${1%/*}" = "${1#*/}" ]; then
+    printf '\033[32m■\033[0m'
+  elif [ "${1%/*}" -gt 0 ]; then
+    printf '\033[33m■\033[0m'
+  else
+    printf '\033[90m■\033[0m'
+  fi
+}
+
 plan_part() {
   [ -n "$task" ] || return 0
   repo=$(git -C "$dir" remote get-url origin | sed -E 's#^.*github\.com[:/]##; s#\.git$##')
-  local progress title closed total stage filled bar
+  local progress title closed total stage stages counts squares=""
   progress=$(read_progress)
   [ -n "$progress" ] || return 0
-  IFS=$'\t' read -r title closed total stage <<< "$progress"
-  filled=$(( closed * 10 / total ))
-  bar=$(printf '%*s' "$filled" '' | sed 's/ /█/g')$(printf '%*s' $(( 10 - filled )) '' | sed 's/ /░/g')
-  printf '%s · %s\n%s %s/%s\n' "$title" "$stage" "$bar" "$closed" "$total"
+  IFS=$'\t' read -r title closed total stage stages <<< "$progress"
+  for counts in $stages; do
+    squares+=$(stage_square "${counts#*:}")
+  done
+  printf '%s · %s\n%s %s/%s\n' "$title" "$stage" "$squares" "$closed" "$total"
 }
 
 working_part() {
