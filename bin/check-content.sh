@@ -22,6 +22,8 @@ path_of() {
   case "$1" in /*) printf '%s' "$1" ;; *) printf '%s/%s' "$root" "$1" ;; esac
 }
 
+printf 'Checked against rules version %s\n' "$(jq -r '.version' "$rules")"
+
 failed=0
 while IFS=$'\037' read -r file contains absent; do
   content=$(cat "$(path_of "$file")" 2>/dev/null || true)

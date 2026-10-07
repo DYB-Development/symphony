@@ -53,6 +53,12 @@ rules '{"version": 1, "rules": [{"file": "scribe.md", "absent": "Never merge."}]
 assert_equals "1" "$(check)" "fails when a rule's forbidden text is in its file"
 drop_root
 
+new_root
+rules '{"version": 3, "rules": []}'
+assert_equals "Checked against rules version 3" "$("$CHECK" "$ROOT/rules.json" "$ROOT" 2>&1 | head -1)" \
+  "prints the version of the list of rules it checked"
+drop_root
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
