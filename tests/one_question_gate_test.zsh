@@ -39,6 +39,8 @@ assert_equals "Ask one question, then wait for the answer before asking the next
   "$(ask 3 | jq -r '.hookSpecificOutput.permissionDecisionReason')" \
   "tells the agent to ask one question and wait for its answer"
 
+assert_equals "" "$(ask 1)" "lets a prompt holding one question through"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
