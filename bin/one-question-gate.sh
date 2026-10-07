@@ -16,4 +16,5 @@ USAGE
 count=$(jq '.tool_input.questions // [] | length')
 [ "$count" -gt 1 ] || exit 0
 
-jq -nc '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny"}}'
+jq -nc '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $text}}' \
+  --arg text "Ask one question, then wait for the answer before asking the next."

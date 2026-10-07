@@ -35,6 +35,10 @@ echo "one-question-gate.sh check:"
 assert_equals "deny" "$(ask 2 | jq -r '.hookSpecificOutput.permissionDecision')" \
   "refuses a prompt holding two questions"
 
+assert_equals "Ask one question, then wait for the answer before asking the next." \
+  "$(ask 3 | jq -r '.hookSpecificOutput.permissionDecisionReason')" \
+  "tells the agent to ask one question and wait for its answer"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
