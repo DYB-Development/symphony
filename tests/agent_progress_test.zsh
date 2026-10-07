@@ -122,6 +122,13 @@ assert_equals $'review-scribe acme/quotes#42\n█░░░░░░░░░ 3/1
   "shows a running scribe's type and target above a bar of its step out of its numbered steps"
 drop_dir
 
+new_dir
+new_agents
+printf '1000\treview-scribe\tacme/quotes#42\t3. Run every check\ts1\t9/9 Missed changes\n' > "$LOGS/a1.log"
+assert_equals $'review-scribe acme/quotes#42\n██░░░░░░░░ 3/11 · Run every check · 9/9 Missed changes' "$(lines s1)" \
+  "fills the bar through a step by the position marked inside it, and shows the position"
+drop_dir
+
 echo "scribes:"
 
 assert_marks_steps() {

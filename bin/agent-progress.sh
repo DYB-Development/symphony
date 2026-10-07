@@ -74,7 +74,9 @@ show_line() {
   n=${step%%.*}
   title=${step#*. }
   total=$(grep -cE '^[0-9]+\. \*\*' "$agents_dir/$type.md" 2>/dev/null || true)
-  printf '%s %s/%s · %s\n' "$(bar $(( (n - 1) * 10 / total )))" "$n" "$total" "$title"
+  local k=0 of=1 fraction=${position%% *}
+  if [[ "$fraction" =~ ^([0-9]+)/([0-9]+)$ ]]; then k=${BASH_REMATCH[1]}; of=${BASH_REMATCH[2]}; fi
+  printf '%s %s/%s · %s%s\n' "$(bar $(( ((n - 1) * of + k) * 10 / (of * total) )))" "$n" "$total" "$title" "${position:+ · $position}"
 }
 
 case "${1:-}" in
