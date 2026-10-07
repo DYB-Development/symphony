@@ -82,6 +82,12 @@ assert_equals "1 CI failed on PR #5: test opened:" "$? $(printf '%s' "$output" |
   "exits naming the failed check and opens nothing when a check fails"
 drop_stub
 
+stub "$(pr OPEN test:SUCCESS)" "$(pr OPEN test:SUCCESS)" "$(pr OPEN test:SUCCESS)" "$(pr MERGED test:SUCCESS)"
+output=$("$WAIT" acme/widget 5 2>&1)
+assert_equals "PR #5 was merged, opened 1 time" "$(printf '%s' "$output" | tail -1), opened $(wc -l < "$WORK/opened" | tr -d ' ') time" \
+  "keeps waiting after the checks pass until the merge, opening the pull request once"
+drop_stub
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
