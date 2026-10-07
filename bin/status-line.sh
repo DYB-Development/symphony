@@ -20,7 +20,8 @@ task=${branch%%[!0-9]*}
 [ -n "$task" ] || exit 0
 repo=$(git -C "$dir" remote get-url origin | sed -E 's#^.*github\.com[:/]##; s#\.git$##')
 
-IFS=$'\t' read -r title closed total stage < <("$(dirname "$0")/plan-progress.sh" "$repo" "$task")
+progress=$("$(dirname "$0")/plan-progress.sh" "$repo" "$task" 2>/dev/null) || exit 0
+IFS=$'\t' read -r title closed total stage <<< "$progress"
 
 filled=$(( closed * 10 / total ))
 bar=$(printf '%*s' "$filled" '' | sed 's/ /█/g')$(printf '%*s' $(( 10 - filled )) '' | sed 's/ /░/g')

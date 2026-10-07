@@ -72,6 +72,10 @@ new_repo feature/quote-lines
 assert_equals "" "$(status_line)" "shows no plan progress on a branch whose name has no leading issue number"
 drop_repo
 
+new_repo 13-loose-task
+assert_equals "" "$(status_line)" "shows no plan progress on a branch whose issue is listed under no plan"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
