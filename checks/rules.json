@@ -8,6 +8,10 @@
     {
       "file": "agents/plan-scribe.md",
       "contains": "~/.claude/bin/owner-turn.sh \"plan\" \"Review plan #<n>\" \"<the artifact URL>\""
+    },
+    {
+      "file": "commands/feature-plan.md",
+      "contains": "~/.claude/bin/plan-link.sh <owner/repo> <plan-issue> <task-issue>"
     }
   ]
 }

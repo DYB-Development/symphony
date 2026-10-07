@@ -72,14 +72,5 @@ assert_contains "1 plan-link.sh: issue #99 does not exist in acme/widget" "$code
 drop_stub
 
 echo ""
-echo "the feature plan command:"
-
-if grep -qF '~/.claude/bin/plan-link.sh <owner/repo> <plan-issue> <task-issue>' "$SCRIPT_DIR/../commands/feature-plan.md"; then
-  ok "the breakdown lists each filed unit under its plan"
-else
-  fail "the breakdown lists each filed unit under its plan"
-fi
-
-echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
