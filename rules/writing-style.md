@@ -26,6 +26,13 @@ commit messages, in comments.
   does not.
 - Nothing cute. No wordplay, no jokes, no charm standing in for information.
 
+## Command descriptions
+
+The owner reads what an agent is doing from the description on each command,
+in the terminal and on the status line, not from the command itself.
+
+Every command carries a description of what it does, in plain words, that does not repeat the command.
+
 ## Banned phrasing
 
 The list lives in `~/.claude/rules/banned-phrases.txt`, one phrase per line, so

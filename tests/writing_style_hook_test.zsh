@@ -52,6 +52,11 @@ assert_contains \
   "$(run_hook SubagentStart | jq -r '.hookSpecificOutput.additionalContext')" \
   "carries the writing style rules as additional context"
 
+assert_contains \
+  "Every command carries a description of what it does, in plain words, that does not repeat the command." \
+  "$(run_hook SubagentStart | jq -r '.hookSpecificOutput.additionalContext')" \
+  "tells every session and subagent to describe each command in plain words"
+
 PHRASES_FILE="$(mktemp "${TMPDIR:-/tmp}/banned_phrases.XXXXXX")"
 printf 'synergise the deliverable\n' > "$PHRASES_FILE"
 export CLAUDE_BANNED_PHRASES_FILE="$PHRASES_FILE"
