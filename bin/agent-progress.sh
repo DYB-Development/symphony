@@ -18,6 +18,10 @@ USAGE
 log_dir="${AGENT_PROGRESS_DIR:-$HOME/.claude/agent-progress}"
 now="${AGENT_PROGRESS_NOW:-$(date +%s)}"
 
+position_for() {
+  printf '%s' "$1" | sed -nE 's/.*scribe-step\.sh[[:space:]]+"[^"]*"[[:space:]]+"[^"]*"[[:space:]]+"([^"]*)".*/\1/p'
+}
+
 step_for() {
   local command=$1 marked script
   marked=$(printf '%s' "$command" | sed -nE 's/.*scribe-step\.sh[[:space:]]+"([^"]*)"[[:space:]]+"([^"]*)".*/\1	\2/p')
@@ -52,11 +56,13 @@ case "${1:-}" in
     if [ "$(printf '%s' "$payload" | jq -r '.hook_event_name // empty')" = SubagentStop ]; then
       step=$(printf '\tfinished')
     else
-      step=$(step_for "$(printf '%s' "$payload" | jq -r '.tool_input.command // empty')")
+      command=$(printf '%s' "$payload" | jq -r '.tool_input.command // empty')
+      step=$(step_for "$command")
       [ -n "$step" ] || exit 0
+      position=$(position_for "$command")
     fi
     mkdir -p "$log_dir"
-    printf '%s\t%s\t%s\t%s\n' "$now" "$agent_type" "$step" "$session" >> "$log_dir/$agent_id.log"
+    printf '%s\t%s\t%s\t%s%s\n' "$now" "$agent_type" "$step" "$session" "${position:+$'\t'$position}" >> "$log_dir/$agent_id.log"
     ;;
   "")
     running=$(for log in "$log_dir"/*.log; do
