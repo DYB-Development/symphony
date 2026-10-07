@@ -67,8 +67,8 @@ status_line() {
 echo "status-line.sh:"
 
 new_repo 12-quote-lines
-assert_equals "Quote builder ███░░░░░░░ 3/8 · stage 2 of 4 — Enrich" "$(status_line)" \
-  "shows the plan's title, a bar, the closed units out of all units, and the task's stage"
+assert_equals $'Quote builder · stage 2 of 4 — Enrich\n███░░░░░░░ 3/8' "$(status_line)" \
+  "shows the plan's title and the task's stage above a bar and the closed units out of all units"
 drop_repo
 
 new_repo feature/quote-lines
@@ -89,7 +89,7 @@ drop_repo
 new_repo 12-quote-lines
 STATUS_LINE_NOW=1000 status_line >/dev/null
 printf '4\t8' > "$COUNTS"
-assert_equals "Quote builder █████░░░░░ 4/8 · stage 2 of 4 — Enrich" "$(STATUS_LINE_NOW=1060 status_line)" \
+assert_equals $'Quote builder · stage 2 of 4 — Enrich\n█████░░░░░ 4/8' "$(STATUS_LINE_NOW=1060 status_line)" \
   "shows a closed unit in the count a minute after the last read"
 drop_repo
 
@@ -97,8 +97,8 @@ new_repo 12-quote-lines
 jq -nc --arg cwd "$REPO" \
   '{hook_event_name: "PreToolUse", session_id: "s1", cwd: $cwd, tool_name: "AskUserQuestion", tool_input: {questions: [{question: "Which road?"}]}}' \
   | "$SCRIPT_DIR/../bin/owner-turn.sh" record
-assert_equals "▶ question · Which road?  Quote builder ███░░░░░░░ 3/8 · stage 2 of 4 — Enrich" "$(status_line)" \
-  "shows the session's flag before the plan progress on the same line"
+assert_equals $'▶ question · Which road?\nQuote builder · stage 2 of 4 — Enrich\n███░░░░░░░ 3/8' "$(status_line)" \
+  "shows the session's flag on its own line above the plan progress"
 drop_repo
 
 new_repo main
