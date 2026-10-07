@@ -48,6 +48,7 @@ case "${1:-}" in
     agent_id=$(printf '%s' "$payload" | jq -r '.agent_id // empty')
     [ -n "$agent_id" ] || exit 0
     agent_type=$(printf '%s' "$payload" | jq -r '.agent_type // empty')
+    session=$(printf '%s' "$payload" | jq -r '.session_id // empty')
     if [ "$(printf '%s' "$payload" | jq -r '.hook_event_name // empty')" = SubagentStop ]; then
       step=$(printf '\tfinished')
     else
@@ -55,7 +56,7 @@ case "${1:-}" in
       [ -n "$step" ] || exit 0
     fi
     mkdir -p "$log_dir"
-    printf '%s\t%s\t%s\n' "$now" "$agent_type" "$step" >> "$log_dir/$agent_id.log"
+    printf '%s\t%s\t%s\t%s\n' "$now" "$agent_type" "$step" "$session" >> "$log_dir/$agent_id.log"
     ;;
   "")
     running=$(for log in "$log_dir"/*.log; do

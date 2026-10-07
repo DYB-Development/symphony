@@ -49,9 +49,9 @@ echo "agent-progress.sh record:"
 
 new_dir
 bash_payload a1 review-scribe '~/.claude/bin/scribe-step.sh "acme/quotes#42" "3. Run every check"' | record 1000
-assert_equals $'1000\treview-scribe\tacme/quotes#42\t3. Run every check' \
+assert_equals $'1000\treview-scribe\tacme/quotes#42\t3. Run every check\ts1' \
   "$(cat "$LOGS/a1.log" 2>&1)" \
-  "records a step marker against the agent that ran it"
+  "records a step marker against the agent that ran it and the session it runs in"
 drop_dir
 
 new_dir
@@ -61,14 +61,14 @@ drop_dir
 
 new_dir
 bash_payload a1 review-scribe '~/.claude/bin/judge-claims.sh /repo/.review-42.claims.json' | record 1000
-assert_equals $'1000\treview-scribe\t\truns judge-claims' \
+assert_equals $'1000\treview-scribe\t\truns judge-claims\ts1' \
   "$(cat "$LOGS/a1.log" 2>&1)" \
   "records a symphony script a subagent runs"
 drop_dir
 
 new_dir
 jq -nc '{hook_event_name: "SubagentStop", session_id: "s1", agent_id: "a1", agent_type: "review-scribe"}' | record 1000
-assert_equals $'1000\treview-scribe\t\tfinished' \
+assert_equals $'1000\treview-scribe\t\tfinished\ts1' \
   "$(cat "$LOGS/a1.log" 2>&1)" \
   "records that a subagent finished"
 drop_dir
