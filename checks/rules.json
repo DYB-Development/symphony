@@ -216,6 +216,10 @@
     {
       "file": "agents/review-scribe.md",
       "contains": "- **Never run the code.**"
+    },
+    {
+      "file": "rules/pr-body.md",
+      "contains": "~/.claude/bin/pr-wait.sh <owner/repo> <pr-number>"
     }
   ]
 }
