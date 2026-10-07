@@ -49,7 +49,20 @@ record() {
   AGENT_PROGRESS_DIR="$LOGS" AGENT_PROGRESS_NOW="$1" "$PROGRESS" record
 }
 
+ran_payload() {
+  jq -nc --arg id "$1" --arg type "$2" --arg command "$3" --arg stdout "$4" \
+    '{hook_event_name: "PostToolUse", session_id: "s1", agent_id: $id, agent_type: $type, tool_name: "Bash", tool_input: {command: $command}, tool_response: {stdout: $stdout, stderr: "", interrupted: false, exit_code: 0}}'
+}
+
 echo "agent-progress.sh record:"
+
+new_dir
+ran_payload a1 review-scribe 'S="acme/quotes#42"; ~/.claude/bin/scribe-step.sh "$S" "$T"' \
+  $'acme/quotes#42 · 3. Run every check\n' | record 1000
+assert_equals $'1000\treview-scribe\tacme/quotes#42\t3. Run every check\ts1' \
+  "$(cat "$LOGS/a1.log" 2>&1)" \
+  "records the target and step a mark printed when its command passed them in shell variables"
+drop_dir
 
 new_dir
 bash_payload a1 review-scribe '~/.claude/bin/scribe-step.sh "acme/quotes#42" "3. Run every check"' | record 1000

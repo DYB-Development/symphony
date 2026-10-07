@@ -39,6 +39,15 @@ step_for() {
   [ -z "$script" ] || printf '\truns %s' "$script"
 }
 
+marks_printed() {
+  printf '%s\n' "$1" | awk -F ' · ' '$2 ~ /^[0-9]+\. / { printf "%s\037%s\037%s\n", $1, $2, $3 }'
+}
+
+append() {
+  mkdir -p "$log_dir"
+  printf '%s\t%s\t%s\t%s%s\n' "$now" "$agent_type" "$1" "$session" "${2:+$'\t'$2}" >> "$log_dir/$agent_id.log"
+}
+
 show_progress() {
   awk -F '\t' -v now="$now" '
     function duration(seconds) { return sprintf("%dm%02ds", int(seconds / 60), seconds % 60) }
@@ -104,17 +113,24 @@ case "${1:-}" in
     [ -n "$agent_id" ] || exit 0
     agent_type=$(printf '%s' "$payload" | jq -r '.agent_type // empty')
     session=$(printf '%s' "$payload" | jq -r '.session_id // empty')
-    if [ "$(printf '%s' "$payload" | jq -r '.hook_event_name // empty')" = SubagentStop ]; then
-      step=$(printf '\tfinished')
-      [ ! -d "$log_dir" ] || find "$log_dir" -name '*.log' -mmin +1440 -delete
-    else
-      command=$(printf '%s' "$payload" | jq -r '.tool_input.command // empty')
-      step=$(step_for "$command")
-      [ -n "$step" ] || exit 0
-      position=$(position_for "$command")
-    fi
-    mkdir -p "$log_dir"
-    printf '%s\t%s\t%s\t%s%s\n' "$now" "$agent_type" "$step" "$session" "${position:+$'\t'$position}" >> "$log_dir/$agent_id.log"
+    command=$(printf '%s' "$payload" | jq -r '.tool_input.command // empty')
+    case "$(printf '%s' "$payload" | jq -r '.hook_event_name // empty')" in
+      SubagentStop)
+        [ ! -d "$log_dir" ] || find "$log_dir" -name '*.log' -mmin +1440 -delete
+        append $'\tfinished'
+        ;;
+      PostToolUse)
+        [[ "$command" == *scribe-step.sh* ]] || exit 0
+        while IFS=$'\037' read -r target step position; do
+          append "$target"$'\t'"$step" "$position"
+        done < <(marks_printed "$(printf '%s' "$payload" | jq -r '.tool_response.stdout // empty')")
+        ;;
+      *)
+        step=$(step_for "$command")
+        [ -n "$step" ] || exit 0
+        append "$step" "$(position_for "$command")"
+        ;;
+    esac
     ;;
   "")
     running=$(recent_logs | while IFS= read -r log; do
