@@ -69,10 +69,13 @@ to `<path>.backup` first, and running it again changes nothing. Set
 `CLAUDE_CONFIG_DIR` to install somewhere other than `~/.claude`.
 
 It also sets the status line to `bin/status-line.sh` when no status line is set,
-and leaves one that is already set alone. On a branch whose name starts with a
-task issue's number, the status line shows the progress of the plan that issue
-is listed under: the plan's title, the task's stage, one square per stage of the
-plan in stage order, and the closed units out of all units. A stage's square is
+and leaves one set to another command alone. The status line it sets reruns
+every 2 seconds, so a scribe's progress keeps moving while the session waits on
+it, and running the install again adds that to a status line it set before.
+On a branch whose name starts with a task issue's number, the status line shows
+the progress of the plan that issue is listed under: the plan's title, the
+task's stage, one square per stage of the plan in stage order, and the closed
+units out of all units. A stage's square is
 green when every unit of that stage is closed, yellow when some are, and grey
 when none are. A unit's stage is read from the `Part of` line of its issue. It
 asks GitHub at most once a minute for each repo and branch.
@@ -122,9 +125,10 @@ settings that are not its own alone:
 | `SessionStart` | `writing-style-hook.sh` | Carries the writing rules and the banned phrase list into the session |
 | `SubagentStart` | `writing-style-hook.sh` | A subagent receives no rules of its own, so it gets them here |
 | `PostToolUse` | `decision-gate.sh arm` | Answering a question settles a choice, which has to be recorded |
+| `PostToolUse` | `agent-progress.sh record` | Logs each step a subagent marked, from what the mark printed, so a target or step passed in a shell variable is logged as its value |
 | `PreToolUse` | `main-clone-gate.sh check` | Refuses an edit or a branch-changing git command aimed at a repo's main clone, which is kept for its owner |
 | `PreToolUse` | `decision-gate.sh check` | Refuses a commit while that choice is still unrecorded |
-| `PreToolUse` | `agent-progress.sh record` | Logs the step a subagent marks and each script it runs |
+| `PreToolUse` | `agent-progress.sh record` | Logs each script a subagent is about to run |
 | `PreToolUse` | `one-question-gate.sh check` | Refuses a question prompt that asks more than one question |
 | `PreToolUse` | `owner-turn.sh record` | Records a question prompt, and each item an agent marks with `owner-turn.sh`, as something the owner is waited on for |
 | `UserPromptSubmit` | `owner-turn.sh record` | Records when the owner last prompted, which ends that session's flag in the status line |
