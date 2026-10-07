@@ -33,6 +33,10 @@ in the terminal and on the status line, not from the command itself.
 
 Every command carries a description of what it does, in plain words, that does not repeat the command.
 
+A piece of work that takes more than three commands is handed to an agent. The
+agent's commands are folded under one entry, so the owner sees one line for the
+work instead of every command in it.
+
 ## Banned phrasing
 
 The list lives in `~/.claude/rules/banned-phrases.txt`, one phrase per line, so

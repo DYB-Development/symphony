@@ -57,6 +57,11 @@ assert_contains \
   "$(run_hook SubagentStart | jq -r '.hookSpecificOutput.additionalContext')" \
   "tells every session and subagent to describe each command in plain words"
 
+assert_contains \
+  "A piece of work that takes more than three commands is handed to an agent." \
+  "$(run_hook SubagentStart | jq -r '.hookSpecificOutput.additionalContext')" \
+  "tells every session and subagent to hand work of more than three commands to an agent"
+
 PHRASES_FILE="$(mktemp "${TMPDIR:-/tmp}/banned_phrases.XXXXXX")"
 printf 'synergise the deliverable\n' > "$PHRASES_FILE"
 export CLAUDE_BANNED_PHRASES_FILE="$PHRASES_FILE"
