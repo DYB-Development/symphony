@@ -183,7 +183,11 @@ is how the person who ran you sees which step you are on.
    `~/.claude/rules/claim-checking.md` (or `rules/claim-checking.md` in this
    package) and follow it. The claims file sits next to the draft, at
    `<repo root>/.review-<pr>.claims.json`. Each claim holds its text word for
-   word and a pointer.
+   word and a pointer. Mark each claim as you start it, where K is the number
+   of claims:
+   ```
+   ~/.claude/bin/scribe-step.sh "<owner/repo>#<pr>" "9. Point each claim at the lines it is about" "<k>/<K> claim"
+   ```
 
    A pointer holds a path, a first and last line, and a side.
 
