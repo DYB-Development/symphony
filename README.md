@@ -159,6 +159,14 @@ To see which step each running scribe is on:
 ~/.claude/bin/agent-progress.sh
 ```
 
+Once a pull request is open, a session watches it in the background with no
+model running. The watch opens it in the browser when every CI check passes,
+exits naming a failed check, and otherwise exits when it is merged or closed:
+
+```sh
+~/.claude/bin/pr-wait.sh <owner/repo> <pr-number>
+```
+
 ### Two more steps
 
 The rules keep three working-tree files that must never reach a commit — the
