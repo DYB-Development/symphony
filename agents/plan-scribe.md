@@ -161,7 +161,13 @@ is how the person who ran you sees which step you are on.
 9. **Put the artifact URL on the issue** as the first line of the body, above the
    header, as a link labelled with the plan's name.
 
-10. **Return** the issue URL, the artifact URL, the unit count, and the open
+10. **Tell the owner it is ready.** Record that the plan is waiting on them, so
+   it shows above the progress in their status line:
+   ```
+   ~/.claude/bin/owner-turn.sh "plan" "Review plan #<n>" "<the artifact URL>"
+   ```
+
+11. **Return** the issue URL, the artifact URL, the unit count, and the open
    decisions from section 08 as a short list. Then `Still flagged:` with each
    sentence the reader flagged on its last read and the reader's note, or `none`,
    or that the read failed. Nothing else.
