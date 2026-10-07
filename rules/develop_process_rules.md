@@ -26,7 +26,12 @@ TDD is the default for everything. Work one tiny cycle at a time:
 3. **Write the minimum code to make it pass.**
 4. **Run the test and watch it pass.**
 5. **Commit.**
-6. Repeat with the next test.
+6. **Tick each acceptance criterion the commit covers** on the task issue, once
+   the commit lands, counting from 1 down the issue's criteria:
+   ```
+   ~/.claude/bin/tick-criterion.sh <owner/repo> <issue> <position>
+   ```
+7. Repeat with the next test.
 
 One assertion per test. One test per commit cycle. No batching multiple behaviors
 into a single test or a single commit.

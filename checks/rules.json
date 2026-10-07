@@ -228,6 +228,10 @@
     {
       "file": "agents/plan-scribe.md",
       "contains": "Do this step again after every republish, so the page opens once for each publish."
+    },
+    {
+      "file": "rules/develop_process_rules.md",
+      "contains": "~/.claude/bin/tick-criterion.sh <owner/repo> <issue> <position>"
     }
   ]
 }

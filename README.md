@@ -77,7 +77,10 @@ the progress of the plan that issue is listed under: the plan's title, the
 task's stage, one square per stage of the plan in stage order, and the closed
 units out of all units. A stage's square is
 green when every unit of that stage is closed, yellow when some are, and grey
-when none are. A unit's stage is read from the `Part of` line of its issue. It
+when none are. A unit's stage is read from the `Part of` line of its issue.
+Under it, a second bar shows how many of the task's acceptance criteria are
+ticked out of all of them. A criterion is ticked once the commit that covers it
+lands, with `~/.claude/bin/tick-criterion.sh <owner/repo> <issue> <position>`. It
 asks GitHub at most once a minute for each repo and branch.
 Above the plan's progress it shows a flag for each item this session has waited
 on the owner for since the owner's last prompt, one to a line, such as a question or a pull
