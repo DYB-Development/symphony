@@ -78,9 +78,11 @@ flags() {
 }
 
 end_of_turn() {
-  local session
+  local session waiting
   session=$(jq -r '.session_id // empty')
-  flags "$session" | jq -Rsc '{systemMessage: rtrimstr("\n")}'
+  waiting=$(flags "$session")
+  [ -n "$waiting" ] || return 0
+  jq -nc --arg waiting "$waiting" '{systemMessage: $waiting}'
 }
 
 case "${1:-}" in

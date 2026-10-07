@@ -133,6 +133,11 @@ assert_equals "▶ plan · Review plan #110 · https://github.com/acme/widget/is
   "shows the owner the flag, worded as the status line words it, when a turn ends while the owner is waited on"
 drop_record
 
+new_record
+record_bash s2 '~/.claude/bin/owner-turn.sh "question" "Which road?"'
+assert_equals "" "$(stop_turn s1)" "prints nothing when a turn ends with nothing waiting on the owner"
+drop_record
+
 echo ""
 echo "the scribes:"
 
