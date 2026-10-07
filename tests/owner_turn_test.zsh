@@ -102,6 +102,11 @@ assert_equals "flags: [] entries: 1" "flags: [$("$TURN" flags s1)] entries: $(en
   "stops showing the flag once the owner sends the next prompt, and keeps every entry"
 drop_record
 
+new_record
+record_bash s2 '~/.claude/bin/owner-turn.sh "question" "Which road?"'
+assert_equals "" "$("$TURN" flags s1)" "never shows an entry from one session in another session's flags"
+drop_record
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
