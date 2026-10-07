@@ -17,12 +17,20 @@ USAGE
 [ $# -eq 2 ] || usage
 
 repo=$1 pr=$2
+opened=0
 
 while true; do
-  state=$(gh pr view "$pr" --repo "$repo" --json state,url,statusCheckRollup | jq -r '.state')
+  view=$(gh pr view "$pr" --repo "$repo" --json state,url,statusCheckRollup)
+  state=$(printf '%s' "$view" | jq -r '.state')
   case "$state" in
     MERGED) printf 'PR #%s was merged\n' "$pr"; exit 0 ;;
     CLOSED) printf 'PR #%s was closed\n' "$pr"; exit 0 ;;
   esac
+  passed=$(printf '%s' "$view" | jq '(.statusCheckRollup | length) > 0 and all(.statusCheckRollup[]; .conclusion == "SUCCESS")')
+  if [ "$opened" -eq 0 ] && [ "$passed" = true ]; then
+    open "$(printf '%s' "$view" | jq -r '.url')"
+    printf 'CI passed on PR #%s, opened it\n' "$pr"
+    opened=1
+  fi
   sleep 30
 done

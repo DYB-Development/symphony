@@ -70,6 +70,12 @@ stub "$(pr CLOSED test:SUCCESS)"
 assert_equals "PR #5 was closed" "$("$WAIT" acme/widget 5 2>&1 | tail -1)" "exits saying the pull request was closed"
 drop_stub
 
+stub "$(pr OPEN test:SUCCESS,lint:SUCCESS)" "$(pr MERGED test:SUCCESS,lint:SUCCESS)"
+"$WAIT" acme/widget 5 >/dev/null 2>&1
+assert_equals "https://github.com/acme/widget/pull/5" "$(cat "$WORK/opened" 2>/dev/null)" \
+  "opens the pull request in the browser once every check passes"
+drop_stub
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
