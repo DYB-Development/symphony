@@ -71,6 +71,10 @@ assert_equals "PreToolUse:AskUserQuestion PreToolUse:Bash UserPromptSubmit:null"
   "$(jq -r '[.hooks | to_entries[] | .key as $event | .value[] | select(any(.hooks[]; .command | endswith("/bin/owner-turn.sh record"))) | "\($event):\(.matcher)"] | sort | join(" ")' "$CONFIG/settings.json")" \
   "records the owner's turn on every question prompt, every Bash call and every prompt the owner sends"
 
+assert_equals "Stop:null:null" \
+  "$(jq -r '[.hooks | to_entries[] | .key as $event | .value[] | . as $entry | .hooks[] | select(.command | endswith("/bin/owner-turn.sh stop")) | "\($event):\($entry.matcher):\(.async)"] | sort | join(" ")' "$CONFIG/settings.json")" \
+  "shows the owner's flag when a session ends its turn, waiting for it so its message is shown"
+
 assert_equals "PreToolUse:* Stop:null" \
   "$(jq -r '[.hooks | to_entries[] | .key as $event | .value[] | select(any(.hooks[]; .command | endswith("/bin/working-line.sh record"))) | "\($event):\(.matcher)"] | sort | join(" ")' "$CONFIG/settings.json")" \
   "keeps the working line on every tool call and clears it when a session ends its turn"

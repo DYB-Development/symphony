@@ -77,8 +77,17 @@ flags() {
   ' "${files[@]}" | while IFS=$'\t' read -r kind wanted link; do flag_text "$kind" "$wanted" "$link"; done
 }
 
+end_of_turn() {
+  local session waiting
+  session=$(jq -r '.session_id // empty')
+  waiting=$(flags "$session")
+  [ -n "$waiting" ] || return 0
+  jq -nc --arg waiting "$waiting" '{systemMessage: $waiting}'
+}
+
 case "${1:-}" in
   record) record; exit 0 ;;
+  stop) end_of_turn; exit 0 ;;
   flags) [ $# -eq 2 ] || usage; flags "$2"; exit 0 ;;
 esac
 

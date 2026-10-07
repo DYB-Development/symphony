@@ -119,6 +119,26 @@ assert_equals "" "$("$TURN" flags s1)" "never shows an entry from one session in
 drop_record
 
 echo ""
+echo "owner-turn.sh stop:"
+
+stop_turn() {
+  jq -nc --arg session "$1" --arg cwd "$REPO" '{hook_event_name: "Stop", session_id: $session, cwd: $cwd}' \
+    | "$TURN" stop
+}
+
+new_record
+record_bash s1 '~/.claude/bin/owner-turn.sh "plan" "Review plan #110" "https://github.com/acme/widget/issues/110"'
+assert_equals "▶ plan · Review plan #110 · https://github.com/acme/widget/issues/110" \
+  "$(stop_turn s1 | jq -r .systemMessage)" \
+  "shows the owner the flag, worded as the status line words it, when a turn ends while the owner is waited on"
+drop_record
+
+new_record
+record_bash s2 '~/.claude/bin/owner-turn.sh "question" "Which road?"'
+assert_equals "" "$(stop_turn s1)" "prints nothing when a turn ends with nothing waiting on the owner"
+drop_record
+
+echo ""
 echo "the scribes:"
 
 if grep -qF '~/.claude/bin/owner-turn.sh "pull request" "Review PR #<n>" "<the PR URL>"' "$SCRIPT_DIR/../agents/pr-scribe.md"; then

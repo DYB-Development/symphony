@@ -113,6 +113,10 @@
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/bin/working-line.sh record"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/owner-turn.sh stop"
           }
         ]
       }
