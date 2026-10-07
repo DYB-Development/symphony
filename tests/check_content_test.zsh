@@ -71,6 +71,12 @@ assert_equals 'FAIL scribe.md contains "Never merge."' "$("$CHECK" "$ROOT/rules.
   "names the file and the forbidden text in it when a rule fails"
 drop_root
 
+new_root
+rules '{"version": 1, "rules": [{"file": "scribe.md", "contains": "Open the pull request."}, {"file": "scribe.md", "absent": "Never merge."}]}'
+assert_equals "2" "$("$CHECK" "$ROOT/rules.json" "$ROOT" 2>&1 | grep -c '^FAIL')" \
+  "reports every failing rule, not only the first"
+drop_root
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
