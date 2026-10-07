@@ -53,6 +53,14 @@ tool_call s1 Read ""
 assert_equals "● working · Read" "$("$WORKING" show s1)" "shows the tool's name for a tool call with no description"
 drop_record
 
+new_record
+tool_call s1 Agent "Open PR for issue 141"
+jq -nc '{hook_event_name: "PreToolUse", session_id: "s1", agent_id: "a1", tool_name: "Bash", tool_input: {command: "true", description: "Read the diff"}}' \
+  | "$WORKING" record
+assert_equals "● working · Open PR for issue 141" "$("$WORKING" show s1)" \
+  "keeps the working line when one of the session's subagents makes a tool call"
+drop_record
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
