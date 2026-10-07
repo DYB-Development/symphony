@@ -21,5 +21,8 @@ if gh api "repos/$repo/issues/$plan/sub_issues" --paginate --jq '.[].number' | g
   exit 0
 fi
 
-id=$(gh api "repos/$repo/issues/$task" --jq .id)
+id=$(gh api "repos/$repo/issues/$task" --jq .id 2>/dev/null) || {
+  printf 'plan-link.sh: issue #%s does not exist in %s\n' "$task" "$repo" >&2
+  exit 1
+}
 gh api -X POST "repos/$repo/issues/$plan/sub_issues" -F "sub_issue_id=$id" >/dev/null

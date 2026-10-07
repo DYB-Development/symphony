@@ -64,6 +64,13 @@ assert_contains "0 0" "$code $(grep -c -- '-X POST' "$GH_LOG")" \
   "succeeds without adding a task issue already listed under the plan"
 drop_stub
 
+stub_gh
+output=$("$LINK" acme/widget 7 99 2>&1)
+code=$?
+assert_contains "1 plan-link.sh: issue #99 does not exist in acme/widget" "$code $output" \
+  "fails naming a task issue that does not exist"
+drop_stub
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
