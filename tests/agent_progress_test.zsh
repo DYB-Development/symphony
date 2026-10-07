@@ -177,5 +177,13 @@ assert_marks_steps plan-scribe
 
 assert_marks_steps audit-scribe
 
+assert_says() {
+  if grep -qF -- "$2" "$SCRIPT_DIR/../$1"; then ok "$3"; else fail "$3"; fi
+}
+
+assert_says agents/review-scribe.md \
+  '~/.claude/bin/scribe-step.sh "<owner/repo>#<pr>" "3. Run every check" "<k>/9 <the check>"' \
+  "the review scribe marks each of its nine checks as a position inside the step"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

@@ -91,7 +91,11 @@ is how the person who ran you sees which step you are on.
 
 3. **Run every check** in the order `review-checks.md` gives, and record each
    one's result as that file says to. Run every one even when the diff looks like
-   it only touches one of them.
+   it only touches one of them. Mark each check as you start it, counting from
+   1 in that order:
+   ```
+   ~/.claude/bin/scribe-step.sh "<owner/repo>#<pr>" "3. Run every check" "<k>/9 <the check>"
+   ```
 
    A finding is something you can point at on a line. If you cannot name the
    line, it is not a finding.
