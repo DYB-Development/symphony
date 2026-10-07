@@ -98,3 +98,10 @@ never the whole draft a second time.
 once more. A sentence still flagged on that third read stays as it is. List each
 one in your return under `Still flagged:`, with the reader's note beside it, so
 the person reading the draft knows where to look.
+
+Mark each read as you start it, with the target and step you marked when this
+step began and the read's number out of three:
+
+```
+~/.claude/bin/scribe-step.sh "<target>" "<n>. <the step's bold title>" "<r>/3 read"
+```

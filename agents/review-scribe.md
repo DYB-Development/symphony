@@ -91,7 +91,11 @@ is how the person who ran you sees which step you are on.
 
 3. **Run every check** in the order `review-checks.md` gives, and record each
    one's result as that file says to. Run every one even when the diff looks like
-   it only touches one of them.
+   it only touches one of them. Mark each check as you start it, counting from
+   1 in that order:
+   ```
+   ~/.claude/bin/scribe-step.sh "<owner/repo>#<pr>" "3. Run every check" "<k>/9 <the check>"
+   ```
 
    A finding is something you can point at on a line. If you cannot name the
    line, it is not a finding.
@@ -117,7 +121,11 @@ is how the person who ran you sees which step you are on.
    Never put the chain of cause into the header or the first sentence, and leave
    the steps out when the defect is visible in the line itself. There is no
    severity — raise it only when it meets the bar in `pr-review.md`. One comment
-   per finding, on the line that causes it, in the current diff.
+   per finding, on the line that causes it, in the current diff. Mark each
+   finding as you start its comment, where K is the number of findings:
+   ```
+   ~/.claude/bin/scribe-step.sh "<owner/repo>#<pr>" "5. Write each inline comment" "<k>/<K> finding"
+   ```
 
 6. **Write the summary** with its four sections — Verdict, Findings,
    Conformance, Not checked — and never another. Findings has one bullet per
@@ -175,7 +183,11 @@ is how the person who ran you sees which step you are on.
    `~/.claude/rules/claim-checking.md` (or `rules/claim-checking.md` in this
    package) and follow it. The claims file sits next to the draft, at
    `<repo root>/.review-<pr>.claims.json`. Each claim holds its text word for
-   word and a pointer.
+   word and a pointer. Mark each claim as you start it, where K is the number
+   of claims:
+   ```
+   ~/.claude/bin/scribe-step.sh "<owner/repo>#<pr>" "9. Point each claim at the lines it is about" "<k>/<K> claim"
+   ```
 
    A pointer holds a path, a first and last line, and a side.
 

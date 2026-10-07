@@ -35,6 +35,8 @@ new_repo() {
   export STATUS_LINE_DIR="$WORK/cache"
   export OWNER_TURN_DIR="$WORK/owner-turn"
   export WORKING_LINE_DIR="$WORK/working-line"
+  export AGENT_PROGRESS_DIR="$WORK/agent-progress"
+  export AGENT_PROGRESS_AGENTS="$WORK/agents"
   GH_LOG="$WORK/calls"
   : > "$GH_LOG"
   COUNTS="$WORK/counts"
@@ -58,7 +60,7 @@ STUB
 drop_repo() {
   path=(${path:#$WORK/bin})
   rm -rf "$WORK"
-  unset STATUS_LINE_DIR OWNER_TURN_DIR WORKING_LINE_DIR
+  unset STATUS_LINE_DIR OWNER_TURN_DIR WORKING_LINE_DIR AGENT_PROGRESS_DIR AGENT_PROGRESS_AGENTS
 }
 
 status_line() {
@@ -114,6 +116,16 @@ jq -nc '{hook_event_name: "PreToolUse", session_id: "s1", tool_name: "Bash", too
   | "$SCRIPT_DIR/../bin/working-line.sh" record
 assert_equals $'● working · Run every test suite\nQuote builder · stage 2 of 4 — Enrich\n███░░░░░░░ 3/8' "$(status_line)" \
   "shows the working line on top while the session works"
+drop_repo
+
+new_repo 12-quote-lines
+jq -nc '{hook_event_name: "PreToolUse", session_id: "s1", tool_name: "Agent", tool_input: {description: "Review PR #142"}}' \
+  | "$SCRIPT_DIR/../bin/working-line.sh" record
+mkdir -p "$AGENT_PROGRESS_DIR" "$AGENT_PROGRESS_AGENTS"
+for n in {1..11}; do printf '%d. **Step %d.** Do it.\n' $n $n; done > "$AGENT_PROGRESS_AGENTS/review-scribe.md"
+printf '1000\treview-scribe\tacme/widget#142\t3. Run every check\ts1\n' > "$AGENT_PROGRESS_DIR/a1.log"
+assert_equals $'● working · Review PR #142\nreview-scribe acme/widget#142\n█░░░░░░░░░ 3/11 · Run every check\nQuote builder · stage 2 of 4 — Enrich\n███░░░░░░░ 3/8' "$(status_line)" \
+  "shows each running agent's lines under the working line"
 drop_repo
 
 echo ""

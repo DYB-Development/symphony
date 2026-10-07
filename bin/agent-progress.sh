@@ -5,9 +5,12 @@ usage() {
   cat >&2 <<'USAGE'
 usage: agent-progress.sh
        agent-progress.sh record < hook.json
+       agent-progress.sh line <session>
 
 Shows each running subagent's target, the step it is on, how long it has been on
-that step and how long it has run. `record` is the hook: it appends a line to
+that step and how long it has run. `line` prints, for each running subagent of
+one session, its type and target above a bar of how far through its numbered
+steps it is, for the status line. `record` is the hook: it appends a line to
 the subagent's log when it marks a step with scribe-step.sh, when it runs a
 script from ~/.claude/bin, and when it stops.
 Logs are kept in ~/.claude/agent-progress, one file per subagent.
@@ -16,7 +19,12 @@ USAGE
 }
 
 log_dir="${AGENT_PROGRESS_DIR:-$HOME/.claude/agent-progress}"
+agents_dir="${AGENT_PROGRESS_AGENTS:-$(dirname "$0")/../agents}"
 now="${AGENT_PROGRESS_NOW:-$(date +%s)}"
+
+position_for() {
+  printf '%s' "$1" | sed -nE 's/.*scribe-step\.sh[[:space:]]+"[^"]*"[[:space:]]+"[^"]*"[[:space:]]+"([^"]*)".*/\1/p'
+}
 
 step_for() {
   local command=$1 marked script
@@ -42,20 +50,64 @@ show_progress() {
   ' "$1"
 }
 
+latest_step() {
+  awk -F '\t' '
+    $3 != "" { target = $3 }
+    $4 == "finished" { finished = 1 }
+    $4 != "" && $4 != "finished" { last = $4 }
+    $4 != "" && $4 != "finished" && $4 !~ /^runs / { step = $4; position = $6 }
+    { type = $2; if ($5 != "") session = $5 }
+    END { if (!finished) printf "%s\037%s\037%s\037%s\037%s\037%s\n", type, target, step, position, session, last }
+  ' "$1"
+}
+
+bar() {
+  local tenths=$1
+  printf '%*s' "$tenths" '' | sed 's/ /█/g'
+  printf '%*s' $(( 10 - tenths )) '' | sed 's/ /░/g'
+}
+
+show_line() {
+  local type target step position session last n title total
+  IFS=$'\037' read -r type target step position session last < <(latest_step "$2") || return 0
+  [ "$session" = "$1" ] || return 0
+  n=${step%%.*}
+  title=${step#*. }
+  total=$(grep -cE '^[0-9]+\. \*\*' "$agents_dir/$type.md" 2>/dev/null || true)
+  if [[ ! "$n" =~ ^[0-9]+$ ]] || [ "${total:-0}" -eq 0 ]; then
+    printf '%s%s · %s\n' "$type" "${target:+ $target}" "$last"
+    return 0
+  fi
+  printf '%s%s\n' "$type" "${target:+ $target}"
+  local k=0 of=1 fraction=${position%% *}
+  if [[ "$fraction" =~ ^([0-9]+)/([0-9]+)$ ]]; then k=${BASH_REMATCH[1]}; of=${BASH_REMATCH[2]}; fi
+  printf '%s %s/%s · %s%s\n' "$(bar $(( ((n - 1) * of + k) * 10 / (of * total) )))" "$n" "$total" "$title" "${position:+ · $position}"
+}
+
 case "${1:-}" in
+  line)
+    [ $# -eq 2 ] || usage
+    for log in "$log_dir"/*.log; do
+      [ -f "$log" ] || continue
+      show_line "$2" "$log"
+    done
+    ;;
   record)
     payload=$(cat)
     agent_id=$(printf '%s' "$payload" | jq -r '.agent_id // empty')
     [ -n "$agent_id" ] || exit 0
     agent_type=$(printf '%s' "$payload" | jq -r '.agent_type // empty')
+    session=$(printf '%s' "$payload" | jq -r '.session_id // empty')
     if [ "$(printf '%s' "$payload" | jq -r '.hook_event_name // empty')" = SubagentStop ]; then
       step=$(printf '\tfinished')
     else
-      step=$(step_for "$(printf '%s' "$payload" | jq -r '.tool_input.command // empty')")
+      command=$(printf '%s' "$payload" | jq -r '.tool_input.command // empty')
+      step=$(step_for "$command")
       [ -n "$step" ] || exit 0
+      position=$(position_for "$command")
     fi
     mkdir -p "$log_dir"
-    printf '%s\t%s\t%s\n' "$now" "$agent_type" "$step" >> "$log_dir/$agent_id.log"
+    printf '%s\t%s\t%s\t%s%s\n' "$now" "$agent_type" "$step" "$session" "${position:+$'\t'$position}" >> "$log_dir/$agent_id.log"
     ;;
   "")
     running=$(for log in "$log_dir"/*.log; do

@@ -79,6 +79,9 @@ request to review. An agent marks a pull request or plan with
 `~/.claude/bin/owner-turn.sh "<kind>" "<what is wanted>" ["<link>"]`.
 While the session works, the top line says what it is doing, taken from the
 description of its most recent tool call, and it goes away when the turn ends.
+Under it, each running scribe of the session shows its type and target above a
+bar of how far through its numbered steps it is, filled partway through a long
+step by the position the scribe marks inside it.
 
 Commands are run as `/review`. A file edited in this clone takes effect in the
 next session, with no reinstall, which is what makes this the mode to use while
