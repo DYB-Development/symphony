@@ -28,6 +28,7 @@ failed=0
 while IFS=$'\037' read -r file contains absent; do
   content=$(cat "$(path_of "$file")" 2>/dev/null || true)
   if [ -n "$contains" ] && [[ "$content" != *"$contains"* ]]; then
+    printf 'FAIL %s is missing "%s"\n' "$file" "$contains"
     failed=1
   fi
   if [ -n "$absent" ] && [[ "$content" == *"$absent"* ]]; then
