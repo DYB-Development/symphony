@@ -65,6 +65,12 @@ assert_equals 'FAIL scribe.md is missing "Open the pull request."' "$("$CHECK" "
   "names the file and the text missing from it when a rule fails"
 drop_root
 
+new_root
+rules '{"version": 1, "rules": [{"file": "scribe.md", "absent": "Never merge."}]}'
+assert_equals 'FAIL scribe.md contains "Never merge."' "$("$CHECK" "$ROOT/rules.json" "$ROOT" 2>&1 | sed -n 2p)" \
+  "names the file and the forbidden text in it when a rule fails"
+drop_root
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

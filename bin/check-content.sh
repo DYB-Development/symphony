@@ -32,6 +32,7 @@ while IFS=$'\037' read -r file contains absent; do
     failed=1
   fi
   if [ -n "$absent" ] && [[ "$content" == *"$absent"* ]]; then
+    printf 'FAIL %s contains "%s"\n' "$file" "$absent"
     failed=1
   fi
 done < <(jq -r '.rules[] | [.file, (.contains // ""), (.absent // "")] | join("\u001f")' "$rules")
