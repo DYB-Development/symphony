@@ -143,6 +143,12 @@ assert_equals "Explore · runs plan-progress" "$(lines s1)" \
   "shows an agent with no numbered steps by its type, target and last step, with no bar"
 drop_dir
 
+new_dir
+new_agents
+printf '1000\treview-scribe\tacme/quotes#42\t3. Run every check\ts2\n' > "$LOGS/a1.log"
+assert_equals "" "$(lines s1)" "never shows a subagent running in another session"
+drop_dir
+
 echo "scribes:"
 
 assert_marks_steps() {
