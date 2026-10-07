@@ -104,6 +104,7 @@ case "${1:-}" in
     session=$(printf '%s' "$payload" | jq -r '.session_id // empty')
     if [ "$(printf '%s' "$payload" | jq -r '.hook_event_name // empty')" = SubagentStop ]; then
       step=$(printf '\tfinished')
+      [ ! -d "$log_dir" ] || find "$log_dir" -name '*.log' -mmin +1440 -delete
     else
       command=$(printf '%s' "$payload" | jq -r '.tool_input.command // empty')
       step=$(step_for "$command")
