@@ -101,6 +101,13 @@ assert_equals "▶ question · Which road?  Quote builder ███░░░░�
   "shows the session's flag before the plan progress on the same line"
 drop_repo
 
+new_repo main
+jq -nc --arg cwd "$REPO" \
+  '{hook_event_name: "PreToolUse", session_id: "s1", cwd: $cwd, tool_name: "AskUserQuestion", tool_input: {questions: [{question: "Which road?"}]}}' \
+  | "$SCRIPT_DIR/../bin/owner-turn.sh" record
+assert_equals "▶ question · Which road?" "$(status_line)" "shows the session's flag on a branch with no plan"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
