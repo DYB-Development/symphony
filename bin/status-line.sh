@@ -14,13 +14,31 @@ USAGE
 
 [ $# -eq 0 ] || usage
 
+cache_dir="${STATUS_LINE_DIR:-$HOME/.claude/status-line}"
+now="${STATUS_LINE_NOW:-$(date +%s)}"
+
+read_progress() {
+  local cache
+  cache="$cache_dir/$(printf '%s %s' "$repo" "$branch" | shasum | cut -c1-40)"
+  if [ -f "$cache" ] && [ $(( now - $(head -1 "$cache") )) -lt 60 ]; then
+    sed -n 2p "$cache"
+    return
+  fi
+  local progress
+  progress=$("$(dirname "$0")/plan-progress.sh" "$repo" "$task" 2>/dev/null) || progress=""
+  mkdir -p "$cache_dir"
+  printf '%s\n%s\n' "$now" "$progress" > "$cache"
+  printf '%s\n' "$progress"
+}
+
 dir=$(jq -r '.workspace.current_dir // .cwd // empty')
 branch=$(git -C "$dir" branch --show-current)
 task=${branch%%[!0-9]*}
 [ -n "$task" ] || exit 0
 repo=$(git -C "$dir" remote get-url origin | sed -E 's#^.*github\.com[:/]##; s#\.git$##')
 
-progress=$("$(dirname "$0")/plan-progress.sh" "$repo" "$task" 2>/dev/null) || exit 0
+progress=$(read_progress)
+[ -n "$progress" ] || exit 0
 IFS=$'\t' read -r title closed total stage <<< "$progress"
 
 filled=$(( closed * 10 / total ))

@@ -76,6 +76,13 @@ new_repo 13-loose-task
 assert_equals "" "$(status_line)" "shows no plan progress on a branch whose issue is listed under no plan"
 drop_repo
 
+new_repo 12-quote-lines
+STATUS_LINE_NOW=1000 status_line >/dev/null
+STATUS_LINE_NOW=1059 status_line >/dev/null
+assert_equals "1" "$(grep -c '/parent' "$GH_LOG")" \
+  "asks GitHub once for refreshes within the same minute"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
