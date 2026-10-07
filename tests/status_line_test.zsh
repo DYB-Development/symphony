@@ -197,6 +197,12 @@ assert_equals "██████████ 2/2 criteria" "$(STATUS_LINE_NOW=1
   "shows a newly ticked criterion in the second bar a minute after the last read"
 drop_repo
 
+new_repo 12-quote-lines
+printf '## Part of\nQuote building, stage 2 of 4 — Enrich.\n\n## Acceptance criteria\n- [x] A rep can quote.\n- [ ] A rep can save.\n' > "$TASK_BODY"
+assert_equals $'\e[32m■\e[0m\e[33m■\e[0m\e[90m■\e[0m\e[90m■\e[0m 3/8\n█████░░░░░ 1/2 criteria' "$(status_line | tail -2)" \
+  "shows the plan bar and the criteria bar on their own lines"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
