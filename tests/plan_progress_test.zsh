@@ -56,6 +56,12 @@ assert_equals $'Quote builder\t3\t8\tstage 2 of 4 — Enrich' "$("$READER" acme/
   "prints the plan's title, its closed and total units, and the task's stage"
 drop_stub
 
+stub_gh
+output=$("$READER" acme/widget 13 2>/dev/null)
+code=$?
+assert_equals "1 " "$code $output" "prints nothing and fails for a task listed under no plan"
+drop_stub
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
