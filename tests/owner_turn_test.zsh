@@ -119,5 +119,14 @@ assert_equals "" "$("$TURN" flags s1)" "never shows an entry from one session in
 drop_record
 
 echo ""
+echo "the scribes:"
+
+if grep -qF '~/.claude/bin/owner-turn.sh "pull request" "Review PR #<n>" "<the PR URL>"' "$SCRIPT_DIR/../agents/pr-scribe.md"; then
+  ok "the pull request scribe records a pull request entry with its link once the PR is opened or updated"
+else
+  fail "the pull request scribe records a pull request entry with its link once the PR is opened or updated"
+fi
+
+echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

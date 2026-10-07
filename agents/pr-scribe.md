@@ -217,6 +217,12 @@ is how the person who ran you sees which step you are on.
    gh pr edit <n> --repo <owner/repo> --body-file <file>
    ```
 
+14. **Tell the owner it is ready.** Record that the PR is waiting on them, so
+   it shows above the progress in their status line:
+   ```
+   ~/.claude/bin/owner-turn.sh "pull request" "Review PR #<n>" "<the PR URL>"
+   ```
+
 **Never merge the PR.** Merging is reserved for the person who ran you.
 
 ## Return
