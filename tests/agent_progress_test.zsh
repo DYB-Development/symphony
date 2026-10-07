@@ -232,6 +232,8 @@ assert_requires_marks review-scribe
 
 assert_requires_marks pr-scribe
 
+assert_requires_marks issue-scribe
+
 assert_says() {
   if grep -qF -- "$2" "$SCRIPT_DIR/../$1"; then ok "$3"; else fail "$3"; fi
 }

@@ -23,7 +23,8 @@ caller gathered. It may be messy — that is fine, you clean it up.
 
 ## What you do
 
-Mark each numbered step below as you start it, before its first command:
+Mark each numbered step below as you start it, before its first command.
+Marking a step is required, never skipped, and is the first thing you do in it, even when the step runs no other command.
 
 ```
 ~/.claude/bin/scribe-step.sh "<owner/repo>" "<n>. <the step's bold title>"
