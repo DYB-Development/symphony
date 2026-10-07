@@ -78,6 +78,15 @@ assert_equals "command $ROOT/bin/status-line.sh" \
 rm -rf "$CONFIG"
 
 CONFIG="$(fresh_config)"
+printf '{"statusLine": {"type": "command", "command": "my-line.sh"}}\n' > "$CONFIG/settings.json"
+output="$(CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" 2>&1)"
+assert_equals "my-line.sh left unchanged: true" \
+  "$(jq -r .statusLine.command "$CONFIG/settings.json") left unchanged: $([[ "$output" == *"already set to my-line.sh, left unchanged"* ]] && echo true || echo false)" \
+  "leaves a status line that is already set and says it did"
+
+rm -rf "$CONFIG"
+
+CONFIG="$(fresh_config)"
 cat > "$CONFIG/settings.json" <<'JSON'
 {
   "model": "opus",
