@@ -128,6 +128,7 @@ is how the person who ran you sees which step you are on.
    ```
    ~/.claude/bin/scribe-step.sh "<owner/repo>#<pr>" "5. Write each inline comment" "<k>/<K> finding"
    ```
+   Marking each finding is required, never skipped, and is the first thing you do for it.
 
 6. **Write the summary** with its four sections — Verdict, Findings,
    Conformance, Not checked — and never another. Findings has one bullet per
