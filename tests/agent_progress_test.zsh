@@ -102,6 +102,26 @@ printf '1000\treview-scribe\tacme/quotes#42\t1. Read the diff\n1200\treview-scri
 assert_equals "No agents running." "$(status 1300)" "leaves out an agent that has finished"
 drop_dir
 
+# An agents directory holding a review-scribe whose instructions number 11 steps.
+new_agents() {
+  AGENTS="$LOGS/agents"
+  mkdir -p "$AGENTS"
+  for n in {1..11}; do printf '%d. **Step %d.** Do it.\n' $n $n; done > "$AGENTS/review-scribe.md"
+}
+
+lines() {
+  AGENT_PROGRESS_DIR="$LOGS" AGENT_PROGRESS_AGENTS="$AGENTS" AGENT_PROGRESS_NOW=1300 "$PROGRESS" line "$1" 2>&1
+}
+
+echo "agent-progress.sh line:"
+
+new_dir
+new_agents
+printf '1000\treview-scribe\tacme/quotes#42\t3. Run every check\ts1\n' > "$LOGS/a1.log"
+assert_equals $'review-scribe acme/quotes#42\n█░░░░░░░░░ 3/11 · Run every check' "$(lines s1)" \
+  "shows a running scribe's type and target above a bar of its step out of its numbered steps"
+drop_dir
+
 echo "scribes:"
 
 assert_marks_steps() {

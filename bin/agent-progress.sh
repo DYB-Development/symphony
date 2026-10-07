@@ -5,9 +5,12 @@ usage() {
   cat >&2 <<'USAGE'
 usage: agent-progress.sh
        agent-progress.sh record < hook.json
+       agent-progress.sh line <session>
 
 Shows each running subagent's target, the step it is on, how long it has been on
-that step and how long it has run. `record` is the hook: it appends a line to
+that step and how long it has run. `line` prints, for each running subagent of
+one session, its type and target above a bar of how far through its numbered
+steps it is, for the status line. `record` is the hook: it appends a line to
 the subagent's log when it marks a step with scribe-step.sh, when it runs a
 script from ~/.claude/bin, and when it stops.
 Logs are kept in ~/.claude/agent-progress, one file per subagent.
@@ -16,6 +19,7 @@ USAGE
 }
 
 log_dir="${AGENT_PROGRESS_DIR:-$HOME/.claude/agent-progress}"
+agents_dir="${AGENT_PROGRESS_AGENTS:-$(dirname "$0")/../agents}"
 now="${AGENT_PROGRESS_NOW:-$(date +%s)}"
 
 position_for() {
@@ -46,7 +50,41 @@ show_progress() {
   ' "$1"
 }
 
+latest_step() {
+  awk -F '\t' '
+    $3 != "" { target = $3 }
+    $4 == "finished" { finished = 1 }
+    $4 != "" && $4 != "finished" && $4 !~ /^runs / { step = $4; position = $6 }
+    { type = $2; if ($5 != "") session = $5 }
+    END { if (!finished) printf "%s\037%s\037%s\037%s\037%s\n", type, target, step, position, session }
+  ' "$1"
+}
+
+bar() {
+  local tenths=$1
+  printf '%*s' "$tenths" '' | sed 's/ /█/g'
+  printf '%*s' $(( 10 - tenths )) '' | sed 's/ /░/g'
+}
+
+show_line() {
+  local type target step position session n title total
+  IFS=$'\037' read -r type target step position session < <(latest_step "$2") || return 0
+  [ "$session" = "$1" ] || return 0
+  printf '%s %s\n' "$type" "$target"
+  n=${step%%.*}
+  title=${step#*. }
+  total=$(grep -cE '^[0-9]+\. \*\*' "$agents_dir/$type.md" 2>/dev/null || true)
+  printf '%s %s/%s · %s\n' "$(bar $(( (n - 1) * 10 / total )))" "$n" "$total" "$title"
+}
+
 case "${1:-}" in
+  line)
+    [ $# -eq 2 ] || usage
+    for log in "$log_dir"/*.log; do
+      [ -f "$log" ] || continue
+      show_line "$2" "$log"
+    done
+    ;;
   record)
     payload=$(cat)
     agent_id=$(printf '%s' "$payload" | jq -r '.agent_id // empty')
