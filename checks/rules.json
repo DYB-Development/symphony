@@ -140,6 +140,42 @@
     {
       "file": "rules/draft-reading.md",
       "contains": "mktemp -d"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": ".review-<pr>.claims.json"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "a side"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "Every Findings bullet that reports a finding"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "~/.claude/bin/capture-evidence.sh"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "A finding whose pointer cannot be resolved is cut from the draft."
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "Cut for an unresolved pointer:"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "Every inline comment has a claim whose pointer is that comment's own path, line and side."
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "~/.claude/bin/review-draft.sh --check-lines"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "~/.claude/bin/judge-claims.sh"
     }
   ]
 }
