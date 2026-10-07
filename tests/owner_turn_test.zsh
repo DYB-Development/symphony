@@ -89,6 +89,11 @@ assert_equals "▶ plan · Review plan #110 · https://github.com/acme/widget/is
   "shows a marker, the kind, what is wanted and the link for an entry the session is waiting on"
 drop_record
 
+new_record
+record_bash s1 '~/.claude/bin/owner-turn.sh "question" "Which road?"'
+assert_equals "▶ question · Which road?" "$("$TURN" flags s1)" "leaves the link off a flag for an entry with none"
+drop_record
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
