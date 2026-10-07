@@ -80,7 +80,7 @@ drop_root
 new_root
 printf '1000\treview-scribe\tacme/quotes#42\t1. Read the diff\n' > "$ROOT/run.log"
 rules "{\"version\": 1, \"rules\": [{\"file\": \"$ROOT/run.log\", \"contains\": \"1. Read the diff\"}]}"
-assert_equals "0" "$("$CHECK" "$ROOT/rules.json" / >/dev/null 2>&1; echo $?)" \
+assert_equals "0" "$("$CHECK" "$ROOT/rules.json" "$ROOT/elsewhere" >/dev/null 2>&1; echo $?)" \
   "checks a file named by its full path, such as a run's progress log, the same way"
 drop_root
 
