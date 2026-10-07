@@ -13,7 +13,9 @@ one session, its type and target above a bar of how far through its numbered
 steps it is, for the status line. `record` is the hook: it appends a line to
 the subagent's log when it marks a step with scribe-step.sh, when it runs a
 script from ~/.claude/bin, and when it stops.
-Logs are kept in ~/.claude/agent-progress, one file per subagent.
+Logs are kept in ~/.claude/agent-progress, one file per subagent. An agent that
+has recorded nothing for an hour is not shown, and a log untouched for a day is
+removed when the next subagent stops.
 USAGE
   exit 64
 }
