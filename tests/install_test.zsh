@@ -71,6 +71,10 @@ assert_equals "Notification:permission_prompt:true Stop:null:true" \
   "$(jq -r '[.hooks | to_entries[] | .key as $event | .value[] | . as $entry | .hooks[] | select(.command | endswith("/bin/turn-sound.sh play")) | "\($event):\($entry.matcher):\(.async)"] | sort | join(" ")' "$CONFIG/settings.json")" \
   "plays the waiting sound in the background when a session ends its turn or asks permission"
 
+assert_equals "command $ROOT/bin/status-line.sh" \
+  "$(jq -r '"\(.statusLine.type) \(.statusLine.command)"' "$CONFIG/settings.json")" \
+  "sets the status line to the package's command when none is set"
+
 rm -rf "$CONFIG"
 
 CONFIG="$(fresh_config)"
