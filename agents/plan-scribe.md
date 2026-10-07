@@ -70,6 +70,7 @@ is how the person who ran you sees which step you are on.
    ```
    ~/.claude/bin/scribe-step.sh "<owner/repo>" "3. Write all ten sections" "<k>/10 <the section>"
    ```
+   Marking each section is required, never skipped, and is the first thing you do for it.
 
    - Section 04 is the section the plan is read for. Get every relationship
      right and name the join between the new work and the built work, and with it
