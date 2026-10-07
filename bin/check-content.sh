@@ -17,3 +17,17 @@ USAGE
 
 rules=$1
 root=${2:-.}
+
+path_of() {
+  case "$1" in /*) printf '%s' "$1" ;; *) printf '%s/%s' "$root" "$1" ;; esac
+}
+
+failed=0
+while IFS=$'\037' read -r file contains; do
+  content=$(cat "$(path_of "$file")" 2>/dev/null || true)
+  if [ -n "$contains" ] && [[ "$content" != *"$contains"* ]]; then
+    failed=1
+  fi
+done < <(jq -r '.rules[] | [.file, (.contains // "")] | join("\u001f")' "$rules")
+
+exit "$failed"

@@ -43,6 +43,11 @@ rules '{"version": 1, "rules": [{"file": "scribe.md", "contains": "Mark each ste
 assert_equals "0" "$(check)" "passes when a rule's required text is in its file"
 drop_root
 
+new_root
+rules '{"version": 1, "rules": [{"file": "scribe.md", "contains": "Open the pull request."}]}'
+assert_equals "1" "$(check)" "fails when a rule's required text is missing from its file"
+drop_root
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
