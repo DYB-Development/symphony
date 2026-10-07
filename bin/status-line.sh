@@ -34,13 +34,14 @@ read_progress() {
 plan_part() {
   [ -n "$task" ] || return 0
   repo=$(git -C "$dir" remote get-url origin | sed -E 's#^.*github\.com[:/]##; s#\.git$##')
-  local progress title closed total stage filled bar
+  local progress title closed total stage stages squares=""
   progress=$(read_progress)
   [ -n "$progress" ] || return 0
-  IFS=$'\t' read -r title closed total stage <<< "$progress"
-  filled=$(( closed * 10 / total ))
-  bar=$(printf '%*s' "$filled" '' | sed 's/ /█/g')$(printf '%*s' $(( 10 - filled )) '' | sed 's/ /░/g')
-  printf '%s · %s\n%s %s/%s\n' "$title" "$stage" "$bar" "$closed" "$total"
+  IFS=$'\t' read -r title closed total stage stages <<< "$progress"
+  for _ in $stages; do
+    squares+="■"
+  done
+  printf '%s · %s\n%s %s/%s\n' "$title" "$stage" "$squares" "$closed" "$total"
 }
 
 working_part() {

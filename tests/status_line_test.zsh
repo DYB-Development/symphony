@@ -25,8 +25,15 @@ assert_equals() {
   fi
 }
 
+SQUARES='■■■■'
+
+unit() {
+  jq -nc --arg state "$1" --arg stage "$2" '{state: $state, body: ("## Part of\nQuote building, " + $stage + ".\n")}'
+}
+
 # A repo of acme/widget on branch $1, a cache directory, and a gh where task 12
-# sits under plan 7, "Quote builder", with 3 of 8 units closed.
+# sits under plan 7, "Quote builder", with 3 of 8 units closed: both of stage 1,
+# one of stage 2's three, none of stage 3's one and none of stage 4's two.
 new_repo() {
   WORK="$(mktemp -d "${TMPDIR:-/tmp}/status_line_test.XXXXXX")"
   REPO="$WORK/widget"
@@ -42,7 +49,16 @@ new_repo() {
   COUNTS="$WORK/counts"
   printf '3\t8' > "$COUNTS"
   UNITS="$WORK/units"
-  printf '[]' > "$UNITS"
+  {
+    unit closed "stage 1 of 4 — End to end"
+    unit closed "stage 1 of 4 — End to end"
+    unit closed "stage 2 of 4 — Enrich"
+    unit open "stage 2 of 4 — Enrich"
+    unit open "stage 2 of 4 — Enrich"
+    unit open "stage 3 of 4 — Simplify"
+    unit open "stage 4 of 4 — Harden"
+    unit open "stage 4 of 4 — Harden"
+  } | jq -sc . > "$UNITS"
   mkdir -p "$WORK/bin"
   cat > "$WORK/bin/gh" <<STUB
 #!/usr/bin/env bash
@@ -74,8 +90,13 @@ status_line() {
 echo "status-line.sh:"
 
 new_repo 12-quote-lines
-assert_equals $'Quote builder · stage 2 of 4 — Enrich\n███░░░░░░░ 3/8' "$(status_line)" \
+assert_equals $'Quote builder · stage 2 of 4 — Enrich\n'"$SQUARES 3/8" "$(status_line)" \
   "shows the plan's title and the task's stage above a bar and the closed units out of all units"
+drop_repo
+
+new_repo 12-quote-lines
+assert_equals "■■■■ 3/8" "$(status_line | sed -n 2p | sed $'s/\e\\[[0-9;]*m//g')" \
+  "shows one square per stage of the plan beside the closed units out of all units"
 drop_repo
 
 new_repo feature/quote-lines
@@ -96,7 +117,7 @@ drop_repo
 new_repo 12-quote-lines
 STATUS_LINE_NOW=1000 status_line >/dev/null
 printf '4\t8' > "$COUNTS"
-assert_equals $'Quote builder · stage 2 of 4 — Enrich\n█████░░░░░ 4/8' "$(STATUS_LINE_NOW=1060 status_line)" \
+assert_equals $'Quote builder · stage 2 of 4 — Enrich\n'"$SQUARES 4/8" "$(STATUS_LINE_NOW=1060 status_line)" \
   "shows a closed unit in the count a minute after the last read"
 drop_repo
 
@@ -104,7 +125,7 @@ new_repo 12-quote-lines
 jq -nc --arg cwd "$REPO" \
   '{hook_event_name: "PreToolUse", session_id: "s1", cwd: $cwd, tool_name: "AskUserQuestion", tool_input: {questions: [{question: "Which road?"}]}}' \
   | "$SCRIPT_DIR/../bin/owner-turn.sh" record
-assert_equals $'▶ question · Which road?\nQuote builder · stage 2 of 4 — Enrich\n███░░░░░░░ 3/8' "$(status_line)" \
+assert_equals $'▶ question · Which road?\nQuote builder · stage 2 of 4 — Enrich\n'"$SQUARES 3/8" "$(status_line)" \
   "shows the session's flag on its own line above the plan progress"
 drop_repo
 
@@ -118,7 +139,7 @@ drop_repo
 new_repo 12-quote-lines
 jq -nc '{hook_event_name: "PreToolUse", session_id: "s1", tool_name: "Bash", tool_input: {command: "true", description: "Run every test suite"}}' \
   | "$SCRIPT_DIR/../bin/working-line.sh" record
-assert_equals $'● working · Run every test suite\nQuote builder · stage 2 of 4 — Enrich\n███░░░░░░░ 3/8' "$(status_line)" \
+assert_equals $'● working · Run every test suite\nQuote builder · stage 2 of 4 — Enrich\n'"$SQUARES 3/8" "$(status_line)" \
   "shows the working line on top while the session works"
 drop_repo
 
@@ -128,7 +149,7 @@ jq -nc '{hook_event_name: "PreToolUse", session_id: "s1", tool_name: "Agent", to
 mkdir -p "$AGENT_PROGRESS_DIR" "$AGENT_PROGRESS_AGENTS"
 for n in {1..11}; do printf '%d. **Step %d.** Do it.\n' $n $n; done > "$AGENT_PROGRESS_AGENTS/review-scribe.md"
 printf '1000\treview-scribe\tacme/widget#142\t3. Run every check\ts1\n' > "$AGENT_PROGRESS_DIR/a1.log"
-assert_equals $'● working · Review PR #142\nreview-scribe acme/widget#142\n█░░░░░░░░░ 3/11 · Run every check\nQuote builder · stage 2 of 4 — Enrich\n███░░░░░░░ 3/8' "$(status_line)" \
+assert_equals $'● working · Review PR #142\nreview-scribe acme/widget#142\n█░░░░░░░░░ 3/11 · Run every check\nQuote builder · stage 2 of 4 — Enrich\n'"$SQUARES 3/8" "$(status_line)" \
   "shows each running agent's lines under the working line"
 drop_repo
 
