@@ -23,11 +23,14 @@ path_of() {
 }
 
 failed=0
-while IFS=$'\037' read -r file contains; do
+while IFS=$'\037' read -r file contains absent; do
   content=$(cat "$(path_of "$file")" 2>/dev/null || true)
   if [ -n "$contains" ] && [[ "$content" != *"$contains"* ]]; then
     failed=1
   fi
-done < <(jq -r '.rules[] | [.file, (.contains // "")] | join("\u001f")' "$rules")
+  if [ -n "$absent" ] && [[ "$content" == *"$absent"* ]]; then
+    failed=1
+  fi
+done < <(jq -r '.rules[] | [.file, (.contains // ""), (.absent // "")] | join("\u001f")' "$rules")
 
 exit "$failed"
