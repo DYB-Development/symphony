@@ -3,7 +3,7 @@ set -euo pipefail
 
 usage() {
   cat >&2 <<'USAGE'
-usage: scribe-step.sh "<target>" "<step>"
+usage: scribe-step.sh "<target>" "<step>" ["<k>/<K> <label>"]
 
 Marks the step a scribe is starting. It prints the target and the step and
 writes nothing: the progress hook sees the call and records it against the
@@ -14,6 +14,6 @@ USAGE
   exit 64
 }
 
-[ $# -eq 2 ] || usage
+[ $# -eq 2 ] || [ $# -eq 3 ] || usage
 
-printf '%s · %s\n' "$1" "$2"
+printf '%s · %s%s\n' "$1" "$2" "${3:+ · $3}"

@@ -31,6 +31,10 @@ assert_equals "acme/quotes#42 · 3. Run every check" \
   "$("$STEP" "acme/quotes#42" "3. Run every check" 2>&1)" \
   "prints the target and the step it is given"
 
+assert_equals "acme/quotes#42 · 3. Run every check · 4/9 Dependencies" \
+  "$("$STEP" "acme/quotes#42" "3. Run every check" "4/9 Dependencies" 2>&1)" \
+  "prints a position inside the step after the step"
+
 PROGRESS="$SCRIPT_DIR/../bin/agent-progress.sh"
 
 new_dir() { LOGS="$(mktemp -d "${TMPDIR:-/tmp}/agent_progress_test.XXXXXX")"; }
