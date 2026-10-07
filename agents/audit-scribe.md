@@ -29,7 +29,8 @@ caller may say what they are worried about; read the code anyway.
 
 ## What you do
 
-Mark each numbered step below as you start it, before its first command:
+Mark each numbered step below as you start it, before its first command.
+Marking a step is required, never skipped, and is the first thing you do in it, even when the step runs no other command.
 
 ```
 ~/.claude/bin/scribe-step.sh "<owner/repo>:<section>" "<n>. <the step's bold title>"

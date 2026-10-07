@@ -34,7 +34,8 @@ may be thin; the repo is what you actually work from.
 
 ## What you do
 
-Mark each numbered step below as you start it, before its first command:
+Mark each numbered step below as you start it, before its first command.
+Marking a step is required, never skipped, and is the first thing you do in it, even when the step runs no other command.
 
 ```
 ~/.claude/bin/scribe-step.sh "<owner/repo>" "<n>. <the step's bold title>"
@@ -69,6 +70,7 @@ is how the person who ran you sees which step you are on.
    ```
    ~/.claude/bin/scribe-step.sh "<owner/repo>" "3. Write all ten sections" "<k>/10 <the section>"
    ```
+   Marking each section is required, never skipped, and is the first thing you do for it.
 
    - Section 04 is the section the plan is read for. Get every relationship
      right and name the join between the new work and the built work, and with it

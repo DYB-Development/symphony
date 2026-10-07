@@ -38,7 +38,8 @@ review of yours, in which case it is a **re-review**.
 
 ## What you do
 
-Mark each numbered step below as you start it, before its first command:
+Mark each numbered step below as you start it, before its first command.
+Marking a step is required, never skipped, and is the first thing you do in it, even when the step runs no other command.
 
 ```
 ~/.claude/bin/scribe-step.sh "<owner/repo>#<pr>" "<n>. <the step's bold title>"
@@ -96,6 +97,7 @@ is how the person who ran you sees which step you are on.
    ```
    ~/.claude/bin/scribe-step.sh "<owner/repo>#<pr>" "3. Run every check" "<k>/9 <the check>"
    ```
+   Marking each check is required, never skipped, and is the first thing you do for it.
 
    A finding is something you can point at on a line. If you cannot name the
    line, it is not a finding.
@@ -126,6 +128,7 @@ is how the person who ran you sees which step you are on.
    ```
    ~/.claude/bin/scribe-step.sh "<owner/repo>#<pr>" "5. Write each inline comment" "<k>/<K> finding"
    ```
+   Marking each finding is required, never skipped, and is the first thing you do for it.
 
 6. **Write the summary** with its four sections — Verdict, Findings,
    Conformance, Not checked — and never another. Findings has one bullet per
@@ -188,6 +191,7 @@ is how the person who ran you sees which step you are on.
    ```
    ~/.claude/bin/scribe-step.sh "<owner/repo>#<pr>" "9. Point each claim at the lines it is about" "<k>/<K> claim"
    ```
+   Marking each claim is required, never skipped, and is the first thing you do for it.
 
    A pointer holds a path, a first and last line, and a side.
 

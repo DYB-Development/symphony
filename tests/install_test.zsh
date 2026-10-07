@@ -59,9 +59,9 @@ assert_equals "SessionStart SubagentStart PostToolUse PreToolUse SubagentStop St
   "$(jq -r '[.hooks | keys_unsorted[]] | join(" ")' "$CONFIG/settings.json" | tr '\n' ' ' | sed 's/ $//')" \
   "registers a hook for each event the package needs"
 
-assert_equals "PreToolUse:Bash SubagentStop:*" \
+assert_equals "PostToolUse:Bash PreToolUse:Bash SubagentStop:*" \
   "$(jq -r '[.hooks | to_entries[] | .key as $event | .value[] | select(any(.hooks[]; .command | endswith("/bin/agent-progress.sh record"))) | "\($event):\(.matcher)"] | sort | join(" ")' "$CONFIG/settings.json")" \
-  "runs the progress recorder on every Bash call and when a subagent stops"
+  "runs the progress recorder before and after every Bash call and when a subagent stops"
 
 assert_equals "PreToolUse:AskUserQuestion" \
   "$(jq -r '[.hooks | to_entries[] | .key as $event | .value[] | select(any(.hooks[]; .command | endswith("/bin/one-question-gate.sh check"))) | "\($event):\(.matcher)"] | sort | join(" ")' "$CONFIG/settings.json")" \
@@ -87,6 +87,9 @@ assert_equals "command $ROOT/bin/status-line.sh" \
   "$(jq -r '"\(.statusLine.type) \(.statusLine.command)"' "$CONFIG/settings.json")" \
   "sets the status line to the package's command when none is set"
 
+assert_equals "2" "$(jq -r .statusLine.refreshInterval "$CONFIG/settings.json")" \
+  "sets the status line it adds to refresh every 2 seconds"
+
 rm -rf "$CONFIG"
 
 CONFIG="$(fresh_config)"
@@ -95,6 +98,17 @@ output="$(CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" 2>&1)"
 assert_equals "my-line.sh left unchanged: true" \
   "$(jq -r .statusLine.command "$CONFIG/settings.json") left unchanged: $([[ "$output" == *"already set to my-line.sh, left unchanged"* ]] && echo true || echo false)" \
   "leaves a status line that is already set and says it did"
+
+assert_equals "null" "$(jq -r .statusLine.refreshInterval "$CONFIG/settings.json")" \
+  "adds no refresh interval to another tool's status line"
+
+rm -rf "$CONFIG"
+
+CONFIG="$(fresh_config)"
+jq -n --arg command "$ROOT/bin/status-line.sh" '{statusLine: {type: "command", command: $command}}' > "$CONFIG/settings.json"
+CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" >/dev/null 2>&1
+assert_equals "2" "$(jq -r .statusLine.refreshInterval "$CONFIG/settings.json")" \
+  "sets the package's own status line to refresh every 2 seconds when it is already set"
 
 rm -rf "$CONFIG"
 

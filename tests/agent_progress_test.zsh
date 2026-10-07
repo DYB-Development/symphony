@@ -49,20 +49,32 @@ record() {
   AGENT_PROGRESS_DIR="$LOGS" AGENT_PROGRESS_NOW="$1" "$PROGRESS" record
 }
 
+ran_payload() {
+  jq -nc --arg id "$1" --arg type "$2" --arg command "$3" --arg stdout "$4" \
+    '{hook_event_name: "PostToolUse", session_id: "s1", agent_id: $id, agent_type: $type, tool_name: "Bash", tool_input: {command: $command}, tool_response: {stdout: $stdout, stderr: "", interrupted: false, exit_code: 0}}'
+}
+
 echo "agent-progress.sh record:"
 
 new_dir
-bash_payload a1 review-scribe '~/.claude/bin/scribe-step.sh "acme/quotes#42" "3. Run every check"' | record 1000
+ran_payload a1 review-scribe 'S="acme/quotes#42"; ~/.claude/bin/scribe-step.sh "$S" "$T"' \
+  $'acme/quotes#42 · 3. Run every check\n' | record 1000
 assert_equals $'1000\treview-scribe\tacme/quotes#42\t3. Run every check\ts1' \
   "$(cat "$LOGS/a1.log" 2>&1)" \
-  "records a step marker against the agent that ran it and the session it runs in"
+  "records the target and step a mark printed when its command passed them in shell variables"
 drop_dir
 
 new_dir
-bash_payload a1 review-scribe '~/.claude/bin/scribe-step.sh "acme/quotes#42" "3. Run every check" "4/9 Dependencies"' | record 1000
-assert_equals $'1000\treview-scribe\tacme/quotes#42\t3. Run every check\ts1\t4/9 Dependencies' \
+ran_payload a1 review-scribe '~/.claude/bin/scribe-step.sh "$S" "2. Read the ticket" && ~/.claude/bin/scribe-step.sh "$S" "3. Run every check" "1/9 Security"' \
+  $'acme/quotes#42 · 2. Read the ticket\nacme/quotes#42 · 3. Run every check · 1/9 Security\n' | record 1000
+assert_equals $'1000\treview-scribe\tacme/quotes#42\t2. Read the ticket\ts1\n1000\treview-scribe\tacme/quotes#42\t3. Run every check\ts1\t1/9 Security' \
   "$(cat "$LOGS/a1.log" 2>&1)" \
-  "records a position inside the step when the marker carries one"
+  "records each mark one command printed as its own step"
+drop_dir
+
+new_dir
+bash_payload a1 review-scribe '~/.claude/bin/scribe-step.sh "$S" "3. Run every check"' | record 1000
+assert_equals "" "$(ls -A "$LOGS")" "records no mark before its command has run"
 drop_dir
 
 new_dir
@@ -206,6 +218,26 @@ assert_marks_steps plan-scribe
 
 assert_marks_steps audit-scribe
 
+assert_requires_marks() {
+  local intro
+  intro="$(awk '/^## What you do/ { on = 1; next } /^1\. / { on = 0 } on' "$SCRIPT_DIR/../agents/$1.md")"
+  if [[ "$intro" == *"Marking a step is required, never skipped, and is the first thing you do in it, even when the step runs no other command."* ]]; then
+    ok "$1 makes marking a step required and first in that step"
+  else
+    fail "$1 makes marking a step required and first in that step"
+  fi
+}
+
+assert_requires_marks review-scribe
+
+assert_requires_marks pr-scribe
+
+assert_requires_marks issue-scribe
+
+assert_requires_marks plan-scribe
+
+assert_requires_marks audit-scribe
+
 assert_says() {
   if grep -qF -- "$2" "$SCRIPT_DIR/../$1"; then ok "$3"; else fail "$3"; fi
 }
@@ -229,6 +261,26 @@ assert_says agents/plan-scribe.md \
 assert_says rules/draft-reading.md \
   '~/.claude/bin/scribe-step.sh "<target>" "<n>. <the step'"'"'s bold title>" "<r>/3 read"' \
   "every scribe marks each read of its draft as a position out of three"
+
+assert_says agents/review-scribe.md \
+  'Marking each check is required, never skipped, and is the first thing you do for it.' \
+  "the review scribe makes marking each check required and first"
+
+assert_says agents/review-scribe.md \
+  'Marking each finding is required, never skipped, and is the first thing you do for it.' \
+  "the review scribe makes marking each finding required and first"
+
+assert_says agents/review-scribe.md \
+  'Marking each claim is required, never skipped, and is the first thing you do for it.' \
+  "the review scribe makes marking each claim required and first"
+
+assert_says agents/plan-scribe.md \
+  'Marking each section is required, never skipped, and is the first thing you do for it.' \
+  "the plan scribe makes marking each section required and first"
+
+assert_says rules/draft-reading.md \
+  'Marking each read is required, never skipped, and is the first thing you do for it.' \
+  "every scribe makes marking each read of its draft required and first"
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

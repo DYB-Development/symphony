@@ -105,3 +105,4 @@ step began and the read's number out of three:
 ```
 ~/.claude/bin/scribe-step.sh "<target>" "<n>. <the step's bold title>" "<r>/3 read"
 ```
+Marking each read is required, never skipped, and is the first thing you do for it.

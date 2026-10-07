@@ -11,8 +11,8 @@ Shows each running subagent's target, the step it is on, how long it has been on
 that step and how long it has run. `line` prints, for each running subagent of
 one session, its type and target above a bar of how far through its numbered
 steps it is, for the status line. `record` is the hook: it appends a line to
-the subagent's log when it marks a step with scribe-step.sh, when it runs a
-script from ~/.claude/bin, and when it stops.
+the subagent's log for each step mark scribe-step.sh printed, once the command
+has run, for a script from ~/.claude/bin it is about to run, and when it stops.
 Logs are kept in ~/.claude/agent-progress, one file per subagent. An agent that
 has recorded nothing for an hour is not shown, and a log untouched for a day is
 removed when the next subagent stops.
@@ -24,19 +24,19 @@ log_dir="${AGENT_PROGRESS_DIR:-$HOME/.claude/agent-progress}"
 agents_dir="${AGENT_PROGRESS_AGENTS:-$(dirname "$0")/../agents}"
 now="${AGENT_PROGRESS_NOW:-$(date +%s)}"
 
-position_for() {
-  printf '%s' "$1" | sed -nE 's/.*scribe-step\.sh[[:space:]]+"[^"]*"[[:space:]]+"[^"]*"[[:space:]]+"([^"]*)".*/\1/p'
+script_run() {
+  local script
+  script=$(printf '%s' "$1" | sed -nE 's/.*\.claude\/bin\/([A-Za-z0-9_-]+)\.sh.*/\1/p')
+  [ -z "$script" ] || [ "$script" = scribe-step ] || printf '\truns %s' "$script"
 }
 
-step_for() {
-  local command=$1 marked script
-  marked=$(printf '%s' "$command" | sed -nE 's/.*scribe-step\.sh[[:space:]]+"([^"]*)"[[:space:]]+"([^"]*)".*/\1	\2/p')
-  if [ -n "$marked" ]; then
-    printf '%s' "$marked"
-    return
-  fi
-  script=$(printf '%s' "$command" | sed -nE 's/.*\.claude\/bin\/([A-Za-z0-9_-]+)\.sh.*/\1/p')
-  [ -z "$script" ] || printf '\truns %s' "$script"
+marks_printed() {
+  printf '%s\n' "$1" | awk -F ' · ' '$2 ~ /^[0-9]+\. / { printf "%s\037%s\037%s\n", $1, $2, $3 }'
+}
+
+append() {
+  mkdir -p "$log_dir"
+  printf '%s\t%s\t%s\t%s%s\n' "$now" "$agent_type" "$1" "$session" "${2:+$'\t'$2}" >> "$log_dir/$agent_id.log"
 }
 
 show_progress() {
@@ -104,17 +104,24 @@ case "${1:-}" in
     [ -n "$agent_id" ] || exit 0
     agent_type=$(printf '%s' "$payload" | jq -r '.agent_type // empty')
     session=$(printf '%s' "$payload" | jq -r '.session_id // empty')
-    if [ "$(printf '%s' "$payload" | jq -r '.hook_event_name // empty')" = SubagentStop ]; then
-      step=$(printf '\tfinished')
-      [ ! -d "$log_dir" ] || find "$log_dir" -name '*.log' -mmin +1440 -delete
-    else
-      command=$(printf '%s' "$payload" | jq -r '.tool_input.command // empty')
-      step=$(step_for "$command")
-      [ -n "$step" ] || exit 0
-      position=$(position_for "$command")
-    fi
-    mkdir -p "$log_dir"
-    printf '%s\t%s\t%s\t%s%s\n' "$now" "$agent_type" "$step" "$session" "${position:+$'\t'$position}" >> "$log_dir/$agent_id.log"
+    command=$(printf '%s' "$payload" | jq -r '.tool_input.command // empty')
+    case "$(printf '%s' "$payload" | jq -r '.hook_event_name // empty')" in
+      SubagentStop)
+        [ ! -d "$log_dir" ] || find "$log_dir" -name '*.log' -mmin +1440 -delete
+        append $'\tfinished'
+        ;;
+      PostToolUse)
+        [[ "$command" == *scribe-step.sh* ]] || exit 0
+        while IFS=$'\037' read -r target step position; do
+          append "$target"$'\t'"$step" "$position"
+        done < <(marks_printed "$(printf '%s' "$payload" | jq -r '.tool_response.stdout // empty')")
+        ;;
+      *)
+        step=$(script_run "$command")
+        [ -n "$step" ] || exit 0
+        append "$step"
+        ;;
+    esac
     ;;
   "")
     running=$(recent_logs | while IFS= read -r log; do

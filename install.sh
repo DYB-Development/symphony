@@ -136,11 +136,12 @@ echo "  merged into $SETTINGS"
 echo ""
 echo "Status line:"
 existing="$(jq -r '.statusLine.command // empty' "$SETTINGS")"
-if [ -n "$existing" ]; then
+ours_line="$SYMPHONY_DIR/bin/status-line.sh"
+if [ -n "$existing" ] && [ "$existing" != "$ours_line" ]; then
   echo "  already set to $existing, left unchanged"
 else
-  with_status_line="$(jq --arg command "$SYMPHONY_DIR/bin/status-line.sh" '
-    .statusLine = {type: "command", command: $command}
+  with_status_line="$(jq --arg command "$ours_line" '
+    .statusLine = (.statusLine // {}) + {type: "command", command: $command, refreshInterval: 2}
   ' "$SETTINGS")"
   printf '%s\n' "$with_status_line" > "$SETTINGS"
   echo "  set in $SETTINGS"
