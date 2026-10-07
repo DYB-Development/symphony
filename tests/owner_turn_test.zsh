@@ -75,6 +75,13 @@ assert_equals '[{"kind":"question","wanted":"Which road?","link":"","session":"s
 drop_record
 
 new_record
+jq -nc --arg cwd "$REPO" \
+  '{hook_event_name: "PreToolUse", session_id: "s1", cwd: $cwd, tool_name: "AskUserQuestion", tool_input: {questions: [{question: "Which road?"}, {question: "Which car?"}]}}' \
+  | "$TURN" record
+assert_equals "[]" "$(entries)" "records nothing for a question prompt the one-question guard refuses"
+drop_record
+
+new_record
 record_bash s1 '~/.claude/bin/owner-turn.sh "plan" "Review plan #110"'
 record_bash s1 '~/.claude/bin/owner-turn.sh "pull request" "Review PR #135"'
 assert_equals "2" "$(entries | jq length)" "records two items waiting in one session as two entries"

@@ -45,6 +45,7 @@ record() {
     return 0
   fi
   if [ "$(printf '%s' "$payload" | jq -r '.tool_name // empty')" = AskUserQuestion ]; then
+    [ "$(printf '%s' "$payload" | jq '.tool_input.questions | length')" -eq 1 ] || return 0
     wanted=$(printf '%s' "$payload" | jq -r '.tool_input.questions[0].question // empty')
     write_entry question "$wanted" "" "$session" "$cwd"
     return 0
