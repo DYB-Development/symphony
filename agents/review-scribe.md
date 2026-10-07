@@ -97,6 +97,7 @@ is how the person who ran you sees which step you are on.
    ```
    ~/.claude/bin/scribe-step.sh "<owner/repo>#<pr>" "3. Run every check" "<k>/9 <the check>"
    ```
+   Marking each check is required, never skipped, and is the first thing you do for it.
 
    A finding is something you can point at on a line. If you cannot name the
    line, it is not a finding.

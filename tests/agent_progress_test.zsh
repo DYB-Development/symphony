@@ -262,5 +262,9 @@ assert_says rules/draft-reading.md \
   '~/.claude/bin/scribe-step.sh "<target>" "<n>. <the step'"'"'s bold title>" "<r>/3 read"' \
   "every scribe marks each read of its draft as a position out of three"
 
+assert_says agents/review-scribe.md \
+  Marking\ each\ check\ is\ required,\ never\ skipped,\ and\ is\ the\ first\ thing\ you\ do\ for\ it. \
+  the\ review\ scribe\ makes\ marking\ each\ check\ required\ and\ first
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
