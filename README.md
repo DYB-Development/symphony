@@ -77,6 +77,8 @@ Above the plan's progress it shows a flag for each item this session has waited
 on the owner for since the owner's last prompt, one to a line, such as a question or a pull
 request to review. An agent marks a pull request or plan with
 `~/.claude/bin/owner-turn.sh "<kind>" "<what is wanted>" ["<link>"]`.
+While the session works, the top line says what it is doing, taken from the
+description of its most recent tool call, and it goes away when the turn ends.
 
 Commands are run as `/review`. A file edited in this clone takes effect in the
 next session, with no reinstall, which is what makes this the mode to use while
@@ -117,6 +119,8 @@ settings that are not its own alone:
 | `PreToolUse` | `one-question-gate.sh check` | Refuses a question prompt that asks more than one question |
 | `PreToolUse` | `owner-turn.sh record` | Records a question prompt, and each item an agent marks with `owner-turn.sh`, as something the owner is waited on for |
 | `UserPromptSubmit` | `owner-turn.sh record` | Records when the owner last prompted, which ends that session's flag in the status line |
+| `PreToolUse` | `working-line.sh record` | Keeps the description of the session's most recent tool call as its working line |
+| `Stop` | `working-line.sh record` | Clears the working line when the session ends its turn |
 | `SubagentStop` | `agent-progress.sh record` | Logs that a subagent finished |
 | `Stop` | `turn-sound.sh play` | Plays a sound when a session finishes its turn |
 | `Stop` | `stray-test-workers.sh` | Stops any Rails test worker whose test run has gone, since nothing else will and it can run for days |
