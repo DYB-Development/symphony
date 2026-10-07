@@ -41,13 +41,17 @@ new_repo() {
   : > "$GH_LOG"
   COUNTS="$WORK/counts"
   printf '3\t8' > "$COUNTS"
+  UNITS="$WORK/units"
+  printf '[]' > "$UNITS"
   mkdir -p "$WORK/bin"
   cat > "$WORK/bin/gh" <<STUB
 #!/usr/bin/env bash
 printf '%s\n' "\$*" >> "$GH_LOG"
 case "\$*" in
   "api repos/acme/widget/issues/12/parent --jq "*)
-    printf 'Quote builder\t%s\n' "\$(cat "$COUNTS")" ;;
+    printf '7\tQuote builder\t%s\n' "\$(cat "$COUNTS")" ;;
+  "api repos/acme/widget/issues/7/sub_issues --paginate")
+    cat "$UNITS" ;;
   "api repos/acme/widget/issues/12 --jq .body")
     printf '## Part of\nQuote building, stage 2 of 4 — Enrich.\n' ;;
   *) echo "gh: Not Found (HTTP 404)" >&2; exit 1 ;;
