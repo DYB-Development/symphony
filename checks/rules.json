@@ -136,6 +136,10 @@
     {
       "file": "rules/draft-reading.md",
       "contains": "Marking each read is required, never skipped, and is the first thing you do for it."
+    },
+    {
+      "file": "rules/draft-reading.md",
+      "contains": "mktemp -d"
     }
   ]
 }
