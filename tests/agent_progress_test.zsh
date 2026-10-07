@@ -65,6 +65,14 @@ assert_equals $'1000\treview-scribe\tacme/quotes#42\t3. Run every check\ts1' \
 drop_dir
 
 new_dir
+ran_payload a1 review-scribe '~/.claude/bin/scribe-step.sh "$S" "2. Read the ticket" && ~/.claude/bin/scribe-step.sh "$S" "3. Run every check" "1/9 Security"' \
+  $'acme/quotes#42 · 2. Read the ticket\nacme/quotes#42 · 3. Run every check · 1/9 Security\n' | record 1000
+assert_equals $'1000\treview-scribe\tacme/quotes#42\t2. Read the ticket\ts1\n1000\treview-scribe\tacme/quotes#42\t3. Run every check\ts1\t1/9 Security' \
+  "$(cat "$LOGS/a1.log" 2>&1)" \
+  "records each mark one command printed as its own step"
+drop_dir
+
+new_dir
 bash_payload a1 review-scribe '~/.claude/bin/scribe-step.sh "acme/quotes#42" "3. Run every check"' | record 1000
 assert_equals $'1000\treview-scribe\tacme/quotes#42\t3. Run every check\ts1' \
   "$(cat "$LOGS/a1.log" 2>&1)" \
