@@ -73,8 +73,8 @@ and leaves one that is already set alone. On a branch whose name starts with a
 task issue's number, the status line shows the progress of the plan that issue
 is listed under: the plan's title, a bar, the closed units out of all units, and
 the task's stage. It asks GitHub at most once a minute for each repo and branch.
-Before the plan's progress it shows a flag for each item this session has waited
-on the owner for since the owner's last prompt, such as a question or a pull
+Above the plan's progress it shows a flag for each item this session has waited
+on the owner for since the owner's last prompt, one to a line, such as a question or a pull
 request to review. An agent marks a pull request or plan with
 `~/.claude/bin/owner-turn.sh "<kind>" "<what is wanted>" ["<link>"]`.
 
