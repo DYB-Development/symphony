@@ -63,6 +63,10 @@ assert_equals "PreToolUse:Bash SubagentStop:*" \
   "$(jq -r '[.hooks | to_entries[] | .key as $event | .value[] | select(any(.hooks[]; .command | endswith("/bin/agent-progress.sh record"))) | "\($event):\(.matcher)"] | sort | join(" ")' "$CONFIG/settings.json")" \
   "runs the progress recorder on every Bash call and when a subagent stops"
 
+assert_equals "PreToolUse:AskUserQuestion" \
+  "$(jq -r '[.hooks | to_entries[] | .key as $event | .value[] | select(any(.hooks[]; .command | endswith("/bin/one-question-gate.sh check"))) | "\($event):\(.matcher)"] | sort | join(" ")' "$CONFIG/settings.json")" \
+  "checks every question prompt for more than one question before it is shown"
+
 assert_equals "Notification:permission_prompt:true Stop:null:true" \
   "$(jq -r '[.hooks | to_entries[] | .key as $event | .value[] | . as $entry | .hooks[] | select(.command | endswith("/bin/turn-sound.sh play")) | "\($event):\($entry.matcher):\(.async)"] | sort | join(" ")' "$CONFIG/settings.json")" \
   "plays the waiting sound in the background when a session ends its turn or asks permission"
