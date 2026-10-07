@@ -204,6 +204,18 @@
     {
       "file": "rules/draft-reading.md",
       "contains": "only the sentences you rewrote"
+    },
+    {
+      "file": "rules/review-checks.md",
+      "contains": "a behaviour no test reaches is a finding on its own"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "- Any finding the code is not actually wrong without, apart from the two the bar in `pr-review.md` lets past."
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "- **Never run the code.**"
     }
   ]
 }

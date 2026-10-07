@@ -41,12 +41,6 @@ else
   fail "review-checks.md defines a Missed changes check"
 fi
 
-if grep -qF -- "a behaviour no test reaches is a finding on its own" "$RULES/review-checks.md"; then
-  ok "review-checks.md raises an untested behaviour without a defect"
-else
-  fail "review-checks.md raises an untested behaviour without a defect"
-fi
-
 for reader in pr-review repo-audit; do
   missing=()
   for c in "${CHECKS[@]}"; do
@@ -135,23 +129,11 @@ else
   fail "pr-review.md lets an untested behaviour and a missed change past the correctness bar"
 fi
 
-if grep -qF -- "- Any finding the code is not actually wrong without, apart from the two the bar in \`pr-review.md\` lets past." "$SCRIPT_DIR/../agents/review-scribe.md"; then
-  ok "review-scribe.md keeps an untested behaviour and a missed change when it cuts"
-else
-  fail "review-scribe.md keeps an untested behaviour and a missed change when it cuts"
-fi
-
 scribe_reading_step="$(awk '/^2\. \*\*Read enough of the repo/ { on = 1 } /^3\. / { on = 0 } on' "$SCRIPT_DIR/../agents/review-scribe.md")"
 if [[ "$scribe_reading_step" == *"git grep"* && "$scribe_reading_step" == *"Missed changes"* ]]; then
   ok "review-scribe.md searches the head commit for what the diff left wrong"
 else
   fail "review-scribe.md searches the head commit for what the diff left wrong"
-fi
-
-if grep -qF -- "- **Never run the code.**" "$SCRIPT_DIR/../agents/review-scribe.md"; then
-  ok "review-scribe reads the code and runs nothing CI runs"
-else
-  fail "review-scribe reads the code and runs nothing CI runs"
 fi
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
