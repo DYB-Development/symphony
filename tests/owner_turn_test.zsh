@@ -81,5 +81,14 @@ assert_equals "2" "$(entries | jq length)" "records two items waiting in one ses
 drop_record
 
 echo ""
+echo "owner-turn.sh flags:"
+
+new_record
+record_bash s1 '~/.claude/bin/owner-turn.sh "plan" "Review plan #110" "https://github.com/acme/widget/issues/110"'
+assert_equals "▶ plan · Review plan #110 · https://github.com/acme/widget/issues/110" "$("$TURN" flags s1)" \
+  "shows a marker, the kind, what is wanted and the link for an entry the session is waiting on"
+drop_record
+
+echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

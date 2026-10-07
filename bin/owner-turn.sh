@@ -53,10 +53,22 @@ record() {
   write_entry "$kind" "$wanted" "$link" "$session" "$cwd"
 }
 
-if [ "${1:-}" = record ]; then
-  record
-  exit 0
-fi
+flags() {
+  local session=$1 files=()
+  shopt -s nullglob
+  files=("$record_dir"/entries/*.json)
+  [ ${#files[@]} -gt 0 ] || return 0
+  jq -sr --arg session "$session" '
+    map(select(.session == $session))
+    | sort_by(.arrived)[]
+    | "▶ \(.kind) · \(.wanted)" + (if .link == "" then "" else " · \(.link)" end)
+  ' "${files[@]}"
+}
+
+case "${1:-}" in
+  record) record; exit 0 ;;
+  flags) [ $# -eq 2 ] || usage; flags "$2"; exit 0 ;;
+esac
 
 [ $# -ge 2 ] && [ $# -le 3 ] || usage
 
