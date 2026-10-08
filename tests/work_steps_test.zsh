@@ -175,6 +175,13 @@ kept" "$? $output
 $([ -d "$BASE/quotes-7-export-quotes" ] && echo kept || echo removed)" "the finish step fails, changing nothing, while the branch's pull request is not merged"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+pull_request '{"state":"MERGED"}'
+"$BIN/work-finish.sh" >/dev/null 2>&1
+assert_equals "0 removed " "$? $([ -d "$BASE/quotes-7-export-quotes" ] && echo kept || echo removed) $(git -C "$MAIN" branch --list '7-*')" "the finish step removes the worktree and its branch once the pull request is merged"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
