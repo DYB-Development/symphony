@@ -143,6 +143,16 @@ checks "[$(entry test suite 'true'), $(entry lint style 'true')]"
 assert_equals "0 Export quotes" "$? $(git -C "$BASE/origin.git" log -1 --format=%s 7-export-quotes 2>/dev/null)" "the push step pushes the branch when the test and lint entries pass and nothing is uncommitted"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+touch "$BASE/quotes-7-export-quotes/unsaved.rb"
+checks "[$(entry test suite 'true'), $(entry lint style 'true')]"
+output=$("$BIN/work-push.sh" 2>&1)
+assert_equals "1 Something is uncommitted in $BASE/quotes-7-export-quotes
+no branch" "$? $(printf '%s\n' "$output" | tail -1)
+$(git -C "$BASE/origin.git" rev-parse -q --verify 7-export-quotes >/dev/null && echo pushed || echo no branch)" "the push step refuses to push while something is uncommitted"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
