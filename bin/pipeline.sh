@@ -200,18 +200,20 @@ report_watch() {
 }
 
 watch_pull_request() {
-  local id="$1" step name number line status=0
+  local id="$1" step name number line last="" status=0 reported=""
   step=$(hub GET current_step "work_item_id=$id")
   name=$(jq -r '.id' <<<"$step")
   number=$(gh pr view "$(work_branch "$id")" --json number | jq -r '.number')
   hub POST start_step "$(jq -nc --argjson id "$id" --arg step "$name" '{work_item_id: $id, step: $step}')" >/dev/null
   while IFS= read -r line; do
     echo "$line"
+    last="$line"
     case "$line" in
-      "CI passed"*) report_watch "$id" "$name" passed "$line" ;;
-      "CI failed"*) report_watch "$id" "$name" failed "$line"; status=1 ;;
+      "CI passed"*) report_watch "$id" "$name" passed "$line"; reported=1 ;;
+      "CI failed"*) report_watch "$id" "$name" failed "$line"; reported=1; status=1 ;;
     esac
   done < <("$pr_wait" "$(jq -r '.work.repo' <<<"$step")" "$number" || true)
+  [ -n "$reported" ] || [ -z "$last" ] || report_watch "$id" "$name" passed "$last"
   return "$status"
 }
 

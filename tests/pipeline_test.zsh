@@ -333,6 +333,15 @@ stopped=$?
 assert_equals '1 {"result":"failed","output":"CI failed on PR #5: tests"}' "$stopped $(report 1 '{result, output}')" "reports the checks as failed, naming the check that failed, and exits"
 teardown
 
+setup
+work_branch 7-export-quotes
+pull_request '{"number":5,"state":"OPEN","url":"https://github.com/acme/quotes/pull/5"}'
+waiting $'PR #5 was merged\n' 0
+answer current_step "$(step watch "Run work-watch" script work-watch)"
+"$PIPELINE" watch 7 >/dev/null 2>&1
+assert_equals '{"result":"passed","output":"PR #5 was merged"}' "$(report 1 '{result, output}')" "reports the watch step as passed when the pull request is merged before any check reports"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
