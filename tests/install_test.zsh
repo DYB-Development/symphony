@@ -67,6 +67,10 @@ assert_equals "PreToolUse:AskUserQuestion" \
   "$(jq -r '[.hooks | to_entries[] | .key as $event | .value[] | select(any(.hooks[]; .command | endswith("/bin/one-question-gate.sh check"))) | "\($event):\(.matcher)"] | sort | join(" ")' "$CONFIG/settings.json")" \
   "checks every question prompt for more than one question before it is shown"
 
+assert_equals "PreToolUse:Bash" \
+  "$(jq -r '[.hooks | to_entries[] | .key as $event | .value[] | select(any(.hooks[]; .command | endswith("/bin/description-gate.sh check"))) | "\($event):\(.matcher)"] | sort | join(" ")' "$CONFIG/settings.json")" \
+  "refuses every shell command that carries no description"
+
 assert_equals "PreToolUse:AskUserQuestion PreToolUse:Bash UserPromptSubmit:null" \
   "$(jq -r '[.hooks | to_entries[] | .key as $event | .value[] | select(any(.hooks[]; .command | endswith("/bin/owner-turn.sh record"))) | "\($event):\(.matcher)"] | sort | join(" ")' "$CONFIG/settings.json")" \
   "records the owner's turn on every question prompt, every Bash call and every prompt the owner sends"

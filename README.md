@@ -133,6 +133,7 @@ settings that are not its own alone:
 | `PreToolUse` | `decision-gate.sh check` | Refuses a commit while that choice is still unrecorded |
 | `PreToolUse` | `agent-progress.sh record` | Logs each script a subagent is about to run |
 | `PreToolUse` | `one-question-gate.sh check` | Refuses a question prompt that asks more than one question |
+| `PreToolUse` | `description-gate.sh check` | Refuses a shell command that carries no description of what it does |
 | `PreToolUse` | `owner-turn.sh record` | Records a question prompt, and each item an agent marks with `owner-turn.sh`, as something the owner is waited on for |
 | `UserPromptSubmit` | `owner-turn.sh record` | Records when the owner last prompted, which ends that session's flag in the status line |
 | `Stop` | `owner-turn.sh stop` | Shows the session's flags as the last lines of the turn when the owner is waited on |
