@@ -5,6 +5,7 @@ usage() {
   cat >&2 <<'USAGE'
 usage: pipeline.sh claim <work item id>
        pipeline.sh run <work item id>
+       pipeline.sh report <work item id> <agent report file>
 
 Carries one work item through the steps dyb_web's Pipelines hub names.
 `claim` claims the work item for this session and prints its title and first step.
@@ -14,6 +15,8 @@ It stops with status 10 at an agent step, printing the agent, its model and the 
 At the owner's step it reports the pull request of the work item's branch as merged
 or closed, or stops with status 11 while the pull request is still open. The
 work item's branch is the local branch whose name starts with its id.
+`report` posts an agent's report for the agent step the work item is on, with
+the result its last line names, written as Result: passed or Result: failed.
 The dyb_web address and token are read from the dyb_web file in
 $SYMPHONY_CONFIG_DIR, or ~/.config/symphony, one name=value per line.
 USAGE
@@ -113,7 +116,16 @@ run() {
   done
 }
 
+report_agent() {
+  local id="$1" file="$2" step result
+  step=$(hub GET current_step "work_item_id=$id")
+  result=$(grep -v '^[[:space:]]*$' "$file" | tail -1 | sed -nE 's/^Result: (passed|failed)[[:space:]]*$/\1/p')
+  hub POST report_step "$(jq -nc --argjson id "$id" --arg step "$(jq -r '.id' <<<"$step")" --arg result "$result" --rawfile output "$file" \
+    '{work_item_id: $id, step: $step, result: $result, output: ($output | rtrimstr("\n"))}')" >/dev/null
+}
+
 case "${1:-}" in
+  report) [ -n "${3:-}" ] || usage; report_agent "$2" "$3" ;;
   run) [ -n "${2:-}" ] || usage; run "$2" ;;
   claim) [ -n "${2:-}" ] || usage; claim "$2" ;;
   *) usage ;;

@@ -62,7 +62,7 @@ teardown() {
   cd "$SCRIPT_DIR"
   path=(${path:#$WORK/bin})
   rm -rf "$WORK"
-  unset SYMPHONY_CONFIG_DIR SYMPHONY_SESSION STUB_CURL_DOWN SYMPHONY_STEP_DIR
+  unset SYMPHONY_CONFIG_DIR SYMPHONY_SESSION STUB_CURL_DOWN SYMPHONY_STEP_DIR SYMPHONY_USAGE
 }
 
 step_script() {
@@ -84,6 +84,16 @@ work_branch() {
 pull_request() {
   printf '#!/usr/bin/env bash\nprintf "%%s\\n" "$*" >> "%s/gh_calls"\nprintf %%s %s\n' "$WORK" "${(q)1}" > "$WORK/bin/gh"
   chmod +x "$WORK/bin/gh"
+}
+
+agent_report() {
+  printf '%s\n' "$@" > "$WORK/report.md"
+}
+
+measured() {
+  printf '#!/usr/bin/env bash\nprintf "%%s\\n" "$*" >> "%s/usage_calls"\nprintf %%s %s\n' "$WORK" "${(q)1}" > "$WORK/bin/usage.sh"
+  chmod +x "$WORK/bin/usage.sh"
+  export SYMPHONY_USAGE="$WORK/bin/usage.sh"
 }
 
 answer() { printf '%s' "$2" > "$WORK/answers/$1"; }
@@ -195,6 +205,15 @@ stopped=$?
 assert_equals "11
 Export quotes waits on the owner: https://github.com/acme/quotes/pull/5" "$stopped
 $(cat "$WORK/out")" "stops and flags an open pull request as waiting on the owner"
+teardown
+
+setup
+work_branch 7-export-quotes
+measured ""
+answer current_step "$(step build "Hand to builder on claude-sonnet-5-5" agent)"
+agent_report "Built the export." "Result: passed"
+"$PIPELINE" report 7 "$WORK/report.md" >/dev/null 2>&1
+assert_equals '{"step":"build","result":"passed"}' "$(report 1 '{step, result}')" "posts the result named on an agent report's last line"
 teardown
 
 echo ""
