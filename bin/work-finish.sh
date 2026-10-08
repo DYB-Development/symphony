@@ -21,7 +21,7 @@ tree=$(git worktree list --porcelain | awk -v prefix="branch refs/heads/$WORK_IT
 [ -n "$tree" ] || { echo "No worktree for work item $WORK_ITEM_ID"; exit 1; }
 branch=$(git -C "$tree" branch --show-current)
 
-[ "$(gh pr view "$branch" --json state | jq -r '.state')" = MERGED ] || {
+[ "$("$(dirname "${BASH_SOURCE[0]}")/pr-state.sh" "$branch" | cut -f1)" = MERGED ] || {
   echo "The pull request for $branch is not merged"
   exit 1
 }
