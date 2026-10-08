@@ -61,6 +61,12 @@ case "$*" in
     printf '## Part of\nQuote archive, stage 1 of 4 — End to end.\n' ;;
   "api repos/acme/widget/issues/9/sub_issues --paginate")
     echo "error connecting to api.github.com" >&2; exit 1 ;;
+  "api repos/acme/widget/issues/17/parent --jq "*)
+    printf '9\tQuote plans\t1\t2\tacme/plans\n' ;;
+  "api repos/acme/widget/issues/17 --jq .body")
+    printf '## Part of\nQuote plans, stage 1 of 4 — End to end.\n' ;;
+  "api repos/acme/plans/issues/9/sub_issues --paginate")
+    jq -nc '[{state: "closed", body: "## Part of\nQuote plans, stage 1 of 4 — End to end.\n"}, {state: "open", body: "## Part of\nQuote plans, stage 2 of 4 — Enrich.\n"}]' ;;
   "api repos/acme/widget/issues/15/parent --jq "*)
     echo "error connecting to api.github.com" >&2; exit 1 ;;
   "api repos/acme/widget/issues/13/parent --jq "*)
@@ -114,6 +120,11 @@ stub_gh
 output=$("$READER" acme/widget 16 2>/dev/null)
 code=$?
 assert_equals "69 " "$code $output" "prints nothing and exits 69 when a later read from GitHub fails"
+drop_stub
+
+stub_gh
+assert_equals $'Quote plans\t1\t2\tstage 1 of 4 — End to end\t1:1/1 2:0/1' "$("$READER" acme/widget 17 2>&1 | cut -f1-5)" \
+  "counts a plan's units from the plan's own repo when the task lives in another"
 drop_stub
 
 echo ""
