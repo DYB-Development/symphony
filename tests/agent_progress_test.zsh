@@ -143,6 +143,13 @@ drop_dir
 
 new_dir
 new_agents
+printf '1000\treview-scribe\tacme/quotes#42\t3. Run every check\ts1\tcriterion 1 of 2 Export button\n' > "$LOGS/a1.log"
+assert_equals $'review-scribe acme/quotes#42\n██░░░░░░░░ 3/11 · Run every check · criterion 1 of 2 Export button' "$(lines s1)" \
+  "fills the bar through a step by a position written as k of K, and shows the position"
+drop_dir
+
+new_dir
+new_agents
 printf '1000\treview-scribe\tacme/quotes#42\t9. Point each claim\ts1\n1052\treview-scribe\t\truns judge-claims\ts1\n' > "$LOGS/a1.log"
 assert_equals $'review-scribe acme/quotes#42\n███████░░░ 9/11 · Point each claim' "$(lines s1)" \
   "keeps the bar and the step when the scribe runs a script without marking a step"
