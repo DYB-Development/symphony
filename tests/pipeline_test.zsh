@@ -62,7 +62,7 @@ teardown() {
   cd "$SCRIPT_DIR"
   path=(${path:#$WORK/bin})
   rm -rf "$WORK"
-  unset SYMPHONY_CONFIG_DIR SYMPHONY_SESSION STUB_CURL_DOWN SYMPHONY_STEP_DIR SYMPHONY_USAGE SYMPHONY_AGENT_DIR
+  unset SYMPHONY_CONFIG_DIR SYMPHONY_SESSION STUB_CURL_DOWN SYMPHONY_STEP_DIR SYMPHONY_USAGE SYMPHONY_AGENT_DIR SYMPHONY_PR_WAIT
 }
 
 step_script() {
@@ -94,6 +94,12 @@ measured() {
   printf '#!/usr/bin/env bash\nprintf "%%s\\n" "$*" >> "%s/usage_calls"\nprintf %%s %s\n' "$WORK" "${(q)1}" > "$WORK/bin/usage.sh"
   chmod +x "$WORK/bin/usage.sh"
   export SYMPHONY_USAGE="$WORK/bin/usage.sh"
+}
+
+waiting() {
+  printf '#!/usr/bin/env bash\nprintf "%%s\\n" "$*" >> "%s/wait_calls"\nprintf %%s %s\nexit %s\n' "$WORK" "${(q)1}" "$2" > "$WORK/bin/pr-wait.sh"
+  chmod +x "$WORK/bin/pr-wait.sh"
+  export SYMPHONY_PR_WAIT="$WORK/bin/pr-wait.sh"
 }
 
 answer() { printf '%s' "$2" > "$WORK/answers/$1"; }
@@ -293,6 +299,47 @@ stopped=$?
 assert_equals "66
 symphony defines no agent named builder" "$stopped
 $(cat "$WORK/out")" "refuses an agent step naming an agent symphony does not define"
+teardown
+
+setup
+answer current_step "$(step watch "Run work-watch" script work-watch)"
+"$PIPELINE" run 7 > "$WORK/out" 2>&1
+stopped=$?
+assert_equals "12
+Watch the pull request: ~/.claude/bin/pipeline.sh watch 7" "$stopped
+$(cat "$WORK/out")" "stops at the watch step and prints the command to start in the background"
+teardown
+
+setup
+work_branch 7-export-quotes
+pull_request '{"number":5,"state":"OPEN","url":"https://github.com/acme/quotes/pull/5"}'
+waiting $'CI passed on PR #5, opened it\nPR #5 was merged\n' 0
+answer current_step "$(step watch "Run work-watch" script work-watch)"
+output=$("$PIPELINE" watch 7 2>&1)
+assert_equals '{"step":"watch","result":"passed","output":"CI passed on PR #5, opened it"}
+acme/quotes 5
+PR #5 was merged' "$(report 1 '{step, result, output}')
+$(cat "$WORK/wait_calls")
+$(printf '%s\n' "$output" | tail -1)" "reports the checks as passed, then says whether the pull request was merged or closed"
+teardown
+
+setup
+work_branch 7-export-quotes
+pull_request '{"number":5,"state":"OPEN","url":"https://github.com/acme/quotes/pull/5"}'
+waiting $'CI failed on PR #5: tests\n' 1
+answer current_step "$(step watch "Run work-watch" script work-watch)"
+"$PIPELINE" watch 7 >/dev/null 2>&1
+stopped=$?
+assert_equals '1 {"result":"failed","output":"CI failed on PR #5: tests"}' "$stopped $(report 1 '{result, output}')" "reports the checks as failed, naming the check that failed, and exits"
+teardown
+
+setup
+work_branch 7-export-quotes
+pull_request '{"number":5,"state":"OPEN","url":"https://github.com/acme/quotes/pull/5"}'
+waiting $'PR #5 was merged\n' 0
+answer current_step "$(step watch "Run work-watch" script work-watch)"
+"$PIPELINE" watch 7 >/dev/null 2>&1
+assert_equals '{"result":"passed","output":"PR #5 was merged"}' "$(report 1 '{result, output}')" "reports the watch step as passed when the pull request is merged before any check reports"
 teardown
 
 echo ""

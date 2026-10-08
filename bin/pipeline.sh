@@ -8,13 +8,16 @@ usage: pipeline.sh claim <work item id>
        pipeline.sh report <work item id> <agent report file>
        pipeline.sh check <work item id>
        pipeline.sh report-pr <work item id>
+       pipeline.sh watch <work item id>
 
 Carries one work item through the steps dyb_web's Pipelines hub names.
 `claim` claims the work item for this session and prints its title and first step.
 `run` runs each script step the hub names, telling the hub when it starts and
 reporting its exit status and output, until the work item reaches an end.
 It stops with status 10 at an agent step, printing the agent, its model and the work,
-and refuses an agent step naming an agent symphony does not define.
+and refuses an agent step naming an agent symphony does not define. At a script
+step naming work-watch it stops with status 12 and prints the watch command to
+start in the background.
 At the owner's step it reports the pull request of the work item's branch as merged
 or closed, or stops with status 11 while the pull request is still open. The
 work item's branch is the local branch whose name starts with its id.
@@ -26,6 +29,11 @@ test and lint entries the hub gives, and exits with the check step's status.
 `report-pr` reports the pull request step: passed, with the pull request's
 address, only when the work item's branch has an open pull request, and failed
 otherwise, with the model and tokens of the agent's latest run.
+`watch` waits on the work item's pull request through pr-wait.sh with no model
+running. It reports the watch step as passed once every check passes, or as
+failed naming the check that failed, and then says whether the pull request was
+merged or closed. Start it as a background command so the session is woken
+when it exits.
 The dyb_web address and token are read from the dyb_web file in
 $SYMPHONY_CONFIG_DIR, or ~/.config/symphony, one name=value per line.
 USAGE
@@ -36,6 +44,7 @@ settings="${SYMPHONY_CONFIG_DIR:-$HOME/.config/symphony}/dyb_web"
 session="${SYMPHONY_SESSION:-$(hostname -s)}"
 steps="${SYMPHONY_STEP_DIR:-$(cd "$(dirname "$0")" && pwd)}"
 agents="${SYMPHONY_AGENT_DIR:-$(cd "$(dirname "$0")/.." && pwd)/agents}"
+pr_wait="${SYMPHONY_PR_WAIT:-$(cd "$(dirname "$0")" && pwd)/pr-wait.sh}"
 usage_script="${SYMPHONY_USAGE:-$(cd "$(dirname "$0")" && pwd)/usage.sh}"
 
 setting() { sed -n "s/^$1=//p" "$settings" 2>/dev/null | tail -1; }
@@ -120,7 +129,13 @@ run() {
       return 0
     fi
     case "$(jq -r '.kind' <<<"$step")" in
-      script) run_script "$id" "$step" ;;
+      script)
+        if [ "$(jq -r '.script' <<<"$step")" = work-watch ]; then
+          echo "Watch the pull request: ~/.claude/bin/pipeline.sh watch $id"
+          exit 12
+        fi
+        run_script "$id" "$step"
+        ;;
       agent) hand_to_agent "$step" ;;
       owner) owner_step "$id" "$step" ;;
       *) refuse 65 "symphony cannot run a $(jq -r '.kind' <<<"$step") step" ;;
@@ -179,7 +194,31 @@ report_pull_request() {
   echo "Pull request step: $result"
 }
 
+report_watch() {
+  hub POST report_step "$(jq -nc --argjson id "$1" --arg step "$2" --arg result "$3" --arg output "$4" \
+    '{work_item_id: $id, step: $step, result: $result, output: $output}')" >/dev/null
+}
+
+watch_pull_request() {
+  local id="$1" step name number line last="" status=0 reported=""
+  step=$(hub GET current_step "work_item_id=$id")
+  name=$(jq -r '.id' <<<"$step")
+  number=$(gh pr view "$(work_branch "$id")" --json number | jq -r '.number')
+  hub POST start_step "$(jq -nc --argjson id "$id" --arg step "$name" '{work_item_id: $id, step: $step}')" >/dev/null
+  while IFS= read -r line; do
+    echo "$line"
+    last="$line"
+    case "$line" in
+      "CI passed"*) report_watch "$id" "$name" passed "$line"; reported=1 ;;
+      "CI failed"*) report_watch "$id" "$name" failed "$line"; reported=1; status=1 ;;
+    esac
+  done < <("$pr_wait" "$(jq -r '.work.repo' <<<"$step")" "$number" || true)
+  [ -n "$reported" ] || [ -z "$last" ] || report_watch "$id" "$name" passed "$last"
+  return "$status"
+}
+
 case "${1:-}" in
+  watch) [ -n "${2:-}" ] || usage; watch_pull_request "$2" ;;
   report-pr) [ -n "${2:-}" ] || usage; report_pull_request "$2" ;;
   check) [ -n "${2:-}" ] || usage; check_work "$2" ;;
   report) [ -n "${3:-}" ] || usage; report_agent "$2" "$3" ;;

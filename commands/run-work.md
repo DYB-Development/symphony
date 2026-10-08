@@ -32,6 +32,11 @@ run it, and you do only what it stops for: an agent step, or the owner's step.
    - `10` — it stopped at an agent step. Go to step 3.
    - `11` — the pull request waits on the owner. Show the line it printed, which
      names the pull request, and stop.
+   - `12` — it stopped at the watch step. Start the command it printed as a
+     **background** command (`run_in_background`) and end your turn. It runs no
+     model while it waits, opens the pull request in the owner's browser once
+     every check passes, and reports the result to the hub. When it exits you
+     are woken: show its last line, then go back to step 2.
    - anything else — show what it printed and stop. Never work around it.
 
 3. **Hand the agent step to the agent it names**, on the model it names. The
