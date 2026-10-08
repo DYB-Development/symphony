@@ -492,6 +492,20 @@ assert_equals "claude-sonnet-5-5	100" "$("$USAGE" --agent-run builder)" \
   "prints the model and total tokens of an agent's run on this branch"
 drop_repo
 
+new_repo
+model_entry agent_1 builder msg_1 main claude-opus-5-5 60 2026-01-01T00:00:00Z
+model_entry agent_2 builder msg_2 main claude-sonnet-5-5 40 2026-01-02T00:00:00Z
+model_entry agent_3 pr-scribe msg_3 main claude-opus-5-5 10 2026-01-03T00:00:00Z
+assert_equals "claude-sonnet-5-5	40" "$("$USAGE" --agent-run builder)" \
+  "prints only the latest run of the agent type asked for"
+drop_repo
+
+new_repo
+model_entry agent_1 pr-scribe msg_1 main claude-opus-5-5 60 2026-01-01T00:00:00Z
+assert_equals "" "$("$USAGE" --agent-run builder)" \
+  "prints nothing when no run of that agent type is on the branch"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
