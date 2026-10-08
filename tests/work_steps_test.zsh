@@ -128,6 +128,13 @@ assert_equals "suite: exit 3
 style: exit 0" "$("$BIN/work-check.sh" 2>&1 | grep ': exit ')" "the check step's output carries each command's exit status"
 teardown
 
+setup
+checks "[$(entry setup ready 'true'), $(entry test suite 'true'), $(entry lint style 'true')]"
+"$BIN/work-start.sh" >/dev/null 2>&1
+"$BIN/work-check.sh" >/dev/null 2>&1
+assert_equals "" "$(git -C "$BASE/quotes-7-export-quotes" status --porcelain)" "no step adds or changes a file in the repo to hold its commands"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
