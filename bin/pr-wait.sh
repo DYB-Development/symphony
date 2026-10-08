@@ -20,20 +20,17 @@ repo=$1 pr=$2
 opened=0
 
 while true; do
-  view=$(gh pr view "$pr" --repo "$repo" --json state,url,statusCheckRollup)
-  state=$(printf '%s' "$view" | jq -r '.state')
+  IFS=$'\t' read -r state url _ checks < <("$(dirname "${BASH_SOURCE[0]}")/pr-state.sh" "$pr" "$repo")
   case "$state" in
     MERGED) printf 'PR #%s was merged\n' "$pr"; exit 0 ;;
     CLOSED) printf 'PR #%s was closed\n' "$pr"; exit 0 ;;
   esac
-  failed=$(printf '%s' "$view" | jq -r '[.statusCheckRollup[] | select(.conclusion == "FAILURE" or .conclusion == "CANCELLED" or .conclusion == "TIMED_OUT") | .name] | join(", ")')
-  if [ -n "$failed" ]; then
-    printf 'CI failed on PR #%s: %s\n' "$pr" "$failed"
+  if [[ "$checks" == failed:* ]]; then
+    printf 'CI failed on PR #%s: %s\n' "$pr" "${checks#failed: }"
     exit 1
   fi
-  passed=$(printf '%s' "$view" | jq '(.statusCheckRollup | length) > 0 and all(.statusCheckRollup[]; .conclusion == "SUCCESS")')
-  if [ "$opened" -eq 0 ] && [ "$passed" = true ]; then
-    open "$(printf '%s' "$view" | jq -r '.url')"
+  if [ "$opened" -eq 0 ] && [ "$checks" = passed ]; then
+    open "$url"
     printf 'CI passed on PR #%s, opened it\n' "$pr"
     opened=1
   fi
