@@ -138,6 +138,15 @@ record_bash s2 '~/.claude/bin/owner-turn.sh "question" "Which road?"'
 assert_equals "" "$(stop_turn s1)" "prints nothing when a turn ends with nothing waiting on the owner"
 drop_record
 
+new_record
+record_bash s1 '~/.claude/bin/owner-turn.sh "permission" "Run the migration"'
+record_bash s1 '~/.claude/bin/owner-turn.sh "question" "Which road?"' 1001
+record_bash s1 '~/.claude/bin/owner-turn.sh "pull request" "Review PR #9" "https://github.com/acme/widget/pull/9"' 1002
+record_bash s1 '~/.claude/bin/owner-turn.sh "plan" "Review plan #8" "https://github.com/acme/widget/issues/8"' 1003
+assert_equals "$("$TURN" flags s1)" "$(stop_turn s1 | jq -r .systemMessage)" \
+  "words every kind of flag the same at the end of a turn as on the status line"
+drop_record
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
