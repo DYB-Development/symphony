@@ -19,15 +19,25 @@ session="${SYMPHONY_SESSION:-$(hostname -s)}"
 setting() { sed -n "s/^$1=//p" "$settings" 2>/dev/null | tail -1; }
 
 hub() {
-  local method="$1" name="$2" body="${3:-}" reply
+  local method="$1" name="$2" body="${3:-}" reply status
   local address
   address="$(setting url)/api/v1/hubs/pipelines/$name"
   if [ "$method" = GET ]; then
-    reply=$(curl -sS -w '\n%{http_code}' -H "Authorization: token $(setting token)" "$address?$body")
+    reply=$(curl -sS -w '\n%{http_code}' -H "Authorization: token $(setting token)" "$address?$body" 2>/dev/null) || refuse 69 "dyb_web cannot be reached at $(setting url)"
   else
-    reply=$(curl -sS -w '\n%{http_code}' -H "Authorization: token $(setting token)" -H "Content-Type: application/json" -d "$body" "$address")
+    reply=$(curl -sS -w '\n%{http_code}' -H "Authorization: token $(setting token)" -H "Content-Type: application/json" -d "$body" "$address" 2>/dev/null) || refuse 69 "dyb_web cannot be reached at $(setting url)"
   fi
-  printf '%s' "$reply" | sed '$d' | jq -c '.answer'
+  status=$(printf '%s' "$reply" | tail -1)
+  case "$status" in
+    401 | 403 | 404) refuse 77 "dyb_web refused the token" ;;
+    2??) printf '%s' "$reply" | sed '$d' | jq -c '.answer' ;;
+    *) refuse 65 "$(printf '%s' "$reply" | sed '$d' | jq -r '.error // empty' 2>/dev/null | grep . || echo "dyb_web answered $status")" ;;
+  esac
+}
+
+refuse() {
+  echo "$2" >&2
+  exit "$1"
 }
 
 claim() {

@@ -80,6 +80,16 @@ assert_equals "Claimed Export quotes
 First step: Run work-check" "$("$PIPELINE" claim 7)" "claiming a work item by its id prints its title and its first step"
 teardown
 
+setup
+export STUB_CURL_DOWN=1
+assert_equals "dyb_web cannot be reached at https://dyb.example" "$("$PIPELINE" claim 7 2>&1)" "says dyb_web cannot be reached and runs nothing"
+teardown
+
+setup
+answer claim_work_item.code 401
+assert_equals "dyb_web refused the token" "$("$PIPELINE" claim 7 2>&1)" "says dyb_web refused the token and runs nothing"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
