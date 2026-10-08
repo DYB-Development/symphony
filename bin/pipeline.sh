@@ -16,7 +16,8 @@ At the owner's step it reports the pull request of the work item's branch as mer
 or closed, or stops with status 11 while the pull request is still open. The
 work item's branch is the local branch whose name starts with its id.
 `report` posts an agent's report for the agent step the work item is on, with
-the result its last line names, written as Result: passed or Result: failed.
+the result its last line names, written as Result: passed or Result: failed. A
+builder's Result: built is posted as passed and Result: stuck as failed.
 The dyb_web address and token are read from the dyb_web file in
 $SYMPHONY_CONFIG_DIR, or ~/.config/symphony, one name=value per line.
 USAGE
@@ -129,7 +130,7 @@ measured_run() {
 report_agent() {
   local id="$1" file="$2" step result run model tokens
   step=$(hub GET current_step "work_item_id=$id")
-  result=$(grep -v '^[[:space:]]*$' "$file" | tail -1 | sed -nE 's/^Result: (passed|failed)[[:space:]]*$/\1/p')
+  result=$(grep -v '^[[:space:]]*$' "$file" | tail -1 | sed -nE 's/^Result: (passed|failed|built|stuck)[[:space:]]*$/\1/p' | sed 's/^built$/passed/; s/^stuck$/failed/')
   [ -n "$result" ] || refuse 65 "The report's last line names no result"
   run=$(measured_run "$(work_branch "$id")" "$(jq -r '.agent' <<<"$step")")
   model=$(cut -f1 <<<"$run")

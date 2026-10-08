@@ -62,7 +62,7 @@ teardown() {
   cd "$SCRIPT_DIR"
   path=(${path:#$WORK/bin})
   rm -rf "$WORK"
-  unset SYMPHONY_CONFIG_DIR SYMPHONY_SESSION STUB_CURL_DOWN SYMPHONY_STEP_DIR SYMPHONY_USAGE
+  unset SYMPHONY_CONFIG_DIR SYMPHONY_SESSION STUB_CURL_DOWN SYMPHONY_STEP_DIR SYMPHONY_USAGE SYMPHONY_AGENT_DIR
 }
 
 step_script() {
@@ -245,6 +245,18 @@ output=$("$PIPELINE" report 7 "$WORK/report.md" 2>&1)
 assert_equals "The report's last line names no result
 GET current_step" "$output
 $(calls)" "refuses a report whose last line names no result, and posts nothing"
+teardown
+
+setup
+work_branch 7-export-quotes
+measured ""
+answer current_step "$(step build "Hand to builder on claude-sonnet-5-5" agent)"
+agent_report "Built the export." "Result: built"
+"$PIPELINE" report 7 "$WORK/report.md" >/dev/null 2>&1
+built=$(report 1 '.result')
+agent_report "Could not build it." "Result: stuck"
+"$PIPELINE" report 7 "$WORK/report.md" >/dev/null 2>&1
+assert_equals '"passed" "failed"' "$built $(report 2 '.result')" "posts a builder's built as passed and stuck as failed"
 teardown
 
 echo ""
