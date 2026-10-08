@@ -72,6 +72,8 @@ step_script() {
   export SYMPHONY_STEP_DIR="$WORK/steps"
 }
 
+report() { grep '^POST report_step ' "$WORK/calls" | sed -n "${1:-1}p" | cut -d' ' -f3- | jq -c "$2"; }
+
 calls() { cut -d' ' -f1,2 "$WORK/calls" | tr '\n' ',' | sed 's/,$//'; }
 
 answer() { printf '%s' "$2" > "$WORK/answers/$1"; }
@@ -105,6 +107,14 @@ answer current_step.1 "$(step check "Run work-check" script work-check)"
 answer current_step '{"answer":{"done":true,"output":"stopped"}}'
 "$PIPELINE" run 7 >/dev/null 2>&1
 assert_equals "GET current_step,POST start_step,POST report_step,GET current_step" "$(calls)" "tells the hub a script step has started before it runs"
+teardown
+
+setup
+step_script work-check 'echo "12 runs, 0 failures"'
+answer current_step.1 "$(step check "Run work-check" script work-check)"
+answer current_step '{"answer":{"done":true,"output":"stopped"}}'
+"$PIPELINE" run 7 >/dev/null 2>&1
+assert_equals '{"step":"check","result":"passed","exit_status":0,"output":"12 runs, 0 failures"}' "$(report 1 '{step, result, exit_status, output}')" "reports a script step's exit status and output"
 teardown
 
 echo ""
