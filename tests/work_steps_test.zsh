@@ -71,6 +71,14 @@ setup
 assert_equals "create $BASE/quotes-7-export-quotes" "$(cat "$BASE/databases")" "the start step creates the worktree's databases"
 teardown
 
+setup
+checks "[$(entry setup ready 'test -f ready.flag' 'touch ready.flag')]"
+"$BIN/work-start.sh" >/dev/null 2>&1
+outcome=$?
+assert_equals "0 yes" "$outcome $([ -f "$BASE/quotes-7-export-quotes/ready.flag" ] && echo yes || echo no)" \
+  "the start step runs a setup entry's fix command in the worktree when its check fails"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
