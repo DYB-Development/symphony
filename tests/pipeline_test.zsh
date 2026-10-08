@@ -323,6 +323,16 @@ $(cat "$WORK/wait_calls")
 $(printf '%s\n' "$output" | tail -1)" "reports the checks as passed, then says whether the pull request was merged or closed"
 teardown
 
+setup
+work_branch 7-export-quotes
+pull_request '{"number":5,"state":"OPEN","url":"https://github.com/acme/quotes/pull/5"}'
+waiting $'CI failed on PR #5: tests\n' 1
+answer current_step "$(step watch "Run work-watch" script work-watch)"
+"$PIPELINE" watch 7 >/dev/null 2>&1
+stopped=$?
+assert_equals '1 {"result":"failed","output":"CI failed on PR #5: tests"}' "$stopped $(report 1 '{result, output}')" "reports the checks as failed, naming the check that failed, and exits"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
