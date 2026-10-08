@@ -37,5 +37,12 @@ assert_equals "1. Read the work item and the code it touches
 assert_equals "" "$(sed -n '2,/^---$/p' "$BUILDER" | grep '^model:')" \
   "names no model, so it runs on whatever model the session starts it with"
 
+LOGS="$(mktemp -d "${TMPDIR:-/tmp}/builder_agent_test.XXXXXX")"
+printf '1000\tbuilder\tExport quotes\t2. Build the acceptance criteria\ts1\tcriterion 1 of 2 Export button\n' > "$LOGS/b1.log"
+assert_equals $'builder Export quotes\n███░░░░░░░ 2/5 · Build the acceptance criteria · criterion 1 of 2 Export button' \
+  "$(AGENT_PROGRESS_DIR="$LOGS" AGENT_PROGRESS_NOW=1300 "$SCRIPT_DIR/../bin/agent-progress.sh" line s1)" \
+  "shows a builder run on the status line as a bar with the criterion it is on"
+rm -rf "$LOGS"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
