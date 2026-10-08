@@ -19,11 +19,12 @@ USAGE
 repo=$1 task=$2
 
 if ! parent=$(gh api "repos/$repo/issues/$task/parent" \
-  --jq '[.number, .title, .sub_issues_summary.completed, .sub_issues_summary.total] | @tsv' 2>&1); then
+  --jq '[.number, .title, .sub_issues_summary.completed, .sub_issues_summary.total, (.repository_url // "" | sub(".*/repos/"; ""))] | @tsv' 2>&1); then
   case "$parent" in *"HTTP 404"*) exit 1 ;; *) exit 69 ;; esac
 fi
-plan=${parent%%$'\t'*}
-counts=${parent#*$'\t'}
+IFS=$'\t' read -r plan title completed total plan_repo <<< "$parent"
+plan_repo=${plan_repo:-$repo}
+counts=$(printf '%s\t%s\t%s' "$title" "$completed" "$total")
 body=$(gh api "repos/$repo/issues/$task" --jq .body) || exit 69
 stage=$(printf '%s\n' "$body" \
   | awk '/^## Part of/ { getline; print; exit }' \
@@ -35,7 +36,7 @@ criteria=$(printf '%s\n' "$body" | awk '
   END { printf "%d/%d", ticked, total }
 ')
 
-units=$(gh api "repos/$repo/issues/$plan/sub_issues" --paginate) || exit 69
+units=$(gh api "repos/$plan_repo/issues/$plan/sub_issues" --paginate) || exit 69
 stages=$(printf '%s' "$units" \
   | jq -r '.[] | [(.body // "" | capture("## Part of\\s*\\n[^\\n]*stage (?<n>[0-9]+) of").n), .state] | @tsv' \
   | awk -F'\t' '{ total[$1]++; if ($2 == "closed") closed[$1]++ }

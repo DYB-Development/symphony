@@ -75,6 +75,8 @@ case "\$*" in
     printf '7\tQuote builder\t%s\n' "\$(cat "$COUNTS")" ;;
   "api repos/acme/widget/issues/7/sub_issues --paginate")
     cat "$UNITS" ;;
+  "api repos/acme/plans/issues/7/sub_issues --paginate")
+    cat "$UNITS" ;;
   "api repos/acme/widget/issues/12 --jq .body")
     cat "$TASK_BODY" ;;
   *) echo "gh: Not Found (HTTP 404)" >&2; exit 1 ;;
@@ -229,6 +231,12 @@ touch "$WORK/hang"
 started=$EPOCHREALTIME
 status_line >/dev/null
 assert_equals "1" "$(( EPOCHREALTIME - started < 2 ))" "prints within two seconds when GitHub does not answer"
+drop_repo
+
+new_repo 12-quote-lines
+printf '3\t8\tacme/plans' > "$COUNTS"
+assert_equals $'Quote builder · stage 2 of 4 — Enrich\n\e[32m■\e[0m\e[33m■\e[0m\e[90m■\e[0m\e[90m■\e[0m 3/8' "$(status_line)" \
+  "shows the plan's progress on the branch of a task whose plan lives in another repo"
 drop_repo
 
 echo ""
