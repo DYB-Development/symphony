@@ -205,7 +205,7 @@ one work item from dyb_web's Pipelines hub.
 | `/feature-plan` | A request too big for one issue becomes a plan in four stages, filed as an issue with its units already written as issue bodies |
 | `/review <n>` | A pull request is reviewed against every check, drafted for you to read, and posted only when you say so |
 | `/audit` | One named section of a repo is measured and scored, and nothing is posted or filed |
-| `/run-work <id>` | One work item is claimed and run through its pipeline: `pipeline.sh` runs each script step, the session hands the build step to `builder` and the pull request step to `pr-scribe`, and the run stops while the pull request waits on you |
+| `/run-work <id>` | One work item is claimed and run through its pipeline: `pipeline.sh` runs each script step, the session hands the build step to `builder` and the pull request step to `pr-scribe`, watches the pull request's checks in the background, and the run stops while the pull request waits on you |
 
 `pipeline.sh` reads dyb_web's address and a staff API token from
 `~/.config/symphony/dyb_web`, one `url=` line and one `token=` line. Run
