@@ -177,6 +177,15 @@ answer current_step '{"answer":{"done":true,"output":"merged"}}'
 assert_equals '{"step":"merge","result":"passed","output":"merged"}' "$(report 1 '{step, result, output}')" "reports a merged pull request at the owner's step"
 teardown
 
+setup
+work_branch 7-export-quotes
+pull_request '{"state":"CLOSED","url":"https://github.com/acme/quotes/pull/5"}'
+answer current_step.1 "$(step merge "Wait for the owner" owner)"
+answer current_step '{"answer":{"done":true,"output":"stopped"}}'
+"$PIPELINE" run 7 >/dev/null 2>&1
+assert_equals '{"result":"failed","output":"closed"}' "$(report 1 '{result, output}')" "reports a closed pull request at the owner's step"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
