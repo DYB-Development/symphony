@@ -17,6 +17,18 @@ USAGE
 cache_dir="${STATUS_LINE_DIR:-$HOME/.claude/status-line}"
 now="${STATUS_LINE_NOW:-$(date +%s)}"
 
+within_seconds() {
+  perl -MTime::HiRes=ualarm -e '
+    my $limit = shift;
+    my $pid = fork;
+    if (!$pid) { setpgrp(0, 0); exec @ARGV or exit 127 }
+    $SIG{ALRM} = sub { kill "KILL", -$pid; exit 69 };
+    ualarm($limit * 1_000_000);
+    waitpid $pid, 0;
+    exit($? >> 8);
+  ' "$@"
+}
+
 read_progress() {
   local cache progress code=0 previous=""
   cache="$cache_dir/$(printf '%s %s' "$repo" "$branch" | shasum | cut -c1-40)"
@@ -25,7 +37,7 @@ read_progress() {
     return
   fi
   [ -f "$cache" ] && previous=$(sed -n 2p "$cache")
-  progress=$("$(dirname "$0")/plan-progress.sh" "$repo" "$task" 2>/dev/null) || code=$?
+  progress=$(within_seconds 1.5 "$(dirname "$0")/plan-progress.sh" "$repo" "$task" 2>/dev/null) || code=$?
   local state=fresh
   if [ "$code" -eq 69 ]; then
     progress=$previous
