@@ -135,6 +135,15 @@ answer current_step '{"answer":{"done":true,"output":"merged"}}'
 assert_equals '"pushed"' "$(report 2 '.output')" "runs the next script step after one reports"
 teardown
 
+setup
+step_script work-check 'echo checked'
+answer current_step "$(step deploy "Run work-deploy" script work-deploy)"
+output=$("$PIPELINE" run 7 2>&1)
+assert_equals "symphony has no script named work-deploy
+GET current_step" "$output
+$(calls)" "refuses a step naming a script this package does not contain, and runs nothing"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

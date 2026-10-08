@@ -55,6 +55,7 @@ run_script() {
   local id="$1" step="$2" name script output status result
   name=$(jq -r '.id' <<<"$step")
   script="$steps/$(jq -r '.script' <<<"$step").sh"
+  [ -x "$script" ] || refuse 66 "symphony has no script named $(jq -r '.script' <<<"$step")"
   hub POST start_step "$(jq -nc --argjson id "$id" --arg step "$name" '{work_item_id: $id, step: $step}')" >/dev/null
   set +e
   output=$(PIPELINE_STEP="$step" WORK_ITEM_ID="$id" "$script" 2>&1)
