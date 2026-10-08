@@ -20,6 +20,7 @@ databases="${SYMPHONY_WORKTREE_DATABASES:-$(dirname "${BASH_SOURCE[0]}")/worktre
 
 main=$(git worktree list --porcelain | awk 'NR == 1 { print $2 }')
 tree=$(git worktree list --porcelain | awk -v prefix="branch refs/heads/$WORK_ITEM_ID-" '/^worktree / { tree = substr($0, 10) } index($0, prefix) == 1 { print tree; exit }')
+[ -n "$tree" ] || { echo "Nothing to remove for work item $WORK_ITEM_ID"; exit 0; }
 branch=$(git -C "$tree" branch --show-current)
 
 rm -f "$tree/.decisions.md" "$tree/.ticket" "$tree/start_here.md"

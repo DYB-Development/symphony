@@ -222,6 +222,11 @@ assert_equals "" "$(grep -E 'decisions|ticket|start_here' "$BASE/left")" \
   "the clean-up step removes the decision log, ticket and resume bookmark before it removes the worktree"
 teardown
 
+setup
+assert_equals "Nothing to remove for work item 7 0" "$("$BIN/work-clean-up.sh" 2>&1) $?" \
+  "the clean-up step passes and says there was nothing to remove when the work item has no worktree"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
