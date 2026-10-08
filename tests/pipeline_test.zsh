@@ -62,7 +62,7 @@ teardown() {
   cd "$SCRIPT_DIR"
   path=(${path:#$WORK/bin})
   rm -rf "$WORK"
-  unset SYMPHONY_CONFIG_DIR SYMPHONY_SESSION STUB_CURL_DOWN SYMPHONY_STEP_DIR SYMPHONY_USAGE SYMPHONY_AGENT_DIR
+  unset SYMPHONY_CONFIG_DIR SYMPHONY_SESSION STUB_CURL_DOWN SYMPHONY_STEP_DIR SYMPHONY_USAGE SYMPHONY_AGENT_DIR SYMPHONY_PR_WAIT
 }
 
 step_script() {
@@ -94,6 +94,12 @@ measured() {
   printf '#!/usr/bin/env bash\nprintf "%%s\\n" "$*" >> "%s/usage_calls"\nprintf %%s %s\n' "$WORK" "${(q)1}" > "$WORK/bin/usage.sh"
   chmod +x "$WORK/bin/usage.sh"
   export SYMPHONY_USAGE="$WORK/bin/usage.sh"
+}
+
+waiting() {
+  printf '#!/usr/bin/env bash\nprintf "%%s\\n" "$*" >> "%s/wait_calls"\nprintf %%s %s\nexit %s\n' "$WORK" "${(q)1}" "$2" > "$WORK/bin/pr-wait.sh"
+  chmod +x "$WORK/bin/pr-wait.sh"
+  export SYMPHONY_PR_WAIT="$WORK/bin/pr-wait.sh"
 }
 
 answer() { printf '%s' "$2" > "$WORK/answers/$1"; }
@@ -293,6 +299,15 @@ stopped=$?
 assert_equals "66
 symphony defines no agent named builder" "$stopped
 $(cat "$WORK/out")" "refuses an agent step naming an agent symphony does not define"
+teardown
+
+setup
+answer current_step "$(step watch "Run work-watch" script work-watch)"
+"$PIPELINE" run 7 > "$WORK/out" 2>&1
+stopped=$?
+assert_equals "12
+Watch the pull request: ~/.claude/bin/pipeline.sh watch 7" "$stopped
+$(cat "$WORK/out")" "stops at the watch step and prints the command to start in the background"
 teardown
 
 echo ""

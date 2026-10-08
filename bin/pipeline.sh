@@ -14,7 +14,9 @@ Carries one work item through the steps dyb_web's Pipelines hub names.
 `run` runs each script step the hub names, telling the hub when it starts and
 reporting its exit status and output, until the work item reaches an end.
 It stops with status 10 at an agent step, printing the agent, its model and the work,
-and refuses an agent step naming an agent symphony does not define.
+and refuses an agent step naming an agent symphony does not define. At a script
+step naming work-watch it stops with status 12 and prints the watch command to
+start in the background.
 At the owner's step it reports the pull request of the work item's branch as merged
 or closed, or stops with status 11 while the pull request is still open. The
 work item's branch is the local branch whose name starts with its id.
@@ -120,7 +122,13 @@ run() {
       return 0
     fi
     case "$(jq -r '.kind' <<<"$step")" in
-      script) run_script "$id" "$step" ;;
+      script)
+        if [ "$(jq -r '.script' <<<"$step")" = work-watch ]; then
+          echo "Watch the pull request: ~/.claude/bin/pipeline.sh watch $id"
+          exit 12
+        fi
+        run_script "$id" "$step"
+        ;;
       agent) hand_to_agent "$step" ;;
       owner) owner_step "$id" "$step" ;;
       *) refuse 65 "symphony cannot run a $(jq -r '.kind' <<<"$step") step" ;;
