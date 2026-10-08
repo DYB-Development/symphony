@@ -135,6 +135,14 @@ checks "[$(entry setup ready 'true'), $(entry test suite 'true'), $(entry lint s
 assert_equals "" "$(git -C "$BASE/quotes-7-export-quotes" status --porcelain)" "no step adds or changes a file in the repo to hold its commands"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+git -C "$BASE/quotes-7-export-quotes" -c user.name=t -c user.email=t@example.com commit -q --allow-empty -m "Export quotes"
+checks "[$(entry test suite 'true'), $(entry lint style 'true')]"
+"$BIN/work-push.sh" >/dev/null 2>&1
+assert_equals "0 Export quotes" "$? $(git -C "$BASE/origin.git" log -1 --format=%s 7-export-quotes 2>/dev/null)" "the push step pushes the branch when the test and lint entries pass and nothing is uncommitted"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
