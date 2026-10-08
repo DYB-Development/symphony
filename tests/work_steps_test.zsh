@@ -213,6 +213,15 @@ assert_equals "0 removed 7-export-quotes" "$? $([ -d "$BASE/quotes-7-export-quot
   "the clean-up step keeps a branch holding commits that are on no remote"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+touch "$BASE/quotes-7-export-quotes/.decisions.md" "$BASE/quotes-7-export-quotes/.ticket" "$BASE/quotes-7-export-quotes/start_here.md"
+printf '#!/usr/bin/env bash\nls -a "$2" > "%s/left"\n' "$BASE" > "$BASE/stubs/worktree-databases.sh"
+"$BIN/work-clean-up.sh" >/dev/null 2>&1
+assert_equals "" "$(grep -E 'decisions|ticket|start_here' "$BASE/left")" \
+  "the clean-up step removes the decision log, ticket and resume bookmark before it removes the worktree"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

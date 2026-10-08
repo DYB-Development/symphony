@@ -22,6 +22,7 @@ main=$(git worktree list --porcelain | awk 'NR == 1 { print $2 }')
 tree=$(git worktree list --porcelain | awk -v prefix="branch refs/heads/$WORK_ITEM_ID-" '/^worktree / { tree = substr($0, 10) } index($0, prefix) == 1 { print tree; exit }')
 branch=$(git -C "$tree" branch --show-current)
 
+rm -f "$tree/.decisions.md" "$tree/.ticket" "$tree/start_here.md"
 "$databases" drop "$tree"
 git -C "$main" worktree remove --force "$tree"
 [ -n "$(git -C "$main" rev-list "$branch" --not --remotes)" ] || git -C "$main" branch -q -D "$branch"
