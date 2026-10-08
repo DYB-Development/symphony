@@ -79,6 +79,14 @@ assert_equals "0 yes" "$outcome $([ -f "$BASE/quotes-7-export-quotes/ready.flag"
   "the start step runs a setup entry's fix command in the worktree when its check fails"
 teardown
 
+setup
+checks "[$(entry setup postgres 'false' 'true' 'Start Postgres with brew services start postgresql')]"
+output=$("$BIN/work-start.sh" 2>&1)
+outcome=$?
+assert_equals "1 Start Postgres with brew services start postgresql" "$outcome $(printf '%s\n' "$output" | tail -1)" \
+  "the start step shows a setup entry's instruction and fails when its check still fails"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
