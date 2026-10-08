@@ -6,6 +6,7 @@ usage() {
 usage: pipeline.sh claim <work item id>
        pipeline.sh run <work item id>
        pipeline.sh report <work item id> <agent report file>
+       pipeline.sh check <work item id>
 
 Carries one work item through the steps dyb_web's Pipelines hub names.
 `claim` claims the work item for this session and prints its title and first step.
@@ -18,6 +19,8 @@ work item's branch is the local branch whose name starts with its id.
 `report` posts an agent's report for the agent step the work item is on, with
 the result its last line names, written as Result: passed or Result: failed. A
 builder's Result: built is posted as passed and Result: stuck as failed.
+`check` runs the check step for the step the work item is on, with the repo's
+test and lint entries the hub gives, and exits with the check step's status.
 The dyb_web address and token are read from the dyb_web file in
 $SYMPHONY_CONFIG_DIR, or ~/.config/symphony, one name=value per line.
 USAGE
@@ -142,7 +145,14 @@ report_agent() {
       model: (if $model == "" then null else $model end), tokens: (if $tokens == "" then null else ($tokens | tonumber) end)}')" >/dev/null
 }
 
+check_work() {
+  local id="$1" step
+  step=$(hub GET current_step "work_item_id=$id")
+  PIPELINE_STEP="$step" WORK_ITEM_ID="$id" "$steps/work-check.sh"
+}
+
 case "${1:-}" in
+  check) [ -n "${2:-}" ] || usage; check_work "$2" ;;
   report) [ -n "${3:-}" ] || usage; report_agent "$2" "$3" ;;
   run) [ -n "${2:-}" ] || usage; run "$2" ;;
   claim) [ -n "${2:-}" ] || usage; claim "$2" ;;

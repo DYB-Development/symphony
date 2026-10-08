@@ -259,6 +259,13 @@ agent_report "Could not build it." "Result: stuck"
 assert_equals '"passed" "failed"' "$built $(report 2 '.result')" "posts a builder's built as passed and stuck as failed"
 teardown
 
+setup
+work_branch 7-export-quotes
+step_script work-check 'echo "$WORK_ITEM_ID $(jq -r .kind <<<"$PIPELINE_STEP")"'
+answer current_step "$(step build "Hand to builder on claude-sonnet-5-5" agent)"
+assert_equals "7 agent" "$("$PIPELINE" check 7 2>&1)" "runs the check step for the step a work item is on"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
