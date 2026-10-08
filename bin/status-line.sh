@@ -18,17 +18,24 @@ cache_dir="${STATUS_LINE_DIR:-$HOME/.claude/status-line}"
 now="${STATUS_LINE_NOW:-$(date +%s)}"
 
 read_progress() {
-  local cache
+  local cache progress code=0 previous=""
   cache="$cache_dir/$(printf '%s %s' "$repo" "$branch" | shasum | cut -c1-40)"
   if [ -f "$cache" ] && [ $(( now - $(head -1 "$cache") )) -lt 60 ]; then
-    sed -n 2p "$cache"
+    sed -n '2,3p' "$cache"
     return
   fi
-  local progress
-  progress=$("$(dirname "$0")/plan-progress.sh" "$repo" "$task" 2>/dev/null) || progress=""
+  [ -f "$cache" ] && previous=$(sed -n 2p "$cache")
+  progress=$("$(dirname "$0")/plan-progress.sh" "$repo" "$task" 2>/dev/null) || code=$?
+  local state=fresh
+  if [ "$code" -eq 69 ]; then
+    progress=$previous
+    state=stale
+  elif [ "$code" -ne 0 ]; then
+    progress=""
+  fi
   mkdir -p "$cache_dir"
-  printf '%s\n%s\n' "$now" "$progress" > "$cache"
-  printf '%s\n' "$progress"
+  printf '%s\n%s\n%s\n' "$now" "$progress" "$state" > "$cache"
+  printf '%s\n%s\n' "$progress" "$state"
 }
 
 stage_square() {
@@ -45,13 +52,16 @@ plan_part() {
   [ -n "$task" ] || return 0
   repo=$(git -C "$dir" remote get-url origin | sed -E 's#^.*github\.com[:/]##; s#\.git$##')
   local progress title closed total stage stages criteria counts squares=""
-  progress=$(read_progress)
+  local read state
+  read=$(read_progress)
+  progress=$(printf '%s\n' "$read" | sed -n 1p)
+  state=$(printf '%s\n' "$read" | sed -n 2p)
   [ -n "$progress" ] || return 0
   IFS=$'\t' read -r title closed total stage stages criteria <<< "$progress"
   for counts in $stages; do
     squares+=$(stage_square "${counts#*:}")
   done
-  printf '%s · %s\n%s %s/%s\n' "$title" "$stage" "$squares" "$closed" "$total"
+  printf '%s · %s\n%s %s/%s%s\n' "$title" "$stage" "$squares" "$closed" "$total" "$([ "$state" = stale ] && printf ' · out of date')"
   criteria_bar "${criteria:-0/0}"
 }
 
