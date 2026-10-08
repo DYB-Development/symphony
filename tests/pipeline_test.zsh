@@ -117,6 +117,14 @@ answer current_step '{"answer":{"done":true,"output":"stopped"}}'
 assert_equals '{"step":"check","result":"passed","exit_status":0,"output":"12 runs, 0 failures"}' "$(report 1 '{step, result, exit_status, output}')" "reports a script step's exit status and output"
 teardown
 
+setup
+step_script work-check 'echo "2 failures"; exit 3'
+answer current_step.1 "$(step check "Run work-check" script work-check)"
+answer current_step '{"answer":{"done":true,"output":"stopped"}}'
+"$PIPELINE" run 7 >/dev/null 2>&1
+assert_equals '{"result":"failed","exit_status":3}' "$(report 1 '{result, exit_status}')" "reports a step whose script exits non-zero as failed, with its exit status"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
