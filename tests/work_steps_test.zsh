@@ -153,6 +153,13 @@ no branch" "$? $(printf '%s\n' "$output" | tail -1)
 $(git -C "$BASE/origin.git" rev-parse -q --verify 7-export-quotes >/dev/null && echo pushed || echo no branch)" "the push step refuses to push while something is uncommitted"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+checks "[$(entry test suite 'exit 1'), $(entry lint style 'true')]"
+"$BIN/work-push.sh" >/dev/null 2>&1
+assert_equals "1 no branch" "$? $(git -C "$BASE/origin.git" rev-parse -q --verify 7-export-quotes >/dev/null && echo pushed || echo no branch)" "the push step refuses to push when a test or lint entry fails"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
