@@ -18,6 +18,7 @@ actually there.
 | `plan-scribe` | A feature plan in four stages, from reading the repo |
 | `review-scribe` | A pull request review, drafted before it is posted |
 | `audit-scribe` | An audit of a section of a repo, with no pull request open |
+| `builder` | A work item's acceptance criteria, built test-first in its worktree, and a report of each commit |
 
 They share one list of checks in `rules/review-checks.md`, one writing style in
 `rules/writing-style.md`, and one stamp generator that names the versions behind
@@ -96,7 +97,8 @@ While the session works, the top line says what it is doing, taken from the
 description of its most recent tool call, and it goes away when the turn ends.
 Under it, each running scribe of the session shows its type and target above a
 bar of how far through its numbered steps it is, filled partway through a long
-step by the position the scribe marks inside it.
+step by the position the scribe marks inside it, written as `3/9` or as
+`criterion 3 of 9`.
 
 Commands are run as `/review`. A file edited in this clone takes effect in the
 next session, with no reinstall, which is what makes this the mode to use while
