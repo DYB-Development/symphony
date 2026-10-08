@@ -197,6 +197,14 @@ assert_equals "0 removed  drop $BASE/quotes-7-export-quotes" "$? $([ -d "$BASE/q
   "the clean-up step removes the worktree, drops its databases and deletes a branch with nothing unpushed"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+touch "$BASE/quotes-7-export-quotes/unsaved.rb"
+"$BIN/work-clean-up.sh" >/dev/null 2>&1
+assert_equals "0 removed" "$? $([ -d "$BASE/quotes-7-export-quotes" ] && echo kept || echo removed)" \
+  "the clean-up step removes a worktree that holds uncommitted changes"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
