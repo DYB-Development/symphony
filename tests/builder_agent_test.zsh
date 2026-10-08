@@ -34,5 +34,8 @@ assert_equals "1. Read the work item and the code it touches
 5. Report" "$(grep -E '^[0-9]+\. \*\*' "$BUILDER" 2>/dev/null | sed -E 's/^([0-9]+\.) \*\*([^*]+)\*\*.*/\1 \2/; s/\.$//')" \
   "numbers its steps in order: read, build, update the readme, check, report"
 
+assert_equals "" "$(sed -n '2,/^---$/p' "$BUILDER" | grep '^model:')" \
+  "names no model, so it runs on whatever model the session starts it with"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
