@@ -205,6 +205,14 @@ assert_equals "0 removed" "$? $([ -d "$BASE/quotes-7-export-quotes" ] && echo ke
   "the clean-up step removes a worktree that holds uncommitted changes"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+git -C "$BASE/quotes-7-export-quotes" -c user.name=t -c user.email=t@example.com commit -q --allow-empty -m "Not pushed"
+"$BIN/work-clean-up.sh" >/dev/null 2>&1
+assert_equals "0 removed 7-export-quotes" "$? $([ -d "$BASE/quotes-7-export-quotes" ] && echo kept || echo removed) $(git -C "$MAIN" branch --list '7-*' | tr -d ' ')" \
+  "the clean-up step keeps a branch holding commits that are on no remote"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
