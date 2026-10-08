@@ -87,6 +87,14 @@ assert_equals "1 Start Postgres with brew services start postgresql" "$outcome $
   "the start step shows a setup entry's instruction and fails when its check still fails"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+WORK_ITEM_ID=8 checks '[]' 'Import prices'
+WORK_ITEM_ID=8 "$BIN/work-start.sh" >/dev/null 2>&1
+assert_equals "7-export-quotes 8-import-prices" "$(git -C "$MAIN" branch --format='%(refname:short)' | grep -v '^main$' | tr '\n' ' ' | sed 's/ $//')" \
+  "two work items in the same repo get two worktrees and two branches"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
