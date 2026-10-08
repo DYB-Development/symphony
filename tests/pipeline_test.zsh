@@ -168,6 +168,15 @@ Acceptance criteria: A rep downloads a CSV" "$stopped
 $(cat "$WORK/out")" "stops at an agent step and prints the agent, its model and the work"
 teardown
 
+setup
+work_branch 7-export-quotes
+pull_request '{"state":"MERGED","url":"https://github.com/acme/quotes/pull/5"}'
+answer current_step.1 "$(step merge "Wait for the owner" owner)"
+answer current_step '{"answer":{"done":true,"output":"merged"}}'
+"$PIPELINE" run 7 >/dev/null 2>&1
+assert_equals '{"step":"merge","result":"passed","output":"merged"}' "$(report 1 '{step, result, output}')" "reports a merged pull request at the owner's step"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

@@ -11,6 +11,9 @@ Carries one work item through the steps dyb_web's Pipelines hub names.
 `run` runs each script step the hub names, telling the hub when it starts and
 reporting its exit status and output, until the work item reaches an end.
 It stops with status 10 at an agent step, printing the agent, its model and the work.
+At the owner's step it reports the pull request of the work item's branch as merged
+or closed, or stops with status 11 while the pull request is still open. The
+work item's branch is the local branch whose name starts with its id.
 The dyb_web address and token are read from the dyb_web file in
 $SYMPHONY_CONFIG_DIR, or ~/.config/symphony, one name=value per line.
 USAGE
@@ -73,6 +76,26 @@ hand_to_agent() {
   exit 10
 }
 
+work_branch() {
+  git for-each-ref --format='%(refname:short)' "refs/heads/$1-*" | head -1 | grep . || refuse 66 "no branch for work item $1 in this repo"
+}
+
+owner_step() {
+  local id="$1" step="$2" pull state result
+  pull=$(gh pr view "$(work_branch "$id")" --json state,url)
+  state=$(jq -r '.state' <<<"$pull")
+  case "$state" in
+    MERGED) result=passed ;;
+    CLOSED) result=failed ;;
+    *)
+      printf '%s waits on the owner: %s\n' "$(jq -r '.work.title' <<<"$step")" "$(jq -r '.url' <<<"$pull")"
+      exit 11
+      ;;
+  esac
+  hub POST report_step "$(jq -nc --argjson id "$id" --arg step "$(jq -r '.id' <<<"$step")" --arg result "$result" --arg output "$(tr '[:upper:]' '[:lower:]' <<<"$state")" \
+    '{work_item_id: $id, step: $step, result: $result, output: $output}')" >/dev/null
+}
+
 run() {
   local id="$1" step
   while :; do
@@ -84,6 +107,7 @@ run() {
     case "$(jq -r '.kind' <<<"$step")" in
       script) run_script "$id" "$step" ;;
       agent) hand_to_agent "$step" ;;
+      owner) owner_step "$id" "$step" ;;
       *) refuse 65 "symphony cannot run a $(jq -r '.kind' <<<"$step") step" ;;
     esac
   done
