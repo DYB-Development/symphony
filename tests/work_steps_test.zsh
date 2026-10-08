@@ -104,6 +104,16 @@ $(git -C "$MAIN" worktree list | wc -l | tr -d ' ')" \
   "the start step reports a work item's existing worktree and makes no second one"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+checks "[$(entry test suite 'true'), $(entry lint style 'true')]"
+"$BIN/work-check.sh" >/dev/null 2>&1
+passed=$?
+checks "[$(entry test suite 'true'), $(entry lint style 'exit 2')]"
+"$BIN/work-check.sh" >/dev/null 2>&1
+assert_equals "0 1" "$passed $?" "the check step passes only when every test and lint entry exits zero"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
