@@ -130,6 +130,7 @@ report_agent() {
   local id="$1" file="$2" step result run model tokens
   step=$(hub GET current_step "work_item_id=$id")
   result=$(grep -v '^[[:space:]]*$' "$file" | tail -1 | sed -nE 's/^Result: (passed|failed)[[:space:]]*$/\1/p')
+  [ -n "$result" ] || refuse 65 "The report's last line names no result"
   run=$(measured_run "$(work_branch "$id")" "$(jq -r '.agent' <<<"$step")")
   model=$(cut -f1 <<<"$run")
   tokens=$(cut -s -f2 <<<"$run")

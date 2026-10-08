@@ -236,6 +236,17 @@ agent_report "Built the export." "Result: passed"
 assert_equals '{"tokens":null,"output":"Built the export.\nResult: passed\nTokens: not measured"}' "$(report 1 '{tokens, output}')" "marks the tokens as not measured when the transcripts hold no run of the agent"
 teardown
 
+setup
+work_branch 7-export-quotes
+measured ""
+answer current_step "$(step build "Hand to builder on claude-sonnet-5-5" agent)"
+agent_report "Built the export." "All done."
+output=$("$PIPELINE" report 7 "$WORK/report.md" 2>&1)
+assert_equals "The report's last line names no result
+GET current_step" "$output
+$(calls)" "refuses a report whose last line names no result, and posts nothing"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
