@@ -24,7 +24,7 @@ tree=$(git worktree list --porcelain | awk -v prefix="branch refs/heads/$WORK_IT
 branch=$(git -C "$tree" branch --show-current)
 
 rm -f "$tree/.decisions.md" "$tree/.ticket" "$tree/start_here.md"
-"$databases" drop "$tree"
+dropped=$("$databases" drop "$tree" 2>&1) || { echo "Dropping the databases failed: $dropped"; exit 1; }
 git -C "$main" worktree remove --force "$tree"
 [ -n "$(git -C "$main" rev-list "$branch" --not --remotes)" ] || git -C "$main" branch -q -D "$branch"
 echo "Removed $tree"

@@ -227,6 +227,14 @@ assert_equals "Nothing to remove for work item 7 0" "$("$BIN/work-clean-up.sh" 2
   "the clean-up step passes and says there was nothing to remove when the work item has no worktree"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+printf '#!/usr/bin/env bash\necho "dropdb failed for quotes_development"; exit 1\n' > "$BASE/stubs/worktree-databases.sh"
+output=$("$BIN/work-clean-up.sh" 2>&1)
+assert_equals "1 kept Dropping the databases failed: dropdb failed for quotes_development" "$? $([ -d "$BASE/quotes-7-export-quotes" ] && echo kept || echo removed) $(printf '%s\n' "$output" | tail -1)" \
+  "a database drop that fails makes the clean-up step fail, naming the drop, before the worktree is removed"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
