@@ -114,6 +114,13 @@ checks "[$(entry test suite 'true'), $(entry lint style 'exit 2')]"
 assert_equals "0 1" "$passed $?" "the check step passes only when every test and lint entry exits zero"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+checks "[$(entry test suite 'true')]"
+output=$("$BIN/work-check.sh" 2>&1)
+assert_equals "1 No lint entry for acme/quotes" "$? $output" "the check step fails, naming the missing kind, for a repo with no lint entry"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
