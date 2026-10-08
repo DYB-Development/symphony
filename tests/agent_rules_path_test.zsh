@@ -18,7 +18,7 @@ fail() { printf '  \033[31m✗\033[0m %s\n' "$1"; FAIL=$((FAIL+1)); }
 
 # The rules file an agent is told to read first, taken from its own prose.
 primary_rules_of() {
-  grep -om1 '~/\.claude/rules/[a-z-]*\.\(md\|json\)' "$1" | sed 's|.*/||'
+  grep -om1 '~/\.claude/rules/[a-z_-]*\.\(md\|json\)' "$1" | sed 's|.*/||'
 }
 
 echo "agents name their rules by a path in this package:"
