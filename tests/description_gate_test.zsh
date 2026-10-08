@@ -33,6 +33,9 @@ echo "description-gate.sh check:"
 assert_equals "deny" "$(run '{"command": "ls"}' | jq -r '.hookSpecificOutput.permissionDecision')" \
   "refuses a command with no description"
 
+assert_equals "deny" "$(run '{"command": "ls", "description": "   "}' | jq -r '.hookSpecificOutput.permissionDecision')" \
+  "refuses a command whose description is empty"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

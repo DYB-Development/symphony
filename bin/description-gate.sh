@@ -14,7 +14,7 @@ USAGE
 
 [ "${1:-}" = check ] || usage
 
-description=$(jq -r '.tool_input.description // empty')
+description=$(jq -r '.tool_input.description // empty | gsub("^\\s+|\\s+$"; "")')
 [ -z "$description" ] || exit 0
 
 jq -nc '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny"}}'
