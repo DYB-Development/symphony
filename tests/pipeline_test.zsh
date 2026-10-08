@@ -125,6 +125,16 @@ answer current_step '{"answer":{"done":true,"output":"stopped"}}'
 assert_equals '{"result":"failed","exit_status":3}' "$(report 1 '{result, exit_status}')" "reports a step whose script exits non-zero as failed, with its exit status"
 teardown
 
+setup
+step_script work-check 'echo checked'
+step_script work-push 'echo pushed'
+answer current_step.1 "$(step check "Run work-check" script work-check)"
+answer current_step.2 "$(step push "Run work-push" script work-push)"
+answer current_step '{"answer":{"done":true,"output":"merged"}}'
+"$PIPELINE" run 7 >/dev/null 2>&1
+assert_equals '"pushed"' "$(report 2 '.output')" "runs the next script step after one reports"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
