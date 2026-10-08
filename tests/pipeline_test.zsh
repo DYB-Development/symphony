@@ -275,6 +275,15 @@ answer current_step "$(step open-pr "Hand to pr-scribe on claude-opus-5-5" agent
 assert_equals '{"result":"passed","output":"https://github.com/acme/quotes/pull/5","model":"claude-opus-5-5","tokens":90000}' "$(report 1 '{result, output, model, tokens}')" "reports the pull request step as opened when the branch has an open pull request"
 teardown
 
+setup
+work_branch 7-export-quotes
+measured ""
+pull_request '{"state":"CLOSED","url":"https://github.com/acme/quotes/pull/5"}'
+answer current_step "$(step open-pr "Hand to pr-scribe on claude-opus-5-5" agent)"
+"$PIPELINE" report-pr 7 >/dev/null 2>&1
+assert_equals '"failed"' "$(report 1 '.result')" "reports the pull request step as failed when the branch has no open pull request"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
