@@ -44,5 +44,9 @@ assert_equals $'builder Export quotes\n███░░░░░░░ 2/5 · Bui
   "shows a builder run on the status line as a bar with the criterion it is on"
 rm -rf "$LOGS"
 
+assert_equals "Result: built
+Result: stuck" "$(sed -n '/^## Return/,$p' "$BUILDER" | grep -o 'Result: [a-z]*' | sort -u)" \
+  "ends its report with a line naming its result as built or stuck"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
