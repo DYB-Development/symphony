@@ -186,6 +186,17 @@ answer current_step '{"answer":{"done":true,"output":"stopped"}}'
 assert_equals '{"result":"failed","output":"closed"}' "$(report 1 '{result, output}')" "reports a closed pull request at the owner's step"
 teardown
 
+setup
+work_branch 7-export-quotes
+pull_request '{"state":"OPEN","url":"https://github.com/acme/quotes/pull/5"}'
+answer current_step "$(step merge "Wait for the owner" owner)"
+"$PIPELINE" run 7 > "$WORK/out" 2>&1
+stopped=$?
+assert_equals "11
+Export quotes waits on the owner: https://github.com/acme/quotes/pull/5" "$stopped
+$(cat "$WORK/out")" "stops and flags an open pull request as waiting on the owner"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
