@@ -66,6 +66,11 @@ assert_equals "$BASE/quotes-7-export-quotes 7-export-quotes" "$(git -C "$MAIN" w
   "the start step makes the work item's worktree beside the main clone, on a branch that begins with its id"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+assert_equals "create $BASE/quotes-7-export-quotes" "$(cat "$BASE/databases")" "the start step creates the worktree's databases"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
