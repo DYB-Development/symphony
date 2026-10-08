@@ -36,6 +36,10 @@ assert_equals "deny" "$(run '{"command": "ls"}' | jq -r '.hookSpecificOutput.per
 assert_equals "deny" "$(run '{"command": "ls", "description": "   "}' | jq -r '.hookSpecificOutput.permissionDecision')" \
   "refuses a command whose description is empty"
 
+assert_equals "Add a description that says in plain words what this command does, without repeating the command." \
+  "$(run '{"command": "ls"}' | jq -r '.hookSpecificOutput.permissionDecisionReason')" \
+  "tells the agent to add a description in plain words"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

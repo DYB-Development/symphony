@@ -17,4 +17,5 @@ USAGE
 description=$(jq -r '.tool_input.description // empty | gsub("^\\s+|\\s+$"; "")')
 [ -z "$description" ] || exit 0
 
-jq -nc '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny"}}'
+jq -nc '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $text}}' \
+  --arg text "Add a description that says in plain words what this command does, without repeating the command."
