@@ -55,6 +55,12 @@ case "$*" in
     printf '## Part of\nQuote export, stage 3 of 4 — Simplify.\n' ;;
   "api repos/acme/widget/issues/8/sub_issues --paginate")
     jq -nc '[{state: "closed", body: "Follows the work of stage 1 of 4.\n\n## Part of\nQuote export, stage 3 of 4 — Simplify.\n"}]' ;;
+  "api repos/acme/widget/issues/16/parent --jq "*)
+    printf '9\tQuote archive\t2\t5\n' ;;
+  "api repos/acme/widget/issues/16 --jq .body")
+    printf '## Part of\nQuote archive, stage 1 of 4 — End to end.\n' ;;
+  "api repos/acme/widget/issues/9/sub_issues --paginate")
+    echo "error connecting to api.github.com" >&2; exit 1 ;;
   "api repos/acme/widget/issues/15/parent --jq "*)
     echo "error connecting to api.github.com" >&2; exit 1 ;;
   "api repos/acme/widget/issues/13/parent --jq "*)
@@ -102,6 +108,12 @@ stub_gh
 output=$("$READER" acme/widget 15 2>/dev/null)
 code=$?
 assert_equals "69 " "$code $output" "prints nothing and exits 69 when GitHub cannot be read"
+drop_stub
+
+stub_gh
+output=$("$READER" acme/widget 16 2>/dev/null)
+code=$?
+assert_equals "69 " "$code $output" "prints nothing and exits 69 when a later read from GitHub fails"
 drop_stub
 
 echo ""
