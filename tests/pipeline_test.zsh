@@ -62,8 +62,17 @@ teardown() {
   cd "$SCRIPT_DIR"
   path=(${path:#$WORK/bin})
   rm -rf "$WORK"
-  unset SYMPHONY_CONFIG_DIR SYMPHONY_SESSION STUB_CURL_DOWN
+  unset SYMPHONY_CONFIG_DIR SYMPHONY_SESSION STUB_CURL_DOWN SYMPHONY_STEP_DIR
 }
+
+step_script() {
+  mkdir -p "$WORK/steps"
+  printf '#!/usr/bin/env bash\n%s\n' "$2" > "$WORK/steps/$1.sh"
+  chmod +x "$WORK/steps/$1.sh"
+  export SYMPHONY_STEP_DIR="$WORK/steps"
+}
+
+calls() { cut -d' ' -f1,2 "$WORK/calls" | tr '\n' ',' | sed 's/,$//'; }
 
 answer() { printf '%s' "$2" > "$WORK/answers/$1"; }
 
@@ -88,6 +97,14 @@ teardown
 setup
 answer claim_work_item.code 401
 assert_equals "dyb_web refused the token" "$("$PIPELINE" claim 7 2>&1)" "says dyb_web refused the token and runs nothing"
+teardown
+
+setup
+step_script work-check 'echo "12 runs, 0 failures"'
+answer current_step.1 "$(step check "Run work-check" script work-check)"
+answer current_step '{"answer":{"done":true,"output":"stopped"}}'
+"$PIPELINE" run 7 >/dev/null 2>&1
+assert_equals "GET current_step,POST start_step,POST report_step,GET current_step" "$(calls)" "tells the hub a script step has started before it runs"
 teardown
 
 echo ""
