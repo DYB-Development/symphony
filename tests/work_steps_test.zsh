@@ -182,6 +182,14 @@ pull_request '{"state":"MERGED"}'
 assert_equals "0 removed " "$? $([ -d "$BASE/quotes-7-export-quotes" ] && echo kept || echo removed) $(git -C "$MAIN" branch --list '7-*')" "the finish step removes the worktree and its branch once the pull request is merged"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+touch "$BASE/quotes-7-export-quotes/.decisions.md" "$BASE/quotes-7-export-quotes/.ticket" "$BASE/quotes-7-export-quotes/start_here.md"
+pull_request '{"state":"MERGED"}'
+"$BIN/work-finish.sh" >/dev/null 2>&1
+assert_equals "0 removed" "$? $([ -d "$BASE/quotes-7-export-quotes" ] && echo kept || echo removed)" "the finish step removes the worktree's decision log, ticket and resume bookmark too"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
