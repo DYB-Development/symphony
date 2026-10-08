@@ -216,6 +216,17 @@ agent_report "Built the export." "Result: passed"
 assert_equals '{"step":"build","result":"passed"}' "$(report 1 '{step, result}')" "posts the result named on an agent report's last line"
 teardown
 
+setup
+work_branch 7-export-quotes
+measured "claude-sonnet-5-5	120000"
+answer current_step "$(step build "Hand to builder on claude-sonnet-5-5" agent)"
+agent_report "Built the export." "Result: passed"
+"$PIPELINE" report 7 "$WORK/report.md" >/dev/null 2>&1
+assert_equals '{"model":"claude-sonnet-5-5","tokens":120000}
+--agent-run builder' "$(report 1 '{model, tokens}')
+$(cat "$WORK/usage_calls")" "posts the model and tokens the transcripts recorded for the agent's latest run"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

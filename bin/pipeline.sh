@@ -26,6 +26,7 @@ USAGE
 settings="${SYMPHONY_CONFIG_DIR:-$HOME/.config/symphony}/dyb_web"
 session="${SYMPHONY_SESSION:-$(hostname -s)}"
 steps="${SYMPHONY_STEP_DIR:-$(cd "$(dirname "$0")" && pwd)}"
+usage_script="${SYMPHONY_USAGE:-$(cd "$(dirname "$0")" && pwd)/usage.sh}"
 
 setting() { sed -n "s/^$1=//p" "$settings" 2>/dev/null | tail -1; }
 
@@ -116,12 +117,26 @@ run() {
   done
 }
 
+worktree_of() {
+  git worktree list --porcelain | awk -v branch="refs/heads/$1" '/^worktree / { tree = substr($0, 10) } $0 == "branch " branch { print tree; exit }' | grep . || pwd
+}
+
+measured_run() {
+  local branch="$1" agent="$2"
+  (cd "$(worktree_of "$branch")" && "$usage_script" --agent-run "$agent")
+}
+
 report_agent() {
-  local id="$1" file="$2" step result
+  local id="$1" file="$2" step result run model tokens
   step=$(hub GET current_step "work_item_id=$id")
   result=$(grep -v '^[[:space:]]*$' "$file" | tail -1 | sed -nE 's/^Result: (passed|failed)[[:space:]]*$/\1/p')
+  run=$(measured_run "$(work_branch "$id")" "$(jq -r '.agent' <<<"$step")")
+  model=$(cut -f1 <<<"$run")
+  tokens=$(cut -s -f2 <<<"$run")
   hub POST report_step "$(jq -nc --argjson id "$id" --arg step "$(jq -r '.id' <<<"$step")" --arg result "$result" --rawfile output "$file" \
-    '{work_item_id: $id, step: $step, result: $result, output: ($output | rtrimstr("\n"))}')" >/dev/null
+    --arg model "$model" --arg tokens "$tokens" \
+    '{work_item_id: $id, step: $step, result: $result, output: ($output | rtrimstr("\n")),
+      model: (if $model == "" then null else $model end), tokens: (if $tokens == "" then null else ($tokens | tonumber) end)}')" >/dev/null
 }
 
 case "${1:-}" in
