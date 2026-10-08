@@ -81,7 +81,10 @@ when none are. A unit's stage is read from the `Part of` line of its issue.
 Under it, a second bar shows how many of the task's acceptance criteria are
 ticked out of all of them. A criterion is ticked once the commit that covers it
 lands, with `~/.claude/bin/tick-criterion.sh <owner/repo> <issue> <position>`. It
-asks GitHub at most once a minute for each repo and branch.
+asks GitHub at most once a minute for each repo and branch, and gives up on a
+read after a second and a half. When GitHub cannot be read, it keeps showing the
+last count, marked out of date, or says progress is unavailable when it never
+had one.
 Above the plan's progress it shows a flag for each item this session has waited
 on the owner for since the owner's last prompt, one to a line, such as a question or a pull
 request to review. An agent marks a pull request or plan with
