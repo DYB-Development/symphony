@@ -45,6 +45,7 @@ session="${SYMPHONY_SESSION:-$(hostname -s)}"
 steps="${SYMPHONY_STEP_DIR:-$(cd "$(dirname "$0")" && pwd)}"
 agents="${SYMPHONY_AGENT_DIR:-$(cd "$(dirname "$0")/.." && pwd)/agents}"
 pr_wait="${SYMPHONY_PR_WAIT:-$(cd "$(dirname "$0")" && pwd)/pr-wait.sh}"
+pr_state="$(cd "$(dirname "$0")" && pwd)/pr-state.sh"
 usage_script="${SYMPHONY_USAGE:-$(cd "$(dirname "$0")" && pwd)/usage.sh}"
 
 setting() { sed -n "s/^$1=//p" "$settings" 2>/dev/null | tail -1; }
@@ -105,14 +106,13 @@ work_branch() {
 }
 
 owner_step() {
-  local id="$1" step="$2" pull state result
-  pull=$(gh pr view "$(work_branch "$id")" --json state,url)
-  state=$(jq -r '.state' <<<"$pull")
+  local id="$1" step="$2" state url result
+  IFS=$'\t' read -r state url _ _ < <("$pr_state" "$(work_branch "$id")")
   case "$state" in
     MERGED) result=passed ;;
     CLOSED) result=failed ;;
     *)
-      printf '%s waits on the owner: %s\n' "$(jq -r '.work.title' <<<"$step")" "$(jq -r '.url' <<<"$pull")"
+      printf '%s waits on the owner: %s\n' "$(jq -r '.work.title' <<<"$step")" "$url"
       exit 11
       ;;
   esac
@@ -174,15 +174,15 @@ check_work() {
 }
 
 report_pull_request() {
-  local id="$1" step branch pull result output run model tokens
+  local id="$1" step branch state url result output run model tokens
   step=$(hub GET current_step "work_item_id=$id")
   branch=$(work_branch "$id")
-  pull=$(gh pr view "$branch" --json state,url 2>/dev/null || echo '{}')
+  IFS=$'\t' read -r state url _ _ < <("$pr_state" "$branch" 2>/dev/null || true)
   result=failed
   output="No open pull request for $branch"
-  if [ "$(jq -r '.state // ""' <<<"$pull")" = OPEN ]; then
+  if [ "${state:-}" = OPEN ]; then
     result=passed
-    output=$(jq -r '.url' <<<"$pull")
+    output="$url"
   fi
   run=$(measured_run "$branch" "$(jq -r '.agent' <<<"$step")")
   model=$(cut -f1 <<<"$run")
@@ -203,7 +203,7 @@ watch_pull_request() {
   local id="$1" step name number line last="" status=0 reported=""
   step=$(hub GET current_step "work_item_id=$id")
   name=$(jq -r '.id' <<<"$step")
-  number=$(gh pr view "$(work_branch "$id")" --json number | jq -r '.number')
+  IFS=$'\t' read -r _ _ number _ < <("$pr_state" "$(work_branch "$id")")
   hub POST start_step "$(jq -nc --argjson id "$id" --arg step "$name" '{work_item_id: $id, step: $step}')" >/dev/null
   while IFS= read -r line; do
     echo "$line"
