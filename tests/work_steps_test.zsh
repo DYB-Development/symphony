@@ -55,6 +55,12 @@ checks() {
     '{id: "start", kind: "script", work: {title: $title, repo: "acme/quotes"}, checks: $checks}')"
 }
 
+pull_request() {
+  printf '#!/usr/bin/env bash\necho %s\n' "${(q)1}" > "$BASE/stubs/gh"
+  chmod +x "$BASE/stubs/gh"
+  path=("$BASE/stubs" $path)
+}
+
 entry() {
   jq -nc --arg kind "$1" --arg name "$2" --arg check "$3" --arg fix "${4:-}" --arg instruction "${5:-}" \
     '{kind: $kind, name: $name, purpose: "", check_command: $check, fix_command: $fix, instruction: $instruction}'
@@ -158,6 +164,15 @@ setup
 checks "[$(entry test suite 'exit 1'), $(entry lint style 'true')]"
 "$BIN/work-push.sh" >/dev/null 2>&1
 assert_equals "1 no branch" "$? $(git -C "$BASE/origin.git" rev-parse -q --verify 7-export-quotes >/dev/null && echo pushed || echo no branch)" "the push step refuses to push when a test or lint entry fails"
+teardown
+
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+pull_request '{"state":"OPEN"}'
+output=$("$BIN/work-finish.sh" 2>&1)
+assert_equals "1 The pull request for 7-export-quotes is not merged
+kept" "$? $output
+$([ -d "$BASE/quotes-7-export-quotes" ] && echo kept || echo removed)" "the finish step fails, changing nothing, while the branch's pull request is not merged"
 teardown
 
 echo ""
