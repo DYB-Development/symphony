@@ -7,6 +7,7 @@ usage: pipeline.sh claim <work item id>
        pipeline.sh run <work item id>
        pipeline.sh report <work item id> <agent report file>
        pipeline.sh check <work item id>
+       pipeline.sh report-pr <work item id>
 
 Carries one work item through the steps dyb_web's Pipelines hub names.
 `claim` claims the work item for this session and prints its title and first step.
@@ -21,6 +22,9 @@ the result its last line names, written as Result: passed or Result: failed. A
 builder's Result: built is posted as passed and Result: stuck as failed.
 `check` runs the check step for the step the work item is on, with the repo's
 test and lint entries the hub gives, and exits with the check step's status.
+`report-pr` reports the pull request step: passed, with the pull request's
+address, only when the work item's branch has an open pull request, and failed
+otherwise, with the model and tokens of the agent's latest run.
 The dyb_web address and token are read from the dyb_web file in
 $SYMPHONY_CONFIG_DIR, or ~/.config/symphony, one name=value per line.
 USAGE
@@ -151,7 +155,29 @@ check_work() {
   PIPELINE_STEP="$step" WORK_ITEM_ID="$id" "$steps/work-check.sh"
 }
 
+report_pull_request() {
+  local id="$1" step branch pull result output run model tokens
+  step=$(hub GET current_step "work_item_id=$id")
+  branch=$(work_branch "$id")
+  pull=$(gh pr view "$branch" --json state,url 2>/dev/null || echo '{}')
+  result=failed
+  output="No open pull request for $branch"
+  if [ "$(jq -r '.state // ""' <<<"$pull")" = OPEN ]; then
+    result=passed
+    output=$(jq -r '.url' <<<"$pull")
+  fi
+  run=$(measured_run "$branch" "$(jq -r '.agent' <<<"$step")")
+  model=$(cut -f1 <<<"$run")
+  tokens=$(cut -s -f2 <<<"$run")
+  hub POST report_step "$(jq -nc --argjson id "$id" --arg step "$(jq -r '.id' <<<"$step")" --arg result "$result" --arg output "$output" \
+    --arg model "$model" --arg tokens "$tokens" \
+    '{work_item_id: $id, step: $step, result: $result, output: $output,
+      model: (if $model == "" then null else $model end), tokens: (if $tokens == "" then null else ($tokens | tonumber) end)}')" >/dev/null
+  echo "Pull request step: $result"
+}
+
 case "${1:-}" in
+  report-pr) [ -n "${2:-}" ] || usage; report_pull_request "$2" ;;
   check) [ -n "${2:-}" ] || usage; check_work "$2" ;;
   report) [ -n "${3:-}" ] || usage; report_agent "$2" "$3" ;;
   run) [ -n "${2:-}" ] || usage; run "$2" ;;
