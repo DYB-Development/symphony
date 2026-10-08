@@ -54,5 +54,10 @@ assert_equals "OPEN	https://github.com/acme/quotes/pull/5	5	failed: tests, deplo
   "names each check that failed, was cancelled or timed out"
 drop_stub
 
+stub MERGED "tests:SUCCESS,lint:"
+assert_equals "MERGED	https://github.com/acme/quotes/pull/5	5	pending" "$("$STATE" 5)" \
+  "prints pending while a check has no conclusion, and the merged state"
+drop_stub
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
