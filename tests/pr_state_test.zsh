@@ -59,5 +59,11 @@ assert_equals "MERGED	https://github.com/acme/quotes/pull/5	5	pending" "$("$STAT
   "prints pending while a check has no conclusion, and the merged state"
 drop_stub
 
+stub CLOSED ""
+"$STATE" 5 acme/quotes >/dev/null
+assert_equals "pr view 5 --repo acme/quotes --json state,url,number,statusCheckRollup" "$(cat "$WORK/calls")" \
+  "asks GitHub once, for the repo it is given"
+drop_stub
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
