@@ -49,5 +49,10 @@ assert_equals "OPEN	https://github.com/acme/quotes/pull/5	5	passed" "$("$STATE" 
   "prints the state, address, number and passed for an open pull request whose checks all passed"
 drop_stub
 
+stub OPEN "tests:FAILURE,lint:SUCCESS,deploy:CANCELLED"
+assert_equals "OPEN	https://github.com/acme/quotes/pull/5	5	failed: tests, deploy" "$("$STATE" 5)" \
+  "names each check that failed, was cancelled or timed out"
+drop_stub
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
