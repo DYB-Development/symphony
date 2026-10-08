@@ -95,6 +95,15 @@ assert_equals "7-export-quotes 8-import-prices" "$(git -C "$MAIN" branch --forma
   "two work items in the same repo get two worktrees and two branches"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+output=$("$BIN/work-start.sh" 2>&1)
+assert_equals "Worktree already at $BASE/quotes-7-export-quotes
+2" "$(printf '%s\n' "$output" | head -1)
+$(git -C "$MAIN" worktree list | wc -l | tr -d ' ')" \
+  "the start step reports a work item's existing worktree and makes no second one"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

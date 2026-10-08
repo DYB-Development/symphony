@@ -8,7 +8,8 @@ usage: work-start.sh
 The pipeline's start step. Run by pipeline.sh inside a clone of the work item's
 repo, with WORK_ITEM_ID and PIPELINE_STEP, the step the hub named, set. It makes
 the work item's worktree beside the main clone, on a branch named after the work
-item's id and title, and creates the worktree's databases. It then runs each of
+item's id and title, and creates the worktree's databases. A work item whose
+worktree already exists keeps that worktree and gets no second one. It then runs each of
 the repo's setup entries in the worktree, runs an entry's fix command when its
 check fails, and fails showing the entry's instruction when the check still fails.
 USAGE
@@ -25,10 +26,17 @@ slug=$(printf '%s' "$title" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/
 branch="$WORK_ITEM_ID-$slug"
 tree="$main-$branch"
 
-git -C "$main" fetch -q origin
-git -C "$main" worktree add -q -b "$branch" "$tree" origin/main
-"$databases" create "$tree"
-echo "Worktree: $tree"
+existing=$(git worktree list --porcelain | awk -v prefix="branch refs/heads/$WORK_ITEM_ID-" '/^worktree / { tree = substr($0, 10) } index($0, prefix) == 1 { print tree; exit }')
+
+if [ -n "$existing" ]; then
+  tree="$existing"
+  echo "Worktree already at $tree"
+else
+  git -C "$main" fetch -q origin
+  git -C "$main" worktree add -q -b "$branch" "$tree" origin/main
+  "$databases" create "$tree"
+  echo "Worktree: $tree"
+fi
 
 set_up() {
   local entry="$1" name check fix
