@@ -13,7 +13,8 @@ Carries one work item through the steps dyb_web's Pipelines hub names.
 `claim` claims the work item for this session and prints its title and first step.
 `run` runs each script step the hub names, telling the hub when it starts and
 reporting its exit status and output, until the work item reaches an end.
-It stops with status 10 at an agent step, printing the agent, its model and the work.
+It stops with status 10 at an agent step, printing the agent, its model and the work,
+and refuses an agent step naming an agent symphony does not define.
 At the owner's step it reports the pull request of the work item's branch as merged
 or closed, or stops with status 11 while the pull request is still open. The
 work item's branch is the local branch whose name starts with its id.
@@ -34,6 +35,7 @@ USAGE
 settings="${SYMPHONY_CONFIG_DIR:-$HOME/.config/symphony}/dyb_web"
 session="${SYMPHONY_SESSION:-$(hostname -s)}"
 steps="${SYMPHONY_STEP_DIR:-$(cd "$(dirname "$0")" && pwd)}"
+agents="${SYMPHONY_AGENT_DIR:-$(cd "$(dirname "$0")/.." && pwd)/agents}"
 usage_script="${SYMPHONY_USAGE:-$(cd "$(dirname "$0")" && pwd)/usage.sh}"
 
 setting() { sed -n "s/^$1=//p" "$settings" 2>/dev/null | tail -1; }
@@ -84,6 +86,7 @@ run_script() {
 }
 
 hand_to_agent() {
+  [ -f "$agents/$(jq -r '.agent' <<<"$1").md" ] || refuse 66 "symphony defines no agent named $(jq -r '.agent' <<<"$1")"
   jq -r '"Agent step: \(.name)\nAgent: \(.agent)\nModel: \(.model)\nTitle: \(.work.title)\nRequest: \(.work.request)\nAcceptance criteria: \(.work.acceptance_criteria)"' <<<"$1"
   exit 10
 }

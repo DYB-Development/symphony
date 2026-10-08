@@ -284,6 +284,17 @@ answer current_step "$(step open-pr "Hand to pr-scribe on claude-opus-5-5" agent
 assert_equals '"failed"' "$(report 1 '.result')" "reports the pull request step as failed when the branch has no open pull request"
 teardown
 
+setup
+mkdir -p "$WORK/agents"
+export SYMPHONY_AGENT_DIR="$WORK/agents"
+answer current_step "$(step build "Hand to builder on claude-sonnet-5-5" agent)"
+"$PIPELINE" run 7 > "$WORK/out" 2>&1
+stopped=$?
+assert_equals "66
+symphony defines no agent named builder" "$stopped
+$(cat "$WORK/out")" "refuses an agent step naming an agent symphony does not define"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
