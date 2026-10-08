@@ -62,7 +62,7 @@ teardown() {
   cd "$SCRIPT_DIR"
   path=(${path:#$WORK/bin})
   rm -rf "$WORK"
-  unset SYMPHONY_CONFIG_DIR SYMPHONY_SESSION STUB_CURL_DOWN SYMPHONY_STEP_DIR SYMPHONY_USAGE
+  unset SYMPHONY_CONFIG_DIR SYMPHONY_SESSION STUB_CURL_DOWN SYMPHONY_STEP_DIR SYMPHONY_USAGE SYMPHONY_AGENT_DIR
 }
 
 step_script() {
@@ -245,6 +245,54 @@ output=$("$PIPELINE" report 7 "$WORK/report.md" 2>&1)
 assert_equals "The report's last line names no result
 GET current_step" "$output
 $(calls)" "refuses a report whose last line names no result, and posts nothing"
+teardown
+
+setup
+work_branch 7-export-quotes
+measured ""
+answer current_step "$(step build "Hand to builder on claude-sonnet-5-5" agent)"
+agent_report "Built the export." "Result: built"
+"$PIPELINE" report 7 "$WORK/report.md" >/dev/null 2>&1
+built=$(report 1 '.result')
+agent_report "Could not build it." "Result: stuck"
+"$PIPELINE" report 7 "$WORK/report.md" >/dev/null 2>&1
+assert_equals '"passed" "failed"' "$built $(report 2 '.result')" "posts a builder's built as passed and stuck as failed"
+teardown
+
+setup
+work_branch 7-export-quotes
+step_script work-check 'echo "$WORK_ITEM_ID $(jq -r .kind <<<"$PIPELINE_STEP")"'
+answer current_step "$(step build "Hand to builder on claude-sonnet-5-5" agent)"
+assert_equals "7 agent" "$("$PIPELINE" check 7 2>&1)" "runs the check step for the step a work item is on"
+teardown
+
+setup
+work_branch 7-export-quotes
+measured "claude-opus-5-5	90000"
+pull_request '{"state":"OPEN","url":"https://github.com/acme/quotes/pull/5"}'
+answer current_step "$(step open-pr "Hand to pr-scribe on claude-opus-5-5" agent)"
+"$PIPELINE" report-pr 7 >/dev/null 2>&1
+assert_equals '{"result":"passed","output":"https://github.com/acme/quotes/pull/5","model":"claude-opus-5-5","tokens":90000}' "$(report 1 '{result, output, model, tokens}')" "reports the pull request step as opened when the branch has an open pull request"
+teardown
+
+setup
+work_branch 7-export-quotes
+measured ""
+pull_request '{"state":"CLOSED","url":"https://github.com/acme/quotes/pull/5"}'
+answer current_step "$(step open-pr "Hand to pr-scribe on claude-opus-5-5" agent)"
+"$PIPELINE" report-pr 7 >/dev/null 2>&1
+assert_equals '"failed"' "$(report 1 '.result')" "reports the pull request step as failed when the branch has no open pull request"
+teardown
+
+setup
+mkdir -p "$WORK/agents"
+export SYMPHONY_AGENT_DIR="$WORK/agents"
+answer current_step "$(step build "Hand to builder on claude-sonnet-5-5" agent)"
+"$PIPELINE" run 7 > "$WORK/out" 2>&1
+stopped=$?
+assert_equals "66
+symphony defines no agent named builder" "$stopped
+$(cat "$WORK/out")" "refuses an agent step naming an agent symphony does not define"
 teardown
 
 echo ""

@@ -6,17 +6,26 @@ usage() {
 usage: pipeline.sh claim <work item id>
        pipeline.sh run <work item id>
        pipeline.sh report <work item id> <agent report file>
+       pipeline.sh check <work item id>
+       pipeline.sh report-pr <work item id>
 
 Carries one work item through the steps dyb_web's Pipelines hub names.
 `claim` claims the work item for this session and prints its title and first step.
 `run` runs each script step the hub names, telling the hub when it starts and
 reporting its exit status and output, until the work item reaches an end.
-It stops with status 10 at an agent step, printing the agent, its model and the work.
+It stops with status 10 at an agent step, printing the agent, its model and the work,
+and refuses an agent step naming an agent symphony does not define.
 At the owner's step it reports the pull request of the work item's branch as merged
 or closed, or stops with status 11 while the pull request is still open. The
 work item's branch is the local branch whose name starts with its id.
 `report` posts an agent's report for the agent step the work item is on, with
-the result its last line names, written as Result: passed or Result: failed.
+the result its last line names, written as Result: passed or Result: failed. A
+builder's Result: built is posted as passed and Result: stuck as failed.
+`check` runs the check step for the step the work item is on, with the repo's
+test and lint entries the hub gives, and exits with the check step's status.
+`report-pr` reports the pull request step: passed, with the pull request's
+address, only when the work item's branch has an open pull request, and failed
+otherwise, with the model and tokens of the agent's latest run.
 The dyb_web address and token are read from the dyb_web file in
 $SYMPHONY_CONFIG_DIR, or ~/.config/symphony, one name=value per line.
 USAGE
@@ -26,6 +35,7 @@ USAGE
 settings="${SYMPHONY_CONFIG_DIR:-$HOME/.config/symphony}/dyb_web"
 session="${SYMPHONY_SESSION:-$(hostname -s)}"
 steps="${SYMPHONY_STEP_DIR:-$(cd "$(dirname "$0")" && pwd)}"
+agents="${SYMPHONY_AGENT_DIR:-$(cd "$(dirname "$0")/.." && pwd)/agents}"
 usage_script="${SYMPHONY_USAGE:-$(cd "$(dirname "$0")" && pwd)/usage.sh}"
 
 setting() { sed -n "s/^$1=//p" "$settings" 2>/dev/null | tail -1; }
@@ -76,6 +86,7 @@ run_script() {
 }
 
 hand_to_agent() {
+  [ -f "$agents/$(jq -r '.agent' <<<"$1").md" ] || refuse 66 "symphony defines no agent named $(jq -r '.agent' <<<"$1")"
   jq -r '"Agent step: \(.name)\nAgent: \(.agent)\nModel: \(.model)\nTitle: \(.work.title)\nRequest: \(.work.request)\nAcceptance criteria: \(.work.acceptance_criteria)"' <<<"$1"
   exit 10
 }
@@ -129,7 +140,7 @@ measured_run() {
 report_agent() {
   local id="$1" file="$2" step result run model tokens
   step=$(hub GET current_step "work_item_id=$id")
-  result=$(grep -v '^[[:space:]]*$' "$file" | tail -1 | sed -nE 's/^Result: (passed|failed)[[:space:]]*$/\1/p')
+  result=$(grep -v '^[[:space:]]*$' "$file" | tail -1 | sed -nE 's/^Result: (passed|failed|built|stuck)[[:space:]]*$/\1/p' | sed 's/^built$/passed/; s/^stuck$/failed/')
   [ -n "$result" ] || refuse 65 "The report's last line names no result"
   run=$(measured_run "$(work_branch "$id")" "$(jq -r '.agent' <<<"$step")")
   model=$(cut -f1 <<<"$run")
@@ -141,7 +152,36 @@ report_agent() {
       model: (if $model == "" then null else $model end), tokens: (if $tokens == "" then null else ($tokens | tonumber) end)}')" >/dev/null
 }
 
+check_work() {
+  local id="$1" step
+  step=$(hub GET current_step "work_item_id=$id")
+  PIPELINE_STEP="$step" WORK_ITEM_ID="$id" "$steps/work-check.sh"
+}
+
+report_pull_request() {
+  local id="$1" step branch pull result output run model tokens
+  step=$(hub GET current_step "work_item_id=$id")
+  branch=$(work_branch "$id")
+  pull=$(gh pr view "$branch" --json state,url 2>/dev/null || echo '{}')
+  result=failed
+  output="No open pull request for $branch"
+  if [ "$(jq -r '.state // ""' <<<"$pull")" = OPEN ]; then
+    result=passed
+    output=$(jq -r '.url' <<<"$pull")
+  fi
+  run=$(measured_run "$branch" "$(jq -r '.agent' <<<"$step")")
+  model=$(cut -f1 <<<"$run")
+  tokens=$(cut -s -f2 <<<"$run")
+  hub POST report_step "$(jq -nc --argjson id "$id" --arg step "$(jq -r '.id' <<<"$step")" --arg result "$result" --arg output "$output" \
+    --arg model "$model" --arg tokens "$tokens" \
+    '{work_item_id: $id, step: $step, result: $result, output: $output,
+      model: (if $model == "" then null else $model end), tokens: (if $tokens == "" then null else ($tokens | tonumber) end)}')" >/dev/null
+  echo "Pull request step: $result"
+}
+
 case "${1:-}" in
+  report-pr) [ -n "${2:-}" ] || usage; report_pull_request "$2" ;;
+  check) [ -n "${2:-}" ] || usage; check_work "$2" ;;
   report) [ -n "${3:-}" ] || usage; report_agent "$2" "$3" ;;
   run) [ -n "${2:-}" ] || usage; run "$2" ;;
   claim) [ -n "${2:-}" ] || usage; claim "$2" ;;
