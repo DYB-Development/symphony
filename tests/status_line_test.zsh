@@ -68,6 +68,8 @@ new_repo() {
   cat > "$WORK/bin/gh" <<STUB
 #!/usr/bin/env bash
 printf '%s\n' "\$*" >> "$GH_LOG"
+[ ! -f "$WORK/offline" ] || { echo "error connecting to api.github.com" >&2; exit 1; }
+[ ! -f "$WORK/hang" ] || /bin/sleep 10
 case "\$*" in
   "api repos/acme/widget/issues/12/parent --jq "*)
     printf '7\tQuote builder\t%s\n' "\$(cat "$COUNTS")" ;;
@@ -206,6 +208,27 @@ drop_repo
 new_repo 12-quote-lines
 assert_equals $'\e[32m■\e[0m\e[33m■\e[0m\e[90m■\e[0m\e[90m■\e[0m 3/8' "$(status_line | tail -1)" \
   "shows only the plan bar for a task with no acceptance criteria"
+drop_repo
+
+new_repo 12-quote-lines
+STATUS_LINE_NOW=1000 status_line >/dev/null
+touch "$WORK/offline"
+assert_equals $'\e[32m■\e[0m\e[33m■\e[0m\e[90m■\e[0m\e[90m■\e[0m 3/8 · out of date' "$(STATUS_LINE_NOW=1060 status_line | tail -1)" \
+  "shows the last count it read, marked out of date, when GitHub cannot be read"
+drop_repo
+
+new_repo 12-quote-lines
+touch "$WORK/offline"
+assert_equals "Plan progress unavailable: GitHub cannot be read" "$(status_line)" \
+  "says progress is unavailable when GitHub cannot be read and no count was ever read"
+drop_repo
+
+zmodload zsh/datetime
+new_repo 12-quote-lines
+touch "$WORK/hang"
+started=$EPOCHREALTIME
+status_line >/dev/null
+assert_equals "1" "$(( EPOCHREALTIME - started < 2 ))" "prints within two seconds when GitHub does not answer"
 drop_repo
 
 echo ""
