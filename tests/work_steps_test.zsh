@@ -190,6 +190,13 @@ pull_request '{"state":"MERGED"}'
 assert_equals "0 removed" "$? $([ -d "$BASE/quotes-7-export-quotes" ] && echo kept || echo removed)" "the finish step removes the worktree's decision log, ticket and resume bookmark too"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+"$BIN/work-clean-up.sh" >/dev/null 2>&1
+assert_equals "0 removed  drop $BASE/quotes-7-export-quotes" "$? $([ -d "$BASE/quotes-7-export-quotes" ] && echo kept || echo removed) $(git -C "$MAIN" branch --list '7-*' | tr -d ' ') $(grep '^drop' "$BASE/databases")" \
+  "the clean-up step removes the worktree, drops its databases and deletes a branch with nothing unpushed"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
