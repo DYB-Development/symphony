@@ -10,6 +10,7 @@ Carries one work item through the steps dyb_web's Pipelines hub names.
 `claim` claims the work item for this session and prints its title and first step.
 `run` runs each script step the hub names, telling the hub when it starts and
 reporting its exit status and output, until the work item reaches an end.
+It stops with status 10 at an agent step, printing the agent, its model and the work.
 The dyb_web address and token are read from the dyb_web file in
 $SYMPHONY_CONFIG_DIR, or ~/.config/symphony, one name=value per line.
 USAGE
@@ -67,6 +68,11 @@ run_script() {
     '{work_item_id: $id, step: $step, result: $result, exit_status: $status, output: $output}')" >/dev/null
 }
 
+hand_to_agent() {
+  jq -r '"Agent step: \(.name)\nAgent: \(.agent)\nModel: \(.model)\nTitle: \(.work.title)\nRequest: \(.work.request)\nAcceptance criteria: \(.work.acceptance_criteria)"' <<<"$1"
+  exit 10
+}
+
 run() {
   local id="$1" step
   while :; do
@@ -77,6 +83,8 @@ run() {
     fi
     case "$(jq -r '.kind' <<<"$step")" in
       script) run_script "$id" "$step" ;;
+      agent) hand_to_agent "$step" ;;
+      *) refuse 65 "symphony cannot run a $(jq -r '.kind' <<<"$step") step" ;;
     esac
   done
 }

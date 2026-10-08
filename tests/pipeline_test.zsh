@@ -76,6 +76,16 @@ report() { grep '^POST report_step ' "$WORK/calls" | sed -n "${1:-1}p" | cut -d'
 
 calls() { cut -d' ' -f1,2 "$WORK/calls" | tr '\n' ',' | sed 's/,$//'; }
 
+work_branch() {
+  git -C "$WORK/repo" -c user.name=t -c user.email=t@example.com commit -q --allow-empty -m start
+  git -C "$WORK/repo" branch "$1"
+}
+
+pull_request() {
+  printf '#!/usr/bin/env bash\nprintf "%%s\\n" "$*" >> "%s/gh_calls"\nprintf %%s %s\n' "$WORK" "${(q)1}" > "$WORK/bin/gh"
+  chmod +x "$WORK/bin/gh"
+}
+
 answer() { printf '%s' "$2" > "$WORK/answers/$1"; }
 
 step() {
@@ -142,6 +152,20 @@ output=$("$PIPELINE" run 7 2>&1)
 assert_equals "symphony has no script named work-deploy
 GET current_step" "$output
 $(calls)" "refuses a step naming a script this package does not contain, and runs nothing"
+teardown
+
+setup
+answer current_step "$(step build "Hand to builder on claude-sonnet-5-5" agent)"
+"$PIPELINE" run 7 > "$WORK/out" 2>&1
+stopped=$?
+assert_equals "10
+Agent step: Hand to builder on claude-sonnet-5-5
+Agent: builder
+Model: claude-sonnet-5-5
+Title: Export quotes
+Request: Reps want quotes as CSV
+Acceptance criteria: A rep downloads a CSV" "$stopped
+$(cat "$WORK/out")" "stops at an agent step and prints the agent, its model and the work"
 teardown
 
 echo ""
