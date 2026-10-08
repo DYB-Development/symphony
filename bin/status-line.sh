@@ -56,7 +56,10 @@ plan_part() {
   read=$(read_progress)
   progress=$(printf '%s\n' "$read" | sed -n 1p)
   state=$(printf '%s\n' "$read" | sed -n 2p)
-  [ -n "$progress" ] || return 0
+  if [ -z "$progress" ]; then
+    [ "$state" != stale ] || printf 'Plan progress unavailable: GitHub cannot be read\n'
+    return 0
+  fi
   IFS=$'\t' read -r title closed total stage stages criteria <<< "$progress"
   for counts in $stages; do
     squares+=$(stage_square "${counts#*:}")

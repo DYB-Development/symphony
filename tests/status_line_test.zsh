@@ -216,6 +216,12 @@ assert_equals $'\e[32m■\e[0m\e[33m■\e[0m\e[90m■\e[0m\e[90m■\e[0m 3/8 · 
   "shows the last count it read, marked out of date, when GitHub cannot be read"
 drop_repo
 
+new_repo 12-quote-lines
+touch "$WORK/offline"
+assert_equals "Plan progress unavailable: GitHub cannot be read" "$(status_line)" \
+  "says progress is unavailable when GitHub cannot be read and no count was ever read"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
