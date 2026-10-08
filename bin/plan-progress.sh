@@ -18,8 +18,10 @@ USAGE
 
 repo=$1 task=$2
 
-parent=$(gh api "repos/$repo/issues/$task/parent" \
-  --jq '[.number, .title, .sub_issues_summary.completed, .sub_issues_summary.total] | @tsv')
+if ! parent=$(gh api "repos/$repo/issues/$task/parent" \
+  --jq '[.number, .title, .sub_issues_summary.completed, .sub_issues_summary.total] | @tsv' 2>&1); then
+  case "$parent" in *"HTTP 404"*) exit 1 ;; *) exit 69 ;; esac
+fi
 plan=${parent%%$'\t'*}
 counts=${parent#*$'\t'}
 body=$(gh api "repos/$repo/issues/$task" --jq .body)

@@ -55,6 +55,8 @@ case "$*" in
     printf '## Part of\nQuote export, stage 3 of 4 — Simplify.\n' ;;
   "api repos/acme/widget/issues/8/sub_issues --paginate")
     jq -nc '[{state: "closed", body: "Follows the work of stage 1 of 4.\n\n## Part of\nQuote export, stage 3 of 4 — Simplify.\n"}]' ;;
+  "api repos/acme/widget/issues/15/parent --jq "*)
+    echo "error connecting to api.github.com" >&2; exit 1 ;;
   "api repos/acme/widget/issues/13/parent --jq "*)
     echo "gh: Not Found (HTTP 404)" >&2; exit 1 ;;
 esac
@@ -94,6 +96,12 @@ stub_gh
 output=$("$READER" acme/widget 13 2>/dev/null)
 code=$?
 assert_equals "1 " "$code $output" "prints nothing and fails for a task listed under no plan"
+drop_stub
+
+stub_gh
+output=$("$READER" acme/widget 15 2>/dev/null)
+code=$?
+assert_equals "69 " "$code $output" "prints nothing and exits 69 when GitHub cannot be read"
 drop_stub
 
 echo ""
