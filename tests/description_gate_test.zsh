@@ -40,6 +40,9 @@ assert_equals "Add a description that says in plain words what this command does
   "$(run '{"command": "ls"}' | jq -r '.hookSpecificOutput.permissionDecisionReason')" \
   "tells the agent to add a description in plain words"
 
+assert_equals "" "$(run '{"command": "ls", "description": "List files in the current directory"}')" \
+  "lets a command with a description through unchanged"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
