@@ -235,6 +235,13 @@ assert_equals "1 kept Dropping the databases failed: dropdb failed for quotes_de
   "a database drop that fails makes the clean-up step fail, naming the drop, before the worktree is removed"
 teardown
 
+setup
+git -C "$MAIN" switch -q -c 7-export-quotes
+output=$("$BIN/work-clean-up.sh" 2>&1)
+assert_equals "1 kept The clean-up step refuses to remove the main clone at $MAIN" "$? $([ -d "$MAIN/.git" ] && echo kept || echo removed) $output" \
+  "the clean-up step refuses to remove the main clone"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
