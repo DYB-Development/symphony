@@ -70,6 +70,14 @@ agent_entry() {
       }}}' >> "$TRANSCRIPT"
 }
 
+model_entry() {
+  local agent="$1" type="$2" id="$3" branch="$4" model="$5" total="$6" stamp="$7"
+  jq -nc --arg agent "$agent" --arg type "$type" --arg id "$id" --arg branch "$branch" \
+    --arg cwd "$REPO" --arg model "$model" --argjson total "$total" --arg stamp "$stamp" \
+    '{type: "assistant", agentId: $agent, attributionAgent: $type, timestamp: $stamp, gitBranch: $branch, cwd: $cwd,
+      message: {id: $id, model: $model, usage: {input_tokens: $total, output_tokens: 0, cache_read_input_tokens: 0, cache_creation_input_tokens: 0}}}' >> "$TRANSCRIPT"
+}
+
 commit_at() {
   local at="$1"
   GIT_COMMITTER_DATE="$at" GIT_AUTHOR_DATE="$at" \
@@ -475,6 +483,27 @@ git -C "$REPO" worktree remove "$REPO-other"
 git -C "$REPO" worktree add -q "$REPO/trees/again" feature 2>/dev/null
 cd "$REPO/trees/again"
 assert_equals "" "$("$USAGE" --rows | grep '	prompt	')" "does not count a removed worktree with another folder name"
+drop_repo
+
+new_repo
+model_entry agent_1 builder msg_1 main claude-sonnet-5-5 60 2026-01-01T00:00:00Z
+model_entry agent_1 builder msg_2 main claude-sonnet-5-5 40 2026-01-01T00:01:00Z
+assert_equals "claude-sonnet-5-5	100" "$("$USAGE" --agent-run builder)" \
+  "prints the model and total tokens of an agent's run on this branch"
+drop_repo
+
+new_repo
+model_entry agent_1 builder msg_1 main claude-opus-5-5 60 2026-01-01T00:00:00Z
+model_entry agent_2 builder msg_2 main claude-sonnet-5-5 40 2026-01-02T00:00:00Z
+model_entry agent_3 pr-scribe msg_3 main claude-opus-5-5 10 2026-01-03T00:00:00Z
+assert_equals "claude-sonnet-5-5	40" "$("$USAGE" --agent-run builder)" \
+  "prints only the latest run of the agent type asked for"
+drop_repo
+
+new_repo
+model_entry agent_1 pr-scribe msg_1 main claude-opus-5-5 60 2026-01-01T00:00:00Z
+assert_equals "" "$("$USAGE" --agent-run builder)" \
+  "prints nothing when no run of that agent type is on the branch"
 drop_repo
 
 echo ""

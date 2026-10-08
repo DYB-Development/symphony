@@ -7,6 +7,7 @@ usage: usage.sh
        usage.sh --render
        usage.sh --runs
        usage.sh --rows
+       usage.sh --agent-run <agent type>
 
 Totals the tokens the session transcripts recorded for this branch, broken down
 by input, output and cache. `--render` prints the PR body's Tokens Used section
@@ -15,7 +16,9 @@ branch. `--runs` lists every scribe run recorded for this clone instead, oldest
 first, each with the branch it worked on and what it cost, whichever branch is
 checked out now. `--rows` prints what the owner put into this branch instead,
 one row per measure, oldest first, as the time, the session, the kind of
-measure and its amount, separated by tabs.
+measure and its amount, separated by tabs. `--agent-run` prints the model and
+the total tokens of the latest run of one agent type on this branch, separated by
+a tab, and prints nothing when the transcripts hold no such run.
 A message is charged to the branch the worktree it was working in held when it
 was recorded, read from that worktree's own reflog. The worktree comes from the
 absolute paths in that agent run's own tool records, carried forward to the
@@ -34,6 +37,7 @@ USAGE
 
 case "${1:-}" in
   "" | --render | --runs | --rows) ;;
+  --agent-run) [ -n "${2:-}" ] || usage ;;
   *) usage ;;
 esac
 
@@ -177,7 +181,8 @@ def row($id; $kind; $amount):
     (worked_paths | join("|")),
     $kind,
     $amount,
-    (.sessionId // "")
+    (.sessionId // ""),
+    (.message.model // "")
   ]
   | @tsv;
 
@@ -253,12 +258,12 @@ BEGIN {
   if ($11 == "turn") turn_ended[$13] = $2 + 0
   if ($1 == "" || working == "") next
 
-  rest = $4 OFS $5 OFS $6 OFS $7 OFS $8 OFS $9 OFS $2 OFS $11 OFS $12 OFS $13
+  rest = $4 OFS $5 OFS $6 OFS $7 OFS $8 OFS $9 OFS $2 OFS $11 OFS $12 OFS $13 OFS $14
   if ($11 == "prompt" && ($13 in turn_ended)) {
     held++
     held_id[held] = $1 ":waited"
     held_at[held] = $2 + 0
-    held_rest[held] = $4 OFS $5 OFS $6 OFS $7 OFS $8 OFS $9 OFS $2 OFS "waited" OFS ($2 - turn_ended[$13]) OFS $13
+    held_rest[held] = $4 OFS $5 OFS $6 OFS $7 OFS $8 OFS $9 OFS $2 OFS "waited" OFS ($2 - turn_ended[$13]) OFS $13 OFS $14
   }
   if (typed_in_prompt($11)) {
     held++
@@ -334,6 +339,23 @@ list_rows() {
     $2 == branch && $10 != "tokens" && $10 != "" && !counted[$1]++ { print $9, $12, $10, $11 }
   ' | sort -t $'\t' -k1,1n -s
 }
+
+agent_run() {
+  sort -t $'\t' -k9,9n | awk -F '\t' -v branch="$branch" -v type="$1" '
+    $2 == branch && $4 == type && $10 == "tokens" && !counted[$1]++ {
+      run = $3
+      spent[run] += $5 + $6 + $7 + $8
+      if ($13 != "") model[run] = $13
+      latest = run
+    }
+    END { if (latest != "") printf "%s\t%d\n", model[latest], spent[latest] }
+  '
+}
+
+if [ "${1:-}" = "--agent-run" ]; then
+  attributed | agent_run "$2"
+  exit 0
+fi
 
 if [ "${1:-}" = "--rows" ]; then
   attributed | list_rows
