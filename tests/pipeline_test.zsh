@@ -310,6 +310,19 @@ Watch the pull request: ~/.claude/bin/pipeline.sh watch 7" "$stopped
 $(cat "$WORK/out")" "stops at the watch step and prints the command to start in the background"
 teardown
 
+setup
+work_branch 7-export-quotes
+pull_request '{"number":5,"state":"OPEN","url":"https://github.com/acme/quotes/pull/5"}'
+waiting $'CI passed on PR #5, opened it\nPR #5 was merged\n' 0
+answer current_step "$(step watch "Run work-watch" script work-watch)"
+output=$("$PIPELINE" watch 7 2>&1)
+assert_equals '{"step":"watch","result":"passed","output":"CI passed on PR #5, opened it"}
+acme/quotes 5
+PR #5 was merged' "$(report 1 '{step, result, output}')
+$(cat "$WORK/wait_calls")
+$(printf '%s\n' "$output" | tail -1)" "reports the checks as passed, then says whether the pull request was merged or closed"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
