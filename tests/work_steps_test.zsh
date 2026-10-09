@@ -262,6 +262,14 @@ assert_equals "0 removed drop $BASE/quotes-7-export-quotes" "$? $([ -d "$BASE/qu
   "run again after a database drop failed, the clean-up step drops the databases, removes the worktree and passes"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+git -C "$MAIN" worktree remove --force "$BASE/quotes-7-export-quotes"
+"$BIN/work-clean-up.sh" >/dev/null 2>&1
+assert_equals "0 " "$? $(git -C "$MAIN" branch --list '7-*' | tr -d ' ')" \
+  "run again after the worktree was removed, the clean-up step deletes a branch with nothing unpushed and passes"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
