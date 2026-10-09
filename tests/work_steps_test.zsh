@@ -190,6 +190,67 @@ pull_request '{"state":"MERGED"}'
 assert_equals "0 removed" "$? $([ -d "$BASE/quotes-7-export-quotes" ] && echo kept || echo removed)" "the finish step removes the worktree's decision log, ticket and resume bookmark too"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+"$BIN/work-clean-up.sh" >/dev/null 2>&1
+assert_equals "0 removed  drop $BASE/quotes-7-export-quotes" "$? $([ -d "$BASE/quotes-7-export-quotes" ] && echo kept || echo removed) $(git -C "$MAIN" branch --list '7-*' | tr -d ' ') $(grep '^drop' "$BASE/databases")" \
+  "the clean-up step removes the worktree, drops its databases and deletes a branch with nothing unpushed"
+teardown
+
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+touch "$BASE/quotes-7-export-quotes/unsaved.rb"
+"$BIN/work-clean-up.sh" >/dev/null 2>&1
+assert_equals "0 removed" "$? $([ -d "$BASE/quotes-7-export-quotes" ] && echo kept || echo removed)" \
+  "the clean-up step removes a worktree that holds uncommitted changes"
+teardown
+
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+git -C "$BASE/quotes-7-export-quotes" -c user.name=t -c user.email=t@example.com commit -q --allow-empty -m "Not pushed"
+"$BIN/work-clean-up.sh" >/dev/null 2>&1
+assert_equals "0 removed 7-export-quotes" "$? $([ -d "$BASE/quotes-7-export-quotes" ] && echo kept || echo removed) $(git -C "$MAIN" branch --list '7-*' | tr -d ' ')" \
+  "the clean-up step keeps a branch holding commits that are on no remote"
+teardown
+
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+touch "$BASE/quotes-7-export-quotes/.decisions.md" "$BASE/quotes-7-export-quotes/.ticket" "$BASE/quotes-7-export-quotes/start_here.md"
+printf '#!/usr/bin/env bash\nls -a "$2" > "%s/left"\n' "$BASE" > "$BASE/stubs/worktree-databases.sh"
+"$BIN/work-clean-up.sh" >/dev/null 2>&1
+assert_equals "" "$(grep -E 'decisions|ticket|start_here' "$BASE/left")" \
+  "the clean-up step removes the decision log, ticket and resume bookmark before it removes the worktree"
+teardown
+
+setup
+assert_equals "Nothing to remove for work item 7 0" "$("$BIN/work-clean-up.sh" 2>&1) $?" \
+  "the clean-up step passes and says there was nothing to remove when the work item has no worktree"
+teardown
+
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+printf '#!/usr/bin/env bash\necho "dropdb failed for quotes_development"; exit 1\n' > "$BASE/stubs/worktree-databases.sh"
+output=$("$BIN/work-clean-up.sh" 2>&1)
+assert_equals "1 kept Dropping the databases failed: dropdb failed for quotes_development" "$? $([ -d "$BASE/quotes-7-export-quotes" ] && echo kept || echo removed) $(printf '%s\n' "$output" | tail -1)" \
+  "a database drop that fails makes the clean-up step fail, naming the drop, before the worktree is removed"
+teardown
+
+setup
+git -C "$MAIN" switch -q -c 7-export-quotes
+output=$("$BIN/work-clean-up.sh" 2>&1)
+assert_equals "1 kept The clean-up step refuses to remove the main clone at $MAIN" "$? $([ -d "$MAIN/.git" ] && echo kept || echo removed) $output" \
+  "the clean-up step refuses to remove the main clone"
+teardown
+
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+git -C "$BASE/quotes-7-export-quotes" -c user.name=t -c user.email=t@example.com commit -q --allow-empty -m "Squashed into main on GitHub"
+pull_request '{"state":"MERGED"}'
+"$BIN/work-clean-up.sh" >/dev/null 2>&1
+assert_equals "0 " "$? $(git -C "$MAIN" branch --list '7-*' | tr -d ' ')" \
+  "the clean-up step deletes the branch of work whose pull request merged, even when its commits are on no remote"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
