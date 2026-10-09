@@ -242,6 +242,15 @@ assert_equals "1 kept The clean-up step refuses to remove the main clone at $MAI
   "the clean-up step refuses to remove the main clone"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+git -C "$BASE/quotes-7-export-quotes" -c user.name=t -c user.email=t@example.com commit -q --allow-empty -m "Squashed into main on GitHub"
+pull_request '{"state":"MERGED"}'
+"$BIN/work-clean-up.sh" >/dev/null 2>&1
+assert_equals "0 " "$? $(git -C "$MAIN" branch --list '7-*' | tr -d ' ')" \
+  "the clean-up step deletes the branch of work whose pull request merged, even when its commits are on no remote"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

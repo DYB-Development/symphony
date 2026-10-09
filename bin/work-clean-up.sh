@@ -8,8 +8,8 @@ usage: work-clean-up.sh
 The pipeline's clean-up step, run however the work ended. Run by pipeline.sh
 inside a clone of the work item's repo, with WORK_ITEM_ID and PIPELINE_STEP,
 the step the hub named, set. It drops the work item's worktree databases and
-removes its worktree, and deletes its local branch unless the branch holds
-commits that are on no remote.
+removes its worktree. It deletes the local branch when its pull request merged,
+and otherwise keeps a branch holding commits that are on no remote.
 USAGE
   exit 64
 }
@@ -27,5 +27,8 @@ branch=$(git -C "$tree" branch --show-current)
 rm -f "$tree/.decisions.md" "$tree/.ticket" "$tree/start_here.md"
 dropped=$("$databases" drop "$tree" 2>&1) || { echo "Dropping the databases failed: $dropped"; exit 1; }
 git -C "$main" worktree remove --force "$tree"
-[ -n "$(git -C "$main" rev-list "$branch" --not --remotes)" ] || git -C "$main" branch -q -D "$branch"
+merged=$("$(dirname "${BASH_SOURCE[0]}")/pr-state.sh" "$branch" 2>/dev/null | cut -f1 || true)
+if [ "$merged" = MERGED ] || [ -z "$(git -C "$main" rev-list "$branch" --not --remotes)" ]; then
+  git -C "$main" branch -q -D "$branch"
+fi
 echo "Removed $tree"
