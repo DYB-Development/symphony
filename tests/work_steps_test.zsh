@@ -251,6 +251,44 @@ assert_equals "0 " "$? $(git -C "$MAIN" branch --list '7-*' | tr -d ' ')" \
   "the clean-up step deletes the branch of work whose pull request merged, even when its commits are on no remote"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+cp "$BASE/stubs/worktree-databases.sh" "$BASE/stubs/drops.sh"
+printf '#!/usr/bin/env bash\necho "dropdb failed for quotes_development"; exit 1\n' > "$BASE/stubs/worktree-databases.sh"
+"$BIN/work-clean-up.sh" >/dev/null 2>&1
+cp "$BASE/stubs/drops.sh" "$BASE/stubs/worktree-databases.sh"
+"$BIN/work-clean-up.sh" >/dev/null 2>&1
+assert_equals "0 removed drop $BASE/quotes-7-export-quotes" "$? $([ -d "$BASE/quotes-7-export-quotes" ] && echo kept || echo removed) $(grep '^drop' "$BASE/databases")" \
+  "run again after a database drop failed, the clean-up step drops the databases, removes the worktree and passes"
+teardown
+
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+git -C "$MAIN" worktree remove --force "$BASE/quotes-7-export-quotes"
+"$BIN/work-clean-up.sh" >/dev/null 2>&1
+assert_equals "0 " "$? $(git -C "$MAIN" branch --list '7-*' | tr -d ' ')" \
+  "run again after the worktree was removed, the clean-up step deletes a branch with nothing unpushed and passes"
+teardown
+
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+git -C "$BASE/quotes-7-export-quotes" -c user.name=t -c user.email=t@example.com commit -q --allow-empty -m "Not pushed"
+git -C "$MAIN" worktree remove --force "$BASE/quotes-7-export-quotes"
+"$BIN/work-clean-up.sh" >/dev/null 2>&1
+assert_equals "0 7-export-quotes" "$? $(git -C "$MAIN" branch --list '7-*' | tr -d ' ')" \
+  "run again after the worktree was removed, the clean-up step keeps a branch holding commits that are on no remote and passes"
+teardown
+
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+git -C "$BASE/quotes-7-export-quotes" -c user.name=t -c user.email=t@example.com commit -q --allow-empty -m "Not pushed"
+"$BIN/work-clean-up.sh" >/dev/null 2>&1
+before="$(git -C "$MAIN" worktree list) $(git -C "$MAIN" branch --list '7-*' -v) $(cat "$BASE/databases")"
+"$BIN/work-clean-up.sh" >/dev/null 2>&1
+assert_equals "0 $before" "$? $(git -C "$MAIN" worktree list) $(git -C "$MAIN" branch --list '7-*' -v) $(cat "$BASE/databases")" \
+  "run a second time on work it already cleaned up, the clean-up step passes and changes nothing"
+teardown
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
