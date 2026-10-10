@@ -64,6 +64,34 @@ drop_app() {
   rm -rf "$BASE"
 }
 
+serve_until_killed() {
+  SERVER_PID_FILE="$BASE/server.pid"
+  printf '#!/usr/bin/env bash\necho $$ > "%s"\nexec sleep 300\n' "$SERVER_PID_FILE" > "$APP/bin/dev"
+}
+
+start_up_in_own_group() {
+  (cd "$1" && PATH="$BASE/stubs:$PATH" exec perl -e '$SIG{INT} = "DEFAULT"; setpgrp(0, 0); exec @ARGV' "$UP") >/dev/null 2>&1 &
+  UP_PID=$!
+}
+
+poll() {
+  local tries=100
+  until eval "$1"; do
+    (( --tries > 0 )) || return 1
+    sleep 0.05
+  done
+}
+
+server_stopped() {
+  ! kill -0 "$(cat "$SERVER_PID_FILE")" 2>/dev/null
+}
+
+stop_leftover_server() {
+  [[ -s "$SERVER_PID_FILE" ]] && kill -9 "$(cat "$SERVER_PID_FILE")" 2>/dev/null
+  kill -9 "$UP_PID" 2>/dev/null
+  return 0
+}
+
 echo "up.sh:"
 
 new_app
@@ -123,6 +151,28 @@ rm "$APP/bin/setup" "$APP/bin/dev"
 OUTPUT="$(run_up "$APP" 2>&1)"
 assert_equals "65 no app up knows how to start $BEFORE " "$? $(grep -o 'no app up knows how to start' <<<"$OUTPUT") $(git -C "$APP" rev-parse HEAD) $(cat "$RUNS")" \
   "says there is no app it knows how to start, exits non-zero and changes nothing in a folder without one"
+drop_app
+
+new_app
+serve_until_killed
+start_up_in_own_group "$APP"
+poll 'grep -q "^open" "$RUNS" && [[ -s "$SERVER_PID_FILE" ]]'
+kill -INT -- -"$UP_PID"
+poll '! kill -0 "$UP_PID" 2>/dev/null'
+poll server_stopped
+assert_equals "0" "$?" "stops the server it started when it is stopped with Ctrl-C"
+stop_leftover_server
+drop_app
+
+new_app
+serve_until_killed
+printf '#!/usr/bin/env bash\nexit 1\n' > "$BASE/stubs/open"
+start_up_in_own_group "$APP"
+poll '[[ -s "$SERVER_PID_FILE" ]]'
+poll '! kill -0 "$UP_PID" 2>/dev/null'
+poll server_stopped
+assert_equals "0" "$?" "stops the server it started when it exits for any other reason"
+stop_leftover_server
 drop_app
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
