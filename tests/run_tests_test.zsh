@@ -70,8 +70,29 @@ for name in a b; do
   suite $name "echo ${name}1; sleep 0.1; echo ${name}2; sleep 0.1; echo ${name}3; exit 1"
 done
 OUTPUT="$("$REPO/run_tests.sh" 2>&1)"
-assert_equals "a1 a2 a3 b1 b2 b3" "$(print -r -- "$OUTPUT" | grep -E '^[ab][123]$' | tr '\n' ' ' | sed 's/ $//')" \
-  "prints each suite's output as one block"
+BLOCKS="$(print -r -- "$OUTPUT" | grep -E '^[ab][123]$' | tr '\n' ' ' | sed 's/ $//')"
+[[ "$BLOCKS" == "a1 a2 a3 b1 b2 b3" || "$BLOCKS" == "b1 b2 b3 a1 a2 a3" ]] \
+  && ok "prints each suite's output as one block" \
+  || { fail "prints each suite's output as one block"; printf '      got:  %s\n' "$BLOCKS"; }
+rm -rf "$REPO"
+
+logging_suites() {
+  for name in a b c d e f g h i j; do
+    suite $name "echo $name >> $REPO/log"
+  done
+}
+
+run_order() {
+  rm -f "$REPO/log"
+  PARALLEL_WORKERS=1 "$REPO/run_tests.sh" "$@" >/dev/null 2>&1
+  tr '\n' ' ' < "$REPO/log" | sed 's/ $//'
+}
+
+new_repo
+logging_suites
+ORDER="$(run_order)"
+[[ "$ORDER" != "a b c d e f g h i j" ]] && ok "runs the suites in a shuffled order" \
+  || fail "runs the suites in a shuffled order"
 rm -rf "$REPO"
 
 echo ""

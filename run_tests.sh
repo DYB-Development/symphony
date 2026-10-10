@@ -17,10 +17,14 @@ run_suite() {
 export -f run_suite
 export RESULTS
 
+SEED="$RANDOM"
+RANDOM="$SEED"
+
 SUITES=()
 while IFS= read -r suite; do
   SUITES+=("$suite")
-done < <(find "$ROOT" -name '*_test.zsh' -not -path '*/.git/*' | sort)
+done < <(find "$ROOT" -name '*_test.zsh' -not -path '*/.git/*' | sort |
+  while IFS= read -r suite; do echo "$RANDOM $suite"; done | sort -n | cut -d' ' -f2-)
 
 for i in "${!SUITES[@]}"; do
   printf '%s\n%s\n' "$i" "${SUITES[$i]}"
