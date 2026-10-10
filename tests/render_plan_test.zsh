@@ -31,9 +31,8 @@ assert_equals() {
   fi
 }
 
-new_issue() {
-  STUB_DIR="$(mktemp -d "${TMPDIR:-/tmp}/render_plan_test.XXXXXX")"
-  cat > "$STUB_DIR/gh" <<'SH'
+SHARED_STUBS="$(mktemp -d "${TMPDIR:-/tmp}/render_plan_stubs.XXXXXX")"
+cat > "$SHARED_STUBS/gh-1" <<'SH'
 #!/usr/bin/env bash
 here="$(dirname "$0")"
 case "$1 $2" in
@@ -58,7 +57,11 @@ case "$1 $2" in
     ;;
 esac
 SH
-  chmod +x "$STUB_DIR/gh"
+chmod +x "$SHARED_STUBS/gh-1"
+
+new_issue() {
+  STUB_DIR="$(mktemp -d "${TMPDIR:-/tmp}/render_plan_test.XXXXXX")"
+  ln -s "$SHARED_STUBS/gh-1" "$STUB_DIR/gh"
   jq -n --arg title "$1" --arg body "$(cat)" '{title: $title, body: $body}' > "$STUB_DIR/issue.json"
 }
 
@@ -244,4 +247,5 @@ assert_equals "0" "$?" "lays out the contents beside the plan, with the plan und
 drop_issue
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
+rm -rf "$SHARED_STUBS"
 [[ $FAIL -eq 0 ]]
