@@ -109,6 +109,11 @@ SEED="$(print -r -- "$PRINTED" | sed -n 's/^Run options: --seed //p')"
 assert_equals "$FIRST" "$(run_order --seed "$SEED")" "repeats a run's order when given its seed"
 rm -rf "$REPO"
 
+new_repo
+logging_suites
+assert_equals "c" "$(cd "$REPO" && run_order tests/c_test.zsh)" "runs only the suite whose path it is given"
+rm -rf "$REPO"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]
