@@ -9,6 +9,8 @@ SCRIPT_DIR="${0:A:h}"
 ROOT="${SCRIPT_DIR:h}"
 INSTALL="$ROOT/install.sh"
 
+export HOME="$(mktemp -d)"
+
 PASS=0
 FAIL=0
 
@@ -36,6 +38,14 @@ CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" >/dev/null 2>&1
 
 assert_equals "$ROOT/rules" "$(readlink "$CONFIG/rules")" \
   "links the rules directory at the package"
+
+rm -rf "$CONFIG"
+
+CONFIG="$(fresh_config)"
+CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" >/dev/null 2>&1
+
+assert_equals "$ROOT/bin/up.sh" "$(readlink "$HOME/.local/bin/up")" \
+  "links a command named up into the shell's bin directory"
 
 rm -rf "$CONFIG"
 
@@ -225,6 +235,8 @@ PATH="$STUB:$PATH" CLAUDE_CONFIG_DIR="$CONFIG" "$INSTALL" --plugin >/dev/null 2>
 assert_equals "75" "$?" "refuses to install the plugin while the linked install is in place"
 
 rm -rf "$CONFIG" "$STUB"
+
+rm -rf "$HOME"
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

@@ -65,7 +65,8 @@ Installing both registers every hook twice, so whichever you run second refuses.
 
 Links `rules`, `agents` and `bin` into `~/.claude`, links each command into
 `~/.claude/commands` one file at a time, and merges the hooks into
-`~/.claude/settings.json`. Anything already at one of those paths is moved aside
+`~/.claude/settings.json`. It also links the `up` command into `~/.local/bin`,
+which needs to be on your shell's path. Anything already at one of those paths is moved aside
 to `<path>.backup` first, and running it again changes nothing. Set
 `CLAUDE_CONFIG_DIR` to install somewhere other than `~/.claude`.
 
@@ -222,6 +223,14 @@ Three files appear in a repo as you work, and none of them should be committed:
 | `.decisions.md` | A choice settled while working, which the pull request scribe renders into the body |
 | `.ticket` | The ticket the branch's hours are billed to |
 | `start_here.md` | Where to pick up, written only when stopping mid-issue |
+
+To get a Rails app running in the browser, type `up` in its folder. In the
+app's main clone it first pulls the latest commits of the checked-out branch,
+and it stops there if the pull fails. A linked worktree is not pulled. It then
+runs the app's `bin/setup --skip-server`, starts `bin/dev` on the first free
+port counting up from 3000, and opens the browser at that address once the
+server answers. A folder without an executable `bin/setup` and `bin/dev` is
+refused and nothing in it is changed.
 
 Two things worth knowing. **Nothing posts without being read first** — a review
 is drafted and rendered for a person, and an audit posts nothing at all.
