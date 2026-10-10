@@ -406,6 +406,11 @@ assert_equals "Export quotes is waiting until 2026-10-12T09:30:00-04:00
 $?" "stops with status 13 at a Wait step, printing the work item's title and the time it waits until"
 teardown
 
+setup
+usage_text=$("$PIPELINE" 2>&1)
+assert_equals "2" "$(grep -c -e 'Value: <name>=<number>' -e 'status 13 at a Wait step' <<<"$usage_text")" "describes Value lines and the status 13 stop at a Wait step in its usage"
+teardown
+
 rm -rf "$STUBS"
 
 echo ""

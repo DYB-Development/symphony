@@ -18,6 +18,10 @@ It stops with status 10 at an agent step, printing the agent, its model and the 
 and refuses an agent step naming an agent symphony does not define. At a script
 step naming work-watch it stops with status 12 and prints the watch command to
 start in the background.
+It stops with status 13 at a Wait step, printing the work item's title and the time
+it waits until; the hub has already let the work item go.
+A line of a script's output, or of an agent's report, written as
+Value: <name>=<number> is sent with the step's result as a named value.
 At the owner's step it reports the pull request of the work item's branch as merged
 or closed, or stops with status 11 while the pull request is still open. The
 work item's branch is the local branch whose name starts with its id.
