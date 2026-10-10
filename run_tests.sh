@@ -6,16 +6,34 @@
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
+RESULTS="$(mktemp -d)"
+trap 'rm -rf "$RESULTS"' EXIT
+
+run_suite() {
+  local index="$1" suite="$2"
+  zsh "$suite" > "$RESULTS/$index.out" 2>&1
+  echo "$?" > "$RESULTS/$index.status"
+}
+export -f run_suite
+export RESULTS
+
+SUITES=()
+while IFS= read -r suite; do
+  SUITES+=("$suite")
+done < <(find "$ROOT" -name '*_test.zsh' -not -path '*/.git/*' | sort)
+
+for i in "${!SUITES[@]}"; do
+  printf '%s\n%s\n' "$i" "${SUITES[$i]}"
+done | xargs -n 2 -P "${PARALLEL_WORKERS:-$(getconf _NPROCESSORS_ONLN)}" bash -c 'run_suite "$1" "$2"' _
 
 FAILED=()
-
-while IFS= read -r suite; do
-  echo "── ${suite#"$ROOT"/}"
-  if ! zsh "$suite"; then
-    FAILED+=("${suite#"$ROOT"/}")
-  fi
+for i in "${!SUITES[@]}"; do
+  name="${SUITES[$i]#"$ROOT"/}"
+  echo "── $name"
+  cat "$RESULTS/$i.out"
+  [ "$(cat "$RESULTS/$i.status")" = 0 ] || FAILED+=("$name")
   echo ""
-done < <(find "$ROOT" -name '*_test.zsh' -not -path '*/.git/*' | sort)
+done
 
 if [ ${#FAILED[@]} -gt 0 ]; then
   printf 'FAILED: %s\n' "${FAILED[@]}"
