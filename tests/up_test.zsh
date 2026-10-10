@@ -109,5 +109,12 @@ assert_equals "open http://localhost:3000" "$(grep '^open' "$RUNS")" \
   "opens the browser at the server's address once the server answers"
 drop_app
 
+new_app
+printf '#!/usr/bin/env bash\nexit 7\n' > "$BASE/stubs/curl"
+OUTPUT="$(run_up "$APP" 2>&1)"
+assert_equals "1 the server stopped before it answered " "$? $(grep -o 'the server stopped before it answered' <<<"$OUTPUT") $(grep '^open' "$RUNS")" \
+  "says the server stopped, exits non-zero and opens no browser when the server stops before it answers"
+drop_app
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

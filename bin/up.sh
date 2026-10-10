@@ -43,6 +43,10 @@ PORT="$port" bin/dev &
 server=$!
 
 until curl -s -o /dev/null "$address"; do
+  kill -0 "$server" 2>/dev/null || {
+    echo "up: the server stopped before it answered at $address" >&2
+    exit 1
+  }
   sleep 0.5
 done
 
