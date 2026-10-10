@@ -37,7 +37,7 @@ read_progress() {
     return
   fi
   [ -f "$cache" ] && previous=$(sed -n 2p "$cache")
-  progress=$(within_seconds 1.5 "$(dirname "$0")/plan-progress.sh" "$repo" "$task" 2>/dev/null) || code=$?
+  progress=$(within_seconds "${STATUS_LINE_LIMIT:-1.5}" "$(dirname "$0")/plan-progress.sh" "$repo" "$task" 2>/dev/null) || code=$?
   local state=fresh
   if [ "$code" -eq 69 ]; then
     progress=$previous

@@ -43,6 +43,7 @@ new_repo() {
   git init -q -b "$1" "$REPO"
   git -C "$REPO" remote add origin git@github.com:acme/widget.git
   export STATUS_LINE_DIR="$WORK/cache"
+  export STATUS_LINE_LIMIT=30
   export OWNER_TURN_DIR="$WORK/owner-turn"
   export WORKING_LINE_DIR="$WORK/working-line"
   export AGENT_PROGRESS_DIR="$WORK/agent-progress"
@@ -70,6 +71,7 @@ new_repo() {
 printf '%s\n' "\$*" >> "$GH_LOG"
 [ ! -f "$WORK/offline" ] || { echo "error connecting to api.github.com" >&2; exit 1; }
 [ ! -f "$WORK/hang" ] || /bin/sleep 10
+[ ! -f "$WORK/slow" ] || /bin/sleep 0.1
 case "\$*" in
   "api repos/acme/widget/issues/12/parent --jq "*)
     printf '7\tQuote builder\t%s\n' "\$(cat "$COUNTS")" ;;
@@ -89,7 +91,7 @@ STUB
 drop_repo() {
   path=(${path:#$WORK/bin})
   rm -rf "$WORK"
-  unset STATUS_LINE_DIR OWNER_TURN_DIR WORKING_LINE_DIR AGENT_PROGRESS_DIR AGENT_PROGRESS_AGENTS
+  unset STATUS_LINE_DIR STATUS_LINE_LIMIT OWNER_TURN_DIR WORKING_LINE_DIR AGENT_PROGRESS_DIR AGENT_PROGRESS_AGENTS
 }
 
 status_line() {
@@ -228,9 +230,16 @@ drop_repo
 zmodload zsh/datetime
 new_repo 12-quote-lines
 touch "$WORK/hang"
+unset STATUS_LINE_LIMIT
 started=$EPOCHREALTIME
 status_line >/dev/null
 assert_equals "1" "$(( EPOCHREALTIME - started < 2 ))" "prints within two seconds when GitHub does not answer"
+drop_repo
+
+new_repo 12-quote-lines
+touch "$WORK/slow"
+assert_equals "Plan progress unavailable: GitHub cannot be read" "$(STATUS_LINE_LIMIT=0.05 status_line)" \
+  "waits on GitHub only as long as its limit setting allows"
 drop_repo
 
 new_repo 12-quote-lines
