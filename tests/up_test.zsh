@@ -73,5 +73,15 @@ assert_equals "$NEWER" "$(git -C "$APP" rev-parse HEAD)" \
   "pulls the latest commits of the checked-out branch in a main clone"
 drop_app
 
+new_app
+git -C "$APP" worktree add -q -b feature "$BASE/app-feature"
+git -C "$BASE/app-feature" branch -q --set-upstream-to=origin/main
+BEFORE="$(git -C "$BASE/app-feature" rev-parse HEAD)"
+push_new_commit >/dev/null
+run_up "$BASE/app-feature" >/dev/null 2>&1
+assert_equals "$BEFORE" "$(git -C "$BASE/app-feature" rev-parse HEAD)" \
+  "does not pull in a linked worktree"
+drop_app
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

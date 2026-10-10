@@ -13,4 +13,10 @@ USAGE
 
 [ $# -eq 0 ] || usage
 
-git pull -q --ff-only
+in_main_clone() {
+  [ "$(git rev-parse --path-format=absolute --git-dir)" = "$(git rev-parse --path-format=absolute --git-common-dir)" ]
+}
+
+if in_main_clone; then
+  git pull -q --ff-only
+fi
