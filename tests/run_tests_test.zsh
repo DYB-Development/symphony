@@ -114,6 +114,13 @@ logging_suites
 assert_equals "c" "$(cd "$REPO" && run_order tests/c_test.zsh)" "runs only the suite whose path it is given"
 rm -rf "$REPO"
 
+new_repo
+suite good "exit 0"
+suite bad "exit 1"
+assert_equals "./run_tests.sh tests/bad_test.zsh" "$("$REPO/run_tests.sh" 2>&1 | tail -1)" \
+  "ends with the command that reruns a failed suite"
+rm -rf "$REPO"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

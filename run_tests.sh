@@ -60,7 +60,8 @@ for i in "${!SUITES[@]}"; do
 done
 
 if [ ${#FAILED[@]} -gt 0 ]; then
-  printf 'FAILED: %s\n' "${FAILED[@]}"
+  echo "Failed suites:"
+  printf './run_tests.sh %s\n' "${FAILED[@]}"
   exit 1
 fi
 
