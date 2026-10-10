@@ -27,25 +27,37 @@ assert_equals() {
 }
 
 # Each argument is one answer gh gives, in order; the last repeats.
+SHARED_STUBS="$(mktemp -d "${TMPDIR:-/tmp}/pr_wait_stubs.XXXXXX")"
+cat > "$SHARED_STUBS/gh" <<'STUB'
+#!/usr/bin/env bash
+work="$(dirname "$0")/.."
+count=$(( $(cat "$work/count" 2>/dev/null || echo 0) + 1 ))
+echo "$count" > "$work/count"
+[ -f "$work/answers/$count" ] || count=$(cat "$work/last")
+cat "$work/answers/$count"
+STUB
+chmod +x "$SHARED_STUBS/gh"
+cat > "$SHARED_STUBS/open" <<'STUB'
+#!/usr/bin/env bash
+printf "%s\n" "$*" >> "$(dirname "$0")/../opened"
+STUB
+chmod +x "$SHARED_STUBS/open"
+cat > "$SHARED_STUBS/sleep" <<'STUB'
+#!/usr/bin/env bash
+work="$(dirname "$0")/.."
+printf '%s\n' "$*" >> "$work/slept"
+[ "$(wc -l < "$work/slept")" -lt 20 ] || { echo "still waiting after 20 rounds"; kill "$PPID"; }
+STUB
+chmod +x "$SHARED_STUBS/sleep"
+
 stub() {
   WORK="$(mktemp -d "${TMPDIR:-/tmp}/pr_wait_test.XXXXXX")"
   mkdir -p "$WORK/bin" "$WORK/answers"
   local n=0
   for answer in "$@"; do n=$((n+1)); printf '%s' "$answer" > "$WORK/answers/$n"; done
-  cat > "$WORK/bin/gh" <<STUB
-#!/usr/bin/env bash
-count=\$(( \$(cat "$WORK/count" 2>/dev/null || echo 0) + 1 ))
-echo "\$count" > "$WORK/count"
-[ -f "$WORK/answers/\$count" ] || count=$n
-cat "$WORK/answers/\$count"
-STUB
-  printf '#!/usr/bin/env bash\nprintf "%%s\\n" "$*" >> "%s/opened"\n' "$WORK" > "$WORK/bin/open"
-  cat > "$WORK/bin/sleep" <<STUB
-#!/usr/bin/env bash
-printf '%s\n' "\$*" >> "$WORK/slept"
-[ "\$(wc -l < "$WORK/slept")" -lt 20 ] || { echo "still waiting after 20 rounds"; kill "\$PPID"; }
-STUB
-  chmod +x "$WORK/bin/"*
+  echo "$n" > "$WORK/last"
+  local name
+  for name in gh open sleep; do ln -s "$SHARED_STUBS/$name" "$WORK/bin/$name"; done
   path=("$WORK/bin" $path)
 }
 
@@ -95,4 +107,5 @@ drop_stub
 
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
+rm -rf "$SHARED_STUBS"
 [[ $FAIL -eq 0 ]]
