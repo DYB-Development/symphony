@@ -164,5 +164,16 @@ assert_equals "0" "$?" "stops the server it started when it is stopped with Ctrl
 stop_leftover_server
 drop_app
 
+new_app
+serve_until_killed
+printf '#!/usr/bin/env bash\nexit 1\n' > "$BASE/stubs/open"
+start_up_in_own_group "$APP"
+poll '[[ -s "$SERVER_PID_FILE" ]]'
+poll '! kill -0 "$UP_PID" 2>/dev/null'
+poll server_stopped
+assert_equals "0" "$?" "stops the server it started when it exits for any other reason"
+stop_leftover_server
+drop_app
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

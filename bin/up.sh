@@ -46,7 +46,7 @@ address="http://localhost:$port"
 
 PORT="$port" bin/dev &
 server=$!
-trap 'kill "$server" 2>/dev/null' INT
+trap 'kill "$server" 2>/dev/null' EXIT
 
 until curl -s -o /dev/null "$address"; do
   kill -0 "$server" 2>/dev/null || {
