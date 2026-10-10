@@ -101,6 +101,11 @@ for dir in rules agents bin; do
 done
 
 echo ""
+echo "Shell commands:"
+mkdir -p "$HOME/.local/bin"
+link_file "$SYMPHONY_DIR/bin/up.sh" "$HOME/.local/bin/up"
+
+echo ""
 echo "Commands:"
 mkdir -p "$CONFIG_DIR/commands"
 for cmd in "$SYMPHONY_DIR"/commands/*.md; do
