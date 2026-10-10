@@ -25,71 +25,86 @@ assert_equals() {
   fi
 }
 
-new_clones() {
+STUBS="$(mktemp -d "${TMPDIR:-/tmp}/worktree_done_stubs.XXXXXX")"
+STUBS="${STUBS:A}"
+cat > "$STUBS/stub" <<'STUB'
+#!/usr/bin/env bash
+case "${0##*/}" in
+  rails) echo "shop_${RAILS_ENV}_app_feature" ;;
+  psql) cat "$WORKTREE_DONE_TEST_BASE/databases" ;;
+  dropdb) echo "${@: -1}" >> "$WORKTREE_DONE_TEST_BASE/dropped" ;;
+  bun)
+    [ ! -f "$WORKTREE_DONE_TEST_BASE/bun_fails" ] || exit 1
+    echo "$(pwd -P) $*" >> "$WORKTREE_DONE_TEST_BASE/runs" ;;
+esac
+STUB
+chmod +x "$STUBS/stub"
+WORKTREE_DONE_TEST_BASE=/nonexistent "$STUBS/stub" >/dev/null 2>&1
+mkdir -p "$STUBS/path"
+for name in rails psql dropdb bun; do ln -s "$STUBS/stub" "$STUBS/path/$name"; done
+
+template() {
+  local dir="$STUBS/$1"
+  git init -q --bare --template= -b main "$dir/origin.git"
+  git clone -q --template= "$dir/origin.git" "$dir/app" 2>/dev/null
+  case "$1" in
+    rails)
+      mkdir -p "$dir/app/config" "$dir/app/bin"
+      ln -s "$STUBS/path/rails" "$dir/app/bin/rails"
+      git -C "$dir/app" add bin ;;
+    package)
+      echo '{"scripts": {"worktree:db:create": "x", "worktree:db:drop": "x"}}' > "$dir/app/package.json"
+      git -C "$dir/app" add package.json ;;
+  esac
+  git -C "$dir/app" commit -q --allow-empty -m init
+  git -C "$dir/app" push -q origin main
+}
+template plain
+template rails
+template package
+
+copy_template() {
   BASE="$(mktemp -d "${TMPDIR:-/tmp}/worktree_done_test.XXXXXX")"
   BASE="${BASE:A}"
-  git init -q --bare -b main "$BASE/origin.git"
-  git clone -q "$BASE/origin.git" "$BASE/app" 2>/dev/null
-  git -C "$BASE/app" commit -q --allow-empty -m init
-  git -C "$BASE/app" push -q origin main
-  git -C "$BASE/app" worktree add -q -b feature "$BASE/app-feature"
+  export WORKTREE_DONE_TEST_BASE="$BASE"
+  cp -R "$STUBS/$1/origin.git" "$STUBS/$1/app" "$BASE/"
+  git -C "$BASE/app" remote set-url origin "$BASE/origin.git"
   MAIN="$BASE/app"
   LINKED="$BASE/app-feature"
 }
 
+add_linked() {
+  git -C "$MAIN" worktree add -q -b feature "$LINKED"
+}
+
+new_clones() {
+  copy_template plain
+  add_linked
+}
+
 new_rails_clones() {
-  BASE="$(mktemp -d "${TMPDIR:-/tmp}/worktree_done_test.XXXXXX")"
-  BASE="${BASE:A}"
-  git init -q --bare -b main "$BASE/origin.git"
-  git clone -q "$BASE/origin.git" "$BASE/app" 2>/dev/null
-  mkdir -p "$BASE/app/config" "$BASE/app/bin" "$BASE/stubs"
+  copy_template rails
+  mkdir -p "$BASE/app/config" "$BASE/stubs"
   echo "${1:-<% worktree = \"\" %>}" > "$BASE/app/config/database.yml"
-  cat > "$BASE/app/bin/rails" <<'RAILS'
-#!/usr/bin/env bash
-echo "shop_${RAILS_ENV}_app_feature"
-RAILS
-  chmod +x "$BASE/app/bin/rails"
-  git -C "$BASE/app" add config bin
-  git -C "$BASE/app" commit -q -m init
+  git -C "$BASE/app" add config
+  git -C "$BASE/app" commit -q -m config
   git -C "$BASE/app" push -q origin main
-  git -C "$BASE/app" worktree add -q -b feature "$BASE/app-feature"
-  MAIN="$BASE/app"
-  LINKED="$BASE/app-feature"
+  add_linked
   DATABASES="$BASE/databases"
   DROPPED="$BASE/dropped"
   printf '%s\n' shop_development shop_test shop_development_app_feature shop_test_app_feature > "$DATABASES"
   touch "$DROPPED"
-  cat > "$BASE/stubs/psql" <<PSQL
-#!/usr/bin/env bash
-cat "$DATABASES"
-PSQL
-  cat > "$BASE/stubs/dropdb" <<DROPDB
-#!/usr/bin/env bash
-echo "\${@: -1}" >> "$DROPPED"
-DROPDB
-  chmod +x "$BASE/stubs/psql" "$BASE/stubs/dropdb"
+  ln -s "$STUBS/path/psql" "$BASE/stubs/psql"
+  ln -s "$STUBS/path/dropdb" "$BASE/stubs/dropdb"
 }
 
 new_package_clones() {
-  BASE="$(mktemp -d "${TMPDIR:-/tmp}/worktree_done_test.XXXXXX")"
-  BASE="${BASE:A}"
-  git init -q --bare -b main "$BASE/origin.git"
-  git clone -q "$BASE/origin.git" "$BASE/app" 2>/dev/null
-  echo '{"scripts": {"worktree:db:create": "x", "worktree:db:drop": "x"}}' > "$BASE/app/package.json"
-  git -C "$BASE/app" add package.json
-  git -C "$BASE/app" commit -q -m init
-  git -C "$BASE/app" push -q origin main
-  git -C "$BASE/app" worktree add -q -b feature "$BASE/app-feature"
-  MAIN="$BASE/app"
-  LINKED="$BASE/app-feature"
+  copy_template package
+  add_linked
   RUNS="$BASE/runs"
   touch "$RUNS"
   mkdir -p "$BASE/stubs"
-  cat > "$BASE/stubs/bun" <<BUN
-#!/usr/bin/env bash
-echo "\$(pwd -P) \$*" >> "$RUNS"
-BUN
-  chmod +x "$BASE/stubs/bun"
+  ln -s "$STUBS/path/bun" "$BASE/stubs/bun"
 }
 
 drop_clones() {
@@ -183,7 +198,7 @@ assert_equals "64 there" "$? $([[ -d $LINKED ]] && echo there || echo gone)" \
 drop_clones
 
 new_package_clones
-printf '#!/usr/bin/env bash\nexit 1\n' > "$BASE/stubs/bun"
+touch "$BASE/bun_fails"
 OUTPUT="$(PATH="$BASE/stubs:$PATH" "$WORKTREE_DONE" "$LINKED" 2>&1)"
 assert_equals "1 there feature the package app" \
   "$? $([[ -d $LINKED ]] && echo there || echo gone) $(git -C "$MAIN" branch --list feature --format='%(refname:short)') $(grep -o 'the package app' <<<"$OUTPUT" | head -1)" \
@@ -191,15 +206,15 @@ assert_equals "1 there feature the package app" \
 drop_clones
 
 new_package_clones
-cp "$BASE/stubs/bun" "$BASE/working-bun"
-printf '#!/usr/bin/env bash\nexit 1\n' > "$BASE/stubs/bun"
+touch "$BASE/bun_fails"
 PATH="$BASE/stubs:$PATH" "$WORKTREE_DONE" "$LINKED" >/dev/null 2>&1
-cp "$BASE/working-bun" "$BASE/stubs/bun"
+rm "$BASE/bun_fails"
 PATH="$BASE/stubs:$PATH" "$WORKTREE_DONE" "$LINKED" >/dev/null 2>&1
 assert_equals "$LINKED run worktree:db:drop gone" "$(cat "$RUNS") $([[ -d $LINKED ]] && echo there || echo gone)" \
   "drops the databases and removes the worktree when cleanup runs again after a failed drop is fixed"
 drop_clones
 
+rm -rf "$STUBS"
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
