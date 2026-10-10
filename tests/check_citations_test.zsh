@@ -40,16 +40,18 @@ assert_equals "64" "$?" "refuses to run without a ledger to check"
 "$CHECK" /nonexistent/ledger.json >/dev/null 2>&1
 assert_equals "70" "$?" "reports a ledger it cannot read as not checked"
 
+TEMPLATE="$(mktemp -d "${TMPDIR:-/tmp}/check_citations_template.XXXXXX")"
+git init -q --template= "$TEMPLATE/repo"
+git -C "$TEMPLATE/repo" config user.email test@example.com
+git -C "$TEMPLATE/repo" config user.name Test
+printf 'one\ntwo\nthree\nfour\n' > "$TEMPLATE/repo/quote.rb"
+git -C "$TEMPLATE/repo" add quote.rb
+git -C "$TEMPLATE/repo" commit -q -m "first"
+
 new_source() {
   WORK="$(mktemp -d "${TMPDIR:-/tmp}/check_citations_test.XXXXXX")"
   SOURCE="$WORK/repo"
-  mkdir -p "$SOURCE"
-  git -C "$SOURCE" init -q
-  git -C "$SOURCE" config user.email test@example.com
-  git -C "$SOURCE" config user.name Test
-  printf 'one\ntwo\nthree\nfour\n' > "$SOURCE/quote.rb"
-  git -C "$SOURCE" add quote.rb
-  git -C "$SOURCE" commit -q -m "first"
+  cp -R "$TEMPLATE/repo" "$SOURCE"
   COMMIT="$(git -C "$SOURCE" rev-parse HEAD)"
   DRAFT="$WORK/draft.md"
   LEDGER="$WORK/ledger.json"
@@ -133,5 +135,6 @@ check >/dev/null 2>&1
 assert_equals "70" "$?" "reports a cited commit it cannot read as not checked"
 drop_source
 
+rm -rf "$TEMPLATE"
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
