@@ -26,37 +26,59 @@ assert_equals() {
   fi
 }
 
+STUBS="$(mktemp -d "${TMPDIR:-/tmp}/up_test_stubs.XXXXXX")"
+STUBS="${STUBS:A}"
+mkdir -p "$STUBS/path"
+cat > "$STUBS/stub" <<'STUB'
+#!/usr/bin/env bash
+state="$UP_TEST_STATE"
+case "${0##*/}" in
+  lsof) grep -qx -- "$2" "$state/busy" 2>/dev/null ;;
+  curl) exit "$(cat "$state/curl" 2>/dev/null || echo 0)" ;;
+  open) echo "open $*" >> "$state/runs"; exit "$(cat "$state/open" 2>/dev/null || echo 0)" ;;
+  setup) echo "setup $*" >> "$state/runs" ;;
+  dev)
+    [ -f "$state/serve" ] && { echo $$ > "$state/server.pid"; exec sleep 300; }
+    echo "dev PORT=$PORT" >> "$state/runs" ;;
+esac
+STUB
+chmod +x "$STUBS/stub"
+for name in lsof curl open; do ln -s "$STUBS/stub" "$STUBS/path/$name"; done
+ln -s "$STUBS/stub" "$STUBS/setup"
+ln -s "$STUBS/stub" "$STUBS/dev"
+UP_TEST_STATE=/nonexistent "$STUBS/stub" >/dev/null 2>&1
+
+TEMPLATE="$STUBS/template"
+git init -q --bare --template= -b main "$TEMPLATE/remote.git"
+git clone -q --template= "$TEMPLATE/remote.git" "$TEMPLATE/app" 2>/dev/null
+mkdir -p "$TEMPLATE/app/bin"
+ln -s "$STUBS/setup" "$TEMPLATE/app/bin/setup"
+ln -s "$STUBS/dev" "$TEMPLATE/app/bin/dev"
+git -C "$TEMPLATE/app" add bin
+git -C "$TEMPLATE/app" commit -q -m init
+git -C "$TEMPLATE/app" push -q origin main 2>/dev/null
+git clone -q "$TEMPLATE/remote.git" "$STUBS/other" 2>/dev/null
+git -C "$STUBS/other" commit -q --allow-empty -m newer
+git -C "$STUBS/other" push -q origin main:newer 2>/dev/null
+
 new_app() {
   BASE="$(mktemp -d "${TMPDIR:-/tmp}/up_test.XXXXXX")"
   BASE="${BASE:A}"
+  export UP_TEST_STATE="$BASE"
   RUNS="$BASE/runs"
   touch "$RUNS"
-  git init -q --bare -b main "$BASE/remote.git"
-  git clone -q "$BASE/remote.git" "$BASE/app" 2>/dev/null
+  cp -R "$TEMPLATE/remote.git" "$TEMPLATE/app" "$BASE/"
   APP="$BASE/app"
-  mkdir -p "$APP/bin"
-  printf '#!/usr/bin/env bash\necho "setup $*" >> "%s"\n' "$RUNS" > "$APP/bin/setup"
-  printf '#!/usr/bin/env bash\necho "dev PORT=$PORT" >> "%s"\n' "$RUNS" > "$APP/bin/dev"
-  chmod +x "$APP/bin/setup" "$APP/bin/dev"
-  git -C "$APP" add bin
-  git -C "$APP" commit -q -m init
-  git -C "$APP" push -q origin main 2>/dev/null
-  mkdir -p "$BASE/stubs"
-  printf '#!/usr/bin/env bash\nexit 1\n' > "$BASE/stubs/lsof"
-  printf '#!/usr/bin/env bash\nexit 0\n' > "$BASE/stubs/curl"
-  printf '#!/usr/bin/env bash\necho "open $*" >> "%s"\n' "$RUNS" > "$BASE/stubs/open"
-  chmod +x "$BASE/stubs/lsof" "$BASE/stubs/curl" "$BASE/stubs/open"
+  git -C "$APP" remote set-url origin "$BASE/remote.git"
 }
 
 push_new_commit() {
-  git clone -q "$BASE/remote.git" "$BASE/other" 2>/dev/null
-  git -C "$BASE/other" commit -q --allow-empty -m newer
-  git -C "$BASE/other" push -q origin main 2>/dev/null
-  git -C "$BASE/other" rev-parse HEAD
+  git -C "$BASE/remote.git" update-ref refs/heads/main refs/heads/newer
+  git -C "$BASE/remote.git" rev-parse main
 }
 
 run_up() {
-  (cd "$1" && PATH="$BASE/stubs:$PATH" "$UP")
+  (cd "$1" && PATH="$STUBS/path:$PATH" "$UP")
 }
 
 drop_app() {
@@ -66,11 +88,11 @@ drop_app() {
 
 serve_until_killed() {
   SERVER_PID_FILE="$BASE/server.pid"
-  printf '#!/usr/bin/env bash\necho $$ > "%s"\nexec sleep 300\n' "$SERVER_PID_FILE" > "$APP/bin/dev"
+  touch "$BASE/serve"
 }
 
 start_up_in_own_group() {
-  (cd "$1" && PATH="$BASE/stubs:$PATH" exec perl -e '$SIG{INT} = "DEFAULT"; setpgrp(0, 0); exec @ARGV' "$UP") >/dev/null 2>&1 &
+  (cd "$1" && PATH="$STUBS/path:$PATH" exec perl -e '$SIG{INT} = "DEFAULT"; setpgrp(0, 0); exec @ARGV' "$UP") >/dev/null 2>&1 &
   UP_PID=$!
 }
 
@@ -125,7 +147,7 @@ assert_equals "setup --skip-server" "$(sed -n 1p "$RUNS")" \
 drop_app
 
 new_app
-printf '#!/usr/bin/env bash\ncase "$*" in *:3000*) exit 0 ;; esac\nexit 1\n' > "$BASE/stubs/lsof"
+echo "-iTCP:3000" > "$BASE/busy"
 run_up "$APP" >/dev/null 2>&1
 assert_equals "dev PORT=3001" "$(grep '^dev' "$RUNS")" \
   "starts the app's server on the first free port counting up from 3000"
@@ -138,7 +160,7 @@ assert_equals "open http://localhost:3000" "$(grep '^open' "$RUNS")" \
 drop_app
 
 new_app
-printf '#!/usr/bin/env bash\nexit 7\n' > "$BASE/stubs/curl"
+echo 7 > "$BASE/curl"
 OUTPUT="$(run_up "$APP" 2>&1)"
 assert_equals "1 the server stopped before it answered " "$? $(grep -o 'the server stopped before it answered' <<<"$OUTPUT") $(grep '^open' "$RUNS")" \
   "says the server stopped, exits non-zero and opens no browser when the server stops before it answers"
@@ -166,7 +188,7 @@ drop_app
 
 new_app
 serve_until_killed
-printf '#!/usr/bin/env bash\nexit 1\n' > "$BASE/stubs/open"
+echo 1 > "$BASE/open"
 start_up_in_own_group "$APP"
 poll '[[ -s "$SERVER_PID_FILE" ]]'
 poll '! kill -0 "$UP_PID" 2>/dev/null'
@@ -175,5 +197,6 @@ assert_equals "0" "$?" "stops the server it started when it exits for any other 
 stop_leftover_server
 drop_app
 
+rm -rf "$STUBS"
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

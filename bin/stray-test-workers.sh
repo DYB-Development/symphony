@@ -14,7 +14,18 @@ for pid in $asked; do
   kill "$pid" 2>/dev/null || true
 done
 
-sleep "$grace"
+any_still_running() {
+  for pid in $asked; do
+    kill -0 "$pid" 2>/dev/null && return 0
+  done
+  return 1
+}
+
+tries=$(( grace * 10 ))
+while [ "$tries" -gt 0 ] && any_still_running; do
+  sleep 0.1
+  tries=$(( tries - 1 ))
+done
 
 for pid in $(stray); do
   kill -9 "$pid" 2>/dev/null || true
