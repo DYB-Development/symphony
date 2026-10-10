@@ -167,10 +167,11 @@ report_agent() {
   model=$(cut -f1 <<<"$run")
   tokens=$(cut -s -f2 <<<"$run")
   hub POST report_step "$(jq -nc --argjson id "$id" --arg step "$(jq -r '.id' <<<"$step")" --arg result "$result" --rawfile output "$file" \
-    --arg model "$model" --arg tokens "$tokens" \
+    --arg model "$model" --arg tokens "$tokens" --argjson values "$(values_in "$(cat "$file")")" \
     '{work_item_id: $id, step: $step, result: $result,
       output: ($output | rtrimstr("\n") + (if $tokens == "" then "\nTokens: not measured" else "" end)),
-      model: (if $model == "" then null else $model end), tokens: (if $tokens == "" then null else ($tokens | tonumber) end)}')" >/dev/null
+      model: (if $model == "" then null else $model end), tokens: (if $tokens == "" then null else ($tokens | tonumber) end)}
+      + (if $values == {} then {} else {values: $values} end)')" >/dev/null
 }
 
 check_work() {

@@ -389,6 +389,15 @@ answer current_step '{"answer":{"done":true,"output":"stopped"}}'
 assert_equals '["exit_status","output","result","step","work_item_id"]' "$(report 1 'keys')" "reports a script step that prints no Value lines with no values at all"
 teardown
 
+setup
+work_branch 7-export-quotes
+measured ""
+answer current_step "$(step build "Hand to builder on claude-sonnet-5-5" agent)"
+agent_report "Built the export." "Value: files_changed=4" "Result: passed"
+"$PIPELINE" report 7 "$WORK/report.md" >/dev/null 2>&1
+assert_equals '{"files_changed":4}' "$(report 1 '.values')" "sends the values an agent report holds as Value lines with its result"
+teardown
+
 rm -rf "$STUBS"
 
 echo ""
