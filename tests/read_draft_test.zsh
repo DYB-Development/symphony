@@ -21,10 +21,8 @@ assert_equals() {
   fi
 }
 
-new_reader() {
-  READER_DIR="$(mktemp -d "${TMPDIR:-/tmp}/read_draft_test.XXXXXX")"
-  DRAFT_FILE="$READER_DIR/draft.md"
-  cat > "$READER_DIR/claude" <<'SH'
+SHARED_STUBS="$(mktemp -d "${TMPDIR:-/tmp}/read_draft_stubs.XXXXXX")"
+cat > "$SHARED_STUBS/claude-1" <<'SH'
 #!/usr/bin/env bash
 here="$(dirname "$0")"
 printf '%s\n' "$@" > "$here/args"
@@ -39,7 +37,12 @@ cat > "$here/stdin"
 printf '%s\n' "${READER_REPLY:-Flagged: 0}"
 exit "${READER_EXIT:-0}"
 SH
-  chmod +x "$READER_DIR/claude"
+chmod +x "$SHARED_STUBS/claude-1"
+
+new_reader() {
+  READER_DIR="$(mktemp -d "${TMPDIR:-/tmp}/read_draft_test.XXXXXX")"
+  DRAFT_FILE="$READER_DIR/draft.md"
+  ln -s "$SHARED_STUBS/claude-1" "$READER_DIR/claude"
 }
 
 drop_reader() {
@@ -172,4 +175,5 @@ assert_equals "opus" \
 drop_reader
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
+rm -rf "$SHARED_STUBS"
 [[ $FAIL -eq 0 ]]
