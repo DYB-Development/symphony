@@ -90,5 +90,11 @@ assert_equals "1 the pull failed " "$? $(grep -o 'the pull failed' <<<"$OUTPUT")
   "says the pull failed, exits non-zero and neither sets up nor starts the app when the pull fails"
 drop_app
 
+new_app
+run_up "$APP" >/dev/null 2>&1
+assert_equals "setup --skip-server" "$(sed -n 1p "$RUNS")" \
+  "runs the app's own setup step, without its server, before anything is started"
+drop_app
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

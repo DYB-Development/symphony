@@ -23,3 +23,5 @@ if in_main_clone; then
     exit 1
   }
 fi
+
+bin/setup --skip-server
