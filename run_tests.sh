@@ -53,9 +53,10 @@ done | xargs -n 2 -P "${PARALLEL_WORKERS:-$(getconf _NPROCESSORS_ONLN)}" bash -c
 FAILED=()
 for i in "${!SUITES[@]}"; do
   name="${SUITES[$i]#"$ROOT"/}"
+  [ "$(cat "$RESULTS/$i.status")" = 0 ] && continue
+  FAILED+=("$name")
   echo "── $name"
   cat "$RESULTS/$i.out"
-  [ "$(cat "$RESULTS/$i.status")" = 0 ] || FAILED+=("$name")
   echo ""
 done
 

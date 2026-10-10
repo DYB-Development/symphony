@@ -121,6 +121,12 @@ assert_equals "./run_tests.sh tests/bad_test.zsh" "$("$REPO/run_tests.sh" 2>&1 |
   "ends with the command that reruns a failed suite"
 rm -rf "$REPO"
 
+new_repo
+suite good "echo passing-detail"
+[[ "$("$REPO/run_tests.sh" 2>&1)" != *passing-detail* ]] \
+  && ok "leaves a passing suite's output out" || fail "leaves a passing suite's output out"
+rm -rf "$REPO"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]
