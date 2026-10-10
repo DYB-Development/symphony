@@ -83,5 +83,12 @@ assert_equals "$BEFORE" "$(git -C "$BASE/app-feature" rev-parse HEAD)" \
   "does not pull in a linked worktree"
 drop_app
 
+new_app
+rm -rf "$BASE/remote.git"
+OUTPUT="$(run_up "$APP" 2>&1)"
+assert_equals "1 the pull failed " "$? $(grep -o 'the pull failed' <<<"$OUTPUT") $(cat "$RUNS")" \
+  "says the pull failed, exits non-zero and neither sets up nor starts the app when the pull fails"
+drop_app
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

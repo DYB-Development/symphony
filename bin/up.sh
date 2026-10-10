@@ -18,5 +18,8 @@ in_main_clone() {
 }
 
 if in_main_clone; then
-  git pull -q --ff-only
+  git pull -q --ff-only || {
+    echo "up: the pull failed, so the app was not set up or started" >&2
+    exit 1
+  }
 fi
