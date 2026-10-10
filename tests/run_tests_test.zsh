@@ -42,6 +42,15 @@ suite b "$(waits_for b-started a-started)"
 assert_equals 0 "$?" "runs suites at the same time"
 rm -rf "$REPO"
 
+new_repo
+for name in a b c; do
+  suite $name "echo start >> $REPO/log; sleep 0.2; echo end >> $REPO/log"
+done
+PARALLEL_WORKERS=1 "$REPO/run_tests.sh" >/dev/null 2>&1
+assert_equals "start end start end start end" "$(tr '\n' ' ' < "$REPO/log" | sed 's/ $//')" \
+  "runs no more suites at once than its workers"
+rm -rf "$REPO"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]
