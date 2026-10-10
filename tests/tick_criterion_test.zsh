@@ -30,18 +30,22 @@ BODY=$'## Part of\n- [ ] not a criterion\n\n## Acceptance criteria\n- [ ] A rep 
 
 # A gh that serves $BODY for issue 12 of acme/widget and keeps any body it is
 # asked to save in $WORK/saved.
+SHARED_STUBS="$(mktemp -d "${TMPDIR:-/tmp}/tick_criterion_stubs.XXXXXX")"
+cat > "$SHARED_STUBS/gh" <<'STUB'
+#!/usr/bin/env bash
+work="$(dirname "$0")/.."
+case "$*" in
+  "api repos/acme/widget/issues/12 --jq .body") cat "$work/body" ;;
+  "api -X PATCH repos/acme/widget/issues/12 -F body=@-"*) cat > "$work/saved" ;;
+esac
+STUB
+chmod +x "$SHARED_STUBS/gh"
+
 stub_gh() {
   WORK="$(mktemp -d "${TMPDIR:-/tmp}/tick_criterion_test.XXXXXX")"
   mkdir -p "$WORK/bin"
   printf '%s' "$BODY" > "$WORK/body"
-  cat > "$WORK/bin/gh" <<STUB
-#!/usr/bin/env bash
-case "\$*" in
-  "api repos/acme/widget/issues/12 --jq .body") cat "$WORK/body" ;;
-  "api -X PATCH repos/acme/widget/issues/12 -F body=@-"*) cat > "$WORK/saved" ;;
-esac
-STUB
-  chmod +x "$WORK/bin/gh"
+  ln -s "$SHARED_STUBS/gh" "$WORK/bin/gh"
   path=("$WORK/bin" $path)
 }
 
@@ -74,4 +78,5 @@ drop_stub
 
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
+rm -rf "$SHARED_STUBS"
 [[ $FAIL -eq 0 ]]
