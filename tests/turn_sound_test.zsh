@@ -26,11 +26,17 @@ assert_equals() {
   fi
 }
 
+SHARED_STUBS="$(mktemp -d "${TMPDIR:-/tmp}/turn_sound_stubs.XXXXXX")"
+cat > "$SHARED_STUBS/player" <<'STUB'
+#!/bin/sh
+printf "%s\n" "$1" >> "$(dirname "$0")/played"
+STUB
+chmod +x "$SHARED_STUBS/player"
+
 new_dir() {
   WORK="$(mktemp -d "${TMPDIR:-/tmp}/turn_sound_test.XXXXXX")"
   PLAYER="$WORK/player"
-  printf '#!/bin/sh\nprintf "%%s\\n" "$1" >> "%s/played"\n' "$WORK" > "$PLAYER"
-  chmod +x "$PLAYER"
+  ln -s "$SHARED_STUBS/player" "$PLAYER"
 }
 drop_dir() { rm -rf "$WORK"; }
 
@@ -66,4 +72,5 @@ assert_equals "0" "$?" "exits cleanly on a machine with no player"
 drop_dir
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
+rm -rf "$SHARED_STUBS"
 [[ $FAIL -eq 0 ]]

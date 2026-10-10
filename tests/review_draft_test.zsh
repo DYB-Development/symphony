@@ -133,11 +133,8 @@ drop_draft
 echo ""
 echo "review-draft.sh --post:"
 
-stub_gh() {
-  STUB_DIR="$(mktemp -d "${TMPDIR:-/tmp}/review_draft_gh.XXXXXX")"
-  GH_LOG="$STUB_DIR/calls"
-  : > "$GH_LOG"
-  cat > "$STUB_DIR/gh" <<'STUB'
+SHARED_STUBS="$(mktemp -d "${TMPDIR:-/tmp}/review_draft_stubs.XXXXXX")"
+cat > "$SHARED_STUBS/gh-1" <<'STUB'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >> "$GH_LOG"
 case "$*" in
@@ -147,7 +144,104 @@ case "$*" in
   *) printf 'https://github.com/o/r/pull/1#x\n' ;;
 esac
 STUB
-  chmod +x "$STUB_DIR/gh"
+chmod +x "$SHARED_STUBS/gh-1"
+printf '#!/usr/bin/env bash\ncat "$(dirname "$0")/diff.txt"\n' > "$SHARED_STUBS/gh-diff-file"
+chmod +x "$SHARED_STUBS/gh-diff-file"
+cat > "$SHARED_STUBS/gh-2" <<'SH'
+#!/usr/bin/env bash
+cat <<'DIFF'
+diff --git a/app/models/quote.rb b/app/models/quote.rb
+index 1111111..2222222 100644
+--- a/app/models/quote.rb
++++ b/app/models/quote.rb
+@@ -40,3 +40,4 @@ class Quote
+   def convert
++    order.save
+   end
+ end
+DIFF
+SH
+chmod +x "$SHARED_STUBS/gh-2"
+cat > "$SHARED_STUBS/gh-3" <<'SH'
+#!/usr/bin/env bash
+cat <<'DIFF'
+diff --git a/app/quote[1].rb b/app/quote[1].rb
+--- a/app/quote[1].rb
++++ b/app/quote[1].rb
+@@ -1,2 +1,3 @@
+ class Quote
++  def convert; end
+ end
+DIFF
+SH
+chmod +x "$SHARED_STUBS/gh-3"
+cat > "$SHARED_STUBS/gh-4" <<'SH'
+#!/usr/bin/env bash
+printf '%s\n' 'diff --git a/app/models/quote.rb b/app/models/quote.rb' \
+  '--- /dev/null' '+++ b/app/models/quote.rb' '@@ -0,0 +1,20000 @@'
+for i in $(seq 1 20000); do printf '+line %s\n' "$i"; done
+SH
+chmod +x "$SHARED_STUBS/gh-4"
+cat > "$SHARED_STUBS/gh-5" <<'SH'
+#!/usr/bin/env bash
+cat <<'DIFF'
+diff --git a/app/models/quote.rb b/app/models/quote.rb
+--- a/app/models/quote.rb
++++ b/app/models/quote.rb
+@@ -40,3 +40,4 @@ class Quote
+   def convert
++    order.save
+   end
+diff --git a/app/other.rb b/app/other.rb
+--- a/app/other.rb
++++ b/app/other.rb
+@@ -1,2 +1,3 @@
+ class Other
++  def run; end
+ end
+DIFF
+SH
+chmod +x "$SHARED_STUBS/gh-5"
+cat > "$SHARED_STUBS/gh-6" <<'SH'
+#!/usr/bin/env bash
+cat <<'DIFF'
+diff --git a/app/models/quote.rb b/app/models/quote.rb
+--- a/app/models/quote.rb
++++ b/app/models/quote.rb
+@@ -40,3 +40,4 @@ class Quote
+   def convert
++    order.save
+   end
+diff --git a/app/gone.rb b/app/gone.rb
+deleted file mode 100644
+--- a/app/gone.rb
++++ /dev/null
+@@ -1,2 +0,0 @@
+-class Gone
+-end
+DIFF
+SH
+chmod +x "$SHARED_STUBS/gh-6"
+cat > "$SHARED_STUBS/gh-7" <<'SH'
+#!/usr/bin/env bash
+cat <<'DIFF'
+diff --git a/db/quote.sql b/db/quote.sql
+--- a/db/quote.sql
++++ b/db/quote.sql
+@@ -1,3 +1,3 @@
+ select 1
+--- the old comment
++-- the new comment
+ from quotes
+DIFF
+SH
+chmod +x "$SHARED_STUBS/gh-7"
+
+stub_gh() {
+  STUB_DIR="$(mktemp -d "${TMPDIR:-/tmp}/review_draft_gh.XXXXXX")"
+  GH_LOG="$STUB_DIR/calls"
+  : > "$GH_LOG"
+  ln -s "$SHARED_STUBS/gh-1" "$STUB_DIR/gh"
   export GH_LOG
   PATH="$STUB_DIR:$PATH"
 }
@@ -221,21 +315,7 @@ echo "review-draft.sh --check-lines:"
 new_diff() {
   LINES_DIR="$(mktemp -d "${TMPDIR:-/tmp}/review_lines_test.XXXXXX")"
   LINES_FILE="$LINES_DIR/review.json"
-  cat > "$LINES_DIR/gh" <<'SH'
-#!/usr/bin/env bash
-cat <<'DIFF'
-diff --git a/app/models/quote.rb b/app/models/quote.rb
-index 1111111..2222222 100644
---- a/app/models/quote.rb
-+++ b/app/models/quote.rb
-@@ -40,3 +40,4 @@ class Quote
-   def convert
-+    order.save
-   end
- end
-DIFF
-SH
-  chmod +x "$LINES_DIR/gh"
+  ln -s "$SHARED_STUBS/gh-2" "$LINES_DIR/gh"
 }
 
 drop_diff() {
@@ -278,19 +358,7 @@ drop_diff
 
 LINES_DIR="$(mktemp -d "${TMPDIR:-/tmp}/review_lines_test.XXXXXX")"
 LINES_FILE="$LINES_DIR/review.json"
-cat > "$LINES_DIR/gh" <<'SH'
-#!/usr/bin/env bash
-cat <<'DIFF'
-diff --git a/app/quote[1].rb b/app/quote[1].rb
---- a/app/quote[1].rb
-+++ b/app/quote[1].rb
-@@ -1,2 +1,3 @@
- class Quote
-+  def convert; end
- end
-DIFF
-SH
-chmod +x "$LINES_DIR/gh"
+ln -s "$SHARED_STUBS/gh-3" "$LINES_DIR/gh"
 cat > "$LINES_FILE" <<'JSON'
 { "summary": "One finding.",
   "comments": [ { "path": "app/quote[1].rb", "line": 2, "side": "RIGHT", "body": "a finding" } ],
@@ -302,13 +370,7 @@ rm -rf "$LINES_DIR"
 
 LINES_DIR="$(mktemp -d "${TMPDIR:-/tmp}/review_lines_test.XXXXXX")"
 LINES_FILE="$LINES_DIR/review.json"
-cat > "$LINES_DIR/gh" <<'SH'
-#!/usr/bin/env bash
-printf '%s\n' 'diff --git a/app/models/quote.rb b/app/models/quote.rb' \
-  '--- /dev/null' '+++ b/app/models/quote.rb' '@@ -0,0 +1,20000 @@'
-for i in $(seq 1 20000); do printf '+line %s\n' "$i"; done
-SH
-chmod +x "$LINES_DIR/gh"
+ln -s "$SHARED_STUBS/gh-4" "$LINES_DIR/gh"
 cat > "$LINES_FILE" <<'JSON'
 { "summary": "One finding.",
   "comments": [ { "path": "app/models/quote.rb", "line": 1, "side": "RIGHT", "body": "a finding" } ],
@@ -323,26 +385,7 @@ assert_equals "0" "$?" "documents the line check in its own usage"
 
 LINES_DIR="$(mktemp -d "${TMPDIR:-/tmp}/review_lines_test.XXXXXX")"
 LINES_FILE="$LINES_DIR/review.json"
-cat > "$LINES_DIR/gh" <<'SH'
-#!/usr/bin/env bash
-cat <<'DIFF'
-diff --git a/app/models/quote.rb b/app/models/quote.rb
---- a/app/models/quote.rb
-+++ b/app/models/quote.rb
-@@ -40,3 +40,4 @@ class Quote
-   def convert
-+    order.save
-   end
-diff --git a/app/other.rb b/app/other.rb
---- a/app/other.rb
-+++ b/app/other.rb
-@@ -1,2 +1,3 @@
- class Other
-+  def run; end
- end
-DIFF
-SH
-chmod +x "$LINES_DIR/gh"
+ln -s "$SHARED_STUBS/gh-5" "$LINES_DIR/gh"
 cat > "$LINES_FILE" <<'JSON'
 { "summary": "One finding.",
   "comments": [ { "path": "app/models/quote.rb", "line": 42, "side": "LEFT", "body": "a finding" } ],
@@ -354,26 +397,7 @@ rm -rf "$LINES_DIR"
 
 LINES_DIR="$(mktemp -d "${TMPDIR:-/tmp}/review_lines_test.XXXXXX")"
 LINES_FILE="$LINES_DIR/review.json"
-cat > "$LINES_DIR/gh" <<'SH'
-#!/usr/bin/env bash
-cat <<'DIFF'
-diff --git a/app/models/quote.rb b/app/models/quote.rb
---- a/app/models/quote.rb
-+++ b/app/models/quote.rb
-@@ -40,3 +40,4 @@ class Quote
-   def convert
-+    order.save
-   end
-diff --git a/app/gone.rb b/app/gone.rb
-deleted file mode 100644
---- a/app/gone.rb
-+++ /dev/null
-@@ -1,2 +0,0 @@
--class Gone
--end
-DIFF
-SH
-chmod +x "$LINES_DIR/gh"
+ln -s "$SHARED_STUBS/gh-6" "$LINES_DIR/gh"
 cat > "$LINES_FILE" <<'JSON'
 { "summary": "One finding.",
   "comments": [ { "path": "app/gone.rb", "line": 1, "side": "LEFT", "body": "a finding" } ],
@@ -395,20 +419,7 @@ drop_diff
 
 LINES_DIR="$(mktemp -d "${TMPDIR:-/tmp}/review_lines_test.XXXXXX")"
 LINES_FILE="$LINES_DIR/review.json"
-cat > "$LINES_DIR/gh" <<'SH'
-#!/usr/bin/env bash
-cat <<'DIFF'
-diff --git a/db/quote.sql b/db/quote.sql
---- a/db/quote.sql
-+++ b/db/quote.sql
-@@ -1,3 +1,3 @@
- select 1
---- the old comment
-+-- the new comment
- from quotes
-DIFF
-SH
-chmod +x "$LINES_DIR/gh"
+ln -s "$SHARED_STUBS/gh-7" "$LINES_DIR/gh"
 cat > "$LINES_FILE" <<'JSON'
 { "summary": "One finding.",
   "comments": [ { "path": "db/quote.sql", "line": 2, "side": "RIGHT", "body": "a finding" } ],
@@ -421,11 +432,7 @@ rm -rf "$LINES_DIR"
 LINES_DIR="$(mktemp -d "${TMPDIR:-/tmp}/review_lines_test.XXXXXX")"
 LINES_FILE="$LINES_DIR/review.json"
 printf 'diff --git a/app/my quote.rb b/app/my quote.rb\n--- a/app/my quote.rb\t\n+++ b/app/my quote.rb\t\n@@ -1,2 +1,3 @@\n class Quote\n+  def convert; end\n end\n' > "$LINES_DIR/diff.txt"
-cat > "$LINES_DIR/gh" <<SH
-#!/usr/bin/env bash
-cat "$LINES_DIR/diff.txt"
-SH
-chmod +x "$LINES_DIR/gh"
+ln -s "$SHARED_STUBS/gh-diff-file" "$LINES_DIR/gh"
 cat > "$LINES_FILE" <<'JSON'
 { "summary": "One finding.",
   "comments": [ { "path": "app/my quote.rb", "line": 2, "side": "RIGHT", "body": "a finding" } ],
@@ -438,11 +445,7 @@ rm -rf "$LINES_DIR"
 LINES_DIR="$(mktemp -d "${TMPDIR:-/tmp}/review_lines_test.XXXXXX")"
 LINES_FILE="$LINES_DIR/review.json"
 printf 'diff --git a/app/quote.rb b/app/quote.rb\n--- a/app/quote.rb\n+++ b/app/quote.rb\n@@ -1,4 +1,5 @@\n class Quote\n\n+  def convert; end\n end\n' > "$LINES_DIR/diff.txt"
-cat > "$LINES_DIR/gh" <<SH
-#!/usr/bin/env bash
-cat "$LINES_DIR/diff.txt"
-SH
-chmod +x "$LINES_DIR/gh"
+ln -s "$SHARED_STUBS/gh-diff-file" "$LINES_DIR/gh"
 cat > "$LINES_FILE" <<'JSON'
 { "summary": "One finding.",
   "comments": [ { "path": "app/quote.rb", "line": 3, "side": "RIGHT", "body": "a finding" } ],
@@ -455,11 +458,7 @@ rm -rf "$LINES_DIR"
 LINES_DIR="$(mktemp -d "${TMPDIR:-/tmp}/review_lines_test.XXXXXX")"
 LINES_FILE="$LINES_DIR/review.json"
 printf 'diff --git "a/caf\\303\\251.txt" "b/caf\\303\\251.txt"\n--- "a/caf\\303\\251.txt"\n+++ "b/caf\\303\\251.txt"\n@@ -1,2 +1,3 @@\n one\n+two\n three\n' > "$LINES_DIR/diff.txt"
-cat > "$LINES_DIR/gh" <<SH
-#!/usr/bin/env bash
-cat "$LINES_DIR/diff.txt"
-SH
-chmod +x "$LINES_DIR/gh"
+ln -s "$SHARED_STUBS/gh-diff-file" "$LINES_DIR/gh"
 jq -n '{summary:"One finding.",comments:[{path:"café.txt",line:2,side:"RIGHT",body:"a finding"}],replies:[]}' > "$LINES_FILE"
 check_lines >/dev/null 2>&1
 assert_equals "0" "$?" "matches a path git wrote in quotes with escapes"
@@ -485,4 +484,5 @@ drop_diff
 
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
+rm -rf "$SHARED_STUBS"
 [[ $FAIL -eq 0 ]]

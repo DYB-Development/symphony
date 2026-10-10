@@ -26,14 +26,22 @@ assert_equals() {
 }
 
 # One pull request in the state given, with checks written as name:conclusion,...
+SHARED_STUBS="$(mktemp -d "${TMPDIR:-/tmp}/pr_state_stubs.XXXXXX")"
+cat > "$SHARED_STUBS/gh" <<'STUB'
+#!/usr/bin/env bash
+work="$(dirname "$0")/.."
+printf "%s\n" "$*" >> "$work/calls"
+cat "$work/answer"
+STUB
+chmod +x "$SHARED_STUBS/gh"
+
 stub() {
   WORK="$(mktemp -d "${TMPDIR:-/tmp}/pr_state_test.XXXXXX")"
   mkdir -p "$WORK/bin"
   jq -nc --arg state "$1" --arg checks "$2" \
     '{state: $state, url: "https://github.com/acme/quotes/pull/5", number: 5,
       statusCheckRollup: ($checks | split(",") | map(select(. != "") | split(":") | {name: .[0], conclusion: .[1]}))}' > "$WORK/answer"
-  printf '#!/usr/bin/env bash\nprintf "%%s\\n" "$*" >> "%s/calls"\ncat "%s/answer"\n' "$WORK" "$WORK" > "$WORK/bin/gh"
-  chmod +x "$WORK/bin/gh"
+  ln -s "$SHARED_STUBS/gh" "$WORK/bin/gh"
   path=("$WORK/bin" $path)
 }
 
@@ -66,4 +74,5 @@ assert_equals "pr view 5 --repo acme/quotes --json state,url,number,statusCheckR
 drop_stub
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
+rm -rf "$SHARED_STUBS"
 [[ $FAIL -eq 0 ]]

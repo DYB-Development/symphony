@@ -40,25 +40,36 @@ assert_equals "64" "$?" "refuses to run without a claims file and a pull request
 "$CAPTURE" /nonexistent/claims.json acme/quotes 7 >/dev/null 2>&1
 assert_equals "70" "$?" "reports a claims file it cannot read as not captured"
 
+TEMPLATE="$(mktemp -d "${TMPDIR:-/tmp}/capture_evidence_template.XXXXXX")"
+git -C "$TEMPLATE" init -q --template= repo
+git -C "$TEMPLATE/repo" config user.email test@example.com
+git -C "$TEMPLATE/repo" config user.name Test
+printf 'one\ntwo\nthree\nfour\n' > "$TEMPLATE/repo/quote.rb"
+git -C "$TEMPLATE/repo" add quote.rb
+git -C "$TEMPLATE/repo" commit -q -m first
+cat > "$TEMPLATE/gh" <<'SH'
+#!/usr/bin/env bash
+here="$(dirname "$0")"
+[ ! -f "$here/gh_fails" ] || exit 1
+cat "$here/gh_reply"
+SH
+chmod +x "$TEMPLATE/gh"
+"$TEMPLATE/gh" >/dev/null 2>&1
+
+answer_pull_request() {
+  printf '%s\t%s\n' "$1" "$2" > "$WORK/gh_reply"
+}
+
 new_source() {
   WORK="$(mktemp -d "${TMPDIR:-/tmp}/capture_evidence_test.XXXXXX")"
   SOURCE="$WORK/repo"
-  mkdir -p "$SOURCE"
-  git -C "$SOURCE" init -q
-  git -C "$SOURCE" config user.email test@example.com
-  git -C "$SOURCE" config user.name Test
-  printf 'one\ntwo\nthree\nfour\n' > "$SOURCE/quote.rb"
-  git -C "$SOURCE" add quote.rb
-  git -C "$SOURCE" commit -q -m first
+  cp -R "$TEMPLATE/repo" "$SOURCE"
   HEAD_COMMIT="$(git -C "$SOURCE" rev-parse HEAD)"
   DRAFT="$WORK/draft.md"
   CLAIMS="$WORK/claims.json"
   printf 'The loader reads two lines.\n' > "$DRAFT"
-  cat > "$WORK/gh" <<SH
-#!/usr/bin/env bash
-printf '%s\\t%s\\n' "$HEAD_COMMIT" "$HEAD_COMMIT"
-SH
-  chmod +x "$WORK/gh"
+  ln -s "$TEMPLATE/gh" "$WORK/gh"
+  answer_pull_request "$HEAD_COMMIT" "$HEAD_COMMIT"
 }
 
 drop_source() {
@@ -131,11 +142,7 @@ drop_source
 
 new_source
 write_pointer 2 3
-cat > "$WORK/gh" <<'SH'
-#!/usr/bin/env bash
-exit 1
-SH
-chmod +x "$WORK/gh"
+touch "$WORK/gh_fails"
 capture >/dev/null 2>&1
 assert_equals "70" "$?" "reports a pull request it cannot read as not captured"
 drop_source
@@ -147,11 +154,7 @@ printf 'one\ntwo\nthree\nfour\nfive\n' > "$FORK/quote.rb"
 git -C "$FORK" add quote.rb
 git -C "$FORK" -c user.email=t@e.com -c user.name=T commit -q -m second
 FORK_COMMIT="$(git -C "$FORK" rev-parse HEAD)"
-cat > "$WORK/gh" <<SH
-#!/usr/bin/env bash
-printf '%s\t%s\n' "$FORK_COMMIT" "$HEAD_COMMIT"
-SH
-chmod +x "$WORK/gh"
+answer_pull_request "$FORK_COMMIT" "$HEAD_COMMIT"
 git -C "$SOURCE" remote add fork "$FORK" 2>/dev/null
 write_pointer 5 5
 capture >/dev/null 2>&1
@@ -179,11 +182,7 @@ printf 'class Quote\nend\n' > "$SOURCE/app/models/quote.rb"
 git -C "$SOURCE" add app/models/quote.rb
 git -C "$SOURCE" commit -q -m "add a directory"
 HEAD_COMMIT="$(git -C "$SOURCE" rev-parse HEAD)"
-cat > "$WORK/gh" <<SH
-#!/usr/bin/env bash
-printf '%s\t%s\n' "$HEAD_COMMIT" "$HEAD_COMMIT"
-SH
-chmod +x "$WORK/gh"
+answer_pull_request "$HEAD_COMMIT" "$HEAD_COMMIT"
 write_pointer 1 1 app/models
 capture >/dev/null 2>&1
 code=$?
@@ -191,5 +190,6 @@ code=$?
 assert_equals "0" "$?" "reports a pointer naming a directory as unresolved"
 drop_source
 
+rm -rf "$TEMPLATE"
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

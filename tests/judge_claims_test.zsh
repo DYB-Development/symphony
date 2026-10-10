@@ -43,16 +43,29 @@ assert_equals "64" "$?" "refuses to run without a claims file to judge"
 "$JUDGE" /nonexistent/claims.json >/dev/null 2>&1
 assert_equals "70" "$?" "reports a claims file it cannot read as not judged"
 
+TEMPLATE="$(mktemp -d "${TMPDIR:-/tmp}/judge_claims_template.XXXXXX")"
+git -C "$TEMPLATE" init -q --template= repo
+git -C "$TEMPLATE/repo" config user.email test@example.com
+git -C "$TEMPLATE/repo" config user.name Test
+printf 'one\ntwo\nthree\nfour\n' > "$TEMPLATE/repo/quote.rb"
+git -C "$TEMPLATE/repo" add quote.rb
+git -C "$TEMPLATE/repo" commit -q -m first
+cat > "$TEMPLATE/claude" <<'SH'
+#!/usr/bin/env bash
+here="$(dirname "$0")"
+printf '%s\n' "$@" > "$here/args"
+cat > "$here/stdin"
+printf '%s\n' "${JUDGE_REPLY:-Standing: 0}"
+exit "${JUDGE_EXIT:-0}"
+SH
+chmod +x "$TEMPLATE/claude"
+"$TEMPLATE/claude" </dev/null >/dev/null 2>&1
+rm -f "$TEMPLATE/args" "$TEMPLATE/stdin"
+
 new_claims() {
   WORK="$(mktemp -d "${TMPDIR:-/tmp}/judge_claims_test.XXXXXX")"
   SOURCE="$WORK/repo"
-  mkdir -p "$SOURCE"
-  git -C "$SOURCE" init -q
-  git -C "$SOURCE" config user.email test@example.com
-  git -C "$SOURCE" config user.name Test
-  printf 'one\ntwo\nthree\nfour\n' > "$SOURCE/quote.rb"
-  git -C "$SOURCE" add quote.rb
-  git -C "$SOURCE" commit -q -m first
+  cp -R "$TEMPLATE/repo" "$SOURCE"
   COMMIT="$(git -C "$SOURCE" rev-parse HEAD)"
   DRAFT="$WORK/draft.md"
   CLAIMS="$WORK/claims.json"
@@ -63,15 +76,7 @@ new_claims() {
       pointer: { path: "quote.rb", from: 2, to: 3, side: "RIGHT" },
       captured: { commit: $commit, lines: "two\nthree" } } ]
   }' > "$CLAIMS"
-  cat > "$WORK/claude" <<'SH'
-#!/usr/bin/env bash
-here="$(dirname "$0")"
-printf '%s\n' "$@" > "$here/args"
-cat > "$here/stdin"
-printf '%s\n' "${JUDGE_REPLY:-Standing: 0}"
-exit "${JUDGE_EXIT:-0}"
-SH
-  chmod +x "$WORK/claude"
+  ln -s "$TEMPLATE/claude" "$WORK/claude"
 }
 
 drop_claims() {
@@ -253,5 +258,6 @@ assert_equals "The loader was rewritten last week." "$(jq -r '.uncited[]' "$CLAI
   "leaves an empty entry out of the uncited list"
 drop_claims
 
+rm -rf "$TEMPLATE"
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

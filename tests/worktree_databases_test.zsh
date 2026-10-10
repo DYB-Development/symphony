@@ -25,10 +25,45 @@ assert_equals() {
   fi
 }
 
+STUBS="$(mktemp -d "${TMPDIR:-/tmp}/worktree_databases_stubs.XXXXXX")"
+STUBS="${STUBS:A}"
+cat > "$STUBS/stub" <<'STUB'
+#!/usr/bin/env bash
+base="$WORKTREE_DATABASES_TEST_BASE"
+case "${0##*/}" in
+  rails)
+    [ ! -f "$base/rails_fails" ] || exit 1
+    if [ "$1" = runner ]; then
+      echo "shop_${RAILS_ENV}_app_feature"
+    else
+      echo "$RAILS_ENV $*" >> "$base/runs"
+    fi ;;
+  psql) cat "$base/databases" ;;
+  dropdb) echo "${@: -1}" >> "$base/dropped" ;;
+  bun)
+    if [ -f "$base/bun_names_itself" ]; then
+      echo "bun $*" >> "$base/runs"
+    else
+      echo "$(pwd -P) $*" >> "$base/runs"
+    fi ;;
+esac
+STUB
+chmod +x "$STUBS/stub"
+WORKTREE_DATABASES_TEST_BASE=/nonexistent "$STUBS/stub" >/dev/null 2>&1
+mkdir -p "$STUBS/path"
+for name in rails psql dropdb bun; do ln -s "$STUBS/stub" "$STUBS/path/$name"; done
+
+link_stubs() {
+  mkdir -p "$BASE/stubs"
+  local name
+  for name in "$@"; do ln -sf "$STUBS/path/$name" "$BASE/stubs/$name"; done
+}
+
 new_package_clones() {
   BASE="$(mktemp -d "${TMPDIR:-/tmp}/worktree_databases_test.XXXXXX")"
   BASE="${BASE:A}"
-  git init -q -b main "$BASE/app"
+  export WORKTREE_DATABASES_TEST_BASE="$BASE"
+  git init -q --template= -b main "$BASE/app"
   echo "${1:-{\"scripts\": {\"worktree:db:create\": \"x\", \"worktree:db:drop\": \"x\"}}}" > "$BASE/app/package.json"
   git -C "$BASE/app" add package.json
   git -C "$BASE/app" commit -q -m init
@@ -36,31 +71,19 @@ new_package_clones() {
   LINKED="$BASE/app-feature"
   RUNS="$BASE/runs"
   touch "$RUNS"
-  mkdir -p "$BASE/stubs"
-  cat > "$BASE/stubs/bun" <<BUN
-#!/usr/bin/env bash
-echo "\$(pwd -P) \$*" >> "$RUNS"
-BUN
-  chmod +x "$BASE/stubs/bun"
+  link_stubs bun
 }
 
 new_rails_clones() {
   BASE="$(mktemp -d "${TMPDIR:-/tmp}/worktree_databases_test.XXXXXX")"
   BASE="${BASE:A}"
+  export WORKTREE_DATABASES_TEST_BASE="$BASE"
   RUNS="$BASE/runs"
   touch "$RUNS"
-  git init -q -b main "$BASE/app"
+  git init -q --template= -b main "$BASE/app"
   mkdir -p "$BASE/app/config" "$BASE/app/bin"
   echo "${1:-<% worktree = \"\" %>}" > "$BASE/app/config/database.yml"
-  cat > "$BASE/app/bin/rails" <<RAILS
-#!/usr/bin/env bash
-if [ "\$1" = runner ]; then
-  echo "shop_\${RAILS_ENV}_app_feature"
-else
-  echo "\$RAILS_ENV \$*" >> "$RUNS"
-fi
-RAILS
-  chmod +x "$BASE/app/bin/rails"
+  ln -s "$STUBS/path/rails" "$BASE/app/bin/rails"
   git -C "$BASE/app" add config bin
   git -C "$BASE/app" commit -q -m init
   git -C "$BASE/app" worktree add -q -b feature "$BASE/app-feature"
@@ -69,18 +92,14 @@ RAILS
   DROPPED="$BASE/dropped"
   printf '%s\n' shop_development shop_test shop_development_app_feature shop_test_app_feature shop_test_app_feature_0 > "$DATABASES"
   touch "$DROPPED"
-  mkdir -p "$BASE/stubs"
-  printf '#!/usr/bin/env bash\ncat "%s"\n' "$DATABASES" > "$BASE/stubs/psql"
-  printf '#!/usr/bin/env bash\necho "${@: -1}" >> "%s"\n' "$DROPPED" > "$BASE/stubs/dropdb"
-  chmod +x "$BASE/stubs/psql" "$BASE/stubs/dropdb"
+  link_stubs psql dropdb
 }
 
 new_both_clones() {
   new_rails_clones
   echo '{"scripts": {"worktree:db:create": "x", "worktree:db:drop": "x"}}' > "$LINKED/package.json"
-  mkdir -p "$BASE/stubs"
-  printf '#!/usr/bin/env bash\necho "bun $*" >> "%s"\n' "$RUNS" > "$BASE/stubs/bun"
-  chmod +x "$BASE/stubs/bun"
+  touch "$BASE/bun_names_itself"
+  link_stubs bun
 }
 
 runs() {
@@ -171,14 +190,14 @@ assert_equals "shop_development_app_feature shop_test_app_feature shop_test_app_
 drop_clones
 
 new_rails_clones
-printf '#!/usr/bin/env bash\nexit 1\n' > "$LINKED/bin/rails"
+touch "$BASE/rails_fails"
 OUTPUT="$("$WORKTREE_DATABASES" create "$LINKED" 2>&1)"
 assert_equals "1 the Rails app in $LINKED" "$? $(grep -o "the Rails app in $LINKED" <<<"$OUTPUT" | head -1)" \
   "exits non-zero and names the kind and the worktree when a create fails"
 drop_clones
 
 new_both_clones
-printf '#!/usr/bin/env bash\nexit 1\n' > "$LINKED/bin/rails"
+touch "$BASE/rails_fails"
 PATH="$BASE/stubs:$PATH" "$WORKTREE_DATABASES" create "$LINKED" >/dev/null 2>&1
 assert_equals "bun run worktree:db:create" "$(runs)" \
   "still creates the package app's databases when the Rails app's create fails"
@@ -190,6 +209,7 @@ assert_equals "1 Bun is needed" "$? $(grep -o 'Bun is needed' <<<"$OUTPUT")" \
   "exits non-zero and says Bun is needed when a package app is created without Bun installed"
 drop_clones
 
+rm -rf "$STUBS"
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]

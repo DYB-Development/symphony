@@ -38,37 +38,22 @@ assert_contains() {
 }
 
 # A gem repository with a real remote, so a tag push is really pushed.
-new_gem() {
-  WORK="$(mktemp -d "${TMPDIR:-/tmp}/gem_publish.XXXXXX")"
-  REMOTE="$WORK/origin.git"
-  REPO="$WORK/widget"
-  git init -q --bare "$REMOTE"
-  git init -q "$REPO"
-  mkdir -p "$REPO/lib/widget"
-  print -r -- 'module Widget; VERSION = "0.2.0"; end' > "$REPO/lib/widget/version.rb"
-  print -r -- 'Gem::Specification.new { |s| s.name = "widget" }' > "$REPO/widget.gemspec"
-  print -r -- "pkg/" > "$REPO/.gitignore"
-  git -C "$REPO" add -A
-  git -C "$REPO" -c user.email=t@e -c user.name=t commit -qm gem
-  git -C "$REPO" remote add origin "$REMOTE"
-  git -C "$REPO" push -q origin HEAD:refs/heads/main
-  git -C "$REPO" config user.email t@e
-  git -C "$REPO" config user.name t
-  cd "$REPO"
-}
-
-drop_gem() {
-  cd "$SCRIPT_DIR"
-  rm -rf "$WORK"
-}
+TEMPLATE="$(mktemp -d "${TMPDIR:-/tmp}/gem_publish_template.XXXXXX")"
+git init -q --bare --template= "$TEMPLATE/origin.git"
+git init -q --template= "$TEMPLATE/widget"
+mkdir -p "$TEMPLATE/widget/lib/widget"
+print -r -- 'module Widget; VERSION = "0.2.0"; end' > "$TEMPLATE/widget/lib/widget/version.rb"
+print -r -- 'Gem::Specification.new { |s| s.name = "widget" }' > "$TEMPLATE/widget/widget.gemspec"
+print -r -- "pkg/" > "$TEMPLATE/widget/.gitignore"
+git -C "$TEMPLATE/widget" add -A
+git -C "$TEMPLATE/widget" -c user.email=t@e -c user.name=t commit -qm gem
+git -C "$TEMPLATE/widget" remote add origin "$TEMPLATE/origin.git"
+git -C "$TEMPLATE/widget" push -q origin HEAD:refs/heads/main
+git -C "$TEMPLATE/widget" config user.email t@e
+git -C "$TEMPLATE/widget" config user.name t
 
 # A gem command that writes down every call. PUSH_FAILS makes the upload fail.
-stub_gem() {
-  STUB_BIN="$WORK/bin"
-  mkdir -p "$STUB_BIN"
-  GEM_LOG="$WORK/gem-calls"
-  : > "$GEM_LOG"
-  cat > "$STUB_BIN/gem" <<'STUB'
+cat > "$TEMPLATE/gem" <<'STUB'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >> "$GEM_LOG"
 case "$1" in
@@ -85,7 +70,29 @@ case "$1" in
 esac
 exit 0
 STUB
-  chmod +x "$STUB_BIN/gem"
+chmod +x "$TEMPLATE/gem"
+GEM_LOG=/dev/null "$TEMPLATE/gem" version >/dev/null 2>&1
+
+new_gem() {
+  WORK="$(mktemp -d "${TMPDIR:-/tmp}/gem_publish.XXXXXX")"
+  REMOTE="$WORK/origin.git"
+  REPO="$WORK/widget"
+  cp -R "$TEMPLATE/origin.git" "$TEMPLATE/widget" "$WORK/"
+  git -C "$REPO" remote set-url origin "$REMOTE"
+  cd "$REPO"
+}
+
+drop_gem() {
+  cd "$SCRIPT_DIR"
+  rm -rf "$WORK"
+}
+
+stub_gem() {
+  STUB_BIN="$WORK/bin"
+  mkdir -p "$STUB_BIN"
+  GEM_LOG="$WORK/gem-calls"
+  : > "$GEM_LOG"
+  ln -s "$TEMPLATE/gem" "$STUB_BIN/gem"
   export GEM_LOG
   path=("$STUB_BIN" $path)
 }
@@ -124,6 +131,7 @@ assert_equals "" "$(git -C "$REMOTE" tag)" "leaves no tag behind when rubygems.o
 drop_stub
 drop_gem
 
+rm -rf "$TEMPLATE"
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

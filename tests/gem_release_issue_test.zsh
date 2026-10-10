@@ -48,25 +48,30 @@ assert_lacks() {
 }
 
 # A gh that writes down every call and answers the issue search with $MATCHES.
+SHARED_STUBS="$(mktemp -d "${TMPDIR:-/tmp}/gem_release_issue_stubs.XXXXXX")"
+cat > "$SHARED_STUBS/gh" <<'STUB'
+#!/usr/bin/env bash
+here="$(dirname "$0")"
+printf '%s\n' "$*" >> "$here/calls"
+if [[ "$1 $2" == "issue list" ]]; then
+  cat "$here/issues"
+fi
+if [[ "$1 $2" == "issue create" ]]; then
+  printf 'https://github.com/acme/widget/issues/1\n'
+fi
+if [[ "$*" == *--body-file\ -* ]]; then
+  cat >> "$here/calls.body"
+fi
+exit 0
+STUB
+chmod +x "$SHARED_STUBS/gh"
+
 stub_gh() {
   STUB_BIN="$(mktemp -d "${TMPDIR:-/tmp}/gem_release_issue.XXXXXX")"
   GH_LOG="$STUB_BIN/calls"
   : > "$GH_LOG"
-  cat > "$STUB_BIN/gh" <<STUB
-#!/usr/bin/env bash
-printf '%s\n' "\$*" >> "$GH_LOG"
-if [[ "\$1 \$2" == "issue list" ]]; then
-  printf '%s' '${1:-[]}'
-fi
-if [[ "\$1 \$2" == "issue create" ]]; then
-  printf 'https://github.com/acme/widget/issues/1\n'
-fi
-if [[ "\$*" == *--body-file\ -* ]]; then
-  cat >> "$GH_LOG.body"
-fi
-exit 0
-STUB
-  chmod +x "$STUB_BIN/gh"
+  printf '%s' "${1:-[]}" > "$STUB_BIN/issues"
+  ln -s "$SHARED_STUBS/gh" "$STUB_BIN/gh"
   : > "$GH_LOG.body"
   path=("$STUB_BIN" $path)
 
@@ -111,4 +116,5 @@ drop_stub
 
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
+rm -rf "$SHARED_STUBS"
 [[ $FAIL -eq 0 ]]
