@@ -381,6 +381,14 @@ answer current_step '{"answer":{"done":true,"output":"stopped"}}'
 assert_equals '{"coverage":91,"warnings":2}' "$(report 1 '.values')" "sends the values a script step prints as Value lines with its result"
 teardown
 
+setup
+step_script work-check 'echo "12 runs, 0 failures"'
+answer current_step.1 "$(step check "Run work-check" script work-check)"
+answer current_step '{"answer":{"done":true,"output":"stopped"}}'
+"$PIPELINE" run 7 >/dev/null 2>&1
+assert_equals '["exit_status","output","result","step","work_item_id"]' "$(report 1 'keys')" "reports a script step that prints no Value lines with no values at all"
+teardown
+
 rm -rf "$STUBS"
 
 echo ""
