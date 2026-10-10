@@ -13,6 +13,16 @@ USAGE
 
 [ $# -eq 0 ] || usage
 
+port_in_use() {
+  lsof -nP -iTCP:"$1" -sTCP:LISTEN >/dev/null 2>&1
+}
+
+first_free_port() {
+  local port=3000
+  while port_in_use "$port"; do port=$((port + 1)); done
+  echo "$port"
+}
+
 in_main_clone() {
   [ "$(git rev-parse --path-format=absolute --git-dir)" = "$(git rev-parse --path-format=absolute --git-common-dir)" ]
 }
@@ -25,3 +35,5 @@ if in_main_clone; then
 fi
 
 bin/setup --skip-server
+
+PORT="$(first_free_port)" bin/dev

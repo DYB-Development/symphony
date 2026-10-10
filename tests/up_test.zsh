@@ -96,5 +96,12 @@ assert_equals "setup --skip-server" "$(sed -n 1p "$RUNS")" \
   "runs the app's own setup step, without its server, before anything is started"
 drop_app
 
+new_app
+printf '#!/usr/bin/env bash\ncase "$*" in *:3000*) exit 0 ;; esac\nexit 1\n' > "$BASE/stubs/lsof"
+run_up "$APP" >/dev/null 2>&1
+assert_equals "dev PORT=3001" "$(sed -n 2p "$RUNS")" \
+  "starts the app's server on the first free port counting up from 3000"
+drop_app
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
