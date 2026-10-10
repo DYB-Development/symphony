@@ -58,6 +58,13 @@ suite bad "exit 1"
 assert_equals 1 "$?" "exits non-zero when a suite fails"
 rm -rf "$REPO"
 
+new_repo
+suite one "exit 0"
+suite two "exit 0"
+"$REPO/run_tests.sh" >/dev/null 2>&1
+assert_equals 0 "$?" "exits zero when every suite passes"
+rm -rf "$REPO"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]
