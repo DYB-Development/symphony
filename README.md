@@ -365,6 +365,15 @@ directory your team shares.
 Every file named `*_test.zsh` anywhere under the repo root is a suite and is
 picked up with no registration.
 
+Suites run at the same time, one per CPU core, and `PARALLEL_WORKERS=<n>` sets
+another number. A run prints a dot for each suite that passes and an F for each
+that fails, then the full output of each failed suite and the command that
+reruns it.
+
+The suites run in a shuffled order, and the run prints the seed it used.
+`./run_tests.sh --seed <n>` repeats that order, and `./run_tests.sh <suite>...`
+runs only the suites named.
+
 Wording that an agent, rule or command file must contain, or must not, is not
 tested sentence by sentence. It is a rule in `checks/rules.json`, a versioned
 list that `bin/check-content.sh` checks in one suite run. Adding a requirement
