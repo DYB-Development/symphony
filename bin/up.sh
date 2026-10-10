@@ -36,4 +36,15 @@ fi
 
 bin/setup --skip-server
 
-PORT="$(first_free_port)" bin/dev
+port="$(first_free_port)"
+address="http://localhost:$port"
+
+PORT="$port" bin/dev &
+server=$!
+
+until curl -s -o /dev/null "$address"; do
+  sleep 0.5
+done
+
+open "$address"
+wait "$server"
