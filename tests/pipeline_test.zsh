@@ -373,6 +373,14 @@ answer current_step "$(step watch "Run work-watch" script work-watch)"
 assert_equals '{"result":"passed","output":"PR #5 was merged"}' "$(report 1 '{result, output}')" "reports the watch step as passed when the pull request is merged before any check reports"
 teardown
 
+setup
+step_script work-check $'echo "12 runs"\necho "Value: coverage=91"\necho "Value: warnings=2"'
+answer current_step.1 "$(step check "Run work-check" script work-check)"
+answer current_step '{"answer":{"done":true,"output":"stopped"}}'
+"$PIPELINE" run 7 >/dev/null 2>&1
+assert_equals '{"coverage":91,"warnings":2}' "$(report 1 '.values')" "sends the values a script step prints as Value lines with its result"
+teardown
+
 rm -rf "$STUBS"
 
 echo ""

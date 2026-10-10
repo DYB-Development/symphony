@@ -79,6 +79,11 @@ claim() {
   printf 'Claimed %s\nFirst step: %s\n' "$(jq -r '.work.title' <<<"$step")" "$(jq -r '.name' <<<"$step")"
 }
 
+values_in() {
+  sed -nE 's/^Value: ([A-Za-z0-9_]+)=(-?[0-9]+(\.[0-9]+)?)[[:space:]]*$/\1 \2/p' <<<"$1" |
+    jq -Rn '[inputs | split(" ") | {(.[0]): (.[1] | tonumber)}] | add // {}'
+}
+
 run_script() {
   local id="$1" step="$2" name script output status result
   name=$(jq -r '.id' <<<"$step")
@@ -92,7 +97,8 @@ run_script() {
   result=passed
   [ "$status" -eq 0 ] || result=failed
   hub POST report_step "$(jq -nc --argjson id "$id" --arg step "$name" --arg result "$result" --argjson status "$status" --arg output "$output" \
-    '{work_item_id: $id, step: $step, result: $result, exit_status: $status, output: $output}')" >/dev/null
+    --argjson values "$(values_in "$output")" \
+    '{work_item_id: $id, step: $step, result: $result, exit_status: $status, output: $output} + (if $values == {} then {} else {values: $values} end)')" >/dev/null
 }
 
 hand_to_agent() {
