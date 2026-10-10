@@ -37,6 +37,10 @@ run it, and you do only what it stops for: an agent step, or the owner's step.
      model while it waits, opens the pull request in the owner's browser once
      every check passes, and reports the result to the hub. When it exits you
      are woken: show its last line, then go back to step 2.
+   - `13` — the work item reached a Wait step. Show the line it printed, which
+     names the time the work waits until, and stop. Do not claim the work item
+     again: the hub has already let it go, and the next session to claim work
+     takes it once that time has come.
    - anything else — show what it printed and stop. Never work around it.
 
 3. **Hand the agent step to the agent it names**, on the model it names. The
