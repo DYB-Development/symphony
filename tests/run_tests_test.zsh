@@ -101,6 +101,14 @@ suite one "exit 0"
   && ok "prints the seed it used" || fail "prints the seed it used"
 rm -rf "$REPO"
 
+new_repo
+logging_suites
+PRINTED="$(PARALLEL_WORKERS=1 "$REPO/run_tests.sh" 2>&1)"
+FIRST="$(tr '\n' ' ' < "$REPO/log" | sed 's/ $//')"
+SEED="$(print -r -- "$PRINTED" | sed -n 's/^Run options: --seed //p')"
+assert_equals "$FIRST" "$(run_order --seed "$SEED")" "repeats a run's order when given its seed"
+rm -rf "$REPO"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

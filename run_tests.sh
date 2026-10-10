@@ -2,7 +2,7 @@
 # Run every zsh test suite in this repo. Picks up new suites automatically —
 # a file named <thing>_test.zsh anywhere under the repo root is a suite.
 #
-# Usage: ./run_tests.sh
+# Usage: ./run_tests.sh [--seed <n>]
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
@@ -18,15 +18,26 @@ export -f run_suite
 export RESULTS
 
 SEED="$RANDOM"
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --seed) SEED="$2"; shift 2 ;;
+    *) printf 'unrecognised argument: %s\n' "$1" >&2; exit 64 ;;
+  esac
+done
+
 RANDOM="$SEED"
 echo "Run options: --seed $SEED"
 echo ""
 
+KEYED=()
+while IFS= read -r suite; do
+  KEYED+=("$RANDOM $suite")
+done < <(find "$ROOT" -name '*_test.zsh' -not -path '*/.git/*' | sort)
+
 SUITES=()
 while IFS= read -r suite; do
   SUITES+=("$suite")
-done < <(find "$ROOT" -name '*_test.zsh' -not -path '*/.git/*' | sort |
-  while IFS= read -r suite; do echo "$RANDOM $suite"; done | sort -n | cut -d' ' -f2-)
+done < <(printf '%s\n' "${KEYED[@]}" | sort -n | cut -d' ' -f2-)
 
 for i in "${!SUITES[@]}"; do
   printf '%s\n%s\n' "$i" "${SUITES[$i]}"
