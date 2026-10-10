@@ -37,13 +37,27 @@ assert_contains() {
 }
 
 # A git repo holding one gem whose published versions the stub decides.
-new_gem() {
-  local name="${1:-widget}" version="${2:-0.2.0}"
-  REPO="$(mktemp -d "${TMPDIR:-/tmp}/gem_preflight_test.XXXXXX")"
-  git -C "$REPO" init -q
-  mkdir -p "$REPO/lib/$name"
-  print -r -- "module ${(C)name}; VERSION = \"$version\"; end" > "$REPO/lib/$name/version.rb"
-  cat > "$REPO/$name.gemspec" <<SPEC
+TEMPLATES="$(mktemp -d "${TMPDIR:-/tmp}/gem_preflight_templates.XXXXXX")"
+cat > "$TEMPLATES/curl" <<'STUB'
+#!/usr/bin/env bash
+here="$(dirname "$0")"
+if [ -f "$here/versions" ]; then
+  cat "$here/versions"
+else
+  echo 'curl: (22) The requested URL returned error: 404' >&2
+  exit 22
+fi
+STUB
+chmod +x "$TEMPLATES/curl"
+"$TEMPLATES/curl" >/dev/null 2>&1
+
+gem_template() {
+  local name="$1" version="$2" template="$TEMPLATES/$1-$2"
+  [[ -d "$template" ]] && return
+  git init -q --template= "$template"
+  mkdir -p "$template/lib/$name"
+  print -r -- "module ${(C)name}; VERSION = \"$version\"; end" > "$template/lib/$name/version.rb"
+  cat > "$template/$name.gemspec" <<SPEC
 require_relative "lib/$name/version"
 
 Gem::Specification.new do |spec|
@@ -55,9 +69,17 @@ Gem::Specification.new do |spec|
   spec.metadata["allowed_push_host"] = "https://rubygems.org"
 end
 SPEC
-  print -r -- "pkg/" > "$REPO/.gitignore"
-  git -C "$REPO" add -A
-  git -C "$REPO" -c user.email=t@e -c user.name=t commit -qm "gem"
+  print -r -- "pkg/" > "$template/.gitignore"
+  git -C "$template" add -A
+  git -C "$template" -c user.email=t@e -c user.name=t commit -qm "gem"
+}
+
+new_gem() {
+  local name="${1:-widget}" version="${2:-0.2.0}"
+  gem_template "$name" "$version"
+  REPO="$(mktemp -d "${TMPDIR:-/tmp}/gem_preflight_test.XXXXXX")"
+  rm -rf "$REPO"
+  cp -R "$TEMPLATES/$name-$version" "$REPO"
   cd "$REPO"
 }
 
@@ -68,25 +90,16 @@ drop_gem() {
 
 # Answers the published-versions lookup with a curl that never leaves the machine.
 published() {
-  local versions="$1"
   STUB_BIN="$(mktemp -d "${TMPDIR:-/tmp}/gem_preflight_stub.XXXXXX")"
-  {
-    print -r -- "#!/usr/bin/env bash"
-    print -r -- "printf '%s' '$versions'"
-  } > "$STUB_BIN/curl"
-  chmod +x "$STUB_BIN/curl"
+  printf '%s' "$1" > "$STUB_BIN/versions"
+  ln -s "$TEMPLATES/curl" "$STUB_BIN/curl"
   path=("$STUB_BIN" $path)
 }
 
 # A curl that answers the way rubygems.org answers for a gem it has never seen.
 published_none() {
   STUB_BIN="$(mktemp -d "${TMPDIR:-/tmp}/gem_preflight_stub.XXXXXX")"
-  {
-    print -r -- "#!/usr/bin/env bash"
-    print -r -- "echo 'curl: (22) The requested URL returned error: 404' >&2"
-    print -r -- "exit 22"
-  } > "$STUB_BIN/curl"
-  chmod +x "$STUB_BIN/curl"
+  ln -s "$TEMPLATES/curl" "$STUB_BIN/curl"
   path=("$STUB_BIN" $path)
 }
 
@@ -169,6 +182,7 @@ assert_equals "widget 0.1.0" "$("$PREFLIGHT" 2>&1)" \
 drop_stub
 drop_gem
 
+rm -rf "$TEMPLATES"
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
