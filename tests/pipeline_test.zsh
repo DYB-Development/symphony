@@ -398,6 +398,14 @@ agent_report "Built the export." "Value: files_changed=4" "Result: passed"
 assert_equals '{"files_changed":4}' "$(report 1 '.values')" "sends the values an agent report holds as Value lines with its result"
 teardown
 
+setup
+answer current_step "$(step hold "30 minutes after check" wait | jq -c '.answer.until = "2026-10-12T09:30:00-04:00"')"
+output=$("$PIPELINE" run 7 2>&1)
+assert_equals "Export quotes is waiting until 2026-10-12T09:30:00-04:00
+13" "$output
+$?" "stops with status 13 at a Wait step, printing the work item's title and the time it waits until"
+teardown
+
 rm -rf "$STUBS"
 
 echo ""

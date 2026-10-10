@@ -144,6 +144,10 @@ run() {
         ;;
       agent) hand_to_agent "$step" ;;
       owner) owner_step "$id" "$step" ;;
+      wait)
+        printf '%s is waiting until %s\n' "$(jq -r '.work.title' <<<"$step")" "$(jq -r '.until' <<<"$step")"
+        exit 13
+        ;;
       *) refuse 65 "symphony cannot run a $(jq -r '.kind' <<<"$step") step" ;;
     esac
   done
