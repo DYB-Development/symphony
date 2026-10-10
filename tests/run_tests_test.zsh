@@ -51,6 +51,13 @@ assert_equals "start end start end start end" "$(tr '\n' ' ' < "$REPO/log" | sed
   "runs no more suites at once than its workers"
 rm -rf "$REPO"
 
+new_repo
+suite good "exit 0"
+suite bad "exit 1"
+"$REPO/run_tests.sh" >/dev/null 2>&1
+assert_equals 1 "$?" "exits non-zero when a suite fails"
+rm -rf "$REPO"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]
