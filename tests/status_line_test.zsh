@@ -37,10 +37,35 @@ unit() {
 # A repo of acme/widget on branch $1, a cache directory, and a gh where task 12
 # sits under plan 7, "Quote builder", with 3 of 8 units closed: both of stage 1,
 # one of stage 2's three, none of stage 3's one and none of stage 4's two.
+GH_STUB_DIR="$(mktemp -d "${TMPDIR:-/tmp}/status_line_stub.XXXXXX")"
+GH_STUB="$GH_STUB_DIR/gh"
+cat > "$GH_STUB" <<'STUB'
+#!/usr/bin/env bash
+work="$STATUS_LINE_TEST_WORK"
+printf '%s\n' "$*" >> "$work/calls"
+[ ! -f "$work/offline" ] || { echo "error connecting to api.github.com" >&2; exit 1; }
+[ ! -f "$work/hang" ] || /bin/sleep 10
+[ ! -f "$work/slow" ] || /bin/sleep 0.1
+case "$*" in
+  "api repos/acme/widget/issues/12/parent --jq "*)
+    printf '7\tQuote builder\t%s\n' "$(cat "$work/counts")" ;;
+  "api repos/acme/widget/issues/7/sub_issues --paginate")
+    cat "$work/units" ;;
+  "api repos/acme/plans/issues/7/sub_issues --paginate")
+    cat "$work/units" ;;
+  "api repos/acme/widget/issues/12 --jq .body")
+    cat "$work/task-body" ;;
+  *) echo "gh: Not Found (HTTP 404)" >&2; exit 1 ;;
+esac
+STUB
+chmod +x "$GH_STUB"
+STATUS_LINE_TEST_WORK=/nonexistent "$GH_STUB" >/dev/null 2>&1
+
 new_repo() {
   WORK="$(mktemp -d "${TMPDIR:-/tmp}/status_line_test.XXXXXX")"
+  export STATUS_LINE_TEST_WORK="$WORK"
   REPO="$WORK/widget"
-  git init -q -b "$1" "$REPO"
+  git init -q --template= -b "$1" "$REPO"
   git -C "$REPO" remote add origin git@github.com:acme/widget.git
   export STATUS_LINE_DIR="$WORK/cache"
   export STATUS_LINE_LIMIT=30
@@ -66,32 +91,14 @@ new_repo() {
     unit open "stage 4 of 4 — Harden"
   } | jq -sc . > "$UNITS"
   mkdir -p "$WORK/bin"
-  cat > "$WORK/bin/gh" <<STUB
-#!/usr/bin/env bash
-printf '%s\n' "\$*" >> "$GH_LOG"
-[ ! -f "$WORK/offline" ] || { echo "error connecting to api.github.com" >&2; exit 1; }
-[ ! -f "$WORK/hang" ] || /bin/sleep 10
-[ ! -f "$WORK/slow" ] || /bin/sleep 0.1
-case "\$*" in
-  "api repos/acme/widget/issues/12/parent --jq "*)
-    printf '7\tQuote builder\t%s\n' "\$(cat "$COUNTS")" ;;
-  "api repos/acme/widget/issues/7/sub_issues --paginate")
-    cat "$UNITS" ;;
-  "api repos/acme/plans/issues/7/sub_issues --paginate")
-    cat "$UNITS" ;;
-  "api repos/acme/widget/issues/12 --jq .body")
-    cat "$TASK_BODY" ;;
-  *) echo "gh: Not Found (HTTP 404)" >&2; exit 1 ;;
-esac
-STUB
-  chmod +x "$WORK/bin/gh"
+  ln -s "$GH_STUB" "$WORK/bin/gh"
   path=("$WORK/bin" $path)
 }
 
 drop_repo() {
   path=(${path:#$WORK/bin})
   rm -rf "$WORK"
-  unset STATUS_LINE_DIR STATUS_LINE_LIMIT OWNER_TURN_DIR WORKING_LINE_DIR AGENT_PROGRESS_DIR AGENT_PROGRESS_AGENTS
+  unset STATUS_LINE_TEST_WORK STATUS_LINE_DIR STATUS_LINE_LIMIT OWNER_TURN_DIR WORKING_LINE_DIR AGENT_PROGRESS_DIR AGENT_PROGRESS_AGENTS
 }
 
 status_line() {
@@ -247,6 +254,8 @@ printf '3\t8\tacme/plans' > "$COUNTS"
 assert_equals $'Quote builder · stage 2 of 4 — Enrich\n\e[32m■\e[0m\e[33m■\e[0m\e[90m■\e[0m\e[90m■\e[0m 3/8' "$(status_line)" \
   "shows the plan's progress on the branch of a task whose plan lives in another repo"
 drop_repo
+
+rm -rf "$GH_STUB_DIR"
 
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
