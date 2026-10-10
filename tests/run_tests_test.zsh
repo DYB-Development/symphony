@@ -127,6 +127,14 @@ suite good "echo passing-detail"
   && ok "leaves a passing suite's output out" || fail "leaves a passing suite's output out"
 rm -rf "$REPO"
 
+new_repo
+suite good "exit 0"
+suite bad "exit 1"
+MARKS="$("$REPO/run_tests.sh" 2>&1 | sed -n 3p)"
+[[ "$MARKS" == ".F" || "$MARKS" == "F." ]] && ok "marks each suite with a dot when it passes and F when it fails" \
+  || { fail "marks each suite with a dot when it passes and F when it fails"; printf '      got:  %s\n' "$MARKS"; }
+rm -rf "$REPO"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

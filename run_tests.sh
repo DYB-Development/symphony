@@ -12,7 +12,9 @@ trap 'rm -rf "$RESULTS"' EXIT
 run_suite() {
   local index="$1" suite="$2"
   zsh "$suite" > "$RESULTS/$index.out" 2>&1
-  echo "$?" > "$RESULTS/$index.status"
+  local status=$?
+  echo "$status" > "$RESULTS/$index.status"
+  if [ "$status" = 0 ]; then printf '.'; else printf 'F'; fi
 }
 export -f run_suite
 export RESULTS
@@ -49,6 +51,8 @@ done < <(printf '%s\n' "${KEYED[@]}" | sort -n | cut -d' ' -f2-)
 for i in "${!SUITES[@]}"; do
   printf '%s\n%s\n' "$i" "${SUITES[$i]}"
 done | xargs -n 2 -P "${PARALLEL_WORKERS:-$(getconf _NPROCESSORS_ONLN)}" bash -c 'run_suite "$1" "$2"' _
+echo ""
+echo ""
 
 FAILED=()
 for i in "${!SUITES[@]}"; do
