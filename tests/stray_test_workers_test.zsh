@@ -26,9 +26,22 @@ assert_equals() {
   fi
 }
 
+wait_until() {
+  local tries
+  for tries in {1..100}; do
+    eval "$1" && return 0
+    sleep 0.05
+  done
+  return 1
+}
+
+orphaned() {
+  ps -Ao ppid=,command= | grep -q "^ *1 Rails test worker 9 - $MARK $1"
+}
+
 start_orphaned_worker() {
   ( (exec -a "Rails test worker 9 - $MARK $1" sleep 300) & )
-  sleep 0.5
+  wait_until "orphaned $1"
 }
 
 running() {
@@ -36,31 +49,29 @@ running() {
 }
 
 stop_leftovers() {
-  pkill -f "$MARK" 2>/dev/null
-  sleep 0.2
+  pkill -9 -f "$MARK" 2>/dev/null
+  wait_until '! pgrep -f "$MARK" >/dev/null'
 }
 
 echo "stray-test-workers.sh:"
 
 start_orphaned_worker orphaned
 "$STRAY_TEST_WORKERS" >/dev/null 2>&1
-sleep 0.5
+wait_until '[ "$(running orphaned)" = stopped ]'
 assert_equals "stopped" "$(running orphaned)" "stops a Rails test worker whose parent has gone"
 stop_leftovers
 
 (exec -a "Rails test worker 9 - $MARK watched" sleep 300) &
-sleep 0.5
+wait_until '[ "$(running watched)" = running ]'
 "$STRAY_TEST_WORKERS" >/dev/null 2>&1
-sleep 0.5
 assert_equals "running" "$(running watched)" "leaves a Rails test worker whose test run is still going"
 stop_leftovers
 
 ( (exec -a "Rails test worker 9 - $MARK stubborn" bash -c 'trap "" TERM; while :; do sleep 1; done') & )
-sleep 0.5
+wait_until "orphaned stubborn"
 STRAY_TEST_WORKERS_GRACE=1 "$STRAY_TEST_WORKERS" >/dev/null 2>&1
-sleep 0.5
+wait_until '[ "$(running stubborn)" = stopped ]'
 assert_equals "stopped" "$(running stubborn)" "forces a worker that ignores being asked to stop"
-pkill -9 -f "$MARK" 2>/dev/null
 stop_leftovers
 
 zmodload zsh/datetime
