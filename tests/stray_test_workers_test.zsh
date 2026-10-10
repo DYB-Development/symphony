@@ -63,6 +63,13 @@ assert_equals "stopped" "$(running stubborn)" "forces a worker that ignores bein
 pkill -9 -f "$MARK" 2>/dev/null
 stop_leftovers
 
+zmodload zsh/datetime
+start_orphaned_worker quick
+started=$EPOCHREALTIME
+STRAY_TEST_WORKERS_GRACE=60 "$STRAY_TEST_WORKERS" >/dev/null 2>&1
+assert_equals "1" "$(( EPOCHREALTIME - started < 10 ))" "returns once the workers it asked have stopped"
+stop_leftovers
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
