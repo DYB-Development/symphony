@@ -27,34 +27,64 @@ assert_equals() {
   fi
 }
 
+STUBS="$(cd "$(mktemp -d "${TMPDIR:-/tmp}/pipeline_test_stubs.XXXXXX")" && pwd -P)"
+cat > "$STUBS/stub" <<'STUB'
+#!/usr/bin/env bash
+work="$PIPELINE_TEST_WORK"
+case "${0##*/}" in
+  curl)
+    [ -z "${STUB_CURL_DOWN:-}" ] || exit 7
+    url="" data="" method=GET
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        -X) method="$2"; shift ;;
+        -d|--data) data="$2"; method=POST; shift ;;
+        http*) url="$1" ;;
+      esac
+      shift
+    done
+    name="${url##*/}"; name="${name%%\?*}"
+    printf '%s %s %s\n' "$method" "$name" "$data" >> "$work/calls"
+    count=$(( $(cat "$work/count.$name" 2>/dev/null || echo 0) + 1 ))
+    echo "$count" > "$work/count.$name"
+    answer="$work/answers/$name.$count"
+    [ -f "$answer" ] || answer="$work/answers/$name"
+    printf '%s\n%s' "$(cat "$answer" 2>/dev/null || echo '{"answer":null}')" "$(cat "$work/answers/$name.code" 2>/dev/null || echo 200)"
+    ;;
+  gh)
+    printf '%s\n' "$*" >> "$work/gh_calls"
+    cat "$work/gh_output"
+    ;;
+  usage.sh)
+    printf '%s\n' "$*" >> "$work/usage_calls"
+    cat "$work/usage_output"
+    ;;
+  pr-wait.sh)
+    printf '%s\n' "$*" >> "$work/wait_calls"
+    cat "$work/wait_output"
+    exit "$(cat "$work/wait_code")"
+    ;;
+  *.sh)
+    . "$work/steps/${0##*/}.body"
+    ;;
+esac
+STUB
+chmod +x "$STUBS/stub"
+PIPELINE_TEST_WORK=/nonexistent "$STUBS/stub" >/dev/null 2>&1
+
+link_stub() {
+  ln -s "$STUBS/stub" "$1"
+}
+
 setup() {
   WORK="$(cd "$(mktemp -d "${TMPDIR:-/tmp}/pipeline_test.XXXXXX")" && pwd -P)"
+  export PIPELINE_TEST_WORK="$WORK"
   mkdir -p "$WORK/bin" "$WORK/answers" "$WORK/settings" "$WORK/repo"
   printf 'url=https://dyb.example\ntoken=secret\n' > "$WORK/settings/dyb_web"
   export SYMPHONY_CONFIG_DIR="$WORK/settings" SYMPHONY_SESSION="session-a"
-  cat > "$WORK/bin/curl" <<STUB
-#!/usr/bin/env bash
-[ -z "\${STUB_CURL_DOWN:-}" ] || exit 7
-url="" data="" method=GET
-while [ \$# -gt 0 ]; do
-  case "\$1" in
-    -X) method="\$2"; shift ;;
-    -d|--data) data="\$2"; method=POST; shift ;;
-    http*) url="\$1" ;;
-  esac
-  shift
-done
-name="\${url##*/}"; name="\${name%%\\?*}"
-printf '%s %s %s\\n' "\$method" "\$name" "\$data" >> "$WORK/calls"
-count=\$(( \$(cat "$WORK/count.\$name" 2>/dev/null || echo 0) + 1 ))
-echo "\$count" > "$WORK/count.\$name"
-answer="$WORK/answers/\$name.\$count"
-[ -f "\$answer" ] || answer="$WORK/answers/\$name"
-printf '%s\\n%s' "\$(cat "\$answer" 2>/dev/null || echo '{"answer":null}')" "\$(cat "$WORK/answers/\$name.code" 2>/dev/null || echo 200)"
-STUB
-  chmod +x "$WORK/bin/curl"
+  link_stub "$WORK/bin/curl"
   path=("$WORK/bin" $path)
-  git -C "$WORK/repo" init -q
+  git -C "$WORK/repo" init -q --template=
   cd "$WORK/repo"
 }
 
@@ -62,13 +92,13 @@ teardown() {
   cd "$SCRIPT_DIR"
   path=(${path:#$WORK/bin})
   rm -rf "$WORK"
-  unset SYMPHONY_CONFIG_DIR SYMPHONY_SESSION STUB_CURL_DOWN SYMPHONY_STEP_DIR SYMPHONY_USAGE SYMPHONY_AGENT_DIR SYMPHONY_PR_WAIT
+  unset PIPELINE_TEST_WORK SYMPHONY_CONFIG_DIR SYMPHONY_SESSION STUB_CURL_DOWN SYMPHONY_STEP_DIR SYMPHONY_USAGE SYMPHONY_AGENT_DIR SYMPHONY_PR_WAIT
 }
 
 step_script() {
   mkdir -p "$WORK/steps"
-  printf '#!/usr/bin/env bash\n%s\n' "$2" > "$WORK/steps/$1.sh"
-  chmod +x "$WORK/steps/$1.sh"
+  printf '%s\n' "$2" > "$WORK/steps/$1.sh.body"
+  [[ -L "$WORK/steps/$1.sh" ]] || link_stub "$WORK/steps/$1.sh"
   export SYMPHONY_STEP_DIR="$WORK/steps"
 }
 
@@ -82,8 +112,8 @@ work_branch() {
 }
 
 pull_request() {
-  printf '#!/usr/bin/env bash\nprintf "%%s\\n" "$*" >> "%s/gh_calls"\nprintf %%s %s\n' "$WORK" "${(q)1}" > "$WORK/bin/gh"
-  chmod +x "$WORK/bin/gh"
+  printf '%s' "$1" > "$WORK/gh_output"
+  [[ -L "$WORK/bin/gh" ]] || link_stub "$WORK/bin/gh"
 }
 
 agent_report() {
@@ -91,14 +121,15 @@ agent_report() {
 }
 
 measured() {
-  printf '#!/usr/bin/env bash\nprintf "%%s\\n" "$*" >> "%s/usage_calls"\nprintf %%s %s\n' "$WORK" "${(q)1}" > "$WORK/bin/usage.sh"
-  chmod +x "$WORK/bin/usage.sh"
+  printf '%s' "$1" > "$WORK/usage_output"
+  [[ -L "$WORK/bin/usage.sh" ]] || link_stub "$WORK/bin/usage.sh"
   export SYMPHONY_USAGE="$WORK/bin/usage.sh"
 }
 
 waiting() {
-  printf '#!/usr/bin/env bash\nprintf "%%s\\n" "$*" >> "%s/wait_calls"\nprintf %%s %s\nexit %s\n' "$WORK" "${(q)1}" "$2" > "$WORK/bin/pr-wait.sh"
-  chmod +x "$WORK/bin/pr-wait.sh"
+  printf '%s' "$1" > "$WORK/wait_output"
+  printf '%s' "$2" > "$WORK/wait_code"
+  [[ -L "$WORK/bin/pr-wait.sh" ]] || link_stub "$WORK/bin/pr-wait.sh"
   export SYMPHONY_PR_WAIT="$WORK/bin/pr-wait.sh"
 }
 
@@ -341,6 +372,8 @@ answer current_step "$(step watch "Run work-watch" script work-watch)"
 "$PIPELINE" watch 7 >/dev/null 2>&1
 assert_equals '{"result":"passed","output":"PR #5 was merged"}' "$(report 1 '{result, output}')" "reports the watch step as passed when the pull request is merged before any check reports"
 teardown
+
+rm -rf "$STUBS"
 
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
