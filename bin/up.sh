@@ -13,6 +13,11 @@ USAGE
 
 [ $# -eq 0 ] || usage
 
+[ -x bin/setup ] && [ -x bin/dev ] || {
+  echo "up: $PWD holds no app up knows how to start, which needs bin/setup and bin/dev" >&2
+  exit 65
+}
+
 port_in_use() {
   lsof -nP -iTCP:"$1" -sTCP:LISTEN >/dev/null 2>&1
 }

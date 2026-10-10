@@ -116,5 +116,14 @@ assert_equals "1 the server stopped before it answered " "$? $(grep -o 'the serv
   "says the server stopped, exits non-zero and opens no browser when the server stops before it answers"
 drop_app
 
+new_app
+BEFORE="$(git -C "$APP" rev-parse HEAD)"
+push_new_commit >/dev/null
+rm "$APP/bin/setup" "$APP/bin/dev"
+OUTPUT="$(run_up "$APP" 2>&1)"
+assert_equals "65 no app up knows how to start $BEFORE " "$? $(grep -o 'no app up knows how to start' <<<"$OUTPUT") $(git -C "$APP" rev-parse HEAD) $(cat "$RUNS")" \
+  "says there is no app it knows how to start, exits non-zero and changes nothing in a folder without one"
+drop_app
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
