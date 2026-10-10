@@ -25,13 +25,16 @@ assert_equals() {
   fi
 }
 
+TEMPLATE="$(mktemp -d "${TMPDIR:-/tmp}/main_clone_gate_template.XXXXXX")"
+git init -q --template= "$TEMPLATE/app"
+git -C "$TEMPLATE/app" commit -q --allow-empty -m init
+
 new_clones() {
   BASE="$(mktemp -d "${TMPDIR:-/tmp}/main_clone_gate_test.XXXXXX")"
   BASE="${BASE:A}"
   MAIN="$BASE/app"
   LINKED="$BASE/app-feature"
-  git init -q "$MAIN"
-  git -C "$MAIN" commit -q --allow-empty -m init
+  cp -R "$TEMPLATE/app" "$MAIN"
   git -C "$MAIN" worktree add -q -b feature "$LINKED"
 }
 
@@ -140,6 +143,7 @@ done
 assert_equals "" "${unrouted[*]}" \
   "the hooks send every edit and every shell command to the gate"
 
+rm -rf "$TEMPLATE"
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
