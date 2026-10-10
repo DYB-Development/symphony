@@ -373,6 +373,44 @@ answer current_step "$(step watch "Run work-watch" script work-watch)"
 assert_equals '{"result":"passed","output":"PR #5 was merged"}' "$(report 1 '{result, output}')" "reports the watch step as passed when the pull request is merged before any check reports"
 teardown
 
+setup
+step_script work-check $'echo "12 runs"\necho "Value: coverage=91"\necho "Value: warnings=2"'
+answer current_step.1 "$(step check "Run work-check" script work-check)"
+answer current_step '{"answer":{"done":true,"output":"stopped"}}'
+"$PIPELINE" run 7 >/dev/null 2>&1
+assert_equals '{"coverage":91,"warnings":2}' "$(report 1 '.values')" "sends the values a script step prints as Value lines with its result"
+teardown
+
+setup
+step_script work-check 'echo "12 runs, 0 failures"'
+answer current_step.1 "$(step check "Run work-check" script work-check)"
+answer current_step '{"answer":{"done":true,"output":"stopped"}}'
+"$PIPELINE" run 7 >/dev/null 2>&1
+assert_equals '["exit_status","output","result","step","work_item_id"]' "$(report 1 'keys')" "reports a script step that prints no Value lines with no values at all"
+teardown
+
+setup
+work_branch 7-export-quotes
+measured ""
+answer current_step "$(step build "Hand to builder on claude-sonnet-5-5" agent)"
+agent_report "Built the export." "Value: files_changed=4" "Result: passed"
+"$PIPELINE" report 7 "$WORK/report.md" >/dev/null 2>&1
+assert_equals '{"files_changed":4}' "$(report 1 '.values')" "sends the values an agent report holds as Value lines with its result"
+teardown
+
+setup
+answer current_step "$(step hold "30 minutes after check" wait | jq -c '.answer.until = "2026-10-12T09:30:00-04:00"')"
+output=$("$PIPELINE" run 7 2>&1)
+assert_equals "Export quotes is waiting until 2026-10-12T09:30:00-04:00
+13" "$output
+$?" "stops with status 13 at a Wait step, printing the work item's title and the time it waits until"
+teardown
+
+setup
+usage_text=$("$PIPELINE" 2>&1)
+assert_equals "2" "$(grep -c -e 'Value: <name>=<number>' -e 'status 13 at a Wait step' <<<"$usage_text")" "describes Value lines and the status 13 stop at a Wait step in its usage"
+teardown
+
 rm -rf "$STUBS"
 
 echo ""

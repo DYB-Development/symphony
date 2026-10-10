@@ -18,6 +18,10 @@ It stops with status 10 at an agent step, printing the agent, its model and the 
 and refuses an agent step naming an agent symphony does not define. At a script
 step naming work-watch it stops with status 12 and prints the watch command to
 start in the background.
+It stops with status 13 at a Wait step, printing the work item's title and the time
+it waits until; the hub has already let the work item go.
+A line of a script's output, or of an agent's report, written as
+Value: <name>=<number> is sent with the step's result as a named value.
 At the owner's step it reports the pull request of the work item's branch as merged
 or closed, or stops with status 11 while the pull request is still open. The
 work item's branch is the local branch whose name starts with its id.
@@ -79,6 +83,11 @@ claim() {
   printf 'Claimed %s\nFirst step: %s\n' "$(jq -r '.work.title' <<<"$step")" "$(jq -r '.name' <<<"$step")"
 }
 
+values_in() {
+  sed -nE 's/^Value: ([A-Za-z0-9_]+)=(-?[0-9]+(\.[0-9]+)?)[[:space:]]*$/\1 \2/p' <<<"$1" |
+    jq -Rn '[inputs | split(" ") | {(.[0]): (.[1] | tonumber)}] | add // {}'
+}
+
 run_script() {
   local id="$1" step="$2" name script output status result
   name=$(jq -r '.id' <<<"$step")
@@ -92,7 +101,8 @@ run_script() {
   result=passed
   [ "$status" -eq 0 ] || result=failed
   hub POST report_step "$(jq -nc --argjson id "$id" --arg step "$name" --arg result "$result" --argjson status "$status" --arg output "$output" \
-    '{work_item_id: $id, step: $step, result: $result, exit_status: $status, output: $output}')" >/dev/null
+    --argjson values "$(values_in "$output")" \
+    '{work_item_id: $id, step: $step, result: $result, exit_status: $status, output: $output} + (if $values == {} then {} else {values: $values} end)')" >/dev/null
 }
 
 hand_to_agent() {
@@ -138,6 +148,10 @@ run() {
         ;;
       agent) hand_to_agent "$step" ;;
       owner) owner_step "$id" "$step" ;;
+      wait)
+        printf '%s is waiting until %s\n' "$(jq -r '.work.title' <<<"$step")" "$(jq -r '.until' <<<"$step")"
+        exit 13
+        ;;
       *) refuse 65 "symphony cannot run a $(jq -r '.kind' <<<"$step") step" ;;
     esac
   done
@@ -161,10 +175,11 @@ report_agent() {
   model=$(cut -f1 <<<"$run")
   tokens=$(cut -s -f2 <<<"$run")
   hub POST report_step "$(jq -nc --argjson id "$id" --arg step "$(jq -r '.id' <<<"$step")" --arg result "$result" --rawfile output "$file" \
-    --arg model "$model" --arg tokens "$tokens" \
+    --arg model "$model" --arg tokens "$tokens" --argjson values "$(values_in "$(cat "$file")")" \
     '{work_item_id: $id, step: $step, result: $result,
       output: ($output | rtrimstr("\n") + (if $tokens == "" then "\nTokens: not measured" else "" end)),
-      model: (if $model == "" then null else $model end), tokens: (if $tokens == "" then null else ($tokens | tonumber) end)}')" >/dev/null
+      model: (if $model == "" then null else $model end), tokens: (if $tokens == "" then null else ($tokens | tonumber) end)}
+      + (if $values == {} then {} else {values: $values} end)')" >/dev/null
 }
 
 check_work() {
