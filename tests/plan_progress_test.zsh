@@ -28,9 +28,8 @@ assert_equals() {
 # A gh where task 12 sits under plan 7, "Quote builder", with 3 of 8 units
 # closed across four stages, task 13 sits under no plan, and task 14 sits under
 # plan 8, whose one unit names another stage above its `Part of` line.
-stub_gh() {
-  STUB_BIN="$(mktemp -d "${TMPDIR:-/tmp}/plan_progress_test.XXXXXX")"
-  cat > "$STUB_BIN/gh" <<'STUB'
+SHARED_STUBS="$(mktemp -d "${TMPDIR:-/tmp}/plan_progress_stubs.XXXXXX")"
+cat > "$SHARED_STUBS/gh-1" <<'STUB'
 #!/usr/bin/env bash
 case "$*" in
   "api repos/acme/widget/issues/12/parent --jq "*)
@@ -73,7 +72,11 @@ case "$*" in
     echo "gh: Not Found (HTTP 404)" >&2; exit 1 ;;
 esac
 STUB
-  chmod +x "$STUB_BIN/gh"
+chmod +x "$SHARED_STUBS/gh-1"
+
+stub_gh() {
+  STUB_BIN="$(mktemp -d "${TMPDIR:-/tmp}/plan_progress_test.XXXXXX")"
+  ln -s "$SHARED_STUBS/gh-1" "$STUB_BIN/gh"
   path=("$STUB_BIN" $path)
 }
 
@@ -129,4 +132,5 @@ drop_stub
 
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
+rm -rf "$SHARED_STUBS"
 [[ $FAIL -eq 0 ]]
