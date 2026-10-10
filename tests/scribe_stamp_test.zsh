@@ -36,20 +36,28 @@ assert_contains() {
   fi
 }
 
+TEMPLATES="$(mktemp -d "${TMPDIR:-/tmp}/scribe_stamp_templates.XXXXXX")"
+
 new_root() {
   SCRIBE_STAMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/scribe_stamp_test.XXXXXX")"
   export SCRIBE_STAMP_ROOT
-  git -C "$SCRIBE_STAMP_ROOT" init -q
+  git -C "$SCRIBE_STAMP_ROOT" init -q --template=
   mkdir -p "$SCRIBE_STAMP_ROOT/agents" "$SCRIBE_STAMP_ROOT/rules"
 }
 
 commit_rules() {
-  local file
-  for file in "$@"; do
-    printf 'contents\n' > "$SCRIBE_STAMP_ROOT/$file"
-    git -C "$SCRIBE_STAMP_ROOT" add "$file"
-    git -C "$SCRIBE_STAMP_ROOT" commit -qm "add $file"
-  done
+  local template="$TEMPLATES/${(j:+:)${@//\//-}}" file
+  if [[ ! -d "$template" ]]; then
+    git init -q --template= "$template"
+    mkdir -p "$template/agents" "$template/rules"
+    for file in "$@"; do
+      printf 'contents\n' > "$template/$file"
+      git -C "$template" add "$file"
+      git -C "$template" commit -qm "add $file"
+    done
+  fi
+  rm -rf "$SCRIBE_STAMP_ROOT"
+  cp -R "$template" "$SCRIBE_STAMP_ROOT"
 }
 
 sha_of() {
@@ -62,12 +70,17 @@ drop_root() {
 }
 
 new_source() {
+  local template="$TEMPLATES/source"
+  if [[ ! -d "$template" ]]; then
+    git init -q --template= "$template"
+    git -C "$template" remote add origin git@github.com:acme/quotes.git
+    printf 'code\n' > "$template/app.rb"
+    git -C "$template" add app.rb
+    git -C "$template" commit -qm "add app"
+  fi
   SOURCE_DIR="$(mktemp -d "${TMPDIR:-/tmp}/scribe_stamp_source.XXXXXX")"
-  git -C "$SOURCE_DIR" init -q
-  git -C "$SOURCE_DIR" remote add origin git@github.com:acme/quotes.git
-  printf 'code\n' > "$SOURCE_DIR/app.rb"
-  git -C "$SOURCE_DIR" add app.rb
-  git -C "$SOURCE_DIR" commit -qm "add app"
+  rm -rf "$SOURCE_DIR"
+  cp -R "$template" "$SOURCE_DIR"
 }
 
 source_head() {
@@ -302,6 +315,8 @@ assert_equals "Model: \`claude-opus-5[1m]\`, cc \`9.9.9\`" \
   "$(AI_AGENT=claude-code_9-9-9_agent "$STAMP" pr 'claude-opus-5[1m]' | sed -n 5p)" \
   "accepts an identifier carrying a context marker"
 drop_root
+
+rm -rf "$TEMPLATES"
 
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
