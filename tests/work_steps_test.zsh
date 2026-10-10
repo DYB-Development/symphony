@@ -27,17 +27,36 @@ assert_equals() {
   fi
 }
 
+TEMPLATE="$(mktemp -d "${TMPDIR:-/tmp}/work_steps_template.XXXXXX")"
+TEMPLATE="${TEMPLATE:A}"
+cat > "$TEMPLATE/stub" <<'STUB'
+#!/usr/bin/env bash
+case "${0##*/}" in
+  worktree-databases.sh)
+    case "$(cat "$WORK_STEPS_TEST_BASE/databases_mode" 2>/dev/null)" in
+      list) ls -a "$2" > "$WORK_STEPS_TEST_BASE/left" ;;
+      fail) echo "dropdb failed for quotes_development"; exit 1 ;;
+      *) printf '%s\n' "$*" >> "$WORK_STEPS_TEST_BASE/databases" ;;
+    esac ;;
+  gh) cat "$WORK_STEPS_TEST_BASE/gh_output" ;;
+esac
+STUB
+chmod +x "$TEMPLATE/stub"
+WORK_STEPS_TEST_BASE=/nonexistent "$TEMPLATE/stub" >/dev/null 2>&1
+git init -q --bare --template= -b main "$TEMPLATE/origin.git"
+git clone -q --template= "$TEMPLATE/origin.git" "$TEMPLATE/quotes" 2>/dev/null
+git -C "$TEMPLATE/quotes" -c user.name=t -c user.email=t@example.com commit -q --allow-empty -m init
+git -C "$TEMPLATE/quotes" push -q origin main
+
 setup() {
   BASE="$(mktemp -d "${TMPDIR:-/tmp}/work_steps_test.XXXXXX")"
   BASE="${BASE:A}"
-  git init -q --bare -b main "$BASE/origin.git"
-  git clone -q "$BASE/origin.git" "$BASE/quotes" 2>/dev/null
-  git -C "$BASE/quotes" -c user.name=t -c user.email=t@example.com commit -q --allow-empty -m init
-  git -C "$BASE/quotes" push -q origin main
+  export WORK_STEPS_TEST_BASE="$BASE"
+  cp -R "$TEMPLATE/origin.git" "$TEMPLATE/quotes" "$BASE/"
+  git -C "$BASE/quotes" remote set-url origin "$BASE/origin.git"
   MAIN="$BASE/quotes"
   mkdir -p "$BASE/stubs"
-  printf '#!/usr/bin/env bash\nprintf "%%s\\n" "$*" >> "%s/databases"\n' "$BASE" > "$BASE/stubs/worktree-databases.sh"
-  chmod +x "$BASE/stubs/worktree-databases.sh"
+  ln -s "$TEMPLATE/stub" "$BASE/stubs/worktree-databases.sh"
   export SYMPHONY_WORKTREE_DATABASES="$BASE/stubs/worktree-databases.sh"
   export WORK_ITEM_ID=7
   checks '[]'
@@ -47,7 +66,7 @@ setup() {
 teardown() {
   cd "$SCRIPT_DIR"
   rm -rf "$BASE"
-  unset SYMPHONY_WORKTREE_DATABASES WORK_ITEM_ID PIPELINE_STEP
+  unset WORK_STEPS_TEST_BASE SYMPHONY_WORKTREE_DATABASES WORK_ITEM_ID PIPELINE_STEP
 }
 
 checks() {
@@ -56,8 +75,8 @@ checks() {
 }
 
 pull_request() {
-  printf '#!/usr/bin/env bash\necho %s\n' "${(q)1}" > "$BASE/stubs/gh"
-  chmod +x "$BASE/stubs/gh"
+  printf '%s\n' "$1" > "$BASE/gh_output"
+  [[ -L "$BASE/stubs/gh" ]] || ln -s "$TEMPLATE/stub" "$BASE/stubs/gh"
   path=("$BASE/stubs" $path)
 }
 
@@ -216,7 +235,7 @@ teardown
 setup
 "$BIN/work-start.sh" >/dev/null 2>&1
 touch "$BASE/quotes-7-export-quotes/.decisions.md" "$BASE/quotes-7-export-quotes/.ticket" "$BASE/quotes-7-export-quotes/start_here.md"
-printf '#!/usr/bin/env bash\nls -a "$2" > "%s/left"\n' "$BASE" > "$BASE/stubs/worktree-databases.sh"
+echo list > "$BASE/databases_mode"
 "$BIN/work-clean-up.sh" >/dev/null 2>&1
 assert_equals "" "$(grep -E 'decisions|ticket|start_here' "$BASE/left")" \
   "the clean-up step removes the decision log, ticket and resume bookmark before it removes the worktree"
@@ -229,7 +248,7 @@ teardown
 
 setup
 "$BIN/work-start.sh" >/dev/null 2>&1
-printf '#!/usr/bin/env bash\necho "dropdb failed for quotes_development"; exit 1\n' > "$BASE/stubs/worktree-databases.sh"
+echo fail > "$BASE/databases_mode"
 output=$("$BIN/work-clean-up.sh" 2>&1)
 assert_equals "1 kept Dropping the databases failed: dropdb failed for quotes_development" "$? $([ -d "$BASE/quotes-7-export-quotes" ] && echo kept || echo removed) $(printf '%s\n' "$output" | tail -1)" \
   "a database drop that fails makes the clean-up step fail, naming the drop, before the worktree is removed"
@@ -253,10 +272,9 @@ teardown
 
 setup
 "$BIN/work-start.sh" >/dev/null 2>&1
-cp "$BASE/stubs/worktree-databases.sh" "$BASE/stubs/drops.sh"
-printf '#!/usr/bin/env bash\necho "dropdb failed for quotes_development"; exit 1\n' > "$BASE/stubs/worktree-databases.sh"
+echo fail > "$BASE/databases_mode"
 "$BIN/work-clean-up.sh" >/dev/null 2>&1
-cp "$BASE/stubs/drops.sh" "$BASE/stubs/worktree-databases.sh"
+rm "$BASE/databases_mode"
 "$BIN/work-clean-up.sh" >/dev/null 2>&1
 assert_equals "0 removed drop $BASE/quotes-7-export-quotes" "$? $([ -d "$BASE/quotes-7-export-quotes" ] && echo kept || echo removed) $(grep '^drop' "$BASE/databases")" \
   "run again after a database drop failed, the clean-up step drops the databases, removes the worktree and passes"
@@ -288,6 +306,8 @@ before="$(git -C "$MAIN" worktree list) $(git -C "$MAIN" branch --list '7-*' -v)
 assert_equals "0 $before" "$? $(git -C "$MAIN" worktree list) $(git -C "$MAIN" branch --list '7-*' -v) $(cat "$BASE/databases")" \
   "run a second time on work it already cleaned up, the clean-up step passes and changes nothing"
 teardown
+
+rm -rf "$TEMPLATE"
 
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
