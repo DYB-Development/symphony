@@ -65,6 +65,15 @@ suite two "exit 0"
 assert_equals 0 "$?" "exits zero when every suite passes"
 rm -rf "$REPO"
 
+new_repo
+for name in a b; do
+  suite $name "echo ${name}1; sleep 0.1; echo ${name}2; sleep 0.1; echo ${name}3; exit 1"
+done
+OUTPUT="$("$REPO/run_tests.sh" 2>&1)"
+assert_equals "a1 a2 a3 b1 b2 b3" "$(print -r -- "$OUTPUT" | grep -E '^[ab][123]$' | tr '\n' ' ' | sed 's/ $//')" \
+  "prints each suite's output as one block"
+rm -rf "$REPO"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]
