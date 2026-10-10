@@ -27,20 +27,25 @@ assert_contains() {
 
 # A gh that writes down every call. Issue 12 exists with id 9012, and the plan's
 # sub-issues are the numbers in $1.
+SHARED_STUBS="$(mktemp -d "${TMPDIR:-/tmp}/plan_link_stubs.XXXXXX")"
+cat > "$SHARED_STUBS/gh" <<'STUB'
+#!/usr/bin/env bash
+here="$(dirname "$0")"
+printf '%s\n' "$*" >> "$here/calls"
+case "$*" in
+  "api repos/acme/widget/issues/12 --jq .id") printf '9012\n' ;;
+  "api repos/acme/widget/issues/7/sub_issues --paginate --jq .[].number") cat "$here/sub_issues" ;;
+  "api repos/acme/widget/issues/"*" --jq .id") echo "gh: Not Found (HTTP 404)" >&2; exit 1 ;;
+esac
+STUB
+chmod +x "$SHARED_STUBS/gh"
+
 stub_gh() {
   STUB_BIN="$(mktemp -d "${TMPDIR:-/tmp}/plan_link_test.XXXXXX")"
   GH_LOG="$STUB_BIN/calls"
   : > "$GH_LOG"
-  cat > "$STUB_BIN/gh" <<STUB
-#!/usr/bin/env bash
-printf '%s\n' "\$*" >> "$GH_LOG"
-case "\$*" in
-  "api repos/acme/widget/issues/12 --jq .id") printf '9012\n' ;;
-  "api repos/acme/widget/issues/7/sub_issues --paginate --jq .[].number") printf '%s' "${1:-}" ;;
-  "api repos/acme/widget/issues/"*" --jq .id") echo "gh: Not Found (HTTP 404)" >&2; exit 1 ;;
-esac
-STUB
-  chmod +x "$STUB_BIN/gh"
+  printf '%s' "${1:-}" > "$STUB_BIN/sub_issues"
+  ln -s "$SHARED_STUBS/gh" "$STUB_BIN/gh"
   path=("$STUB_BIN" $path)
 }
 
@@ -73,4 +78,5 @@ drop_stub
 
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
+rm -rf "$SHARED_STUBS"
 [[ $FAIL -eq 0 ]]
