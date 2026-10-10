@@ -95,6 +95,12 @@ ORDER="$(run_order)"
   || fail "runs the suites in a shuffled order"
 rm -rf "$REPO"
 
+new_repo
+suite one "exit 0"
+[[ "$("$REPO/run_tests.sh" 2>&1)" =~ "Run options: --seed [0-9]+" ]] \
+  && ok "prints the seed it used" || fail "prints the seed it used"
+rm -rf "$REPO"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

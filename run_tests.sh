@@ -19,6 +19,8 @@ export RESULTS
 
 SEED="$RANDOM"
 RANDOM="$SEED"
+echo "Run options: --seed $SEED"
+echo ""
 
 SUITES=()
 while IFS= read -r suite; do
