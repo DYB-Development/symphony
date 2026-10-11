@@ -25,3 +25,6 @@ and `~/.claude/rules/writing-style.md` for every word of your report.
   the work once every check has passed.
 - Never edit a file outside the worktree you were given, and never in the
   owner's main clone.
+- Never create or change a file outside the test folder. Writing the code that
+  makes the test pass is the code writer's step, which comes after a check has
+  confirmed your test fails.

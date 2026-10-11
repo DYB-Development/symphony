@@ -36,5 +36,8 @@ assert_equals "" "$(sed -n '2,/^---$/p' "$WRITER" | grep '^model:')" \
 assert_equals "1" "$(sed -n '/^## What you never do/,/^## /p' "$WRITER" | grep -c 'Never commit')" \
   "forbids committing, since a later step of the pipeline commits"
 
+assert_equals "1" "$(sed -n '/^## What you never do/,/^## /p' "$WRITER" | grep -c 'outside the test folder')" \
+  "forbids changing any file outside the test folder, since writing the code is the code writer's step"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
