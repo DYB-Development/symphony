@@ -363,6 +363,16 @@ checks "[$(entry test suite 'test -f')]"
 assert_equals "0" "$?" "the new test passes check passes when the new test passes"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+mkdir -p "$BASE/quotes-7-export-quotes/test"
+touch "$BASE/quotes-7-export-quotes/test/export_test.rb"
+checks "[$(entry test suite "sh -c 'echo Expected one export; exit 1' --")]"
+output=$("$BIN/work-new-test-passes.sh" 2>&1)
+assert_equals "1 Expected one export" "$? $output" \
+  "the new test passes check fails, printing the test's failure message, when the new test fails"
+teardown
+
 rm -rf "$TEMPLATE"
 
 echo ""
