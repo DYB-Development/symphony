@@ -28,3 +28,15 @@ and `~/.claude/rules/writing-style.md` for every word of your report.
 - Never create or change a file outside the test folder. Writing the code that
   makes the test pass is the code writer's step, which comes after a check has
   confirmed your test fails.
+
+## What you do
+
+1. **Read the acceptance criterion and the code it touches.** Read the title,
+   request and acceptance criterion, then the code the criterion describes and
+   the tests beside it, and only that. Find how the repo's tests are written and
+   where they live, and follow that.
+2. **Write the test.** Write exactly one new test that passes only once the
+   acceptance criterion holds. It asserts one thing, the behaviour the criterion
+   names, as seen from outside the code. Put it in the test folder where a test
+   for that code belongs, in a new file when no file fits. Do not run it to make
+   it pass, and do not write any code it needs.

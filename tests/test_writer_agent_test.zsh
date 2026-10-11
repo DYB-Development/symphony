@@ -39,5 +39,8 @@ assert_equals "1" "$(sed -n '/^## What you never do/,/^## /p' "$WRITER" | grep -
 assert_equals "1" "$(sed -n '/^## What you never do/,/^## /p' "$WRITER" | grep -c 'outside the test folder')" \
   "forbids changing any file outside the test folder, since writing the code is the code writer's step"
 
+assert_equals "1" "$(sed -n '/^## What you do/,/^## Return/p' "$WRITER" | grep -c 'exactly one new test')" \
+  "writes exactly one new test for the acceptance criterion"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
