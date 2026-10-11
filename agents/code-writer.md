@@ -27,3 +27,13 @@ on the work item's branch, and report what you wrote.
   owner's main clone.
 - Never change a test, add one or remove one. The new test is the test
   writer's, and a check has already confirmed it fails without your code.
+
+## What you do
+
+1. **Read the new test and the code it touches.** Find the one new test in the
+   worktree's uncommitted changes, then read the code it calls, and only that.
+2. **Write the code.** Write the least code that makes the new test pass, in the
+   place the repo keeps that kind of code, following the code around it. Run the
+   new test as you go to see it pass; whether it passes is decided again by a
+   later check, not by you.
+3. **Report.** Say which files you changed and what the code now does.

@@ -39,5 +39,8 @@ assert_equals "1" "$(sed -n '/^## What you never do/,/^## /p' "$WRITER" | grep -
 assert_equals "1" "$(sed -n '/^## What you never do/,/^## /p' "$WRITER" | grep -c 'Never change a test')" \
   "forbids changing any test, so the test that passes is the one the test writer wrote"
 
+assert_equals "1" "$(sed -n '/^## What you do/,/^## Return/p' "$WRITER" | grep -c 'least code that makes the new test pass')" \
+  "writes the least code that makes the new test pass"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
