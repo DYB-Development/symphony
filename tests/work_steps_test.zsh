@@ -326,6 +326,14 @@ Expected one export" "$("$BIN/work-new-test-fails.sh" 2>&1)" \
   "the new test fails check prints that line first, then the test's failure message"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+checks "[$(entry test suite 'false')]"
+output=$("$BIN/work-new-test-fails.sh" 2>&1)
+assert_equals "1 No new test was written" "$? $output" \
+  "the new test fails check fails, saying no new test was written, when the worktree holds no new or changed test"
+teardown
+
 rm -rf "$TEMPLATE"
 
 echo ""

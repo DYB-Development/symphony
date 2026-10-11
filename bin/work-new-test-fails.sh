@@ -19,6 +19,7 @@ tree=$(git worktree list --porcelain | awk -v prefix="branch refs/heads/$WORK_IT
 [ -n "$tree" ] || { echo "No worktree for work item $WORK_ITEM_ID"; exit 1; }
 
 files=$(git -C "$tree" ls-files --others --modified --exclude-standard | tr '\n' ' ')
+[ -n "$files" ] || { echo "No new test was written"; exit 1; }
 command=$(jq -r 'first(.checks[]? | select(.kind == "test")) | .check_command' <<<"$PIPELINE_STEP")
 
 set +e
