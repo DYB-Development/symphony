@@ -419,6 +419,10 @@ assert_equals "Export quotes stopped on a loop at Count check
 $?" "stops with status 14 when the work item's run stopped on a loop, naming the step the loop came back to"
 teardown
 
+setup
+answer current_step '{"answer":{"stopped":true,"kind":"stopped","id":"tally","name":"Count check"}}'
+assert_equals "Work item 7 stopped on a loop at Count check" "$("$PIPELINE" run 7 2>&1)" "names the work item by its id when the stopped step carries no title"
+teardown
 
 rm -rf "$STUBS"
 
