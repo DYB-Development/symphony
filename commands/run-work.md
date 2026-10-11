@@ -65,6 +65,20 @@ run it, and you do only what it stops for: an agent step, or the owner's step.
      ```
      ~/.claude/bin/pipeline.sh report <id> <file>
      ```
+   - **`test-writer`** — hand it the repo, the work item's worktree (found the
+     same way as for the builder), the title, the request and the one
+     acceptance criterion the script printed. Write the report it returns,
+     whole and unedited, to a file in a directory made with `mktemp -d`, then
+     post it:
+     ```
+     ~/.claude/bin/pipeline.sh report <id> <file>
+     ```
+   - **`code-writer`** — hand it the same as the test writer: the repo, the
+     work item's worktree, the title, the request and the one
+     acceptance criterion. Write its report to a file the same way and post it:
+     ```
+     ~/.claude/bin/pipeline.sh report <id> <file>
+     ```
    - **`pr-scribe`** — hand it the repo, the branch, the worktree, and the work
      item's acceptance criteria written out, since there is no issue. Then
      report the step, which passes only when the branch has an open pull request:
