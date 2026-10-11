@@ -354,6 +354,15 @@ assert_equals "1 The new test passed before any code was written" "$? $output" \
   "the new test fails check fails, saying the test passed before any code was written, when the new test already passes"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+mkdir -p "$BASE/quotes-7-export-quotes/test"
+touch "$BASE/quotes-7-export-quotes/test/export_test.rb"
+checks "[$(entry test suite 'test -f')]"
+"$BIN/work-new-test-passes.sh" >/dev/null 2>&1
+assert_equals "0" "$?" "the new test passes check passes when the new test passes"
+teardown
+
 rm -rf "$TEMPLATE"
 
 echo ""
