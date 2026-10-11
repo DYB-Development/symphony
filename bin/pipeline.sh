@@ -152,6 +152,10 @@ run() {
         printf '%s is waiting until %s\n' "$(jq -r '.work.title' <<<"$step")" "$(jq -r '.until' <<<"$step")"
         exit 13
         ;;
+      stopped)
+        printf '%s stopped on a loop at %s\n' "$(jq -r '.work.title' <<<"$step")" "$(jq -r '.name' <<<"$step")"
+        exit 14
+        ;;
       *) refuse 65 "symphony cannot run a $(jq -r '.kind' <<<"$step") step" ;;
     esac
   done
