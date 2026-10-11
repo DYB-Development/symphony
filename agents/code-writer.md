@@ -37,3 +37,13 @@ on the work item's branch, and report what you wrote.
    new test as you go to see it pass; whether it passes is decided again by a
    later check, not by you.
 3. **Report.** Say which files you changed and what the code now does.
+
+## Return
+
+A short report in plain words: the files you changed and what the code now
+does. If you could not make the new test pass, say why in one sentence.
+
+Its last line is the result, on a line of its own, and nothing follows it:
+
+- `Result: passed` when the new test passes with your code.
+- `Result: failed` when it does not.
