@@ -33,5 +33,9 @@ assert_equals "worktree title request criterion report" \
   "$(handoff test-writer | tr '\n' ' ' | grep -oE 'worktree|title|request|acceptance criterion|pipeline.sh report <id>' | sed 's/acceptance criterion/criterion/; s/pipeline.sh report <id>/report/' | tr '\n' ' ' | sed 's/ $//')" \
   "hands a test writer step to test-writer with the worktree, title, request and acceptance criterion, then posts its report"
 
+assert_equals "worktree title request criterion report" \
+  "$(handoff code-writer | tr '\n' ' ' | grep -oE 'worktree|title|request|acceptance criterion|pipeline.sh report <id>' | sed 's/acceptance criterion/criterion/; s/pipeline.sh report <id>/report/' | tr '\n' ' ' | sed 's/ $//')" \
+  "hands a code writer step to code-writer with the worktree, title, request and acceptance criterion, then posts its report"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
