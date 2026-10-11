@@ -20,3 +20,4 @@ tree=$(git worktree list --porcelain | awk -v prefix="branch refs/heads/$WORK_IT
 
 git -C "$tree" add -A
 git -C "$tree" commit -q -m "$(jq -r '.work.title' <<<"$PIPELINE_STEP")" -m "$(jq -r '.work.acceptance_criteria' <<<"$PIPELINE_STEP")"
+echo "Committed $(git -C "$tree" rev-parse --short HEAD) on $(git -C "$tree" branch --show-current)"

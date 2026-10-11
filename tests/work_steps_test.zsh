@@ -391,6 +391,15 @@ assert_equals "A rep can download quotes as a CSV file" "$(git -C "$BASE/quotes-
   "the commit step writes the work item's acceptance criterion as the commit's body"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+mkdir -p "$BASE/quotes-7-export-quotes/test"
+touch "$BASE/quotes-7-export-quotes/test/export_test.rb"
+output=$(GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@example.com GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@example.com "$BIN/work-commit.sh" 2>&1)
+assert_equals "Committed $(git -C "$BASE/quotes-7-export-quotes" rev-parse --short HEAD) on 7-export-quotes" "$(printf '%s\n' "$output" | head -1)" \
+  "the commit step prints the commit's short id and its branch on its first line"
+teardown
+
 rm -rf "$TEMPLATE"
 
 echo ""
