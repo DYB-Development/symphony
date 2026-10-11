@@ -334,6 +334,16 @@ assert_equals "1 No new test was written" "$? $output" \
   "the new test fails check fails, saying no new test was written, when the worktree holds no new or changed test"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+mkdir -p "$BASE/quotes-7-export-quotes/app"
+touch "$BASE/quotes-7-export-quotes/app/export.rb"
+checks "[$(entry test suite 'false')]"
+output=$("$BIN/work-new-test-fails.sh" 2>&1)
+assert_equals "1 No new test was written" "$? $output" \
+  "the new test fails check does not count a changed file outside the test folder as a new test"
+teardown
+
 rm -rf "$TEMPLATE"
 
 echo ""

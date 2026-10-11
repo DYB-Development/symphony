@@ -18,7 +18,7 @@ USAGE
 tree=$(git worktree list --porcelain | awk -v prefix="branch refs/heads/$WORK_ITEM_ID-" '/^worktree / { tree = substr($0, 10) } index($0, prefix) == 1 { print tree; exit }')
 [ -n "$tree" ] || { echo "No worktree for work item $WORK_ITEM_ID"; exit 1; }
 
-files=$(git -C "$tree" ls-files --others --modified --exclude-standard | tr '\n' ' ')
+files=$(git -C "$tree" ls-files --others --modified --exclude-standard | grep -E '(^|/)(test|tests|spec|__tests__)/' | tr '\n' ' ' || true)
 [ -n "$files" ] || { echo "No new test was written"; exit 1; }
 command=$(jq -r 'first(.checks[]? | select(.kind == "test")) | .check_command' <<<"$PIPELINE_STEP")
 
