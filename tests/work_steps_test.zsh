@@ -71,7 +71,7 @@ teardown() {
 
 checks() {
   export PIPELINE_STEP="$(jq -nc --argjson checks "$1" --arg title "${2:-Export quotes}" \
-    '{id: "start", kind: "script", work: {title: $title, repo: "acme/quotes"}, checks: $checks}')"
+    '{id: "start", kind: "script", work: {title: $title, repo: "acme/quotes", acceptance_criteria: "A rep can download quotes as a CSV file"}, checks: $checks}')"
 }
 
 pull_request() {
@@ -380,6 +380,15 @@ touch "$BASE/quotes-7-export-quotes/test/export_test.rb" "$BASE/quotes-7-export-
 GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@example.com GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@example.com "$BIN/work-commit.sh" >/dev/null 2>&1
 assert_equals "0 Export quotes " "$? $(git -C "$BASE/quotes-7-export-quotes" log -1 --format=%s) $(git -C "$BASE/quotes-7-export-quotes" status --porcelain)" \
   "the commit step commits every change in the worktree with the work item's title as the subject"
+teardown
+
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+mkdir -p "$BASE/quotes-7-export-quotes/test"
+touch "$BASE/quotes-7-export-quotes/test/export_test.rb"
+GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@example.com GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@example.com "$BIN/work-commit.sh" >/dev/null 2>&1
+assert_equals "A rep can download quotes as a CSV file" "$(git -C "$BASE/quotes-7-export-quotes" log -1 --format=%b | sed '/^$/d')" \
+  "the commit step writes the work item's acceptance criterion as the commit's body"
 teardown
 
 rm -rf "$TEMPLATE"
