@@ -30,5 +30,8 @@ echo "agents/code-writer.md:"
 assert_equals "name: code-writer" "$(sed -n '2,/^---$/p' "$WRITER" 2>/dev/null | grep '^name:')" \
   "is the agent named code-writer, so a pipeline's agent step can name it"
 
+assert_equals "" "$(sed -n '2,/^---$/p' "$WRITER" | grep '^model:')" \
+  "names no model, so it runs on whatever model the pipeline step names"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
