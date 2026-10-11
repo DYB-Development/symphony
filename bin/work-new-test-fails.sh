@@ -22,8 +22,10 @@ files=$(git -C "$tree" ls-files --others --modified --exclude-standard | tr '\n'
 command=$(jq -r 'first(.checks[]? | select(.kind == "test")) | .check_command' <<<"$PIPELINE_STEP")
 
 set +e
-(cd "$tree" && bash -c "$command $files")
+output=$(cd "$tree" && bash -c "$command $files" 2>&1)
 status=$?
 set -e
 
-[ "$status" -ne 0 ]
+[ "$status" -ne 0 ] || exit 1
+echo "The new test fails"
+printf '%s\n' "$output"
