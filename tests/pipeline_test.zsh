@@ -424,6 +424,10 @@ answer current_step '{"answer":{"stopped":true,"kind":"stopped","id":"tally","na
 assert_equals "Work item 7 stopped on a loop at Count check" "$("$PIPELINE" run 7 2>&1)" "names the work item by its id when the stopped step carries no title"
 teardown
 
+setup
+assert_equals "1" "$("$PIPELINE" 2>&1 | grep -c 'status 14 when the work item.s run stopped on a loop')" "describes the status 14 stop at a run that stopped on a loop in its usage"
+teardown
+
 rm -rf "$STUBS"
 
 echo ""
