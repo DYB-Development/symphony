@@ -373,6 +373,15 @@ assert_equals "1 Expected one export" "$? $output" \
   "the new test passes check fails, printing the test's failure message, when the new test fails"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+mkdir -p "$BASE/quotes-7-export-quotes/test" "$BASE/quotes-7-export-quotes/app"
+touch "$BASE/quotes-7-export-quotes/test/export_test.rb" "$BASE/quotes-7-export-quotes/app/export.rb"
+GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@example.com GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@example.com "$BIN/work-commit.sh" >/dev/null 2>&1
+assert_equals "0 Export quotes " "$? $(git -C "$BASE/quotes-7-export-quotes" log -1 --format=%s) $(git -C "$BASE/quotes-7-export-quotes" status --porcelain)" \
+  "the commit step commits every change in the worktree with the work item's title as the subject"
+teardown
+
 rm -rf "$TEMPLATE"
 
 echo ""
