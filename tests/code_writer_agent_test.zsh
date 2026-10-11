@@ -14,6 +14,19 @@ FAIL=0
 ok()   { printf '  \033[32m✓\033[0m %s\n' "$1"; PASS=$((PASS+1)); }
 fail() { printf '  \033[31m✗\033[0m %s\n' "$1"; FAIL=$((FAIL+1)); }
 
+assert_equals() {
+  local expected="$1" actual="$2" label="$3"
+  if [[ "$expected" == "$actual" ]]; then
+    ok "$label"
+  else
+    fail "$label"
+    printf '      expected: %s\n' "${(qqq)expected}"
+    printf '      actual:   %s\n' "${(qqq)actual}"
+  fi
+}
+
+echo "agents/code-writer.md:"
+
 assert_equals "name: code-writer" "$(sed -n '2,/^---$/p' "$WRITER" 2>/dev/null | grep '^name:')" \
   "is the agent named code-writer, so a pipeline's agent step can name it"
 
