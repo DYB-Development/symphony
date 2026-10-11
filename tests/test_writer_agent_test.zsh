@@ -33,5 +33,8 @@ assert_equals "name: test-writer" "$(sed -n '2,/^---$/p' "$WRITER" 2>/dev/null |
 assert_equals "" "$(sed -n '2,/^---$/p' "$WRITER" | grep '^model:')" \
   "names no model, so it runs on whatever model the pipeline step names"
 
+assert_equals "1" "$(sed -n '/^## What you never do/,/^## /p' "$WRITER" | grep -c 'Never commit')" \
+  "forbids committing, since a later step of the pipeline commits"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
