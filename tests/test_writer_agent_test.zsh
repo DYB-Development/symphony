@@ -42,5 +42,9 @@ assert_equals "1" "$(sed -n '/^## What you never do/,/^## /p' "$WRITER" | grep -
 assert_equals "1" "$(sed -n '/^## What you do/,/^## Return/p' "$WRITER" | grep -c 'exactly one new test')" \
   "writes exactly one new test for the acceptance criterion"
 
+assert_equals "Result: failed
+Result: passed" "$(sed -n '/^## Return/,$p' "$WRITER" | grep -o 'Result: [a-z]*' | sort -u)" \
+  "ends its report with a line naming its result as passed or failed, which the pipeline script posts"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

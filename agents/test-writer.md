@@ -40,3 +40,16 @@ and `~/.claude/rules/writing-style.md` for every word of your report.
    names, as seen from outside the code. Put it in the test folder where a test
    for that code belongs, in a new file when no file fits. Do not run it to make
    it pass, and do not write any code it needs.
+3. **Report.** Say which file the test is in, the test's name, and the one
+   behaviour it asserts.
+
+## Return
+
+A short report in plain words: the test file, the test's name, and what it
+asserts. If you could not write a test for the criterion, say why in one
+sentence.
+
+Its last line is the result, on a line of its own, and nothing follows it:
+
+- `Result: passed` when you wrote exactly one new test for the criterion.
+- `Result: failed` when you could not.
