@@ -41,6 +41,10 @@ run it, and you do only what it stops for: an agent step, or the owner's step.
      names the time the work waits until, and stop. Do not claim the work item
      again: the hub has already let it go, and the next session to claim work
      takes it once that time has come.
+   - `14` — the work item's run stopped on a loop. Show the line it printed,
+     which names the step where the loop stopped, and stop. Do not claim the
+     work item again or work around the stop: the hub has already told the
+     owner, who decides what happens next.
    - anything else — show what it printed and stop. Never work around it.
 
 3. **Hand the agent step to the agent it names**, on the model it names. The

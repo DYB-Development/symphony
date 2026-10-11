@@ -411,6 +411,23 @@ usage_text=$("$PIPELINE" 2>&1)
 assert_equals "2" "$(grep -c -e 'Value: <name>=<number>' -e 'status 13 at a Wait step' <<<"$usage_text")" "describes Value lines and the status 13 stop at a Wait step in its usage"
 teardown
 
+setup
+answer current_step "$(step tally "Count check" stopped | jq -c '.answer.stopped = true')"
+output=$("$PIPELINE" run 7 2>&1)
+assert_equals "Export quotes stopped on a loop at Count check
+14" "$output
+$?" "stops with status 14 when the work item's run stopped on a loop, naming the step the loop came back to"
+teardown
+
+setup
+answer current_step '{"answer":{"stopped":true,"kind":"stopped","id":"tally","name":"Count check"}}'
+assert_equals "Work item 7 stopped on a loop at Count check" "$("$PIPELINE" run 7 2>&1)" "names the work item by its id when the stopped step carries no title"
+teardown
+
+setup
+assert_equals "1" "$("$PIPELINE" 2>&1 | grep -c 'status 14 when the work item.s run stopped on a loop')" "describes the status 14 stop at a run that stopped on a loop in its usage"
+teardown
+
 rm -rf "$STUBS"
 
 echo ""

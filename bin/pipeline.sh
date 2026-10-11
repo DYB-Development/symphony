@@ -20,6 +20,8 @@ step naming work-watch it stops with status 12 and prints the watch command to
 start in the background.
 It stops with status 13 at a Wait step, printing the work item's title and the time
 it waits until; the hub has already let the work item go.
+It stops with status 14 when the work item's run stopped on a loop, printing the
+step the loop came back to; the hub has already told the owner.
 A line of a script's output, or of an agent's report, written as
 Value: <name>=<number> is sent with the step's result as a named value.
 At the owner's step it reports the pull request of the work item's branch as merged
@@ -151,6 +153,10 @@ run() {
       wait)
         printf '%s is waiting until %s\n' "$(jq -r '.work.title' <<<"$step")" "$(jq -r '.until' <<<"$step")"
         exit 13
+        ;;
+      stopped)
+        printf '%s stopped on a loop at %s\n' "$(jq -r --arg id "$id" '.work.title // "Work item \($id)"' <<<"$step")" "$(jq -r '.name' <<<"$step")"
+        exit 14
         ;;
       *) refuse 65 "symphony cannot run a $(jq -r '.kind' <<<"$step") step" ;;
     esac
