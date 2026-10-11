@@ -400,6 +400,13 @@ assert_equals "Committed $(git -C "$BASE/quotes-7-export-quotes" rev-parse --sho
   "the commit step prints the commit's short id and its branch on its first line"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+output=$(GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@example.com GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@example.com "$BIN/work-commit.sh" 2>&1)
+assert_equals "1 Nothing to commit in $BASE/quotes-7-export-quotes" "$? $output" \
+  "the commit step fails, saying there is nothing to commit, when the worktree holds no change"
+teardown
+
 rm -rf "$TEMPLATE"
 
 echo ""

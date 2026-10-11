@@ -18,6 +18,7 @@ USAGE
 tree=$(git worktree list --porcelain | awk -v prefix="branch refs/heads/$WORK_ITEM_ID-" '/^worktree / { tree = substr($0, 10) } index($0, prefix) == 1 { print tree; exit }')
 [ -n "$tree" ] || { echo "No worktree for work item $WORK_ITEM_ID"; exit 1; }
 
+[ -n "$(git -C "$tree" status --porcelain)" ] || { echo "Nothing to commit in $tree"; exit 1; }
 git -C "$tree" add -A
 git -C "$tree" commit -q -m "$(jq -r '.work.title' <<<"$PIPELINE_STEP")" -m "$(jq -r '.work.acceptance_criteria' <<<"$PIPELINE_STEP")"
 echo "Committed $(git -C "$tree" rev-parse --short HEAD) on $(git -C "$tree" branch --show-current)"
