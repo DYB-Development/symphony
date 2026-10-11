@@ -25,3 +25,5 @@ on the work item's branch, and report what you wrote.
   the work once every check has passed.
 - Never edit a file outside the worktree you were given, and never in the
   owner's main clone.
+- Never change a test, add one or remove one. The new test is the test
+  writer's, and a check has already confirmed it fails without your code.

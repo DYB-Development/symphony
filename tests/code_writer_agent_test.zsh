@@ -36,5 +36,8 @@ assert_equals "" "$(sed -n '2,/^---$/p' "$WRITER" | grep '^model:')" \
 assert_equals "1" "$(sed -n '/^## What you never do/,/^## /p' "$WRITER" | grep -c 'Never commit')" \
   "forbids committing, since a later step of the pipeline commits"
 
+assert_equals "1" "$(sed -n '/^## What you never do/,/^## /p' "$WRITER" | grep -c 'Never change a test')" \
+  "forbids changing any test, so the test that passes is the one the test writer wrote"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
