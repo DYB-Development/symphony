@@ -71,7 +71,7 @@ teardown() {
 
 checks() {
   export PIPELINE_STEP="$(jq -nc --argjson checks "$1" --arg title "${2:-Export quotes}" \
-    '{id: "start", kind: "script", work: {title: $title, repo: "acme/quotes"}, checks: $checks}')"
+    '{id: "start", kind: "script", work: {title: $title, repo: "acme/quotes", acceptance_criteria: "A rep can download quotes as a CSV file"}, checks: $checks}')"
 }
 
 pull_request() {
@@ -305,6 +305,106 @@ before="$(git -C "$MAIN" worktree list) $(git -C "$MAIN" branch --list '7-*' -v)
 "$BIN/work-clean-up.sh" >/dev/null 2>&1
 assert_equals "0 $before" "$? $(git -C "$MAIN" worktree list) $(git -C "$MAIN" branch --list '7-*' -v) $(cat "$BASE/databases")" \
   "run a second time on work it already cleaned up, the clean-up step passes and changes nothing"
+teardown
+
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+mkdir -p "$BASE/quotes-7-export-quotes/test"
+touch "$BASE/quotes-7-export-quotes/test/export_test.rb"
+checks "[$(entry test suite 'test ! -f')]"
+"$BIN/work-new-test-fails.sh" >/dev/null 2>&1
+assert_equals "0" "$?" "the new test fails check passes when the new test fails"
+teardown
+
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+mkdir -p "$BASE/quotes-7-export-quotes/test"
+touch "$BASE/quotes-7-export-quotes/test/export_test.rb"
+checks "[$(entry test suite "sh -c 'echo Expected one export; exit 1' --")]"
+assert_equals "The new test fails
+Expected one export" "$("$BIN/work-new-test-fails.sh" 2>&1)" \
+  "the new test fails check prints that line first, then the test's failure message"
+teardown
+
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+checks "[$(entry test suite 'false')]"
+output=$("$BIN/work-new-test-fails.sh" 2>&1)
+assert_equals "1 No new test was written" "$? $output" \
+  "the new test fails check fails, saying no new test was written, when the worktree holds no new or changed test"
+teardown
+
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+mkdir -p "$BASE/quotes-7-export-quotes/app"
+touch "$BASE/quotes-7-export-quotes/app/export.rb"
+checks "[$(entry test suite 'false')]"
+output=$("$BIN/work-new-test-fails.sh" 2>&1)
+assert_equals "1 No new test was written" "$? $output" \
+  "the new test fails check does not count a changed file outside the test folder as a new test"
+teardown
+
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+mkdir -p "$BASE/quotes-7-export-quotes/test"
+touch "$BASE/quotes-7-export-quotes/test/export_test.rb"
+checks "[$(entry test suite 'test -f')]"
+output=$("$BIN/work-new-test-fails.sh" 2>&1)
+assert_equals "1 The new test passed before any code was written" "$? $output" \
+  "the new test fails check fails, saying the test passed before any code was written, when the new test already passes"
+teardown
+
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+mkdir -p "$BASE/quotes-7-export-quotes/test"
+touch "$BASE/quotes-7-export-quotes/test/export_test.rb"
+checks "[$(entry test suite 'test -f')]"
+"$BIN/work-new-test-passes.sh" >/dev/null 2>&1
+assert_equals "0" "$?" "the new test passes check passes when the new test passes"
+teardown
+
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+mkdir -p "$BASE/quotes-7-export-quotes/test"
+touch "$BASE/quotes-7-export-quotes/test/export_test.rb"
+checks "[$(entry test suite "sh -c 'echo Expected one export; exit 1' --")]"
+output=$("$BIN/work-new-test-passes.sh" 2>&1)
+assert_equals "1 Expected one export" "$? $output" \
+  "the new test passes check fails, printing the test's failure message, when the new test fails"
+teardown
+
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+mkdir -p "$BASE/quotes-7-export-quotes/test" "$BASE/quotes-7-export-quotes/app"
+touch "$BASE/quotes-7-export-quotes/test/export_test.rb" "$BASE/quotes-7-export-quotes/app/export.rb"
+GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@example.com GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@example.com "$BIN/work-commit.sh" >/dev/null 2>&1
+assert_equals "0 Export quotes " "$? $(git -C "$BASE/quotes-7-export-quotes" log -1 --format=%s) $(git -C "$BASE/quotes-7-export-quotes" status --porcelain)" \
+  "the commit step commits every change in the worktree with the work item's title as the subject"
+teardown
+
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+mkdir -p "$BASE/quotes-7-export-quotes/test"
+touch "$BASE/quotes-7-export-quotes/test/export_test.rb"
+GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@example.com GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@example.com "$BIN/work-commit.sh" >/dev/null 2>&1
+assert_equals "A rep can download quotes as a CSV file" "$(git -C "$BASE/quotes-7-export-quotes" log -1 --format=%b | sed '/^$/d')" \
+  "the commit step writes the work item's acceptance criterion as the commit's body"
+teardown
+
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+mkdir -p "$BASE/quotes-7-export-quotes/test"
+touch "$BASE/quotes-7-export-quotes/test/export_test.rb"
+output=$(GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@example.com GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@example.com "$BIN/work-commit.sh" 2>&1)
+assert_equals "Committed $(git -C "$BASE/quotes-7-export-quotes" rev-parse --short HEAD) on 7-export-quotes" "$(printf '%s\n' "$output" | head -1)" \
+  "the commit step prints the commit's short id and its branch on its first line"
+teardown
+
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+output=$(GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@example.com GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@example.com "$BIN/work-commit.sh" 2>&1)
+assert_equals "1 Nothing to commit in $BASE/quotes-7-export-quotes" "$? $output" \
+  "the commit step fails, saying there is nothing to commit, when the worktree holds no change"
 teardown
 
 rm -rf "$TEMPLATE"
