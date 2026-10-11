@@ -307,6 +307,15 @@ assert_equals "0 $before" "$? $(git -C "$MAIN" worktree list) $(git -C "$MAIN" b
   "run a second time on work it already cleaned up, the clean-up step passes and changes nothing"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+mkdir -p "$BASE/quotes-7-export-quotes/test"
+touch "$BASE/quotes-7-export-quotes/test/export_test.rb"
+checks "[$(entry test suite 'test ! -f')]"
+"$BIN/work-new-test-fails.sh" >/dev/null 2>&1
+assert_equals "0" "$?" "the new test fails check passes when the new test fails"
+teardown
+
 rm -rf "$TEMPLATE"
 
 echo ""
