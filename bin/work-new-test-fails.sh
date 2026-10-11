@@ -27,6 +27,6 @@ output=$(cd "$tree" && bash -c "$command $files" 2>&1)
 status=$?
 set -e
 
-[ "$status" -ne 0 ] || exit 1
+[ "$status" -ne 0 ] || { echo "The new test passed before any code was written"; exit 1; }
 echo "The new test fails"
 printf '%s\n' "$output"

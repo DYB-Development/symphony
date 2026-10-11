@@ -344,6 +344,16 @@ assert_equals "1 No new test was written" "$? $output" \
   "the new test fails check does not count a changed file outside the test folder as a new test"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+mkdir -p "$BASE/quotes-7-export-quotes/test"
+touch "$BASE/quotes-7-export-quotes/test/export_test.rb"
+checks "[$(entry test suite 'test -f')]"
+output=$("$BIN/work-new-test-fails.sh" 2>&1)
+assert_equals "1 The new test passed before any code was written" "$? $output" \
+  "the new test fails check fails, saying the test passed before any code was written, when the new test already passes"
+teardown
+
 rm -rf "$TEMPLATE"
 
 echo ""
