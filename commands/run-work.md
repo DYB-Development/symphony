@@ -90,9 +90,9 @@ run it, and you do only what it stops for: an agent step, or the owner's step.
 
 ## Rules
 
-- **Hand a step only to the agent it names**, and only to `builder` or
-  `pr-scribe`. The script refuses an agent symphony does not define, and you
-  never stand in for one.
+- **Hand a step only to the agent it names**, and only to `builder`,
+  `test-writer`, `code-writer` or `pr-scribe`. The script refuses an agent
+  symphony does not define, and you never stand in for one.
 - **Never do an agent's work yourself.** Not the build, not the pull request
   body, not when the work looks small.
 - **Never merge, and never report the owner's step.** The script reports it once

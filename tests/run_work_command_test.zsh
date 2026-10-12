@@ -37,5 +37,9 @@ assert_equals "worktree title request criterion report" \
   "$(handoff code-writer | tr '\n' ' ' | grep -oE 'worktree|title|request|acceptance criterion|pipeline.sh report <id>' | sed 's/acceptance criterion/criterion/; s/pipeline.sh report <id>/report/' | tr '\n' ' ' | sed 's/ $//')" \
   "hands a code writer step to code-writer with the worktree, title, request and acceptance criterion, then posts its report"
 
+assert_equals "$(grep -oE '^   - \*\*`[a-z-]+`\*\*' "$COMMAND" | grep -oE '`[a-z-]+`' | tr -d '`' | sort | tr '\n' ' ')" \
+  "$(sed -n '/^## Rules/,$p' "$COMMAND" | awk '/^- \*\*Hand a step only/ { on = 1 } on && /^- \*\*/ && !/Hand a step only/ { exit } on { print }' | grep -oE '`[a-z-]+`' | tr -d '`' | sort | tr '\n' ' ')" \
+  "the rules name the same agents a step can be handed to as the step-by-step instructions"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
