@@ -67,8 +67,8 @@ drop_stub() {
 }
 
 pr() {
-  jq -nc --arg state "$1" --arg checks "$2" \
-    '{state: $state, url: "https://github.com/acme/widget/pull/5",
+  jq -nc --arg state "$1" --arg checks "$2" --arg mergeable "${3:-MERGEABLE}" \
+    '{state: $state, url: "https://github.com/acme/widget/pull/5", mergeable: $mergeable,
       statusCheckRollup: ($checks | split(",") | map(select(. != "") | split(":") | {name: .[0], status: "COMPLETED", conclusion: .[1]}))}'
 }
 
@@ -103,6 +103,12 @@ drop_stub
 stub "$(pr OPEN '')" "$(pr OPEN '')" "$(pr MERGED '')"
 "$WAIT" acme/widget 5 >/dev/null 2>&1
 assert_equals "30 30" "$(tr '\n' ' ' < "$WORK/slept" | sed 's/ $//')" "waits 30 seconds between each question to GitHub"
+drop_stub
+
+stub "$(pr OPEN test:SUCCESS CONFLICTING)"
+output=$("$WAIT" acme/widget 5 2>&1)
+assert_equals "2 PR #5 has a merge conflict with its base branch" "$? $(printf '%s' "$output" | tail -1)" \
+  "exits with its own status, naming the merge conflict, when the pull request cannot merge cleanly"
 drop_stub
 
 echo ""
