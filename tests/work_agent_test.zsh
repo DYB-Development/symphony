@@ -67,5 +67,11 @@ setup
 assert_equals "Read,Write Read,Write" "$(arg_after --tools) $(arg_after --allowedTools)" "gives the session only the tools its version lists, allowed without a prompt"
 teardown
 
+setup
+"$AGENT" >/dev/null 2>&1
+assert_equals "setting-sources:[] strict-mcp:yes skills-off:yes" "setting-sources:[$(arg_after --setting-sources)] strict-mcp:$(grep -qx -- --strict-mcp-config "$WORK/args" && echo yes || echo no) skills-off:$(grep -qx -- --disable-slash-commands "$WORK/args" && echo yes || echo no)" \
+  "loads none of the owner's settings, hooks, rules, MCP servers or skills"
+teardown
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

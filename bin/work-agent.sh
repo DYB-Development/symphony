@@ -19,4 +19,5 @@ tools=$(jq -r '.agent_version.tools | join(",")' <<<"$PIPELINE_STEP")
 
 "${SYMPHONY_CLAUDE:-claude}" -p "$(jq -r '.work.title' <<<"$PIPELINE_STEP")" \
   --system-prompt "$(jq -r '.agent_version.instructions' <<<"$PIPELINE_STEP")" \
-  --tools "$tools" --allowedTools "$tools"
+  --tools "$tools" --allowedTools "$tools" \
+  --setting-sources "" --strict-mcp-config --disable-slash-commands
