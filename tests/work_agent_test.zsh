@@ -78,5 +78,11 @@ setup
 assert_equals "$WORK/quotes-7-export-quotes" "$(cat "$WORK/ran_in" 2>/dev/null)" "runs the session in the task's worktree"
 teardown
 
+setup
+output=$("$AGENT" 2>&1)
+assert_equals "claude-sonnet-5-5 json Wrote one test." "$(arg_after --model) $(arg_after --output-format) $(printf '%s' "$output" | jq -r .result)" \
+  "runs the session on its version's model and prints the session's JSON result"
+teardown
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
