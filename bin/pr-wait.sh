@@ -20,7 +20,7 @@ repo=$1 pr=$2
 opened=0
 
 while true; do
-  IFS=$'\t' read -r state url _ checks < <("$(dirname "${BASH_SOURCE[0]}")/pr-state.sh" "$pr" "$repo")
+  IFS=$'\t' read -r state url _ checks _ < <("$(dirname "${BASH_SOURCE[0]}")/pr-state.sh" "$pr" "$repo")
   case "$state" in
     MERGED) printf 'PR #%s was merged\n' "$pr"; exit 0 ;;
     CLOSED) printf 'PR #%s was closed\n' "$pr"; exit 0 ;;

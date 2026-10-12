@@ -38,8 +38,8 @@ chmod +x "$SHARED_STUBS/gh"
 stub() {
   WORK="$(mktemp -d "${TMPDIR:-/tmp}/pr_state_test.XXXXXX")"
   mkdir -p "$WORK/bin"
-  jq -nc --arg state "$1" --arg checks "$2" \
-    '{state: $state, url: "https://github.com/acme/quotes/pull/5", number: 5,
+  jq -nc --arg state "$1" --arg checks "$2" --arg mergeable "${3:-MERGEABLE}" \
+    '{state: $state, url: "https://github.com/acme/quotes/pull/5", number: 5, mergeable: $mergeable,
       statusCheckRollup: ($checks | split(",") | map(select(. != "") | split(":") | {name: .[0], conclusion: .[1]}))}' > "$WORK/answer"
   ln -s "$SHARED_STUBS/gh" "$WORK/bin/gh"
   path=("$WORK/bin" $path)
@@ -53,24 +53,29 @@ drop_stub() {
 echo "pr-state.sh:"
 
 stub OPEN "tests:SUCCESS,lint:SUCCESS"
-assert_equals "OPEN	https://github.com/acme/quotes/pull/5	5	passed" "$("$STATE" 7-export-quotes)" \
+assert_equals "OPEN	https://github.com/acme/quotes/pull/5	5	passed	MERGEABLE" "$("$STATE" 7-export-quotes)" \
   "prints the state, address, number and passed for an open pull request whose checks all passed"
 drop_stub
 
 stub OPEN "tests:FAILURE,lint:SUCCESS,deploy:CANCELLED"
-assert_equals "OPEN	https://github.com/acme/quotes/pull/5	5	failed: tests, deploy" "$("$STATE" 5)" \
+assert_equals "OPEN	https://github.com/acme/quotes/pull/5	5	failed: tests, deploy	MERGEABLE" "$("$STATE" 5)" \
   "names each check that failed, was cancelled or timed out"
 drop_stub
 
 stub MERGED "tests:SUCCESS,lint:"
-assert_equals "MERGED	https://github.com/acme/quotes/pull/5	5	pending" "$("$STATE" 5)" \
+assert_equals "MERGED	https://github.com/acme/quotes/pull/5	5	pending	MERGEABLE" "$("$STATE" 5)" \
   "prints pending while a check has no conclusion, and the merged state"
 drop_stub
 
 stub CLOSED ""
 "$STATE" 5 acme/quotes >/dev/null
-assert_equals "pr view 5 --repo acme/quotes --json state,url,number,statusCheckRollup" "$(cat "$WORK/calls")" \
+assert_equals "pr view 5 --repo acme/quotes --json state,url,number,statusCheckRollup,mergeable" "$(cat "$WORK/calls")" \
   "asks GitHub once, for the repo it is given"
+drop_stub
+
+stub OPEN "tests:SUCCESS" CONFLICTING
+assert_equals "CONFLICTING" "$("$STATE" 5 | cut -f5)" \
+  "prints whether the pull request can merge cleanly as its fifth field"
 drop_stub
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
