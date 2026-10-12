@@ -88,9 +88,16 @@ command:**
 
 It runs no model while it waits. It opens the pull request in the owner's
 browser once every CI check passes, and exits naming the check when one fails.
+It exits with status 2 when the pull request has a merge conflict with its base
+branch, whether the conflict was there when it started or appeared later.
 Otherwise it keeps waiting and exits saying whether the pull request was merged
 or closed. Its exit wakes the session, which then cleans up a merged branch as
 `~/.claude/rules/agent-worktrees.md` says, or fixes the failed check.
+
+**A merge conflict is resolved by the session, without being asked.** Merge the
+base branch into the pull request branch and resolve the conflict there; never
+rebase, since history is never rewritten. Then run the tests, push, and start
+the watch again.
 
 ## A refactor says so in its title
 

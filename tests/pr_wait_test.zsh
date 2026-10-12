@@ -67,8 +67,8 @@ drop_stub() {
 }
 
 pr() {
-  jq -nc --arg state "$1" --arg checks "$2" \
-    '{state: $state, url: "https://github.com/acme/widget/pull/5",
+  jq -nc --arg state "$1" --arg checks "$2" --arg mergeable "${3:-MERGEABLE}" \
+    '{state: $state, url: "https://github.com/acme/widget/pull/5", mergeable: $mergeable,
       statusCheckRollup: ($checks | split(",") | map(select(. != "") | split(":") | {name: .[0], status: "COMPLETED", conclusion: .[1]}))}'
 }
 
@@ -104,6 +104,29 @@ stub "$(pr OPEN '')" "$(pr OPEN '')" "$(pr MERGED '')"
 "$WAIT" acme/widget 5 >/dev/null 2>&1
 assert_equals "30 30" "$(tr '\n' ' ' < "$WORK/slept" | sed 's/ $//')" "waits 30 seconds between each question to GitHub"
 drop_stub
+
+stub "$(pr OPEN test:SUCCESS CONFLICTING)"
+output=$("$WAIT" acme/widget 5 2>&1)
+assert_equals "2 PR #5 has a merge conflict with its base branch" "$? $(printf '%s' "$output" | tail -1)" \
+  "exits with its own status, naming the merge conflict, when the pull request cannot merge cleanly"
+drop_stub
+
+stub "$(pr OPEN test:SUCCESS)" "$(pr OPEN test:SUCCESS)" "$(pr OPEN test:SUCCESS CONFLICTING)"
+output=$("$WAIT" acme/widget 5 2>&1)
+assert_equals "2 PR #5 has a merge conflict with its base branch, opened 1 time" "$? $(printf '%s' "$output" | tail -1), opened $(wc -l < "$WORK/opened" | tr -d ' ') time" \
+  "exits on a conflict that appears while it waits, after CI passed and the pull request was opened"
+drop_stub
+
+stub "$(pr OPEN '' UNKNOWN)" "$(pr OPEN '' UNKNOWN)" "$(pr MERGED test:SUCCESS)"
+output=$("$WAIT" acme/widget 5 2>&1)
+assert_equals "0 PR #5 was merged" "$? $(printf '%s' "$output" | tail -1)" \
+  "keeps waiting while GitHub has not worked out whether the pull request can merge"
+drop_stub
+
+RULE="$(sed -n '/^## Watch the pull request once it is open/,/^## The/p' "$SCRIPT_DIR/../rules/pr-body.md" | tr '\n' ' ')"
+assert_equals "merge conflict|merge the base branch into the pull request branch|never rebase|run the tests|push|start the watch again" \
+  "$(for phrase in "merge conflict" "merge the base branch into the pull request branch" "never rebase" "run the tests" "push" "start the watch again"; do printf '%s' "$RULE" | grep -qi "$phrase" && printf '%s|' "$phrase"; done | sed 's/|$//')" \
+  "the rule for the watch's exit says to resolve a merge conflict by merging, never rebasing, then testing, pushing and watching again"
 
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
