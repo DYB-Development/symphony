@@ -15,5 +15,8 @@ USAGE
 
 [ -n "${WORK_ITEM_ID:-}" ] && [ -n "${PIPELINE_STEP:-}" ] || usage
 
+tools=$(jq -r '.agent_version.tools | join(",")' <<<"$PIPELINE_STEP")
+
 "${SYMPHONY_CLAUDE:-claude}" -p "$(jq -r '.work.title' <<<"$PIPELINE_STEP")" \
-  --system-prompt "$(jq -r '.agent_version.instructions' <<<"$PIPELINE_STEP")"
+  --system-prompt "$(jq -r '.agent_version.instructions' <<<"$PIPELINE_STEP")" \
+  --tools "$tools" --allowedTools "$tools"

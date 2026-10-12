@@ -62,5 +62,10 @@ setup
 assert_equals "You write ONE test." "$(arg_after --system-prompt)" "uses the version's instructions as the session's whole system prompt"
 teardown
 
+setup
+"$AGENT" >/dev/null 2>&1
+assert_equals "Read,Write Read,Write" "$(arg_after --tools) $(arg_after --allowedTools)" "gives the session only the tools its version lists, allowed without a prompt"
+teardown
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
