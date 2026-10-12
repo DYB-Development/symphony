@@ -15,8 +15,11 @@ USAGE
 
 [ -n "${WORK_ITEM_ID:-}" ] && [ -n "${PIPELINE_STEP:-}" ] || usage
 
+tree=$(git worktree list --porcelain | awk -v prefix="branch refs/heads/$WORK_ITEM_ID-" '/^worktree / { tree = substr($0, 10) } index($0, prefix) == 1 { print tree; exit }')
+[ -n "$tree" ] || { echo "No worktree for work item $WORK_ITEM_ID"; exit 1; }
 tools=$(jq -r '.agent_version.tools | join(",")' <<<"$PIPELINE_STEP")
 
+cd "$tree"
 "${SYMPHONY_CLAUDE:-claude}" -p "$(jq -r '.work.title' <<<"$PIPELINE_STEP")" \
   --system-prompt "$(jq -r '.agent_version.instructions' <<<"$PIPELINE_STEP")" \
   --tools "$tools" --allowedTools "$tools" \

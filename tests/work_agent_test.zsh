@@ -73,5 +73,10 @@ assert_equals "setting-sources:[] strict-mcp:yes skills-off:yes" "setting-source
   "loads none of the owner's settings, hooks, rules, MCP servers or skills"
 teardown
 
+setup
+"$AGENT" >/dev/null 2>&1
+assert_equals "$WORK/quotes-7-export-quotes" "$(cat "$WORK/ran_in" 2>/dev/null)" "runs the session in the task's worktree"
+teardown
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
