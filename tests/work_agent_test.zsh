@@ -91,5 +91,11 @@ assert_equals "yes yes yes" "$([[ "$prompt" == *"Export quotes"* ]] && echo yes 
   "hands the session the task's title, request and acceptance criterion"
 teardown
 
+setup
+output=$(env -u ANTHROPIC_API_KEY "$AGENT" 2>&1)
+assert_equals "0 no-bare" "$? $(grep -qx -- --bare "$WORK/args" && echo bare || echo no-bare)" \
+  "starts the session with no API key and without the minimal mode that needs one, so it signs in with the subscription"
+teardown
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
