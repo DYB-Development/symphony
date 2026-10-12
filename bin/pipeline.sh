@@ -121,7 +121,9 @@ run_hub_agent() {
   result=passed
   [ "$status" -eq 0 ] || result=failed
   hub POST report_step "$(jq -nc --argjson id "$id" --arg step "$name" --arg result "$result" --argjson status "$status" --arg session "$session" \
-    '{work_item_id: $id, step: $step, result: $result, exit_status: $status, output: ($session | fromjson? | .result // "")}')" >/dev/null
+    '($session | fromjson? // {}) as $run
+     | {work_item_id: $id, step: $step, result: $result, exit_status: $status, output: ($run.result // ""),
+        model: (($run.modelUsage // {}) | keys | first), tokens: (($run.usage // {}) | [.[] | numbers] | add)}')" >/dev/null
 }
 
 hand_to_agent() {

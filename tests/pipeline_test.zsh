@@ -228,6 +228,16 @@ assert_equals '"passed" "Could not do it.\n\nResult: failed"' "$(report 1 .resul
 teardown
 
 setup
+answer current_step.1 "$(hub_agent_step)"
+answer current_step.2 '{"answer":{"done":true,"output":"merged"}}'
+step_script work-agent 'printf "%s" "{\"result\":\"Wrote one test.\",\"usage\":{\"input_tokens\":3,\"output_tokens\":40,\"cache_read_input_tokens\":500,\"cache_creation_input_tokens\":4000},\"modelUsage\":{\"claude-sonnet-5-5\":{}}}"'
+step_script work-new-test-fails 'exit 0'
+"$PIPELINE" run 7 > "$WORK/out" 2>&1
+assert_equals '"claude-sonnet-5-5" 4543' "$(report 1 .model) $(report 1 .tokens)" \
+  "reports a hub agent step's model and tokens from the session's own result"
+teardown
+
+setup
 answer current_step "$(step build "Hand to builder on claude-sonnet-5-5" agent)"
 "$PIPELINE" run 7 > "$WORK/out" 2>&1
 stopped=$?
