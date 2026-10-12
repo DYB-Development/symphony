@@ -84,5 +84,12 @@ assert_equals "claude-sonnet-5-5 json Wrote one test." "$(arg_after --model) $(a
   "runs the session on its version's model and prints the session's JSON result"
 teardown
 
+setup
+"$AGENT" >/dev/null 2>&1
+prompt="$(cat "$WORK/args")"
+assert_equals "yes yes yes" "$([[ "$prompt" == *"Export quotes"* ]] && echo yes || echo no) $([[ "$prompt" == *"Reps want quotes as CSV."* ]] && echo yes || echo no) $([[ "$prompt" == *"A rep downloads a CSV"* ]] && echo yes || echo no)" \
+  "hands the session the task's title, request and acceptance criterion"
+teardown
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

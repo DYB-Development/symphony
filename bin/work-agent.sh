@@ -20,7 +20,7 @@ tree=$(git worktree list --porcelain | awk -v prefix="branch refs/heads/$WORK_IT
 tools=$(jq -r '.agent_version.tools | join(",")' <<<"$PIPELINE_STEP")
 
 cd "$tree"
-"${SYMPHONY_CLAUDE:-claude}" -p "$(jq -r '.work.title' <<<"$PIPELINE_STEP")" \
+"${SYMPHONY_CLAUDE:-claude}" -p "$(jq -r '"Title: \(.work.title)\nRequest: \(.work.request)\nAcceptance criterion: \(.work.acceptance_criteria)"' <<<"$PIPELINE_STEP")" \
   --system-prompt "$(jq -r '.agent_version.instructions' <<<"$PIPELINE_STEP")" \
   --tools "$tools" --allowedTools "$tools" \
   --setting-sources "" --strict-mcp-config --disable-slash-commands \
