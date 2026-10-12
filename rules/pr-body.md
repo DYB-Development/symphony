@@ -99,6 +99,22 @@ base branch into the pull request branch and resolve the conflict there; never
 rebase, since history is never rewritten. Then run the tests, push, and start
 the watch again.
 
+## A refactor says so in its title
+
+A pull request that only rearranges code, and changes nothing anyone using the
+code can see or call, is a refactor. **Its title starts with `Refactor:`**, so
+a reviewer knows before opening it that nothing is meant to behave differently.
+
+- A refactor changes no behaviour and adds nothing. A pull request that does
+  either is not a refactor, and its title does not start with `Refactor:`.
+- A refactor may land without a new test, since the existing tests passing
+  unchanged is what shows nothing changed.
+- The title is the one place the word appears. The One Sentence Summary still
+  names a user and what they can now do, never the word "refactor".
+
+The PR Scribe is told by the session that opens the pull request when the work
+is a refactor, and writes the title that way.
+
 ## The `Closes #N` trailer
 
 A PR that resolves an issue ends with `Closes #<n>` on its own line after the
