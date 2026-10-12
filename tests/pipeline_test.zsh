@@ -218,6 +218,16 @@ assert_equals '0 "failed"' "$? $(report 1 .result)" \
 teardown
 
 setup
+answer current_step.1 "$(hub_agent_step)"
+answer current_step.2 '{"answer":{"done":true,"output":"merged"}}'
+step_script work-agent 'printf "%s" "{\"result\":\"Could not do it.\\n\\nResult: failed\",\"usage\":{},\"modelUsage\":{}}"'
+step_script work-new-test-fails 'exit 0'
+"$PIPELINE" run 7 > "$WORK/out" 2>&1
+assert_equals '"passed" "Could not do it.\n\nResult: failed"' "$(report 1 .result) $(report 1 .output)" \
+  "posts the agent's report as the step's output and never lets it decide the result"
+teardown
+
+setup
 answer current_step "$(step build "Hand to builder on claude-sonnet-5-5" agent)"
 "$PIPELINE" run 7 > "$WORK/out" 2>&1
 stopped=$?
