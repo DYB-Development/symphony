@@ -213,6 +213,8 @@ is how the person who ran you sees which step you are on.
    gh pr create --repo <owner/repo> --base main --head <branch> \
      --title "<imperative title>" --body-file <file>
    ```
+   When the session that spawned you says the work is a refactor, the title
+   starts with `Refactor: `, as `~/.claude/rules/pr-body.md` says.
    or, when the PR already exists:
    ```
    gh pr edit <n> --repo <owner/repo> --body-file <file>
