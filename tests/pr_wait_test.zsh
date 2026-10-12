@@ -123,6 +123,11 @@ assert_equals "0 PR #5 was merged" "$? $(printf '%s' "$output" | tail -1)" \
   "keeps waiting while GitHub has not worked out whether the pull request can merge"
 drop_stub
 
+RULE="$(sed -n '/^## Watch the pull request once it is open/,/^## The/p' "$SCRIPT_DIR/../rules/pr-body.md" | tr '\n' ' ')"
+assert_equals "merge conflict|merge the base branch into the pull request branch|never rebase|run the tests|push|start the watch again" \
+  "$(for phrase in "merge conflict" "merge the base branch into the pull request branch" "never rebase" "run the tests" "push" "start the watch again"; do printf '%s' "$RULE" | grep -qi "$phrase" && printf '%s|' "$phrase"; done | sed 's/|$//')" \
+  "the rule for the watch's exit says to resolve a merge conflict by merging, never rebasing, then testing, pushing and watching again"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 rm -rf "$SHARED_STUBS"
