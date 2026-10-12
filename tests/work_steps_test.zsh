@@ -407,6 +407,15 @@ assert_equals "1 Nothing to commit in $BASE/quotes-7-export-quotes" "$? $output"
   "the commit step fails, saying there is nothing to commit, when the worktree holds no change"
 teardown
 
+setup
+"$BIN/work-start.sh" >/dev/null 2>&1
+pull_request '{"state":"OPEN","url":"https://github.com/acme/quotes/pull/9","number":9,"statusCheckRollup":[],"mergeable":"MERGEABLE"}'
+open_status=$("$BIN/work-pr-open.sh" >/dev/null 2>&1; echo $?)
+pull_request '{"state":"CLOSED","url":"https://github.com/acme/quotes/pull/9","number":9,"statusCheckRollup":[],"mergeable":"UNKNOWN"}'
+closed_status=$("$BIN/work-pr-open.sh" >/dev/null 2>&1; echo $?)
+assert_equals "0 1" "$open_status $closed_status" "the open pull request check passes only while the task's branch has an open pull request"
+teardown
+
 rm -rf "$TEMPLATE"
 
 echo ""
