@@ -107,6 +107,23 @@ run_script() {
     '{work_item_id: $id, step: $step, result: $result, exit_status: $status, output: $output} + (if $values == {} then {} else {values: $values} end)')" >/dev/null
 }
 
+run_hub_agent() {
+  local id="$1" step="$2" name check session status result
+  name=$(jq -r '.id' <<<"$step")
+  check="$steps/$(jq -r '.check' <<<"$step").sh"
+  [ -x "$check" ] || refuse 66 "symphony has no check script named $(jq -r '.check' <<<"$step")"
+  hub POST start_step "$(jq -nc --argjson id "$id" --arg step "$name" '{work_item_id: $id, step: $step}')" >/dev/null
+  session=$(PIPELINE_STEP="$step" WORK_ITEM_ID="$id" "$steps/work-agent.sh" 2>/dev/null || true)
+  set +e
+  PIPELINE_STEP="$step" WORK_ITEM_ID="$id" "$check" >/dev/null 2>&1
+  status=$?
+  set -e
+  result=passed
+  [ "$status" -eq 0 ] || result=failed
+  hub POST report_step "$(jq -nc --argjson id "$id" --arg step "$name" --arg result "$result" --argjson status "$status" --arg session "$session" \
+    '{work_item_id: $id, step: $step, result: $result, exit_status: $status, output: ($session | fromjson? | .result // "")}')" >/dev/null
+}
+
 hand_to_agent() {
   [ -f "$agents/$(jq -r '.agent' <<<"$1").md" ] || refuse 66 "symphony defines no agent named $(jq -r '.agent' <<<"$1")"
   jq -r '"Agent step: \(.name)\nAgent: \(.agent)\nModel: \(.model)\nTitle: \(.work.title)\nRequest: \(.work.request)\nAcceptance criteria: \(.work.acceptance_criteria)"' <<<"$1"
@@ -148,7 +165,13 @@ run() {
         fi
         run_script "$id" "$step"
         ;;
-      agent) hand_to_agent "$step" ;;
+      agent)
+        if [ "$(jq -r '.agent_version // empty | .number' <<<"$step")" != "" ]; then
+          run_hub_agent "$id" "$step"
+        else
+          hand_to_agent "$step"
+        fi
+        ;;
       owner) owner_step "$id" "$step" ;;
       wait)
         printf '%s is waiting until %s\n' "$(jq -r '.work.title' <<<"$step")" "$(jq -r '.until' <<<"$step")"

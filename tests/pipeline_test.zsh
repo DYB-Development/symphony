@@ -201,6 +201,22 @@ GET current_step" "$output
 $(calls)" "refuses a step naming a script this package does not contain, and runs nothing"
 teardown
 
+hub_agent_step() {
+  jq -nc --arg check "${1:-work-new-test-fails}" '{answer: {id: "write_test", name: "Write the test", kind: "agent", agent: "test-writer", check: $check,
+    work: {title: "Export quotes", request: "Reps want quotes as CSV", acceptance_criteria: "A rep downloads a CSV", repo: "acme/quotes"},
+    agent_version: {number: 2, instructions: "You write ONE test.", tools: ["Read", "Write"], model: "claude-sonnet-5-5"}}}'
+}
+
+setup
+answer current_step.1 "$(hub_agent_step)"
+answer current_step.2 '{"answer":{"done":true,"output":"merged"}}'
+step_script work-agent 'printf "%s" "{\"result\":\"Wrote one test.\\n\\nResult: passed\",\"usage\":{\"input_tokens\":3,\"output_tokens\":40,\"cache_read_input_tokens\":500,\"cache_creation_input_tokens\":4000},\"modelUsage\":{\"claude-sonnet-5-5\":{}}}"'
+step_script work-new-test-fails 'echo "The new test fails"; exit 1'
+"$PIPELINE" run 7 > "$WORK/out" 2>&1
+assert_equals '0 "failed"' "$? $(report 1 .result)" \
+  "runs a hub agent step's agent, then its check, and reports the step by the check's exit status without stopping"
+teardown
+
 setup
 answer current_step "$(step build "Hand to builder on claude-sonnet-5-5" agent)"
 "$PIPELINE" run 7 > "$WORK/out" 2>&1
