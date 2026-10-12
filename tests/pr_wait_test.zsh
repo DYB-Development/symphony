@@ -111,6 +111,12 @@ assert_equals "2 PR #5 has a merge conflict with its base branch" "$? $(printf '
   "exits with its own status, naming the merge conflict, when the pull request cannot merge cleanly"
 drop_stub
 
+stub "$(pr OPEN test:SUCCESS)" "$(pr OPEN test:SUCCESS)" "$(pr OPEN test:SUCCESS CONFLICTING)"
+output=$("$WAIT" acme/widget 5 2>&1)
+assert_equals "2 PR #5 has a merge conflict with its base branch, opened 1 time" "$? $(printf '%s' "$output" | tail -1), opened $(wc -l < "$WORK/opened" | tr -d ' ') time" \
+  "exits on a conflict that appears while it waits, after CI passed and the pull request was opened"
+drop_stub
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 rm -rf "$SHARED_STUBS"
