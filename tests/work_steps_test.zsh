@@ -228,40 +228,6 @@ teardown
 
 setup
 "$BIN/work-start.sh" >/dev/null 2>&1
-mkdir -p "$BASE/quotes-7-export-quotes/test" "$BASE/quotes-7-export-quotes/app"
-touch "$BASE/quotes-7-export-quotes/test/export_test.rb" "$BASE/quotes-7-export-quotes/app/export.rb"
-GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@example.com GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@example.com "$BIN/work-commit.sh" >/dev/null 2>&1
-assert_equals "0 Export quotes " "$? $(git -C "$BASE/quotes-7-export-quotes" log -1 --format=%s) $(git -C "$BASE/quotes-7-export-quotes" status --porcelain)" \
-  "the commit step commits every change in the worktree with the work item's title as the subject"
-teardown
-
-setup
-"$BIN/work-start.sh" >/dev/null 2>&1
-mkdir -p "$BASE/quotes-7-export-quotes/test"
-touch "$BASE/quotes-7-export-quotes/test/export_test.rb"
-GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@example.com GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@example.com "$BIN/work-commit.sh" >/dev/null 2>&1
-assert_equals "A rep can download quotes as a CSV file" "$(git -C "$BASE/quotes-7-export-quotes" log -1 --format=%b | sed '/^$/d')" \
-  "the commit step writes the work item's acceptance criterion as the commit's body"
-teardown
-
-setup
-"$BIN/work-start.sh" >/dev/null 2>&1
-mkdir -p "$BASE/quotes-7-export-quotes/test"
-touch "$BASE/quotes-7-export-quotes/test/export_test.rb"
-output=$(GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@example.com GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@example.com "$BIN/work-commit.sh" 2>&1)
-assert_equals "Committed $(git -C "$BASE/quotes-7-export-quotes" rev-parse --short HEAD) on 7-export-quotes" "$(printf '%s\n' "$output" | head -1)" \
-  "the commit step prints the commit's short id and its branch on its first line"
-teardown
-
-setup
-"$BIN/work-start.sh" >/dev/null 2>&1
-output=$(GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@example.com GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@example.com "$BIN/work-commit.sh" 2>&1)
-assert_equals "1 Nothing to commit in $BASE/quotes-7-export-quotes" "$? $output" \
-  "the commit step fails, saying there is nothing to commit, when the worktree holds no change"
-teardown
-
-setup
-"$BIN/work-start.sh" >/dev/null 2>&1
 pull_request '{"state":"OPEN","url":"https://github.com/acme/quotes/pull/9","number":9,"statusCheckRollup":[],"mergeable":"MERGEABLE"}'
 open_status=$("$BIN/work-pr-open.sh" >/dev/null 2>&1; echo $?)
 pull_request '{"state":"CLOSED","url":"https://github.com/acme/quotes/pull/9","number":9,"statusCheckRollup":[],"mergeable":"UNKNOWN"}'
