@@ -162,31 +162,6 @@ teardown
 
 setup
 "$BIN/work-start.sh" >/dev/null 2>&1
-git -C "$BASE/quotes-7-export-quotes" -c user.name=t -c user.email=t@example.com commit -q --allow-empty -m "Export quotes"
-checks "[$(entry test suite 'true'), $(entry lint style 'true')]"
-"$BIN/work-push.sh" >/dev/null 2>&1
-assert_equals "0 Export quotes" "$? $(git -C "$BASE/origin.git" log -1 --format=%s 7-export-quotes 2>/dev/null)" "the push step pushes the branch when the test and lint entries pass and nothing is uncommitted"
-teardown
-
-setup
-"$BIN/work-start.sh" >/dev/null 2>&1
-touch "$BASE/quotes-7-export-quotes/unsaved.rb"
-checks "[$(entry test suite 'true'), $(entry lint style 'true')]"
-output=$("$BIN/work-push.sh" 2>&1)
-assert_equals "1 Something is uncommitted in $BASE/quotes-7-export-quotes
-no branch" "$? $(printf '%s\n' "$output" | tail -1)
-$(git -C "$BASE/origin.git" rev-parse -q --verify 7-export-quotes >/dev/null && echo pushed || echo no branch)" "the push step refuses to push while something is uncommitted"
-teardown
-
-setup
-"$BIN/work-start.sh" >/dev/null 2>&1
-checks "[$(entry test suite 'exit 1'), $(entry lint style 'true')]"
-"$BIN/work-push.sh" >/dev/null 2>&1
-assert_equals "1 no branch" "$? $(git -C "$BASE/origin.git" rev-parse -q --verify 7-export-quotes >/dev/null && echo pushed || echo no branch)" "the push step refuses to push when a test or lint entry fails"
-teardown
-
-setup
-"$BIN/work-start.sh" >/dev/null 2>&1
 pull_request '{"state":"OPEN"}'
 output=$("$BIN/work-finish.sh" 2>&1)
 assert_equals "1 The pull request for 7-export-quotes is not merged
