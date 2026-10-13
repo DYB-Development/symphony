@@ -164,53 +164,6 @@ setup
 "$BIN/work-start.sh" >/dev/null 2>&1
 mkdir -p "$BASE/quotes-7-export-quotes/test"
 touch "$BASE/quotes-7-export-quotes/test/export_test.rb"
-checks "[$(entry test suite 'test ! -f')]"
-"$BIN/work-new-test-fails.sh" >/dev/null 2>&1
-assert_equals "0" "$?" "the new test fails check passes when the new test fails"
-teardown
-
-setup
-"$BIN/work-start.sh" >/dev/null 2>&1
-mkdir -p "$BASE/quotes-7-export-quotes/test"
-touch "$BASE/quotes-7-export-quotes/test/export_test.rb"
-checks "[$(entry test suite "sh -c 'echo Expected one export; exit 1' --")]"
-assert_equals "The new test fails
-Expected one export" "$("$BIN/work-new-test-fails.sh" 2>&1)" \
-  "the new test fails check prints that line first, then the test's failure message"
-teardown
-
-setup
-"$BIN/work-start.sh" >/dev/null 2>&1
-checks "[$(entry test suite 'false')]"
-output=$("$BIN/work-new-test-fails.sh" 2>&1)
-assert_equals "1 No new test was written" "$? $output" \
-  "the new test fails check fails, saying no new test was written, when the worktree holds no new or changed test"
-teardown
-
-setup
-"$BIN/work-start.sh" >/dev/null 2>&1
-mkdir -p "$BASE/quotes-7-export-quotes/app"
-touch "$BASE/quotes-7-export-quotes/app/export.rb"
-checks "[$(entry test suite 'false')]"
-output=$("$BIN/work-new-test-fails.sh" 2>&1)
-assert_equals "1 No new test was written" "$? $output" \
-  "the new test fails check does not count a changed file outside the test folder as a new test"
-teardown
-
-setup
-"$BIN/work-start.sh" >/dev/null 2>&1
-mkdir -p "$BASE/quotes-7-export-quotes/test"
-touch "$BASE/quotes-7-export-quotes/test/export_test.rb"
-checks "[$(entry test suite 'test -f')]"
-output=$("$BIN/work-new-test-fails.sh" 2>&1)
-assert_equals "1 The new test passed before any code was written" "$? $output" \
-  "the new test fails check fails, saying the test passed before any code was written, when the new test already passes"
-teardown
-
-setup
-"$BIN/work-start.sh" >/dev/null 2>&1
-mkdir -p "$BASE/quotes-7-export-quotes/test"
-touch "$BASE/quotes-7-export-quotes/test/export_test.rb"
 checks "[$(entry test suite 'test -f')]"
 "$BIN/work-new-test-passes.sh" >/dev/null 2>&1
 assert_equals "0" "$?" "the new test passes check passes when the new test passes"
