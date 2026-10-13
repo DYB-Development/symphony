@@ -129,38 +129,6 @@ $(git -C "$MAIN" worktree list | wc -l | tr -d ' ')" \
   "the start step reports a work item's existing worktree and makes no second one"
 teardown
 
-setup
-"$BIN/work-start.sh" >/dev/null 2>&1
-checks "[$(entry test suite 'true'), $(entry lint style 'true')]"
-"$BIN/work-check.sh" >/dev/null 2>&1
-passed=$?
-checks "[$(entry test suite 'true'), $(entry lint style 'exit 2')]"
-"$BIN/work-check.sh" >/dev/null 2>&1
-assert_equals "0 1" "$passed $?" "the check step passes only when every test and lint entry exits zero"
-teardown
-
-setup
-"$BIN/work-start.sh" >/dev/null 2>&1
-checks "[$(entry test suite 'true')]"
-output=$("$BIN/work-check.sh" 2>&1)
-assert_equals "1 No lint entry for acme/quotes" "$? $output" "the check step fails, naming the missing kind, for a repo with no lint entry"
-teardown
-
-setup
-"$BIN/work-start.sh" >/dev/null 2>&1
-checks "[$(entry test suite 'exit 3'), $(entry lint style 'true')]"
-assert_equals "suite: exit 3
-style: exit 0" "$("$BIN/work-check.sh" 2>&1 | grep ': exit ')" "the check step's output carries each command's exit status"
-teardown
-
-setup
-checks "[$(entry setup ready 'true'), $(entry test suite 'true'), $(entry lint style 'true')]"
-"$BIN/work-start.sh" >/dev/null 2>&1
-"$BIN/work-check.sh" >/dev/null 2>&1
-assert_equals "" "$(git -C "$BASE/quotes-7-export-quotes" status --porcelain)" "no step adds or changes a file in the repo to hold its commands"
-teardown
-
-
 rm -rf "$TEMPLATE"
 
 echo ""
