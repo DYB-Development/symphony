@@ -101,12 +101,14 @@ case "${1:-}" in
     ;;
   record)
     payload=$(cat)
-    agent_id=$(printf '%s' "$payload" | jq -r '.agent_id // empty')
+    agent_id="" agent_type="" session="" command="" event="" stdout=""
+    fields=$(printf '%s' "$payload" | jq -r '
+      def text: (. // "") | tostring | sub("\n+\\z"; "");
+      @sh "agent_id=\(.agent_id | text) agent_type=\(.agent_type | text) session=\(.session_id | text)",
+      @sh "command=\(.tool_input.command | text) event=\(.hook_event_name | text) stdout=\(.tool_response.stdout | text)"')
+    eval "$fields"
     [ -n "$agent_id" ] || exit 0
-    agent_type=$(printf '%s' "$payload" | jq -r '.agent_type // empty')
-    session=$(printf '%s' "$payload" | jq -r '.session_id // empty')
-    command=$(printf '%s' "$payload" | jq -r '.tool_input.command // empty')
-    case "$(printf '%s' "$payload" | jq -r '.hook_event_name // empty')" in
+    case "$event" in
       SubagentStop)
         [ ! -d "$log_dir" ] || find "$log_dir" -name '*.log' -mmin +1440 -delete
         append $'\tfinished'
@@ -115,7 +117,7 @@ case "${1:-}" in
         [[ "$command" == *scribe-step.sh* ]] || exit 0
         while IFS=$'\037' read -r target step position; do
           append "$target"$'\t'"$step" "$position"
-        done < <(marks_printed "$(printf '%s' "$payload" | jq -r '.tool_response.stdout // empty')")
+        done < <(marks_printed "$stdout")
         ;;
       *)
         step=$(script_run "$command")
