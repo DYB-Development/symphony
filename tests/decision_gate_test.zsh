@@ -102,6 +102,12 @@ drop_repo
 
 new_repo
 arm >/dev/null
+assert_contains '"permissionDecision":"deny"' "$(check $'echo "a\tb" \'c d\'\ngit commit -m "wip"')" \
+  "refuses a commit on a later line of a command with quotes and tabs"
+drop_repo
+
+new_repo
+arm >/dev/null
 assert_equals "" "$(check 'git status')" "leaves a command that is not a commit alone"
 drop_repo
 
