@@ -41,7 +41,11 @@ commit_root() {
 }
 
 payload=$(cat)
-session=$(printf '%s' "$payload" | jq -r '.session_id // empty')
+session="" command=""
+fields=$(printf '%s' "$payload" | jq -r '
+  def text: (. // "") | tostring | sub("\n+\\z"; "");
+  @sh "session=\(.session_id | text) command=\(.tool_input.command | text)"')
+eval "$fields"
 [ -n "$session" ] || exit 0
 
 case "${1:-}" in
@@ -54,7 +58,6 @@ case "${1:-}" in
   check)
     marker=$(marker_for "$session")
     [ -f "$marker" ] || exit 0
-    command=$(printf '%s' "$payload" | jq -r '.tool_input.command // empty')
     printf '%s' "$command" | grep -Eq "(^|[^A-Za-z])git([^A-Za-z]|$)" || exit 0
     printf '%s' "$command" | grep -Eq "(^|[^A-Za-z])commit([^A-Za-z]|$)" || exit 0
     root=$(commit_root "$command") || exit 0
