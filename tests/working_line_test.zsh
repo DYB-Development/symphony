@@ -49,6 +49,12 @@ assert_equals "● working · Push the branch" "$("$WORKING" show s1)" "changes 
 drop_record
 
 new_record
+tool_call s1 Bash $'Run the "fast" suite\tand \'lint\''
+assert_equals $'● working · Run the "fast" suite\tand \'lint\'' "$("$WORKING" show s1)" \
+  "shows a description's quotes and tabs as written"
+drop_record
+
+new_record
 tool_call s1 Read ""
 assert_equals "● working · Read" "$("$WORKING" show s1)" "shows the tool's name for a tool call with no description"
 drop_record

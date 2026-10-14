@@ -16,16 +16,19 @@ USAGE
 record_dir="${WORKING_LINE_DIR:-$HOME/.claude/working-line}"
 
 record() {
-  local payload session description
+  local payload fields session="" agent_id="" event="" description=""
   payload=$(cat)
-  session=$(printf '%s' "$payload" | jq -r '.session_id // empty')
+  fields=$(printf '%s' "$payload" | jq -r '
+    def text: (. // "") | tostring | sub("\n+\\z"; "");
+    @sh "session=\(.session_id | text) agent_id=\(.agent_id | text) event=\(.hook_event_name | text)",
+    @sh "description=\(.tool_input.description // .tool_name | text)"')
+  eval "$fields"
   [ -n "$session" ] || return 0
-  [ -z "$(printf '%s' "$payload" | jq -r '.agent_id // empty')" ] || return 0
-  if [ "$(printf '%s' "$payload" | jq -r '.hook_event_name // empty')" = Stop ]; then
+  [ -z "$agent_id" ] || return 0
+  if [ "$event" = Stop ]; then
     rm -f "$record_dir/$session"
     return 0
   fi
-  description=$(printf '%s' "$payload" | jq -r '.tool_input.description // .tool_name // empty')
   mkdir -p "$record_dir"
   printf '%s\n' "$description" > "$record_dir/$session"
 }

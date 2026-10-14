@@ -114,6 +114,11 @@ assert_equals "deny" "$(decision "$(bash_payload "cd $MAIN && git pull" "$LINKED
 drop_clones
 
 new_clones
+assert_equals "deny" "$(decision "$(bash_payload $'echo "a\tb" \'c d\'\ngit commit -m "wip"' "$MAIN")")" \
+  "a git commit on a later line of a command with quotes and tabs is refused in the main clone"
+drop_clones
+
+new_clones
 refused=()
 for command in 'git status' 'git log --oneline' 'git diff' 'git fetch' "git worktree add -b other $BASE/app-other"; do
   [[ "$(decision "$(bash_payload "$command" "$MAIN")")" == allow ]] || refused+=("$command")

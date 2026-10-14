@@ -60,15 +60,17 @@ payload=$(cat)
 
 case "${1:-}" in
   check)
-    command=$(printf '%s' "$payload" | jq -r '.tool_input.command // empty')
+    command="" cwd="" path=""
+    fields=$(printf '%s' "$payload" | jq -r '
+      def text: (. // "") | tostring | sub("\n+\\z"; "");
+      @sh "command=\(.tool_input.command | text) cwd=\(.cwd | text) path=\(.tool_input.file_path // .tool_input.notebook_path | text)"')
+    eval "$fields"
     if [ -n "$command" ]; then
       changes_files_or_branch "$command" || exit 0
-      cwd=$(printf '%s' "$payload" | jq -r '.cwd // empty')
       root=$(main_clone_root "$(target_dir "$command" "$cwd")") || exit 0
       refuse "$root"
       exit 0
     fi
-    path=$(printf '%s' "$payload" | jq -r '.tool_input.file_path // .tool_input.notebook_path // empty')
     [ -n "$path" ] || exit 0
     root=$(main_clone_root "$path") || exit 0
     refuse "$root"
