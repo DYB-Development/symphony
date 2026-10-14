@@ -86,6 +86,14 @@ drop_record
 
 new_record
 jq -nc --arg cwd "$REPO" \
+  '{hook_event_name: "PreToolUse", session_id: "s1", cwd: $cwd, tool_name: "AskUserQuestion", tool_input: {questions: [{question: "Which \"road\"\tor \u0027lane\u0027?\n"}]}}' \
+  | OWNER_TURN_NOW=1000 "$TURN" record
+assert_equals '"Which \"road\"\tor '"'"'lane'"'"'?"' "$(entries | jq -c '.[0].wanted')" \
+  "records a question's quotes and tabs as written and drops its trailing newline"
+drop_record
+
+new_record
+jq -nc --arg cwd "$REPO" \
   '{hook_event_name: "PreToolUse", session_id: "s1", cwd: $cwd, tool_name: "AskUserQuestion", tool_input: {questions: [{question: "Which road?"}, {question: "Which car?"}]}}' \
   | "$TURN" record
 assert_equals "[]" "$(entries)" "records nothing for a question prompt the one-question guard refuses"
