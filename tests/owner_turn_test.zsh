@@ -71,6 +71,12 @@ assert_equals '[{"kind":"plan","wanted":"Review plan #110","link":"https://githu
 drop_record
 
 new_record
+record_bash s1 $'cd \'a b\'\n~/.claude/bin/owner-turn.sh "plan" "Review plan #110" "https://github.com/acme/widget/issues/110"'
+assert_equals '[{"kind":"plan","wanted":"Review plan #110","link":"https://github.com/acme/widget/issues/110","session":"s1","repo":"acme/widget","arrived":1000}]' \
+  "$(entries)" "records an entry from a call on a later line of a multi-line command"
+drop_record
+
+new_record
 jq -nc --arg cwd "$REPO" \
   '{hook_event_name: "PreToolUse", session_id: "s1", cwd: $cwd, tool_name: "AskUserQuestion", tool_input: {questions: [{question: "Which road?"}]}}' \
   | OWNER_TURN_NOW=1000 "$TURN" record
