@@ -90,6 +90,13 @@ assert_equals $'1000\treview-scribe\t\truns judge-claims\ts1' \
 drop_dir
 
 new_dir
+bash_payload a1 review-scribe $'cd "/repo dir"\n~/.claude/bin/judge-claims.sh \'/repo dir/.review-42.claims.json\'' | record 1000
+assert_equals $'1000\treview-scribe\t\truns judge-claims\ts1' \
+  "$(cat "$LOGS/a1.log" 2>&1)" \
+  "records a symphony script a subagent runs on a later line of a command"
+drop_dir
+
+new_dir
 jq -nc '{hook_event_name: "SubagentStop", session_id: "s1", agent_id: "a1", agent_type: "review-scribe"}' | record 1000
 assert_equals $'1000\treview-scribe\t\tfinished\ts1' \
   "$(cat "$LOGS/a1.log" 2>&1)" \
