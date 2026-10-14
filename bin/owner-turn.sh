@@ -35,22 +35,24 @@ write_entry() {
 }
 
 record() {
-  local payload session cwd command args kind wanted link
+  local payload fields session="" cwd="" event="" tool="" questions="" question="" command="" args kind wanted link
   payload=$(cat)
-  session=$(printf '%s' "$payload" | jq -r '.session_id // empty')
-  cwd=$(printf '%s' "$payload" | jq -r '.cwd // empty')
-  if [ "$(printf '%s' "$payload" | jq -r '.hook_event_name // empty')" = UserPromptSubmit ]; then
+  fields=$(printf '%s' "$payload" | jq -r '
+    def text: (. // "") | tostring | sub("\n+\\z"; "");
+    @sh "session=\(.session_id | text) cwd=\(.cwd | text) event=\(.hook_event_name | text) tool=\(.tool_name | text)",
+    @sh "questions=\(.tool_input.questions | length) question=\(.tool_input.questions[0].question | text)",
+    @sh "command=\(.tool_input.command | text)"')
+  eval "$fields"
+  if [ "$event" = UserPromptSubmit ]; then
     mkdir -p "$record_dir/prompts"
     printf '%s\n' "$now" > "$record_dir/prompts/$session"
     return 0
   fi
-  if [ "$(printf '%s' "$payload" | jq -r '.tool_name // empty')" = AskUserQuestion ]; then
-    [ "$(printf '%s' "$payload" | jq '.tool_input.questions | length')" -eq 1 ] || return 0
-    wanted=$(printf '%s' "$payload" | jq -r '.tool_input.questions[0].question // empty')
-    write_entry question "$wanted" "" "$session" "$cwd"
+  if [ "$tool" = AskUserQuestion ]; then
+    [ "$questions" -eq 1 ] || return 0
+    write_entry question "$question" "" "$session" "$cwd"
     return 0
   fi
-  command=$(printf '%s' "$payload" | jq -r '.tool_input.command // empty')
   args=$(printf '%s' "$command" \
     | sed -nE 's/.*owner-turn\.sh[[:space:]]+"([^"]*)"[[:space:]]+"([^"]*)"([[:space:]]+"([^"]*)")?.*/\1\t\2\t\4/p')
   [ -n "$args" ] || return 0
