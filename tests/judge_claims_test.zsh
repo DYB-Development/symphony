@@ -352,6 +352,20 @@ assert_equals "1" "$(grep -cx 'four' "$WORK/stdin")" \
   "sends the judge a file once however many claims point into it"
 drop_claims
 
+new_claims
+JUDGE_REPLY='1. "The loader reads two lines."
+   Verdict: supported
+   Why: the captured lines are two and three.
+
+Standing: 0' judge >/dev/null 2>&1
+JUDGE_REPLY='Uncited:
+- "The loader was rewritten last week."
+
+Standing: 0' judge >/dev/null 2>&1
+assert_equals "1 The loader was rewritten last week." "$? $(jq -r '.uncited[]' "$CLAIMS" 2>/dev/null)" \
+  "still has the draft read for uncited sentences when no claim needs judging"
+drop_claims
+
 rm -rf "$TEMPLATE"
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
