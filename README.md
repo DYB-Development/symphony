@@ -9,6 +9,11 @@ doing, because it did not do any: it has to read the diff, the repo, or the
 issue. That is the whole idea, and it is why what comes out describes what is
 actually there.
 
+A scribe also starts without your `CLAUDE.md` and the rules files every session
+loads, and reads only the rules its own instructions name. This needs Claude
+Code 2.1.271 or later. An older version starts every scribe with every rule, as
+it did before.
+
 ## What is in it
 
 | Agent | Writes |
