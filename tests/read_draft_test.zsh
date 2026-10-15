@@ -50,7 +50,7 @@ drop_reader() {
 }
 
 read_with_reader() {
-  SYMPHONY_OVERLAY_DIR="${SYMPHONY_OVERLAY_DIR:-$READER_DIR/no-overlay}" PATH="$READER_DIR:$PATH" "$READ" "$DRAFT_FILE" 2>&1
+  SYMPHONY_OVERLAY_DIR="${SYMPHONY_OVERLAY_DIR:-$READER_DIR/no-overlay}" SYMPHONY_AGENT_MODELS_FILE="${SYMPHONY_AGENT_MODELS_FILE:-$READER_DIR/no-models.json}" PATH="$READER_DIR:$PATH" "$READ" "$DRAFT_FILE" 2>&1
 }
 
 echo "read-draft.sh:"
@@ -172,6 +172,15 @@ read_with_reader >/dev/null
 assert_equals "opus" \
   "$(cat "$READER_DIR/model" 2>/dev/null)" \
   "reads on the model that read a draft fastest when both were timed"
+drop_reader
+
+new_reader
+printf 'The poll stops when the dialog closes.\n' > "$DRAFT_FILE"
+printf '{"read-draft": "sonnet"}' > "$READER_DIR/agent-models.json"
+SYMPHONY_AGENT_MODELS_FILE="$READER_DIR/agent-models.json" read_with_reader >/dev/null
+assert_equals "sonnet" \
+  "$(cat "$READER_DIR/model" 2>/dev/null)" \
+  "reads on the model the agent models file names for the draft reader"
 drop_reader
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
