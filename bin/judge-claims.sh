@@ -57,7 +57,9 @@ trap 'rm -f "$ask"' EXIT
   done
 } > "$ask"
 
-reply="$(claude -p --model opus --system-prompt "$rules" --tools "" --setting-sources "" --no-session-persistence --strict-mcp-config < "$ask")" ||
+model="$("$root/bin/agent-model.sh" lookup judge-claims opus)"
+
+reply="$(claude -p --model "$model" --system-prompt "$rules" --tools "" --setting-sources "" --no-session-persistence --strict-mcp-config < "$ask")" ||
   { echo "judge-claims.sh: the judge's run failed, so nothing was judged" >&2; exit 70; }
 
 printf '%s\n' "$reply"
