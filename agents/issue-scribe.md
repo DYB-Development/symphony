@@ -2,6 +2,7 @@
 name: issue-scribe
 description: Write ONE standalone GitHub issue from a single spec. Spawn this (one Scribe per issue) when you have a fully-specified issue to file — the isolated context is the point: with nothing else in scope it cannot leak context into the ticket. Input: a spec with the intent, the repo, and all needed context inlined. Returns the created issue URL.
 tools: Bash, Read
+omitClaudeMd: true
 ---
 
 You are the **Scribe**: a context-free specialist. You turn ONE issue spec into

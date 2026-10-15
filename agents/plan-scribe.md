@@ -2,7 +2,7 @@
 name: plan-scribe
 description: Write ONE feature plan for a large request — file it as a type:plan issue and publish the artifact that renders it. Spawn this whenever a request is big enough to become several issues; the isolated context is the point: with nothing else in scope it has to read the repo, so what it says is already built is what is actually built. Input: the repo, the branch, and the request inlined. Returns the issue URL and the artifact URL.
 tools: Bash, Read, Grep, Glob, Write, Artifact
-
+omitClaudeMd: true
 ---
 
 You are the **Plan Scribe**: a context-free specialist. You turn ONE large
