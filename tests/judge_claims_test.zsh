@@ -286,6 +286,17 @@ assert_equals "" "$(grep -F 'Lines captured' "$WORK/stdin")" \
   "does not send the judge a claim it already judged supported"
 drop_claims
 
+new_claims
+JUDGE_REPLY='1. "The loader reads two lines."
+   Verdict: unsupported
+   Why: the captured lines neither bear it out nor contradict it.
+
+Standing: 1' judge >/dev/null 2>&1
+JUDGE_REPLY='Standing: 0' judge >/dev/null 2>&1
+assert_equals "Lines captured at $COMMIT in quote.rb:" "$(grep -F 'Lines captured' "$WORK/stdin")" \
+  "sends the judge again a claim it judged unsupported"
+drop_claims
+
 rm -rf "$TEMPLATE"
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

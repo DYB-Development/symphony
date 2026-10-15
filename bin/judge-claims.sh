@@ -32,7 +32,7 @@ draft=$(jq -r '.draft' "$claims")
 root="$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 rules="$(awk '/^## What the judge is given/ { on = 1 } on' "$root/rules/claim-checking.md")"
 
-to_judge=$(jq -r '.claims | to_entries[] | select(.value.verdict == null) | .key' "$claims")
+to_judge=$(jq -r '.claims | to_entries[] | select(.value.verdict.stands != "supported") | .key' "$claims")
 
 ask=$(mktemp)
 trap 'rm -f "$ask"' EXIT
