@@ -78,10 +78,6 @@
       "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>:<section>\" \"<n>. <the step's bold title>\""
     },
     {
-      "file": "agents/audit-scribe.md",
-      "contains": "Marking a step is required, never skipped, and is the first thing you do in it, even when the step runs no other command."
-    },
-    {
       "file": "agents/review-scribe.md",
       "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>#<pr>\" \"3. Run every check\" \"<k>/9 <the check>\""
     },
@@ -263,6 +259,18 @@
     },
     {
       "file": "agents/review-scribe.md",
+      "absent": "Marking a step is required, never skipped, and is the first thing you do in it, even when the step runs no other command."
+    },
+    {
+      "file": "agents/audit-scribe.md",
+      "contains": "Never run a mark as a command on its own."
+    },
+    {
+      "file": "agents/audit-scribe.md",
+      "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>:<section>\" \"<n>. <the step's bold title>\" && <the step's first command>"
+    },
+    {
+      "file": "agents/audit-scribe.md",
       "absent": "Marking a step is required, never skipped, and is the first thing you do in it, even when the step runs no other command."
     }
   ]
