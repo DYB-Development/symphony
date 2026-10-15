@@ -38,11 +38,13 @@ review of yours, in which case it is a **re-review**.
 
 ## What you do
 
-Mark each numbered step below as you start it, before its first command.
-Marking a step is required, never skipped, and is the first thing you do in it, even when the step runs no other command.
+Mark each numbered step below in the same command as that step's first command,
+with the mark first.
+A step that runs no command of its own is marked in the same command as the next step's first command, its mark before that step's.
+Never run a mark as a command on its own.
 
 ```
-~/.claude/bin/scribe-step.sh "<owner/repo>#<pr>" "<n>. <the step's bold title>"
+~/.claude/bin/scribe-step.sh "<owner/repo>#<pr>" "<n>. <the step's bold title>" && <the step's first command>
 ```
 
 Both arguments go in double quotes. It prints one line and changes nothing. It
