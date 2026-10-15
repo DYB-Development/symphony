@@ -80,6 +80,11 @@ assert_equals "opus" \
   "$(SYMPHONY_AGENT_MODELS_FILE="$MODELS" "$HOOK" lookup judge-claims opus)" \
   "prints the fallback when the file does not name the script"
 
+printf '["read-draft", "sonnet"]' > "$MODELS"
+assert_equals "opus" \
+  "$(SYMPHONY_AGENT_MODELS_FILE="$MODELS" "$HOOK" lookup read-draft opus 2>/dev/null)" \
+  "prints the fallback when the file is not a mapping of names to models"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"
