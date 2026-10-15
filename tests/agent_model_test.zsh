@@ -69,6 +69,10 @@ assert_equals "sonnet" \
   "$(SYMPHONY_AGENT_MODELS_FILE="$MODELS" "$HOOK" lookup read-draft opus)" \
   "prints the model the file names for a script's own name"
 
+assert_equals "opus" \
+  "$(SYMPHONY_AGENT_MODELS_FILE="$MODELS" "$HOOK" lookup judge-claims opus)" \
+  "prints the fallback when the file does not name the script"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"

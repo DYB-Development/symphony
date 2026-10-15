@@ -36,7 +36,7 @@ set_model() {
 lookup() {
   local model
   model="$(model_for "$1")"
-  printf '%s\n' "$model"
+  printf '%s\n' "${model:-$2}"
 }
 
 case "${1:-}" in
