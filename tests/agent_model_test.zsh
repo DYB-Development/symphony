@@ -44,6 +44,10 @@ assert_equals "" \
   "$(spawn '{"prompt": "Look", "description": "Look around", "subagent_type": "Explore"}')" \
   "leaves an agent the file does not name on the model it would run on"
 
+assert_equals "" \
+  "$(spawn '{"prompt": "Write it", "description": "Write the body", "subagent_type": "pr-scribe", "model": "opus"}')" \
+  "leaves a spawn that names its own model on that model"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"
