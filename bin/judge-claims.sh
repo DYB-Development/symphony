@@ -32,7 +32,7 @@ draft=$(jq -r '.draft' "$claims")
 root="$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 rules="$(awk '/^## What the judge is given/ { on = 1 } on' "$root/rules/claim-checking.md")"
 
-to_judge=$(jq -r '.claims | to_entries[] | select(.value.verdict.stands != "supported" or .value.verdict.judged.captured != .value.captured or .value.verdict.judged.text != .value.text) | .key' "$claims")
+to_judge=$(jq -r '.claims | to_entries[] | select(.value.verdict.stands != "supported" or .value.verdict.judged != (.value | { text, pointer, captured })) | .key' "$claims")
 
 ask=$(mktemp)
 trap 'rm -f "$ask"' EXIT
@@ -95,7 +95,7 @@ for index in $to_judge; do
   [ "$verdict" = supported ] || fell=$((fell + 1))
 
   updated=$(jq --argjson i "$index" --arg stands "$verdict" --arg why "$why" \
-    '.claims[$i].verdict = { stands: $stands, why: $why, judged: { text: .claims[$i].text, captured: .claims[$i].captured } }' "$claims")
+    '.claims[$i].verdict = { stands: $stands, why: $why, judged: (.claims[$i] | { text, pointer, captured }) }' "$claims")
   printf '%s\n' "$updated" > "$claims"
 done
 

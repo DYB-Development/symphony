@@ -322,6 +322,18 @@ assert_equals "Lines captured at $COMMIT in quote.rb:" "$(grep -F 'Lines capture
   "sends the judge again a supported claim whose text changed"
 drop_claims
 
+new_claims
+JUDGE_REPLY='1. "The loader reads two lines."
+   Verdict: supported
+   Why: the captured lines are two and three.
+
+Standing: 0' judge >/dev/null 2>&1
+jq '.claims[0].pointer.to = 4' "$CLAIMS" > "$CLAIMS.t" && mv "$CLAIMS.t" "$CLAIMS"
+JUDGE_REPLY='Standing: 0' judge >/dev/null 2>&1
+assert_equals "Lines captured at $COMMIT in quote.rb:" "$(grep -F 'Lines captured' "$WORK/stdin")" \
+  "sends the judge again a supported claim whose pointer changed"
+drop_claims
+
 rm -rf "$TEMPLATE"
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
