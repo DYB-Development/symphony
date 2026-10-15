@@ -70,10 +70,6 @@
       "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>@<branch>\" \"<n>. <the step's bold title>\""
     },
     {
-      "file": "agents/pr-scribe.md",
-      "contains": "Marking a step is required, never skipped, and is the first thing you do in it, even when the step runs no other command."
-    },
-    {
       "file": "agents/issue-scribe.md",
       "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>\" \"<n>. <the step's bold title>\""
     },
@@ -239,6 +235,18 @@
     },
     {
       "file": "agents/issue-scribe.md",
+      "absent": "Marking a step is required, never skipped, and is the first thing you do in it, even when the step runs no other command."
+    },
+    {
+      "file": "agents/pr-scribe.md",
+      "contains": "Never run a mark as a command on its own."
+    },
+    {
+      "file": "agents/pr-scribe.md",
+      "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>@<branch>\" \"<n>. <the step's bold title>\" && <the step's first command>"
+    },
+    {
+      "file": "agents/pr-scribe.md",
       "absent": "Marking a step is required, never skipped, and is the first thing you do in it, even when the step runs no other command."
     }
   ]
