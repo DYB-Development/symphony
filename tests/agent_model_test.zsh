@@ -61,6 +61,13 @@ assert_equals "" \
   "$(spawn '{"prompt": "Write it", "description": "Write the body", "subagent_type": "pr-scribe"}')" \
   "leaves an agent on its usual model when the file names no haiku, sonnet or opus for it"
 
+printf '{"pr-scribe": "haiku"}' > "$MODELS"
+spawn '{"prompt": "Write it", "description": "Write the body", "subagent_type": "pr-scribe"}' >/dev/null
+printf '{"pr-scribe": "sonnet"}' > "$MODELS"
+assert_equals "sonnet" \
+  "$(spawn '{"prompt": "Write it", "description": "Write the body", "subagent_type": "pr-scribe"}' | jq -r '.hookSpecificOutput.updatedInput.model')" \
+  "gives the next spawn the model the file names once the file is changed"
+
 echo ""
 echo "agent-model.sh lookup:"
 
