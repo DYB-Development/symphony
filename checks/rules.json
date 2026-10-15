@@ -296,6 +296,18 @@
     {
       "file": "agents/audit-scribe.md",
       "contains": "omitClaudeMd: true\n---\n"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "git grep -n -o -F -e '<name 1>' -e '<name 2>' <head sha>"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "absent": "git grep -n -- '<name>' <head sha>"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "Skip every hit in a file the diff touched."
     }
   ]
 }
