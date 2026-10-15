@@ -83,10 +83,6 @@
     },
     {
       "file": "rules/draft-reading.md",
-      "contains": "Marking each read is required, never skipped, and is the first thing you do for it."
-    },
-    {
-      "file": "rules/draft-reading.md",
       "contains": "mktemp -d"
     },
     {
@@ -256,6 +252,18 @@
     {
       "file": "agents/plan-scribe.md",
       "absent": "\"<k>/10 <the section>\""
+    },
+    {
+      "file": "rules/draft-reading.md",
+      "contains": "~/.claude/bin/scribe-step.sh \"<target>\" \"<n>. <the step's bold title>\" \"<r>/3 read\" && ~/.claude/bin/read-draft.sh <file>"
+    },
+    {
+      "file": "rules/draft-reading.md",
+      "contains": "Never run a read's mark as a command on its own."
+    },
+    {
+      "file": "rules/draft-reading.md",
+      "absent": "Marking each read is required, never skipped, and is the first thing you do for it."
     }
   ]
 }

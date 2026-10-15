@@ -99,10 +99,11 @@ once more. A sentence still flagged on that third read stays as it is. List each
 one in your return under `Still flagged:`, with the reader's note beside it, so
 the person reading the draft knows where to look.
 
-Mark each read as you start it, with the target and step you marked when this
-step began and the read's number out of three:
+Mark each read in the same command that runs the reader, with the mark first.
+The mark carries the target and step you marked when this step began and the
+read's number out of three:
 
 ```
-~/.claude/bin/scribe-step.sh "<target>" "<n>. <the step's bold title>" "<r>/3 read"
+~/.claude/bin/scribe-step.sh "<target>" "<n>. <the step's bold title>" "<r>/3 read" && ~/.claude/bin/read-draft.sh <file>
 ```
-Marking each read is required, never skipped, and is the first thing you do for it.
+Never run a read's mark as a command on its own.
