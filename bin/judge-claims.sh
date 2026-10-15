@@ -32,7 +32,8 @@ draft=$(jq -r '.draft' "$claims")
 root="$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 rules="$(awk '/^## What the judge is given/ { on = 1 } on' "$root/rules/claim-checking.md")"
 
-to_judge=$(jq -r '.claims | to_entries[] | select(.value.verdict.stands != "supported" or .value.verdict.judged != (.value | { text, pointer, captured })) | .key' "$claims")
+still_stands='def still_stands: .verdict.stands == "supported" and .verdict.judged == { text, pointer, captured };'
+to_judge=$(jq -r "$still_stands"' .claims | to_entries[] | select(.value | still_stands | not) | .key' "$claims")
 
 ask=$(mktemp)
 trap 'rm -f "$ask"' EXIT
@@ -41,7 +42,7 @@ trap 'rm -f "$ask"' EXIT
   printf 'The draft:\n\n'
   cat "$draft"
   printf '\nClaims already judged supported:\n'
-  jq -r '.claims[] | select(.verdict.stands == "supported" and .verdict.judged == { text, pointer, captured }) | "- \"\(.text)\""' "$claims"
+  jq -r "$still_stands"' .claims[] | select(still_stands) | "- \"\(.text)\""' "$claims"
   printf '\nThe claims:\n'
 
   number=0
