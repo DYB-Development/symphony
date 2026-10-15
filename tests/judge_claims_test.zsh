@@ -269,6 +269,12 @@ assert_equals "sonnet" "$(judged_on)" \
   "judges on the model the agent models file names for the claim judge"
 drop_claims
 
+new_claims
+judge >/dev/null 2>&1
+assert_equals "opus" "$(judged_on)" \
+  "judges on Opus when the agent models file does not name the claim judge"
+drop_claims
+
 rm -rf "$TEMPLATE"
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
