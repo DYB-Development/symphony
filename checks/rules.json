@@ -78,10 +78,6 @@
       "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>\" \"<n>. <the step's bold title>\""
     },
     {
-      "file": "agents/issue-scribe.md",
-      "contains": "Marking a step is required, never skipped, and is the first thing you do in it, even when the step runs no other command."
-    },
-    {
       "file": "agents/plan-scribe.md",
       "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>\" \"<n>. <the step's bold title>\""
     },
@@ -232,6 +228,18 @@
     {
       "file": "rules/develop_process_rules.md",
       "contains": "~/.claude/bin/tick-criterion.sh <owner/repo> <issue> <position>"
+    },
+    {
+      "file": "agents/issue-scribe.md",
+      "contains": "Never run a mark as a command on its own."
+    },
+    {
+      "file": "agents/issue-scribe.md",
+      "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>\" \"<n>. <the step's bold title>\" && <the step's first command>"
+    },
+    {
+      "file": "agents/issue-scribe.md",
+      "absent": "Marking a step is required, never skipped, and is the first thing you do in it, even when the step runs no other command."
     }
   ]
 }
