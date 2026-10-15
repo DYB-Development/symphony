@@ -78,16 +78,8 @@
       "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>:<section>\" \"<n>. <the step's bold title>\""
     },
     {
-      "file": "agents/plan-scribe.md",
-      "contains": "~/.claude/bin/scribe-step.sh \"<owner/repo>\" \"3. Write all ten sections\" \"<k>/10 <the section>\""
-    },
-    {
       "file": "rules/draft-reading.md",
       "contains": "~/.claude/bin/scribe-step.sh \"<target>\" \"<n>. <the step's bold title>\" \"<r>/3 read\""
-    },
-    {
-      "file": "agents/plan-scribe.md",
-      "contains": "Marking each section is required, never skipped, and is the first thing you do for it."
     },
     {
       "file": "rules/draft-reading.md",
@@ -260,6 +252,10 @@
     {
       "file": "agents/review-scribe.md",
       "absent": "\"<k>/<K> claim\""
+    },
+    {
+      "file": "agents/plan-scribe.md",
+      "absent": "\"<k>/10 <the section>\""
     }
   ]
 }

@@ -68,11 +68,6 @@ is how the person who ran you sees which step you are on.
 
 3. **Write all ten sections** in the order `feature-plan.md` gives, with the
    header above them. Never drop one, never invent an eleventh, never renumber.
-   Mark each section as you start it:
-   ```
-   ~/.claude/bin/scribe-step.sh "<owner/repo>" "3. Write all ten sections" "<k>/10 <the section>"
-   ```
-   Marking each section is required, never skipped, and is the first thing you do for it.
 
    - Section 04 is the section the plan is read for. Get every relationship
      right and name the join between the new work and the built work, and with it
