@@ -264,6 +264,18 @@
     {
       "file": "rules/draft-reading.md",
       "absent": "Marking each read is required, never skipped, and is the first thing you do for it."
+    },
+    {
+      "file": "rules/claim-checking.md",
+      "contains": "They are not\n  judged again, and their sentences are never listed as uncited."
+    },
+    {
+      "file": "rules/claim-checking.md",
+      "contains": "A file several claims point into is shown once"
+    },
+    {
+      "file": "rules/claim-checking.md",
+      "contains": "A claim judged supported whose record still matches is\nnot handed to the judge again"
     }
   ]
 }
