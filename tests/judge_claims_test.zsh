@@ -345,6 +345,13 @@ assert_equals '- "The loader reads two lines."' "$(awk '/^Claims already judged 
   "names to the judge each claim it already judged supported, so its sentence is not counted uncited"
 drop_claims
 
+new_claims
+jq '.claims += [ { text: "The loader reads four lines.", pointer: .claims[0].pointer, captured: .claims[0].captured } ]' "$CLAIMS" > "$CLAIMS.t" && mv "$CLAIMS.t" "$CLAIMS"
+judge >/dev/null 2>&1
+assert_equals "1" "$(grep -cx 'four' "$WORK/stdin")" \
+  "sends the judge a file once however many claims point into it"
+drop_claims
+
 rm -rf "$TEMPLATE"
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

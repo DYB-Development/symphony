@@ -45,6 +45,7 @@ trap 'rm -f "$ask"' EXIT
   printf '\nThe claims:\n'
 
   number=0
+  sent=""
   for index in $to_judge; do
     text=$(jq -r ".claims[$index].text" "$claims")
     commit=$(jq -r ".claims[$index].captured.commit // \"\"" "$claims")
@@ -54,6 +55,11 @@ trap 'rm -f "$ask"' EXIT
     number=$((number + 1))
     printf '\n%s. "%s"\n' "$number" "$text"
     printf 'Lines captured at %s in %s:\n%s\n' "$commit" "$path" "$lines"
+    if printf '%s\n' "$sent" | grep -Fxq -- "$commit:$path"; then
+      printf 'File %s at that commit: shown above\n' "$path"
+      continue
+    fi
+    sent="$sent"$'\n'"$commit:$path"
     printf 'File %s at that commit:\n' "$path"
     git show "$commit:$path" 2>/dev/null || printf '(the file could not be read)\n'
   done
