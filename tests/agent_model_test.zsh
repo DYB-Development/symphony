@@ -56,6 +56,11 @@ printf 'pr-scribe: haiku\n' > "$MODELS"
 spawn '{"prompt": "Write it", "description": "Write the body", "subagent_type": "pr-scribe"}' >/dev/null 2>&1
 assert_equals "0" "$?" "lets the spawn through when the agent models file is not JSON"
 
+printf '{"pr-scribe": "fastest"}' > "$MODELS"
+assert_equals "" \
+  "$(spawn '{"prompt": "Write it", "description": "Write the body", "subagent_type": "pr-scribe"}')" \
+  "leaves an agent on its usual model when the file names no haiku, sonnet or opus for it"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"
