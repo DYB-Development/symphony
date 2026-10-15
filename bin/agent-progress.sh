@@ -105,7 +105,7 @@ case "${1:-}" in
     fields=$(printf '%s' "$payload" | jq -r '
       def text: (. // "") | tostring | sub("\n+\\z"; "");
       @sh "agent_id=\(.agent_id | text) agent_type=\(.agent_type | text) session=\(.session_id | text)",
-      @sh "command=\(.tool_input.command | text) event=\(.hook_event_name | text) stdout=\(.tool_response.stdout | text)"')
+      @sh "command=\(.tool_input.command | text) event=\(.hook_event_name | text) stdout=\(.tool_response.stdout // .error | text)"')
     eval "$fields"
     [ -n "$agent_id" ] || exit 0
     case "$event" in
@@ -113,7 +113,7 @@ case "${1:-}" in
         [ ! -d "$log_dir" ] || find "$log_dir" -name '*.log' -mmin +1440 -delete
         append $'\tfinished'
         ;;
-      PostToolUse)
+      PostToolUse|PostToolUseFailure)
         [[ "$command" == *scribe-step.sh* ]] || exit 0
         while IFS=$'\037' read -r target step position; do
           append "$target"$'\t'"$step" "$position"
