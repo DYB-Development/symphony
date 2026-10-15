@@ -276,6 +276,10 @@
     {
       "file": "rules/claim-checking.md",
       "contains": "A claim judged supported whose record still matches is\nnot handed to the judge again"
+    },
+    {
+      "file": "agents/issue-scribe.md",
+      "contains": "omitClaudeMd: true\n---\n"
     }
   ]
 }
