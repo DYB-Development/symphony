@@ -77,6 +77,10 @@ assert_equals "PreToolUse:AskUserQuestion" \
   "$(jq -r '[.hooks | to_entries[] | .key as $event | .value[] | select(any(.hooks[]; .command | endswith("/bin/one-question-gate.sh check"))) | "\($event):\(.matcher)"] | sort | join(" ")' "$CONFIG/settings.json")" \
   "checks every question prompt for more than one question before it is shown"
 
+assert_equals "PreToolUse:Agent" \
+  "$(jq -r '[.hooks | to_entries[] | .key as $event | .value[] | select(any(.hooks[]; .command | endswith("/bin/agent-model.sh set"))) | "\($event):\(.matcher)"] | sort | join(" ")' "$CONFIG/settings.json")" \
+  "sets every spawned agent's model from the owner's agent models file before it starts"
+
 assert_equals "PreToolUse:Bash" \
   "$(jq -r '[.hooks | to_entries[] | .key as $event | .value[] | select(any(.hooks[]; .command | endswith("/bin/description-gate.sh check"))) | "\($event):\(.matcher)"] | sort | join(" ")' "$CONFIG/settings.json")" \
   "refuses every shell command that carries no description"
