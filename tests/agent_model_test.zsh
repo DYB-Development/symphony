@@ -48,6 +48,10 @@ assert_equals "" \
   "$(spawn '{"prompt": "Write it", "description": "Write the body", "subagent_type": "pr-scribe", "model": "opus"}')" \
   "leaves a spawn that names its own model on that model"
 
+rm -f "$MODELS"
+spawn '{"prompt": "Write it", "description": "Write the body", "subagent_type": "pr-scribe"}' >/dev/null 2>&1
+assert_equals "0" "$?" "lets the spawn through when there is no agent models file"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"

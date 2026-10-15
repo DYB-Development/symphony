@@ -13,6 +13,7 @@ USAGE
 [ "${1:-}" = set ] || usage
 
 models="${SYMPHONY_AGENT_MODELS_FILE:-$HOME/.config/symphony/agent-models.json}"
+[ -r "$models" ] || exit 0
 input="$(cat)"
 { read -r named; read -r name; } < <(printf '%s' "$input" | jq -r '(.tool_input.model // ""), (.tool_input.subagent_type // "")')
 [ -z "$named" ] || exit 0
