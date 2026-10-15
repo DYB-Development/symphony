@@ -83,15 +83,17 @@ is how the person who ran you sees which step you are on.
    The Missed changes check is the one that reads past the diff, and it reads
    only what a search turns up. List every name the diff renames, removes, or
    changes the meaning of: an identifier, a key, a route, a test id, and the
-   path of each file it changed. Search the head commit for each one:
+   path of each file it changed. Search the head commit for all of them in one
+   command, one `-e` per name:
 
    ```
    git fetch -q origin pull/<n>/head
-   git grep -n -- '<name>' <head sha>
+   git grep -n -o -F -e '<name 1>' -e '<name 2>' <head sha>
    ```
 
-   Read each hit in a file the diff did not touch, and each doc the search finds
-   describing a file the diff changed. Stop there.
+   Each hit prints its file, its line and the name it matched. Read each hit in
+   a file the diff did not touch, and each doc the search finds describing a
+   file the diff changed. Skip every hit in a file the diff touched. Stop there.
 
 3. **Run every check** in the order `review-checks.md` gives, and record each
    one's result as that file says to. Run every one even when the diff looks like
