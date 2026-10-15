@@ -73,6 +73,15 @@ assert_equals $'1000\treview-scribe\tacme/quotes#42\t2. Read the ticket\ts1\n100
 drop_dir
 
 new_dir
+jq -nc '{hook_event_name: "PostToolUseFailure", session_id: "s1", agent_id: "a1", agent_type: "review-scribe", tool_name: "Bash",
+  tool_input: {command: "~/.claude/bin/scribe-step.sh \"$S\" \"11. Have the draft read\" \"1/3 read\" && ~/.claude/bin/read-draft.sh draft.md"},
+  error: "Exit code 1\nacme/quotes#42 · 11. Have the draft read · 1/3 read\n1. \"A sentence.\"\n   Flag: unclear\n\nFlagged: 1"}' | record 1000
+assert_equals $'1000\treview-scribe\tacme/quotes#42\t11. Have the draft read\ts1\t1/3 read' \
+  "$(cat "$LOGS/a1.log" 2>&1)" \
+  "records the mark a command printed before the rest of that command failed"
+drop_dir
+
+new_dir
 bash_payload a1 review-scribe '~/.claude/bin/scribe-step.sh "$S" "3. Run every check"' | record 1000
 assert_equals "" "$(ls -A "$LOGS")" "records no mark before its command has run"
 drop_dir
