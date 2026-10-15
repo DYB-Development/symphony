@@ -139,6 +139,7 @@ settings that are not its own alone:
 | `PreToolUse` | `agent-progress.sh record` | Logs each script a subagent is about to run |
 | `PreToolUse` | `one-question-gate.sh check` | Refuses a question prompt that asks more than one question |
 | `PreToolUse` | `description-gate.sh check` | Refuses a shell command that carries no description of what it does |
+| `PreToolUse` | `agent-model.sh set` | Gives a spawned agent the model your agent models file names for it |
 | `PreToolUse` | `owner-turn.sh record` | Records a question prompt, and each item an agent marks with `owner-turn.sh`, as something the owner is waited on for |
 | `UserPromptSubmit` | `owner-turn.sh record` | Records when the owner last prompted, which ends that session's flag in the status line |
 | `Stop` | `owner-turn.sh stop` | Shows the session's flags as the last lines of the turn when the owner is waited on |
@@ -298,6 +299,7 @@ overwrites them.
 | Variable | Changes |
 |---|---|
 | `SYMPHONY_OVERLAY_DIR` | Where your own rules files are read from, instead of `~/.config/symphony/rules` |
+| `SYMPHONY_AGENT_MODELS_FILE` | Where the model each agent runs on is read from, instead of `~/.config/symphony/agent-models.json` |
 | `CLAUDE_CONFIG_DIR` | Where the installer links to, instead of `~/.claude` |
 | `CLAUDE_WRITING_STYLE_FILE` | One writing rules file, ahead of the overlay and the shipped one |
 | `CLAUDE_BANNED_PHRASES_FILE` | One phrase list, on the same terms |
@@ -353,6 +355,34 @@ expects to find goes missing.
 
 Set `SYMPHONY_OVERLAY_DIR` to keep the overlay somewhere else, such as a
 directory your team shares.
+
+### Choosing each agent's model
+
+Put a file at `~/.config/symphony/agent-models.json`, next to the rules
+overlay, that maps an agent's name to `haiku`, `sonnet` or `opus`:
+
+```json
+{
+  "pr-scribe": "sonnet",
+  "issue-scribe": "haiku",
+  "keystone_ui-develop": "sonnet",
+  "read-draft": "opus",
+  "judge-claims": "opus"
+}
+```
+
+An agent spawned by that name runs on the model given, whether it is one of
+the scribes here or an agent another package installed. `read-draft` is the
+draft reader and `judge-claims` is the claim judge, and each runs on Opus when
+the file does not name it.
+
+A spawn that names its own model keeps it. An agent the file does not name, or
+names with any other value, runs on the model it would run on without the
+file. A missing file, or one that is not a mapping of names to models, changes
+nothing and never stops an agent being spawned.
+
+The file is read on every spawn and every draft read, so a change takes effect
+on the next one with no reinstall.
 
 ## Running the tests
 

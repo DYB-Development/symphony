@@ -90,6 +90,15 @@
         ]
       },
       {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/agent-model.sh set"
+          }
+        ]
+      },
+      {
         "matcher": "*",
         "hooks": [
           {

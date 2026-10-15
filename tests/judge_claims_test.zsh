@@ -84,7 +84,11 @@ drop_claims() {
 }
 
 judge() {
-  (cd "$SOURCE" && PATH="$WORK:$PATH" "$JUDGE" "$CLAIMS")
+  (cd "$SOURCE" && SYMPHONY_AGENT_MODELS_FILE="${SYMPHONY_AGENT_MODELS_FILE:-$WORK/no-models.json}" PATH="$WORK:$PATH" "$JUDGE" "$CLAIMS")
+}
+
+judged_on() {
+  awk 'want { print; exit } $0 == "--model" { want = 1 }' "$WORK/args" 2>/dev/null
 }
 
 new_claims
@@ -256,6 +260,19 @@ Uncited:
 Standing: 0' judge >/dev/null 2>&1
 assert_equals "The loader was rewritten last week." "$(jq -r '.uncited[]' "$CLAIMS" 2>/dev/null)" \
   "leaves an empty entry out of the uncited list"
+drop_claims
+
+new_claims
+printf '{"judge-claims": "sonnet"}' > "$WORK/agent-models.json"
+SYMPHONY_AGENT_MODELS_FILE="$WORK/agent-models.json" judge >/dev/null 2>&1
+assert_equals "sonnet" "$(judged_on)" \
+  "judges on the model the agent models file names for the claim judge"
+drop_claims
+
+new_claims
+judge >/dev/null 2>&1
+assert_equals "opus" "$(judged_on)" \
+  "judges on Opus when the agent models file does not name the claim judge"
 drop_claims
 
 rm -rf "$TEMPLATE"
