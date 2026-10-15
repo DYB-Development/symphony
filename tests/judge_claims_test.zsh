@@ -334,6 +334,17 @@ assert_equals "Lines captured at $COMMIT in quote.rb:" "$(grep -F 'Lines capture
   "sends the judge again a supported claim whose pointer changed"
 drop_claims
 
+new_claims
+JUDGE_REPLY='1. "The loader reads two lines."
+   Verdict: supported
+   Why: the captured lines are two and three.
+
+Standing: 0' judge >/dev/null 2>&1
+JUDGE_REPLY='Standing: 0' judge >/dev/null 2>&1
+assert_equals '- "The loader reads two lines."' "$(awk '/^Claims already judged supported/ { on = 1; next } on && NF { print; exit }' "$WORK/stdin")" \
+  "names to the judge each claim it already judged supported, so its sentence is not counted uncited"
+drop_claims
+
 rm -rf "$TEMPLATE"
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

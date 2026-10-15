@@ -40,6 +40,8 @@ trap 'rm -f "$ask"' EXIT
 {
   printf 'The draft:\n\n'
   cat "$draft"
+  printf '\nClaims already judged supported:\n'
+  jq -r '.claims[] | select(.verdict.stands == "supported" and .verdict.judged == { text, pointer, captured }) | "- \"\(.text)\""' "$claims"
   printf '\nThe claims:\n'
 
   number=0
