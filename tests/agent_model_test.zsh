@@ -40,6 +40,10 @@ assert_equals '{"prompt":"Write it","description":"Write the body","subagent_typ
   "$(spawn '{"prompt": "Write it", "description": "Write the body", "subagent_type": "pr-scribe"}' | jq -c '.hookSpecificOutput.updatedInput')" \
   "gives a named agent the model the file names for it"
 
+assert_equals "" \
+  "$(spawn '{"prompt": "Look", "description": "Look around", "subagent_type": "Explore"}')" \
+  "leaves an agent the file does not name on the model it would run on"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"

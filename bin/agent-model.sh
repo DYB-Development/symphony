@@ -16,6 +16,7 @@ models="${SYMPHONY_AGENT_MODELS_FILE:-$HOME/.config/symphony/agent-models.json}"
 input="$(cat)"
 name="$(printf '%s' "$input" | jq -r '.tool_input.subagent_type // ""')"
 model="$(jq -r --arg name "$name" '.[$name] // ""' "$models")"
+[ -n "$model" ] || exit 0
 
 printf '%s' "$input" | jq -c --arg model "$model" \
   '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "allow", updatedInput: (.tool_input + {model: $model})}}'
