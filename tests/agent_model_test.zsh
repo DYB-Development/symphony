@@ -62,6 +62,14 @@ assert_equals "" \
   "leaves an agent on its usual model when the file names no haiku, sonnet or opus for it"
 
 echo ""
+echo "agent-model.sh lookup:"
+
+printf '{"read-draft": "sonnet"}' > "$MODELS"
+assert_equals "sonnet" \
+  "$(SYMPHONY_AGENT_MODELS_FILE="$MODELS" "$HOOK" lookup read-draft opus)" \
+  "prints the model the file names for a script's own name"
+
+echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"
 [[ $FAIL -eq 0 ]]
