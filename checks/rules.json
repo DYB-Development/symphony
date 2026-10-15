@@ -292,6 +292,10 @@
     {
       "file": "agents/review-scribe.md",
       "contains": "omitClaudeMd: true\n---\n"
+    },
+    {
+      "file": "agents/audit-scribe.md",
+      "contains": "omitClaudeMd: true\n---\n"
     }
   ]
 }
