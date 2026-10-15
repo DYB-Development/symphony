@@ -32,6 +32,8 @@ draft=$(jq -r '.draft' "$claims")
 root="$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 rules="$(awk '/^## What the judge is given/ { on = 1 } on' "$root/rules/claim-checking.md")"
 
+to_judge=$(jq -r '.claims | to_entries[] | select(.value.verdict == null) | .key' "$claims")
+
 ask=$(mktemp)
 trap 'rm -f "$ask"' EXIT
 
@@ -40,20 +42,18 @@ trap 'rm -f "$ask"' EXIT
   cat "$draft"
   printf '\nThe claims:\n'
 
-  count=$(jq '.claims | length' "$claims")
-  index=0
-  while [ "$index" -lt "$count" ]; do
+  number=0
+  for index in $to_judge; do
     text=$(jq -r ".claims[$index].text" "$claims")
     commit=$(jq -r ".claims[$index].captured.commit // \"\"" "$claims")
     lines=$(jq -r ".claims[$index].captured.lines // \"\"" "$claims")
     path=$(jq -r ".claims[$index].pointer.path" "$claims")
 
-    printf '\n%s. "%s"\n' "$((index + 1))" "$text"
+    number=$((number + 1))
+    printf '\n%s. "%s"\n' "$number" "$text"
     printf 'Lines captured at %s in %s:\n%s\n' "$commit" "$path" "$lines"
     printf 'File %s at that commit:\n' "$path"
     git show "$commit:$path" 2>/dev/null || printf '(the file could not be read)\n'
-
-    index=$((index + 1))
   done
 } > "$ask"
 
@@ -70,8 +70,7 @@ fell=0
 printf '%s' "$standing" | grep -qx 'Standing: [0-9][0-9]*' ||
   { echo "judge-claims.sh: the judge's reply does not end with a count, so nothing was judged" >&2; exit 70; }
 
-index=0
-while [ "$index" -lt "$count" ]; do
+for index in $to_judge; do
   text=$(jq -r ".claims[$index].text" "$claims")
 
   block=$(printf '%s\n' "$reply" | awk -v want="$text" '
@@ -98,8 +97,6 @@ while [ "$index" -lt "$count" ]; do
   updated=$(jq --argjson i "$index" --arg stands "$verdict" --arg why "$why" \
     '.claims[$i].verdict = { stands: $stands, why: $why }' "$claims")
   printf '%s\n' "$updated" > "$claims"
-
-  index=$((index + 1))
 done
 
 uncited=$(printf '%s\n' "$reply" | awk '

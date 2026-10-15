@@ -275,6 +275,17 @@ assert_equals "opus" "$(judged_on)" \
   "judges on Opus when the agent models file does not name the claim judge"
 drop_claims
 
+new_claims
+JUDGE_REPLY='1. "The loader reads two lines."
+   Verdict: supported
+   Why: the captured lines are two and three.
+
+Standing: 0' judge >/dev/null 2>&1
+JUDGE_REPLY='Standing: 0' judge >/dev/null 2>&1
+assert_equals "" "$(grep -F 'Lines captured' "$WORK/stdin")" \
+  "does not send the judge a claim it already judged supported"
+drop_claims
+
 rm -rf "$TEMPLATE"
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
