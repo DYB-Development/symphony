@@ -275,6 +275,97 @@ assert_equals "opus" "$(judged_on)" \
   "judges on Opus when the agent models file does not name the claim judge"
 drop_claims
 
+new_claims
+JUDGE_REPLY='1. "The loader reads two lines."
+   Verdict: supported
+   Why: the captured lines are two and three.
+
+Standing: 0' judge >/dev/null 2>&1
+JUDGE_REPLY='Standing: 0' judge >/dev/null 2>&1
+assert_equals "" "$(grep -F 'Lines captured' "$WORK/stdin")" \
+  "does not send the judge a claim it already judged supported"
+drop_claims
+
+new_claims
+JUDGE_REPLY='1. "The loader reads two lines."
+   Verdict: unsupported
+   Why: the captured lines neither bear it out nor contradict it.
+
+Standing: 1' judge >/dev/null 2>&1
+JUDGE_REPLY='Standing: 0' judge >/dev/null 2>&1
+assert_equals "Lines captured at $COMMIT in quote.rb:" "$(grep -F 'Lines captured' "$WORK/stdin")" \
+  "sends the judge again a claim it judged unsupported"
+drop_claims
+
+new_claims
+JUDGE_REPLY='1. "The loader reads two lines."
+   Verdict: supported
+   Why: the captured lines are two and three.
+
+Standing: 0' judge >/dev/null 2>&1
+jq '.claims[0].captured.lines = "two\nthree\nfour"' "$CLAIMS" > "$CLAIMS.t" && mv "$CLAIMS.t" "$CLAIMS"
+JUDGE_REPLY='Standing: 0' judge >/dev/null 2>&1
+assert_equals "Lines captured at $COMMIT in quote.rb:" "$(grep -F 'Lines captured' "$WORK/stdin")" \
+  "sends the judge again a supported claim whose captured lines changed"
+drop_claims
+
+new_claims
+JUDGE_REPLY='1. "The loader reads two lines."
+   Verdict: supported
+   Why: the captured lines are two and three.
+
+Standing: 0' judge >/dev/null 2>&1
+printf 'The loader reads the two lines.\n' > "$DRAFT"
+jq '.claims[0].text = "The loader reads the two lines."' "$CLAIMS" > "$CLAIMS.t" && mv "$CLAIMS.t" "$CLAIMS"
+JUDGE_REPLY='Standing: 0' judge >/dev/null 2>&1
+assert_equals "Lines captured at $COMMIT in quote.rb:" "$(grep -F 'Lines captured' "$WORK/stdin")" \
+  "sends the judge again a supported claim whose text changed"
+drop_claims
+
+new_claims
+JUDGE_REPLY='1. "The loader reads two lines."
+   Verdict: supported
+   Why: the captured lines are two and three.
+
+Standing: 0' judge >/dev/null 2>&1
+jq '.claims[0].pointer.to = 4' "$CLAIMS" > "$CLAIMS.t" && mv "$CLAIMS.t" "$CLAIMS"
+JUDGE_REPLY='Standing: 0' judge >/dev/null 2>&1
+assert_equals "Lines captured at $COMMIT in quote.rb:" "$(grep -F 'Lines captured' "$WORK/stdin")" \
+  "sends the judge again a supported claim whose pointer changed"
+drop_claims
+
+new_claims
+JUDGE_REPLY='1. "The loader reads two lines."
+   Verdict: supported
+   Why: the captured lines are two and three.
+
+Standing: 0' judge >/dev/null 2>&1
+JUDGE_REPLY='Standing: 0' judge >/dev/null 2>&1
+assert_equals '- "The loader reads two lines."' "$(awk '/^Claims already judged supported/ { on = 1; next } on && NF { print; exit }' "$WORK/stdin")" \
+  "names to the judge each claim it already judged supported, so its sentence is not counted uncited"
+drop_claims
+
+new_claims
+jq '.claims += [ { text: "The loader reads four lines.", pointer: .claims[0].pointer, captured: .claims[0].captured } ]' "$CLAIMS" > "$CLAIMS.t" && mv "$CLAIMS.t" "$CLAIMS"
+judge >/dev/null 2>&1
+assert_equals "1" "$(grep -cx 'four' "$WORK/stdin")" \
+  "sends the judge a file once however many claims point into it"
+drop_claims
+
+new_claims
+JUDGE_REPLY='1. "The loader reads two lines."
+   Verdict: supported
+   Why: the captured lines are two and three.
+
+Standing: 0' judge >/dev/null 2>&1
+JUDGE_REPLY='Uncited:
+- "The loader was rewritten last week."
+
+Standing: 0' judge >/dev/null 2>&1
+assert_equals "1 The loader was rewritten last week." "$? $(jq -r '.uncited[]' "$CLAIMS" 2>/dev/null)" \
+  "still has the draft read for uncited sentences when no claim needs judging"
+drop_claims
+
 rm -rf "$TEMPLATE"
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

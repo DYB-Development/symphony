@@ -32,28 +32,37 @@ draft=$(jq -r '.draft' "$claims")
 root="$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 rules="$(awk '/^## What the judge is given/ { on = 1 } on' "$root/rules/claim-checking.md")"
 
+still_stands='def still_stands: .verdict.stands == "supported" and .verdict.judged == { text, pointer, captured };'
+to_judge=$(jq -r "$still_stands"' .claims | to_entries[] | select(.value | still_stands | not) | .key' "$claims")
+
 ask=$(mktemp)
 trap 'rm -f "$ask"' EXIT
 
 {
   printf 'The draft:\n\n'
   cat "$draft"
+  printf '\nClaims already judged supported:\n'
+  jq -r "$still_stands"' .claims[] | select(still_stands) | "- \"\(.text)\""' "$claims"
   printf '\nThe claims:\n'
 
-  count=$(jq '.claims | length' "$claims")
-  index=0
-  while [ "$index" -lt "$count" ]; do
+  number=0
+  sent=""
+  for index in $to_judge; do
     text=$(jq -r ".claims[$index].text" "$claims")
     commit=$(jq -r ".claims[$index].captured.commit // \"\"" "$claims")
     lines=$(jq -r ".claims[$index].captured.lines // \"\"" "$claims")
     path=$(jq -r ".claims[$index].pointer.path" "$claims")
 
-    printf '\n%s. "%s"\n' "$((index + 1))" "$text"
+    number=$((number + 1))
+    printf '\n%s. "%s"\n' "$number" "$text"
     printf 'Lines captured at %s in %s:\n%s\n' "$commit" "$path" "$lines"
+    if printf '%s\n' "$sent" | grep -Fxq -- "$commit:$path"; then
+      printf 'File %s at that commit: shown above\n' "$path"
+      continue
+    fi
+    sent="$sent"$'\n'"$commit:$path"
     printf 'File %s at that commit:\n' "$path"
     git show "$commit:$path" 2>/dev/null || printf '(the file could not be read)\n'
-
-    index=$((index + 1))
   done
 } > "$ask"
 
@@ -70,8 +79,7 @@ fell=0
 printf '%s' "$standing" | grep -qx 'Standing: [0-9][0-9]*' ||
   { echo "judge-claims.sh: the judge's reply does not end with a count, so nothing was judged" >&2; exit 70; }
 
-index=0
-while [ "$index" -lt "$count" ]; do
+for index in $to_judge; do
   text=$(jq -r ".claims[$index].text" "$claims")
 
   block=$(printf '%s\n' "$reply" | awk -v want="$text" '
@@ -96,10 +104,8 @@ while [ "$index" -lt "$count" ]; do
   [ "$verdict" = supported ] || fell=$((fell + 1))
 
   updated=$(jq --argjson i "$index" --arg stands "$verdict" --arg why "$why" \
-    '.claims[$i].verdict = { stands: $stands, why: $why }' "$claims")
+    '.claims[$i].verdict = { stands: $stands, why: $why, judged: (.claims[$i] | { text, pointer, captured }) }' "$claims")
   printf '%s\n' "$updated" > "$claims"
-
-  index=$((index + 1))
 done
 
 uncited=$(printf '%s\n' "$reply" | awk '

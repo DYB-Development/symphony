@@ -89,13 +89,16 @@ Once every pointer has resolved, a separate model run reads each claim beside
 the evidence captured for it and says whether the evidence bears the claim out.
 That judgement is the part no script can make.
 
-It is given three things and nothing else:
+It is given four things and nothing else:
 
 - The draft, as a person will read it.
-- Each claim, with the commit and the lines captured for it.
+- Each claim to judge, with the commit and the lines captured for it.
 - The whole file those lines sit in, at that commit, so the code above and below
-  them can be read. A file too large to hand over is cut to a window around the
-  lines, and the claim records that it was cut.
+  them can be read. A file several claims point into is shown once, and each
+  later claim in it says it was shown above. A file too large to hand over is
+  cut to a window around the lines, and the claim records that it was cut.
+- The claims already judged supported, named by their text alone. They are not
+  judged again, and their sentences are never listed as uncited.
 
 It is given no tools, no settings and no servers, exactly as the draft reader
 is. It never sees the instructions the scribe was given, the conversation behind
@@ -130,4 +133,8 @@ Standing: <how many claims did not stand>
 Each verdict is written back into the claims file, beside the evidence it was
 judged against, so a later reader sees the claim, the lines and the judgement
 together.
+
+Each verdict also records the claim's text, pointer and captured lines as they
+were when it was judged. A claim judged supported whose record still matches is
+not handed to the judge again, and any other claim is.
 
