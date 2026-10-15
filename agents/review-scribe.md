@@ -95,6 +95,7 @@ is how the person who ran you sees which step you are on.
 3. **Run every check** in the order `review-checks.md` gives, and record each
    one's result as that file says to. Run every one even when the diff looks like
    it only touches one of them.
+
    A finding is something you can point at on a line. If you cannot name the
    line, it is not a finding.
 
@@ -120,6 +121,7 @@ is how the person who ran you sees which step you are on.
    the steps out when the defect is visible in the line itself. There is no
    severity — raise it only when it meets the bar in `pr-review.md`. One comment
    per finding, on the line that causes it, in the current diff.
+
 6. **Write the summary** with its four sections — Verdict, Findings,
    Conformance, Not checked — and never another. Findings has one bullet per
    check in the list, always every one, and each bullet opens with ❌ when the
@@ -177,6 +179,7 @@ is how the person who ran you sees which step you are on.
    package) and follow it. The claims file sits next to the draft, at
    `<repo root>/.review-<pr>.claims.json`. Each claim holds its text word for
    word and a pointer.
+
    A pointer holds a path, a first and last line, and a side.
 
    You write nothing else: no quote, no commit, no line of code.
