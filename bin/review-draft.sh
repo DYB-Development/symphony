@@ -7,6 +7,8 @@ usage: review-draft.sh --render <draft.json>
        review-draft.sh --link <draft.json> <comment-url>...
        review-draft.sh --post <owner/repo> <pr-number> <draft.json>
        review-draft.sh --check-lines <draft.json> <owner/repo> <pr-number>
+       review-draft.sh --add-scan <draft.json> <scan.json>
+       review-draft.sh --check-scan <draft.json>
 
 Reads the draft review written by `review-scribe`. `--render` prints it for
 reading before any of it reaches the pull request. `--post` posts it, once I
@@ -18,6 +20,10 @@ answer. `--link` does that substitution on its own.
 `--post` posts the review with the event the draft names, `APPROVE` or
 `REQUEST_CHANGES`, and with event COMMENT when the draft names none. `--render`
 prints that event last.
+
+`--add-scan` adds each hit in a pattern scan result to the draft as an inline
+comment on the hit's line. `--check-scan` fails when the summary's Findings
+bullet for a scan comment's check does not link to that comment.
 See ~/.claude/rules/pr-review.md.
 USAGE
   exit 64
@@ -104,13 +110,44 @@ if [ "$mode" = "--check-lines" ]; then
   exit 0
 fi
 
+if [ "$mode" = "--add-scan" ]; then
+  [ $# -eq 3 ] || usage
+  draft=$2
+  scan=$3
+
+  [ -e "$draft" ] ||
+    printf '{ "summary": null, "event": null, "comments": [], "replies": [] }\n' > "$draft"
+
+  updated=$(jq --slurpfile scan "$scan" '.comments += [$scan[0].hits[] | {
+      path, line, side: "RIGHT", source: "scan",
+      body: "**\(.check) — \(.pattern | gsub("-"; " "))**\n\n\(.reason)\n\n\(.fix)"
+    }]' "$draft")
+  printf '%s\n' "$updated" > "$draft"
+  exit 0
+fi
+
+if [ "$mode" = "--check-scan" ]; then
+  [ $# -eq 2 ] || usage
+  draft=$2
+
+  unlinked=$(jq -r '(.summary // "" | split("\n")) as $lines
+    | .comments | to_entries[] | select(.value.source == "scan")
+    | (.value.body | capture("^\\*\\*(?<check>[^*]+) — ").check) as $check
+    | "{{comment:\(.key + 1)}}" as $token
+    | select([$lines[] | select(startswith("- ❌ **\($check)**") and contains($token))] | length == 0)
+    | "fail  comment \(.key + 1) is not linked from the \($check) bullet"' "$draft")
+
+  [ -z "$unlinked" ] || { printf '%s\n' "$unlinked"; exit 1; }
+  exit 0
+fi
+
 if [ "$mode" = "--post" ]; then
   [ $# -eq 4 ] || usage
   repo=$2
   pr=$3
   draft=$4
 
-  review=$(jq '{ event: (.event // "COMMENT"), body: "Review in progress.", comments: .comments }' "$draft" \
+  review=$(jq '{ event: (.event // "COMMENT"), body: "Review in progress.", comments: [.comments[] | del(.source)] }' "$draft" \
     | gh api "repos/$repo/pulls/$pr/reviews" -X POST --input - --jq '.id')
 
   urls=()
@@ -160,7 +197,7 @@ jq -r '.summary' "$draft"
 
 printf '\nInline comments (%s)\n' "$(jq -r '.comments | length' "$draft")"
 jq -r '.comments | to_entries[]
-  | "\n\(.key + 1). \(.value.path):\(.value.line)\n" + (.value.body | split("\n") | map(if . == "" then . else "   " + . end) | join("\n"))' "$draft"
+  | "\n\(.key + 1). \(.value.path):\(.value.line)\(if .value.source == "scan" then " (written by the pattern scan)" else "" end)\n" + (.value.body | split("\n") | map(if . == "" then . else "   " + . end) | join("\n"))' "$draft"
 
 printf '\nReplies (%s)\n' "$(jq -r '.replies | length' "$draft")"
 jq -r '.replies | to_entries[]

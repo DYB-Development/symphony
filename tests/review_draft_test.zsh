@@ -483,6 +483,93 @@ assert_equals "70" "$?" "refuses a draft whose comments are null"
 drop_diff
 
 echo ""
+echo "review-draft.sh --add-scan:"
+
+write_scan() {
+  SCAN_FILE="$DRAFT_DIR/review.scan.json"
+  cat > "$SCAN_FILE" <<'JSON'
+{
+  "hits": [
+    {
+      "path": "config/payments.rb", "line": 3, "pattern": "credential-in-code", "check": "Security",
+      "reason": "A key written into the code reaches everyone who can read the repo.",
+      "fix": "Read the value from the environment instead."
+    }
+  ],
+  "patterns": [ { "pack": "core", "name": "credential-in-code", "check": "Security" } ]
+}
+JSON
+}
+
+write_draft <<'JSON'
+{ "summary": null, "event": null, "comments": [], "replies": [] }
+JSON
+write_scan
+"$DRAFT" --add-scan "$DRAFT_FILE" "$SCAN_FILE" >/dev/null
+assert_equals 'config/payments.rb 3 RIGHT
+**Security — credential in code**
+
+A key written into the code reaches everyone who can read the repo.
+
+Read the value from the environment instead.' \
+  "$(jq -r '.comments[0] | "\(.path) \(.line) \(.side)\n\(.body)"' "$DRAFT_FILE")" \
+  "adds each scan hit as an inline comment on its line, carrying the pattern's reason and fix"
+drop_draft
+
+write_draft </dev/null
+rm "$DRAFT_FILE"
+write_scan
+"$DRAFT" --add-scan "$DRAFT_FILE" "$SCAN_FILE" >/dev/null 2>&1
+assert_equals "null null 1 0" \
+  "$(jq -r '"\(.summary) \(.event) \(.comments | length) \(.replies | length)"' "$DRAFT_FILE" 2>/dev/null)" \
+  "starts a draft holding only the scan's comments when there is no draft yet"
+drop_draft
+
+write_draft <<'JSON'
+{ "summary": "One finding.", "event": null, "comments": [], "replies": [] }
+JSON
+write_scan
+"$DRAFT" --add-scan "$DRAFT_FILE" "$SCAN_FILE" >/dev/null
+assert_equals "1. config/payments.rb:3 (written by the pattern scan)" \
+  "$("$DRAFT" --render "$DRAFT_FILE" | grep '^1\. ')" \
+  "marks a comment the scan wrote as written by the scan when rendered"
+drop_draft
+
+write_draft <<'JSON'
+{ "summary": "One finding.", "event": "REQUEST_CHANGES", "comments": [], "replies": [] }
+JSON
+write_scan
+"$DRAFT" --add-scan "$DRAFT_FILE" "$SCAN_FILE" >/dev/null
+stub_gh
+"$DRAFT" --post o/r 1 "$DRAFT_FILE" >/dev/null 2>&1
+assert_equals "body,line,path,side" \
+  "$(jq -r '.comments[0] | keys | join(",")' "$STUB_DIR/review" 2>/dev/null)" \
+  "posts a comment the scan wrote as an ordinary inline comment"
+drop_gh
+drop_draft
+
+echo ""
+echo "review-draft.sh --check-scan:"
+
+write_draft <<'JSON'
+{ "summary": "## Findings\n\n- ❌ **Security** — a key is written into the code.\n- ✅ **Scalability** — nothing found", "event": "REQUEST_CHANGES", "comments": [], "replies": [] }
+JSON
+write_scan
+"$DRAFT" --add-scan "$DRAFT_FILE" "$SCAN_FILE" >/dev/null
+"$DRAFT" --check-scan "$DRAFT_FILE" >/dev/null 2>&1
+assert_equals "1" "$?" "fails a draft whose Findings bullet for a scan comment's check does not link to it"
+drop_draft
+
+write_draft <<'JSON'
+{ "summary": "## Findings\n\n- ❌ **Security** — [a key is written into the code]({{comment:1}}).\n- ✅ **Scalability** — nothing found", "event": "REQUEST_CHANGES", "comments": [], "replies": [] }
+JSON
+write_scan
+"$DRAFT" --add-scan "$DRAFT_FILE" "$SCAN_FILE" >/dev/null
+"$DRAFT" --check-scan "$DRAFT_FILE" >/dev/null 2>&1
+assert_equals "0" "$?" "passes a draft whose Findings bullet for a scan comment's check links to it"
+drop_draft
+
+echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 rm -rf "$SHARED_STUBS"
 [[ $FAIL -eq 0 ]]

@@ -75,6 +75,17 @@ is how the person who ran you sees which step you are on.
      --jq '.[] | "\(.id)\t\(.path):\(.line)\t\(.user.login)\t\(.body)"'
    ```
 
+   For a review or a re-review, run the pattern scan over the lines the pull
+   request adds, and start the draft from what it finds:
+
+   ```
+   ~/.claude/bin/pattern-scan.sh <owner/repo> <n> <repo root>/.review-<pr>.json
+   ~/.claude/bin/review-draft.sh --add-scan <repo root>/.review-<pr>.json <repo root>/.review-<pr>.scan.json
+   ```
+
+   Each hit is now an inline comment in the draft, marked as written by the
+   scan. Never edit or remove a comment the scan wrote.
+
 2. **Read enough of the repo to judge, and stop there.** A finding needs the
    file the diff changed and what it calls. A pattern break needs the existing
    file that does it the other way — find that file or drop the finding.
@@ -101,6 +112,14 @@ is how the person who ran you sees which step you are on.
 
    A finding is something you can point at on a line. If you cannot name the
    line, it is not a finding.
+
+   First read which patterns the scan ran:
+
+   ```
+   jq -r '.patterns[] | "\(.check)\t\(.name)"' <repo root>/.review-<pr>.scan.json
+   ```
+
+   Raise no finding that one of those patterns describes, since the scan already looked for it on every added line.
 
 4. **Check conformance against the real ticket.** Find it from the PR: the
    `Closes #N` trailer, an issue linked on the PR, or a ticket key in the body
@@ -131,6 +150,8 @@ is how the person who ran you sees which step you are on.
    check has a finding and ✅ when it has none. Link the words naming a finding to
    `{{comment:N}}`, where N is that comment's position in your `comments` array,
    counting from 1. A check with no finding carries no link.
+
+   A comment the scan wrote is a finding under the check its header names, so that check's bullet opens with ❌ and links to it.
 
    A Missed changes finding has no inline comment and no link. Write its bullet
    and the nested bullet for each file in the form `pr-review.md` gives, each
@@ -171,6 +192,9 @@ is how the person who ran you sees which step you are on.
    { "summary": "...", "event": "REQUEST_CHANGES", "comments": [], "replies": [] }
    ```
 
+   The scan started this file in step 1, so add the summary, the event and
+   your own comments to it, after the comments the scan wrote.
+
    Every key present, empty arrays where there is nothing. A reply job has an
    empty `comments` array, a `summary` of `null` and an `event` of `null`.
 
@@ -187,7 +211,7 @@ is how the person who ran you sees which step you are on.
 
    You write nothing else: no quote, no commit, no line of code.
 
-   Every inline comment has a claim whose pointer is that comment's own path, line and side.
+   Every inline comment the scan did not write has a claim whose pointer is that comment's own path, line and side. A comment the scan wrote carries no claim.
 
    Every Findings bullet that reports a finding has a claim pointing at the lines it is about.
 
@@ -205,6 +229,14 @@ is how the person who ran you sees which step you are on.
    A comment that does not is a comment on code this pull request did not
    change. Cut it, or move it to a line the diff touches. That check reads the
    diff alone and captures nothing.
+
+   Then check that the summary links every comment the scan wrote:
+
+   ```
+   ~/.claude/bin/review-draft.sh --check-scan <repo root>/.review-<pr>.json
+   ```
+
+   Link each comment it names from its check's Findings bullet.
 
    Then have the tooling read the lines:
 
