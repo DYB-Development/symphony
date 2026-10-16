@@ -114,6 +114,15 @@ assert_equals "0" "$(grep -c 'shows the quote total' "$WORK/asked" 2>/dev/null)"
   "never offers the model a test the inventory found a fault in"
 drop_case
 
+new_case
+with_ticket
+valid_test "shows the quote total on the quote page"
+conformance >/dev/null 2>&1
+assert_equals "yes yes no no" \
+  "$(grep -q 'A rep sees the quote total' "$WORK/asked" && echo yes || echo no) $(grep -q 'shows the quote total on the quote page' "$WORK/asked" && echo yes || echo no) $(grep -q 'Taxes' "$WORK/asked" && echo yes || echo no) $(grep -q 'I want' "$WORK/asked" && echo yes || echo no)" \
+  "gives the model the acceptance criteria and test titles and nothing else from the ticket"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
