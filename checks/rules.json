@@ -356,6 +356,10 @@
     {
       "file": "README.md",
       "contains": "a comment on that line reading `symphony-allow: <pattern name>` excuses it from that one pattern"
+    },
+    {
+      "file": "rules/repo-audit.md",
+      "contains": "always reports `Commits` as `nothing-to-check`."
     }
   ]
 }

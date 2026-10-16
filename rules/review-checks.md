@@ -99,3 +99,10 @@ exists, and a config or caller still using something that was renamed or
 removed. In a pull request it is a file the diff did not touch and made wrong.
 In an audit it is a doc, test or config in the section that disagrees with the
 section's code. Name the line that is now wrong and the code it disagrees with.
+
+**Commits** — a commit that changes code and holds no test for it. A commit
+holds a test and the code it drives, with two exceptions that are not findings:
+an interface change spread across several files whose test sits in a
+neighbouring commit, and a refactor that changes no behaviour. A commit that
+changes only documentation is not read. An audit has no commits, so it always
+reports this check as nothing to check. Name the commit and the code it changes.

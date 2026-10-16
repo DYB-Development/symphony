@@ -124,6 +124,7 @@ sections, in this order, and never another:
 - <✅ or ❌> **Failure modes** — <one sentence, or "nothing found", or "nothing to check">
 - <✅ or ❌> **Migration safety** — <one sentence, or "nothing found", or "nothing to check">
 - <✅ or ❌> **Missed changes** — <one sentence, or "nothing found", or "nothing to check">
+- <✅ or ❌> **Commits** — <one sentence, or "nothing found", or "nothing to check">
 
 ## Conformance
 
