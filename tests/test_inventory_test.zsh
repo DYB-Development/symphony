@@ -279,5 +279,33 @@ assert_equals "test-asserts-more-than-one-thing" "$(jq -r '.hits[].pattern' "$RE
 drop_case
 
 echo ""
+echo "test-inventory.sh --titles:"
+
+TITLES_REPO="$(mktemp -d "${TMPDIR:-/tmp}/test_inventory_titles.XXXXXX")"
+git -C "$TITLES_REPO" init -q --template=
+git -C "$TITLES_REPO" config user.email test@example.com
+git -C "$TITLES_REPO" config user.name Test
+mkdir -p "$TITLES_REPO/test/models" "$TITLES_REPO/app/models"
+cat > "$TITLES_REPO/test/models/quote_test.rb" <<'RB'
+class QuoteTest < ActiveSupport::TestCase
+  test "sums the line items into the total" do
+    assert_equal 30, quote.total
+  end
+
+  test "starts with no line items" do
+    assert_empty Quote.new.line_items
+  end
+end
+RB
+printf 'class Quote\n  test "not a test file"\nend\n' > "$TITLES_REPO/app/models/quote.rb"
+git -C "$TITLES_REPO" add -A
+git -C "$TITLES_REPO" commit -q -m first
+assert_equals "starts with no line items
+sums the line items into the total" \
+  "$( (cd "$TITLES_REPO" && "$INVENTORY" --titles HEAD) 2>&1 | sort)" \
+  "lists every test title in the repo's test files at a commit"
+rm -rf "$TITLES_REPO"
+
+echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

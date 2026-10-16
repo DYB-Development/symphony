@@ -4,35 +4,15 @@ set -euo pipefail
 usage() {
   cat >&2 <<'USAGE'
 usage: test-inventory.sh <owner/repo> <pr-number> <draft.json>
+       test-inventory.sh --titles <sha>
 
 Lists every test a pull request adds or changes, with its title, file, line and
-number of assertions, and writes the list beside the review draft.
+number of assertions, and writes the list beside the review draft. `--titles`
+prints the title of every test in the current repo at one revision.
 See ~/.claude/rules/review-checks.md.
 USAGE
   exit 64
 }
-
-[ $# -eq 3 ] || usage
-
-repo=$1
-pr=$2
-draft=$3
-
-result="${draft%.json}.tests.json"
-
-diff=$(gh pr diff "$pr" --repo "$repo")
-head=$(gh pr view "$pr" --repo "$repo" --json headRefOid --jq '.headRefOid')
-
-added=$(printf '%s\n' "$diff" | awk '
-  /^diff --git / { in_hunk = 0; next }
-  !in_hunk && /^\+\+\+ / { path = substr($0, 5); sub(/^b\//, "", path); next }
-  /^@@ / { split($3, n, ","); line = n[1] + 0; if (line < 0) line = -line; in_hunk = 1; next }
-  !in_hunk { next }
-  /^\\/ { next }
-  /^-/ { next }
-  /^\+/ { print path "\t" line; line++; next }
-  { line++ }
-')
 
 is_test_file() {
   grep -q -E '(^|/)(test|tests|spec|__tests__)/|_test\.|_spec\.|\.test\.|\.spec\.' <<<"$1"
@@ -56,7 +36,7 @@ tests_in() {
       return ""
     }
     function close_test(last) {
-      if (open && touched) print start "\t" last "\t" asserts "\t" title
+      if (open && (touched || lines == "all")) print start "\t" last "\t" asserts "\t" title
       open = 0
     }
     {
@@ -75,6 +55,37 @@ tests_in() {
     END { close_test(NR) }
   ' <<<"$1"
 }
+
+if [ "${1:-}" = "--titles" ]; then
+  [ $# -eq 2 ] || usage
+  git ls-tree -r --name-only "$2" | while IFS= read -r path; do
+    is_test_file "$path" || continue
+    tests_in "$(git show "$2:$path")" all | cut -f4
+  done
+  exit 0
+fi
+
+[ $# -eq 3 ] || usage
+
+repo=$1
+pr=$2
+draft=$3
+
+result="${draft%.json}.tests.json"
+
+diff=$(gh pr diff "$pr" --repo "$repo")
+head=$(gh pr view "$pr" --repo "$repo" --json headRefOid --jq '.headRefOid')
+
+added=$(printf '%s\n' "$diff" | awk '
+  /^diff --git / { in_hunk = 0; next }
+  !in_hunk && /^\+\+\+ / { path = substr($0, 5); sub(/^b\//, "", path); next }
+  /^@@ / { split($3, n, ","); line = n[1] + 0; if (line < 0) line = -line; in_hunk = 1; next }
+  !in_hunk { next }
+  /^\\/ { next }
+  /^-/ { next }
+  /^\+/ { print path "\t" line; line++; next }
+  { line++ }
+')
 
 root="$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 model="$("$root/bin/agent-model.sh" lookup test-inventory sonnet)"
