@@ -251,6 +251,12 @@ drop_case
 
 new_case
 write_added_test
+CLAUDE_REPLY="The test looks fine." inventory >/dev/null 2>&1
+assert_equals "70" "$?" "fails when the model's reply does not end in its body line"
+drop_case
+
+new_case
+write_added_test
 CLAUDE_REPLY='Title: does not name a behaviour
 Body: tests that behaviour' inventory >/dev/null 2>&1
 assert_equals "test/quote_test.rb 2 test-title-names-no-behaviour Tests tests" \
