@@ -26,6 +26,7 @@ These are not claims, and they carry no evidence:
 - What someone wants, asks for, or intends to build.
 - A recommendation, an option, or a decision someone made.
 - A sentence pasted word for word from a script, such as a rendered Decision Log.
+- A comment the pattern scan wrote, which carries the pattern's own documented reason and fix.
 
 ## What a claim pointer holds
 
@@ -91,7 +92,7 @@ That judgement is the part no script can make.
 
 It is given four things and nothing else:
 
-- The draft, as a person will read it.
+- The draft, as a person will read it, without the comments the pattern scan wrote.
 - Each claim to judge, with the commit and the lines captured for it.
 - The whole file those lines sit in, at that commit, so the code above and below
   them can be read. A file several claims point into is shown once, and each

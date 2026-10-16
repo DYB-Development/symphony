@@ -312,6 +312,18 @@
     {
       "file": "rules/agent-worktrees.md",
       "contains": "A folder named through a shell variable is followed when the command assigns the variable or the environment holds it, and a command naming a variable with neither is let through."
+    },
+    {
+      "file": "rules/claim-checking.md",
+      "contains": "- A comment the pattern scan wrote, which carries the pattern's own documented reason and fix."
+    },
+    {
+      "file": "rules/claim-checking.md",
+      "contains": "- The draft, as a person will read it, without the comments the pattern scan wrote."
+    },
+    {
+      "file": "rules/claim-checking.md",
+      "absent": "- The draft, as a person will read it.\n"
     }
   ]
 }
