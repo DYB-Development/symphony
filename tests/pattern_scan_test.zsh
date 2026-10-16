@@ -161,6 +161,22 @@ scan >/dev/null 2>&1
 assert_equals "65" "$?" "refuses a pattern that does not say what to do instead"
 drop_case
 
+new_case
+write_diff </dev/null
+jq 'del(.patterns[0].reason)' "$WORK/packs/test.json" > "$WORK/packs/broken.json"
+rm "$WORK/packs/test.json"
+scan >/dev/null 2>&1
+assert_equals "65" "$?" "refuses a pattern that does not say why it is a problem"
+drop_case
+
+new_case
+write_diff </dev/null
+jq 'del(.patterns[0].check)' "$WORK/packs/test.json" > "$WORK/packs/broken.json"
+rm "$WORK/packs/test.json"
+scan >/dev/null 2>&1
+assert_equals "65" "$?" "refuses a pattern that does not name its check"
+drop_case
+
 core_checks_for() {
   new_case
   printf 'diff --git a/config/x b/config/x\n--- a/config/x\n+++ b/config/x\n@@ -1,0 +1,1 @@\n+%s\n' "$1" > "$WORK/diff"
