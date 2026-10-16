@@ -48,47 +48,7 @@ if [ "$mode" = "--check-lines" ]; then
   diff=$(gh pr diff "$pr" --repo "$repo") ||
     { echo "review-draft.sh: the diff for $repo#$pr could not be read" >&2; exit 70; }
 
-  touched=$(printf '%s\n' "$diff" | awk '
-    function path_of(line,   p, out, i, c, oct) {
-      p = substr(line, 5)
-      sub(/\t.*$/, "", p)
-      if (p ~ /^".*"$/) {
-        p = substr(p, 2, length(p) - 2)
-        out = ""
-        for (i = 1; i <= length(p); i++) {
-          c = substr(p, i, 1)
-          if (c == "\\" && substr(p, i + 1, 1) ~ /[0-7]/) {
-            oct = substr(p, i + 1, 3)
-            out = out sprintf("%c", (substr(oct, 1, 1) * 64) + (substr(oct, 2, 1) * 8) + substr(oct, 3, 1))
-            i += 3
-          } else if (c == "\\") {
-            out = out substr(p, i + 1, 1)
-            i++
-          } else {
-            out = out c
-          }
-        }
-        p = out
-      }
-      sub(/^[ab]\//, "", p)
-      return p
-    }
-    /^diff --git / { in_hunk = 0; next }
-    !in_hunk && /^index / { next }
-    !in_hunk && /^--- / { old_path = path_of($0); next }
-    !in_hunk && /^\+\+\+ / { new_path = path_of($0); next }
-    /^@@ / {
-      split($2, o, ","); old = o[1] + 0; if (old < 0) old = -old
-      split($3, n, ","); new = n[1] + 0; if (new < 0) new = -new
-      in_hunk = 1
-      next
-    }
-    !in_hunk { next }
-    /^\\/ { next }
-    /^-/ { print "LEFT:" old_path ":" old; old++; next }
-    /^\+/ { print "RIGHT:" new_path ":" new; new++; next }
-    { old++; new++ }
-  ')
+  touched=$(printf '%s\n' "$diff" | "$(dirname "$0")/diff-lines.sh" | awk -F'\t' '{ print $1 ":" $2 ":" $3 }')
 
   missing=0
   count=$(jq '.comments | length' "$draft")
