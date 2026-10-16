@@ -75,6 +75,17 @@ is how the person who ran you sees which step you are on.
      --jq '.[] | "\(.id)\t\(.path):\(.line)\t\(.user.login)\t\(.body)"'
    ```
 
+   For a review or a re-review, run the pattern scan over the lines the pull
+   request adds, and start the draft from what it finds:
+
+   ```
+   ~/.claude/bin/pattern-scan.sh <owner/repo> <n> <repo root>/.review-<pr>.json
+   ~/.claude/bin/review-draft.sh --add-scan <repo root>/.review-<pr>.json <repo root>/.review-<pr>.scan.json
+   ```
+
+   Each hit is now an inline comment in the draft, marked as written by the
+   scan. Never edit or remove a comment the scan wrote.
+
 2. **Read enough of the repo to judge, and stop there.** A finding needs the
    file the diff changed and what it calls. A pattern break needs the existing
    file that does it the other way — find that file or drop the finding.
@@ -170,6 +181,9 @@ is how the person who ran you sees which step you are on.
    ```json
    { "summary": "...", "event": "REQUEST_CHANGES", "comments": [], "replies": [] }
    ```
+
+   The scan started this file in step 1, so add the summary, the event and
+   your own comments to it, after the comments the scan wrote.
 
    Every key present, empty arrays where there is nothing. A reply job has an
    empty `comments` array, a `summary` of `null` and an `event` of `null`.

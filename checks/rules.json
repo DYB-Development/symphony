@@ -324,6 +324,18 @@
     {
       "file": "rules/claim-checking.md",
       "absent": "- The draft, as a person will read it.\n"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "~/.claude/bin/pattern-scan.sh <owner/repo> <n> <repo root>/.review-<pr>.json"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "~/.claude/bin/review-draft.sh --add-scan <repo root>/.review-<pr>.json <repo root>/.review-<pr>.scan.json"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "Never edit or remove a comment the scan wrote."
     }
   ]
 }
