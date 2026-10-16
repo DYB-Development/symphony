@@ -244,6 +244,14 @@ assert_equals "test/quote_test.rb 2 test-title-names-no-behaviour Tests tests" \
   "turns a test whose title names no behaviour into a Tests finding naming what it failed"
 drop_case
 
+new_case
+write_added_test
+CLAUDE_REPLY='Title: names a behaviour
+Body: does not test that behaviour' inventory >/dev/null 2>&1
+assert_equals "test-body-misses-its-title" "$(jq -r '.hits[].pattern' "$RESULT" 2>/dev/null)" \
+  "turns a test whose body does not test its title into a Tests finding"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
