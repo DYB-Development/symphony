@@ -201,6 +201,14 @@ drop_case
 
 new_case
 write_diff </dev/null
+printf '{ "version": 1, "applies": "always", "patterns": [\n' > "$WORK/packs/half.json"
+assert_equals "70 yes" \
+  "$(scan >/dev/null 2>"$WORK/err"; echo "$? $(grep -q 'pack half' "$WORK/err" && echo yes || echo no)")" \
+  "stops and names a pack that cannot be read"
+drop_case
+
+new_case
+write_diff </dev/null
 jq 'del(.applies)' "$WORK/packs/test.json" > "$WORK/packs/broken.json"
 rm "$WORK/packs/test.json"
 scan >/dev/null 2>&1

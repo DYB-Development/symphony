@@ -25,6 +25,11 @@ diff=$(gh pr diff "$pr" --repo "$repo")
 
 added=$(printf '%s\n' "$diff" | "$(dirname "$0")/diff-lines.sh" | awk '/^RIGHT\t/ { print substr($0, 7) }')
 
+for pack_file in "$packs_dir"/*.json; do
+  jq -e . "$pack_file" >/dev/null 2>&1 ||
+    { echo "pattern-scan.sh: pack $(basename "$pack_file" .json) cannot be read" >&2; exit 70; }
+done
+
 unsaid=$(jq -r -n 'inputs | (input_filename | split("/") | last | rtrimstr(".json")) as $pack
   | select(.applies != "always" and ((.applies | type) != "object"
       or (.applies | keys) != ["framework"] and (.applies | keys) != ["library"]))
