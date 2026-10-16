@@ -47,6 +47,17 @@
         "match": "<%= comment.body.html_safe %>",
         "miss": "<%= comment.body %>"
       }
+    },
+    {
+      "name": "rails-query-in-loop",
+      "check": "Scalability",
+      "regex": "\\.(each|map|each_with_object|find_each)[^|]*\\|[^|]*\\|.*[A-Z][A-Za-z0-9_]*\\.(find|find_by|where|count|exists\\?)[ (]",
+      "reason": "A query inside a loop runs once per item, so the number of queries grows with the collection.",
+      "fix": "Load the records once before the loop, with includes or one where on all the ids.",
+      "examples": {
+        "match": "items.each { |item| Product.find(item.product_id) }",
+        "miss": "items.each { |item| total += item.price }"
+      }
     }
   ]
 }
