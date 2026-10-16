@@ -95,5 +95,5 @@ while IFS= read -r pattern; do
   done
 done < <(printf '%s\n' "$patterns" | jq -c '.[]')
 
-jq -n --argjson hits "$hits" --argjson patterns "$patterns" \
-  '{hits: $hits, patterns: [$patterns[] | {pack, name, check}]}' > "$result"
+jq -n --argjson hits "$hits" --argjson patterns "$patterns" --argjson applied "$applied" \
+  '{hits: $hits, applied: $applied, patterns: [$patterns[] | {pack, name, check}]}' > "$result"
