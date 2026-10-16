@@ -252,6 +252,32 @@ assert_equals "test-body-misses-its-title" "$(jq -r '.hits[].pattern' "$RESULT" 
   "turns a test whose body does not test its title into a Tests finding"
 drop_case
 
+new_case
+head_file test/quote_test.rb <<'RB'
+class QuoteTest < Minitest::Test
+  test "sums the line items into the total" do
+    assert_equal 30, quote.total
+    assert_equal 2, quote.line_items.size
+  end
+end
+RB
+write_diff <<'DIFF'
+diff --git a/test/quote_test.rb b/test/quote_test.rb
+--- a/test/quote_test.rb
++++ b/test/quote_test.rb
+@@ -1,2 +1,6 @@
+ class QuoteTest < Minitest::Test
++  test "sums the line items into the total" do
++    assert_equal 30, quote.total
++    assert_equal 2, quote.line_items.size
++  end
+ end
+DIFF
+inventory >/dev/null 2>&1
+assert_equals "test-asserts-more-than-one-thing" "$(jq -r '.hits[].pattern' "$RESULT" 2>/dev/null)" \
+  "turns a test with more than one assertion into a Tests finding"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
