@@ -106,8 +106,13 @@ while IFS= read -r pattern; do
   done
 done < <(printf '%s\n' "$patterns" | jq -c '.[]')
 
+known_names=$(jq -r '.[].name' <<<"$patterns")
+
 while IFS=$'\t' read -r path line text; do
-  [ -z "$(marked_names "$text")" ] || continue
+  names=$(marked_names "$text")
+  if [ -n "$names" ] && ! grep -vxF -f <(printf '%s\n' "$known_names") <<<"$names" >/dev/null; then
+    continue
+  fi
   hits=$(jq -c --arg path "$path" --argjson line "$line" '. + [{path: $path, line: $line,
       pattern: "unknown-false-hit-marker", check: "Patterns",
       reason: "A false-hit marker that names no pattern of the packs applied here excuses nothing, so it reads as an exemption that does not exist.",

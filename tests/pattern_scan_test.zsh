@@ -289,6 +289,14 @@ assert_equals "app/x.rb 1 unknown-false-hit-marker Patterns" \
   "reports a false-hit marker that names no pattern"
 drop_case
 
+new_case
+write_line_diff 'total = 1 # symphony-allow: no-such-pattern'
+scan >/dev/null 2>&1
+assert_equals "app/x.rb 1 unknown-false-hit-marker" \
+  "$(jq -r '.hits[] | "\(.path) \(.line) \(.pattern)"' "$RESULT" 2>/dev/null)" \
+  "reports a false-hit marker naming a pattern that does not exist"
+drop_case
+
 core_checks_for() {
   new_case
   printf 'diff --git a/config/x b/config/x\n--- a/config/x\n+++ b/config/x\n@@ -1,0 +1,1 @@\n+%s\n' "$1" > "$WORK/diff"
