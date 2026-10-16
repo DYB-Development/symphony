@@ -72,6 +72,7 @@ pr=$2
 draft=$3
 
 result="${draft%.json}.tests.json"
+rm -f "$result"
 
 diff=$(gh pr diff "$pr" --repo "$repo")
 head=$(gh pr view "$pr" --repo "$repo" --json headRefOid --jq '.headRefOid')

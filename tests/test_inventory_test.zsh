@@ -265,6 +265,14 @@ drop_case
 
 new_case
 write_added_test
+printf '{ "tests": [ { "path": "test/quote_test.rb", "line": 2, "title": "an old test", "assertions": 1 } ], "hits": [] }\n' > "$RESULT"
+CLAUDE_REPLY="The test looks fine." inventory >/dev/null 2>&1
+assert_equals "no result" "$([[ -e "$RESULT" ]] && echo "result left" || echo "no result")" \
+  "leaves no earlier test list behind when its judgement does not finish"
+drop_case
+
+new_case
+write_added_test
 CLAUDE_REPLY='Title: does not name a behaviour
 Body: tests that behaviour' inventory >/dev/null 2>&1
 assert_equals "test/quote_test.rb 2 test-title-names-no-behaviour Tests tests" \
