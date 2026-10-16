@@ -153,6 +153,16 @@ assert_equals "core credential-in-code Security" \
   "finds a credential written into the code with the core pack this package ships"
 drop_case
 
+wrong_examples=()
+for pack in "$SCRIPT_DIR"/../rules/patterns/*.json; do
+  while IFS=$'\037' read -r name regex match miss; do
+    printf '%s\n' "$match" | grep -q -E -e "$regex" || wrong_examples+=("$name misses its match example")
+    printf '%s\n' "$miss" | grep -q -E -e "$regex" && wrong_examples+=("$name matches its miss example")
+  done < <(jq -r '.patterns[] | [.name, .regex, .examples.match, .examples.miss] | join("\u001f")' "$pack")
+done
+assert_equals "" "${(j:, :)wrong_examples}" \
+  "every shipped pattern matches its match example and not its miss example"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
