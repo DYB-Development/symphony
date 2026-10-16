@@ -35,7 +35,9 @@ case "\$1 \$2" in
   "pr view") printf 'headsha\n' ;;
   "api repos/acme/quotes/contents/"*)
     file=\${2#repos/acme/quotes/contents/}
-    cat "$WORK/head/\${file%%\\?*}" 2>/dev/null || exit 1 ;;
+    file=\${file%%\\?*}
+    if [ -e "$WORK/head/\$file.fails" ]; then echo "gh: Server Error (HTTP 500)" >&2; exit 1; fi
+    cat "$WORK/head/\$file" 2>/dev/null || { echo "gh: Not Found (HTTP 404)" >&2; exit 1; } ;;
 esac
 SH
   chmod +x "$WORK/bin/gh"
@@ -211,6 +213,14 @@ new_case
 touch "$WORK/diff.fails"
 scan >/dev/null 2>&1
 assert_equals "70" "$?" "stops when the diff cannot be read rather than reporting no hits"
+drop_case
+
+new_case
+write_diff </dev/null
+touch "$WORK/head/Gemfile.lock.fails"
+assert_equals "70 yes" \
+  "$(scan >/dev/null 2>"$WORK/err"; echo "$? $(grep -q 'Gemfile.lock' "$WORK/err" && echo yes || echo no)")" \
+  "stops and names a lockfile that cannot be read rather than applying fewer packs"
 drop_case
 
 new_case

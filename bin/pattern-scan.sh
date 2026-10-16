@@ -41,11 +41,21 @@ unsaid=$(jq -r -n 'inputs | (input_filename | split("/") | last | rtrimstr(".jso
 head=$(gh pr view "$pr" --repo "$repo" --json headRefOid --jq '.headRefOid')
 
 file_at_head() {
-  gh api "repos/$repo/contents/$1?ref=$head" -H 'Accept: application/vnd.github.raw' 2>/dev/null || true
+  local errors
+  errors=$(mktemp)
+  if gh api "repos/$repo/contents/$1?ref=$head" -H 'Accept: application/vnd.github.raw' 2>"$errors"; then
+    rm -f "$errors"
+  elif grep -q 'HTTP 404' "$errors"; then
+    rm -f "$errors"
+  else
+    rm -f "$errors"
+    echo "pattern-scan.sh: $1 could not be read, so no pack was chosen" >&2
+    return 1
+  fi
 }
 
-gemfile_lock=$(file_at_head Gemfile.lock)
-package_json=$(file_at_head package.json)
+gemfile_lock=$(file_at_head Gemfile.lock) || exit 70
+package_json=$(file_at_head package.json) || exit 70
 
 file_showing_dependency() {
   if grep -q -E "^    $1 \(" <<<"$gemfile_lock"; then
