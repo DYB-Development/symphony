@@ -79,6 +79,13 @@ assert_equals "c1 flagged" "$(jq -r '.commits[] | "\(.sha) \(.shape)"' "$RESULT"
   "flags a commit that holds code and no test, in a file beside the review draft"
 drop_case
 
+new_case
+add_commit c1 "Add the quote total" test/models/quote_test.rb app/models/quote.rb
+shape >/dev/null 2>&1
+assert_equals "c1 test-and-code" "$(jq -r '.commits[] | "\(.sha) \(.shape)"' "$RESULT" 2>/dev/null)" \
+  "does not flag a commit that holds a test file and a code file"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
