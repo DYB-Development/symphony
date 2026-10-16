@@ -311,6 +311,10 @@ assert_equals "rails-query-in-loop" \
   "$(rails_patterns_for 'items.each { |item| Product.find(item.product_id) }')" \
   "finds a query inside a loop in a Rails repo"
 
+assert_equals "rails-unbounded-fetch" \
+  "$(rails_patterns_for 'Quote.all.each do |quote|')" \
+  "finds a fetch of every row with no limit in a Rails repo"
+
 wrong_examples=()
 for pack in "$SCRIPT_DIR"/../rules/patterns/*.json; do
   while IFS=$'\037' read -r name regex match miss; do
