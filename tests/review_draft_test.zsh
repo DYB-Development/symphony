@@ -526,6 +526,19 @@ assert_equals "1. config/payments.rb:3 (written by the pattern scan)" \
   "marks a comment the scan wrote as written by the scan when rendered"
 drop_draft
 
+write_draft <<'JSON'
+{ "summary": "One finding.", "event": "REQUEST_CHANGES", "comments": [], "replies": [] }
+JSON
+write_scan
+"$DRAFT" --add-scan "$DRAFT_FILE" "$SCAN_FILE" >/dev/null
+stub_gh
+"$DRAFT" --post o/r 1 "$DRAFT_FILE" >/dev/null 2>&1
+assert_equals "body,line,path,side" \
+  "$(jq -r '.comments[0] | keys | join(",")' "$STUB_DIR/review" 2>/dev/null)" \
+  "posts a comment the scan wrote as an ordinary inline comment"
+drop_gh
+drop_draft
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 rm -rf "$SHARED_STUBS"
