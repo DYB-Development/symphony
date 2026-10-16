@@ -68,6 +68,33 @@ assert_equals "No ticket referenced." "$(render 2>&1)" \
   "reports that no ticket was referenced when the pull request names none"
 drop_case
 
+with_ticket() {
+  printf '12\n' > "$WORK/ticket"
+  cat > "$WORK/issue" <<'MD'
+**As a** rep, **I want** a quote total.
+
+## Acceptance criteria
+- [ ] A rep sees the quote total on the quote page.
+
+## Out of scope
+- Taxes.
+MD
+}
+
+valid_test() {
+  jq -n --arg title "$1" '{ tests: [ { path: "test/quote_test.rb", line: 2, title: $title, assertions: 1 } ], hits: [] }' \
+    > "$WORK/repo/.review-7.tests.json"
+}
+
+new_case
+with_ticket
+valid_test "shows the quote total on the quote page"
+CLAUDE_REPLY="1: 1" conformance >/dev/null 2>&1
+assert_equals '- [x] A rep sees the quote total on the quote page. Covered by "shows the quote total on the quote page".' \
+  "$(render 2>&1)" \
+  "ticks a criterion a valid test covers and names the test"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
