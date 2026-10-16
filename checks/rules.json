@@ -424,6 +424,10 @@
     {
       "file": "rules/claim-checking.md",
       "contains": "Every other claim is judged against the code captured for it, never against test titles."
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "A Tests finding that changed code has behaviour no test reaches carries a second claim, word for word the same sentence, whose pointer is `{ \"test_titles\": true }`."
     }
   ]
 }
