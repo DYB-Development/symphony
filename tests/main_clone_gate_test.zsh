@@ -129,6 +129,11 @@ assert_equals "deny" "$(decision "$(bash_payload "APP=$MAIN; cd \"\$APP\" && git
 drop_clones
 
 new_clones
+assert_equals "deny" "$(decision "$(bash_payload "APP=$MAIN; git -C \"\$APP\" commit -m wip" "$LINKED")")" \
+  "a git commit pointed at a variable holding the main clone is refused"
+drop_clones
+
+new_clones
 assert_equals "deny" "$(decision "$(bash_payload $'echo "a\tb" \'c d\'\ngit commit -m "wip"' "$MAIN")")" \
   "a git commit on a later line of a command with quotes and tabs is refused in the main clone"
 drop_clones
