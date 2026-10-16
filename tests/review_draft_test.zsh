@@ -483,6 +483,40 @@ assert_equals "70" "$?" "refuses a draft whose comments are null"
 drop_diff
 
 echo ""
+echo "review-draft.sh --add-scan:"
+
+write_scan() {
+  SCAN_FILE="$DRAFT_DIR/review.scan.json"
+  cat > "$SCAN_FILE" <<'JSON'
+{
+  "hits": [
+    {
+      "path": "config/payments.rb", "line": 3, "pattern": "credential-in-code", "check": "Security",
+      "reason": "A key written into the code reaches everyone who can read the repo.",
+      "fix": "Read the value from the environment instead."
+    }
+  ],
+  "patterns": [ { "pack": "core", "name": "credential-in-code", "check": "Security" } ]
+}
+JSON
+}
+
+write_draft <<'JSON'
+{ "summary": null, "event": null, "comments": [], "replies": [] }
+JSON
+write_scan
+"$DRAFT" --add-scan "$DRAFT_FILE" "$SCAN_FILE" >/dev/null
+assert_equals 'config/payments.rb 3 RIGHT
+**Security — credential in code**
+
+A key written into the code reaches everyone who can read the repo.
+
+Read the value from the environment instead.' \
+  "$(jq -r '.comments[0] | "\(.path) \(.line) \(.side)\n\(.body)"' "$DRAFT_FILE")" \
+  "adds each scan hit as an inline comment on its line, carrying the pattern's reason and fix"
+drop_draft
+
+echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 rm -rf "$SHARED_STUBS"
 [[ $FAIL -eq 0 ]]

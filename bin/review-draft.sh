@@ -7,6 +7,7 @@ usage: review-draft.sh --render <draft.json>
        review-draft.sh --link <draft.json> <comment-url>...
        review-draft.sh --post <owner/repo> <pr-number> <draft.json>
        review-draft.sh --check-lines <draft.json> <owner/repo> <pr-number>
+       review-draft.sh --add-scan <draft.json> <scan.json>
 
 Reads the draft review written by `review-scribe`. `--render` prints it for
 reading before any of it reaches the pull request. `--post` posts it, once I
@@ -18,6 +19,9 @@ answer. `--link` does that substitution on its own.
 `--post` posts the review with the event the draft names, `APPROVE` or
 `REQUEST_CHANGES`, and with event COMMENT when the draft names none. `--render`
 prints that event last.
+
+`--add-scan` adds each hit in a pattern scan result to the draft as an inline
+comment on the hit's line.
 See ~/.claude/rules/pr-review.md.
 USAGE
   exit 64
@@ -101,6 +105,19 @@ if [ "$mode" = "--check-lines" ]; then
   done
 
   [ "$missing" -eq 0 ] || exit 1
+  exit 0
+fi
+
+if [ "$mode" = "--add-scan" ]; then
+  [ $# -eq 3 ] || usage
+  draft=$2
+  scan=$3
+
+  updated=$(jq --slurpfile scan "$scan" '.comments += [$scan[0].hits[] | {
+      path, line, side: "RIGHT",
+      body: "**\(.check) — \(.pattern | gsub("-"; " "))**\n\n\(.reason)\n\n\(.fix)"
+    }]' "$draft")
+  printf '%s\n' "$updated" > "$draft"
   exit 0
 fi
 
