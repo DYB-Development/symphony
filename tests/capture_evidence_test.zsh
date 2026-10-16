@@ -233,6 +233,21 @@ assert_equals "" "$(jq -r '.claims[0].captured.lines' "$CLAIMS" 2>/dev/null)" \
   "leaves the pull request's invalid tests out of the captured test titles"
 drop_source
 
+new_source
+add_test_file
+printf 'The loader reads two lines.\nNo test reads the lines.\n' > "$DRAFT"
+jq -n --arg draft "$DRAFT" '{
+  draft: $draft,
+  claims: [
+    { text: "The loader reads two lines.", pointer: { path: "quote.rb", from: 2, to: 3, side: "RIGHT" } },
+    { text: "No test reads the lines.", pointer: { test_titles: true } } ]
+}' > "$CLAIMS"
+capture >/dev/null 2>&1
+assert_equals "two
+three" "$(jq -r '.claims[0].captured.lines' "$CLAIMS" 2>/dev/null)" \
+  "still captures a claim about the code from the code beside a claim at the test titles"
+drop_source
+
 rm -rf "$TEMPLATE"
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
