@@ -211,7 +211,7 @@ is how the person who ran you sees which step you are on.
 
    You write nothing else: no quote, no commit, no line of code.
 
-   Every inline comment has a claim whose pointer is that comment's own path, line and side.
+   Every inline comment the scan did not write has a claim whose pointer is that comment's own path, line and side. A comment the scan wrote carries no claim.
 
    Every Findings bullet that reports a finding has a claim pointing at the lines it is about.
 

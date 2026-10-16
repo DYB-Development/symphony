@@ -111,7 +111,7 @@
     },
     {
       "file": "agents/review-scribe.md",
-      "contains": "Every inline comment has a claim whose pointer is that comment's own path, line and side."
+      "contains": "Every inline comment the scan did not write has a claim whose pointer is that comment's own path, line and side. A comment the scan wrote carries no claim."
     },
     {
       "file": "agents/review-scribe.md",
