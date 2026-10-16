@@ -516,6 +516,16 @@ Read the value from the environment instead.' \
   "adds each scan hit as an inline comment on its line, carrying the pattern's reason and fix"
 drop_draft
 
+write_draft <<'JSON'
+{ "summary": "One finding.", "event": null, "comments": [], "replies": [] }
+JSON
+write_scan
+"$DRAFT" --add-scan "$DRAFT_FILE" "$SCAN_FILE" >/dev/null
+assert_equals "1. config/payments.rb:3 (written by the pattern scan)" \
+  "$("$DRAFT" --render "$DRAFT_FILE" | grep '^1\. ')" \
+  "marks a comment the scan wrote as written by the scan when rendered"
+drop_draft
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 rm -rf "$SHARED_STUBS"

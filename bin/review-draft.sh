@@ -114,7 +114,7 @@ if [ "$mode" = "--add-scan" ]; then
   scan=$3
 
   updated=$(jq --slurpfile scan "$scan" '.comments += [$scan[0].hits[] | {
-      path, line, side: "RIGHT",
+      path, line, side: "RIGHT", source: "scan",
       body: "**\(.check) — \(.pattern | gsub("-"; " "))**\n\n\(.reason)\n\n\(.fix)"
     }]' "$draft")
   printf '%s\n' "$updated" > "$draft"
@@ -177,7 +177,7 @@ jq -r '.summary' "$draft"
 
 printf '\nInline comments (%s)\n' "$(jq -r '.comments | length' "$draft")"
 jq -r '.comments | to_entries[]
-  | "\n\(.key + 1). \(.value.path):\(.value.line)\n" + (.value.body | split("\n") | map(if . == "" then . else "   " + . end) | join("\n"))' "$draft"
+  | "\n\(.key + 1). \(.value.path):\(.value.line)\(if .value.source == "scan" then " (written by the pattern scan)" else "" end)\n" + (.value.body | split("\n") | map(if . == "" then . else "   " + . end) | join("\n"))' "$draft"
 
 printf '\nReplies (%s)\n' "$(jq -r '.replies | length' "$draft")"
 jq -r '.replies | to_entries[]
