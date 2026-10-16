@@ -25,6 +25,17 @@
         "match": "system(\"convert #{params[:file]} out.png\")",
         "miss": "system(\"convert\", params[:file], \"out.png\")"
       }
+    },
+    {
+      "name": "rails-params-in-path",
+      "check": "Security",
+      "regex": "(File\\.(read|open|write|join)|send_file|Rails\\.root\\.join)[( ].*params\\[",
+      "reason": "Request input in a file path lets a request read or write a file outside the folder meant for it.",
+      "fix": "Look the file up from a record or an allowed list of names, and never build its path from the request.",
+      "examples": {
+        "match": "send_file(Rails.root.join(\"exports\", params[:name]))",
+        "miss": "send_file(export.file_path)"
+      }
     }
   ]
 }
