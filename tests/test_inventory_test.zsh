@@ -227,6 +227,14 @@ assert_equals "false true" \
   "records whether a model finds the title names a behaviour and the body tests it"
 drop_case
 
+new_case
+write_added_test
+inventory >/dev/null 2>&1
+assert_equals "yes yes no" \
+  "$(grep -q '^works$' "$WORK/asked" && echo yes || echo no) $(grep -q 'assert_equal 30, quote.total' "$WORK/asked" && echo yes || echo no) $(grep -q 'class QuoteTest' "$WORK/asked" && echo yes || echo no)" \
+  "gives the model the test's title and body and nothing else from its file"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
