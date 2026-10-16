@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "applies": "always",
   "patterns": [
     {
       "name": "credential-in-code",

@@ -36,6 +36,7 @@ SH
   cat > "$WORK/packs/test.json" <<'JSON'
 {
   "version": 1,
+  "applies": "always",
   "patterns": [
     {
       "name": "debug-print",
@@ -175,6 +176,14 @@ jq 'del(.patterns[0].check)' "$WORK/packs/test.json" > "$WORK/packs/broken.json"
 rm "$WORK/packs/test.json"
 scan >/dev/null 2>&1
 assert_equals "65" "$?" "refuses a pattern that does not name its check"
+drop_case
+
+new_case
+write_diff </dev/null
+jq 'del(.applies)' "$WORK/packs/test.json" > "$WORK/packs/broken.json"
+rm "$WORK/packs/test.json"
+scan >/dev/null 2>&1
+assert_equals "65" "$?" "refuses a pack that does not say when it applies"
 drop_case
 
 core_checks_for() {

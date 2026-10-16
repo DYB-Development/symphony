@@ -34,6 +34,13 @@ added=$(printf '%s\n' "$diff" | awk '
   { line++ }
 ')
 
+unsaid=$(jq -r -n 'inputs | (input_filename | split("/") | last | rtrimstr(".json")) as $pack
+  | select(.applies != "always" and ((.applies | type) != "object"
+      or (.applies | keys) != ["framework"] and (.applies | keys) != ["library"]))
+  | "pattern-scan.sh: pack \($pack) does not say whether it applies always, to a framework or to a library"' \
+  "$packs_dir"/*.json)
+[ -z "$unsaid" ] || { printf '%s\n' "$unsaid" >&2; exit 65; }
+
 patterns=$(jq -c -n '[inputs | (input_filename | split("/") | last | rtrimstr(".json")) as $pack
   | .patterns[] | . + {pack: $pack}]' "$packs_dir"/*.json)
 
