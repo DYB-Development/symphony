@@ -295,6 +295,10 @@ assert_equals "rails-params-in-query" \
   "$(rails_patterns_for 'Quote.where("name = '"'"'#{params[:name]}'"'"'")')" \
   "finds request input written into a database query in a Rails repo"
 
+assert_equals "rails-params-in-command" \
+  "$(rails_patterns_for 'system("convert #{params[:file]} out.png")')" \
+  "finds request input written into a shell command in a Rails repo"
+
 wrong_examples=()
 for pack in "$SCRIPT_DIR"/../rules/patterns/*.json; do
   while IFS=$'\037' read -r name regex match miss; do

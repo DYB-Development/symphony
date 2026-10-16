@@ -1,6 +1,8 @@
 {
   "version": 1,
-  "applies": { "framework": "rails" },
+  "applies": {
+    "framework": "rails"
+  },
   "patterns": [
     {
       "name": "rails-params-in-query",
@@ -11,6 +13,17 @@
       "examples": {
         "match": "Quote.where(\"name = '#{params[:name]}'\")",
         "miss": "Quote.where(name: params[:name])"
+      }
+    },
+    {
+      "name": "rails-params-in-command",
+      "check": "Security",
+      "regex": "(system|exec|spawn|Open3\\.[a-z0-9_]+|%x)[( {].*#\\{[^}]*params|`[^`]*#\\{[^}]*params",
+      "reason": "Request input written into a shell command lets a request run commands of its own on the server.",
+      "fix": "Pass the command and each argument separately, so no shell reads the input.",
+      "examples": {
+        "match": "system(\"convert #{params[:file]} out.png\")",
+        "miss": "system(\"convert\", params[:file], \"out.png\")"
       }
     }
   ]
