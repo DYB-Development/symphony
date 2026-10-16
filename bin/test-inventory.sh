@@ -105,7 +105,8 @@ tests='[]'
 while IFS= read -r path; do
   is_test_file "$path" || continue
   lines=",$(printf '%s\n' "$added" | awk -F'\t' -v p="$path" '$1 == p { printf "%s,", $2 }')"
-  content=$(gh api "repos/$repo/contents/$path?ref=$head" -H 'Accept: application/vnd.github.raw')
+  content=$(gh api "repos/$repo/contents/$path?ref=$head" -H 'Accept: application/vnd.github.raw' 2>/dev/null) ||
+    { echo "test-inventory.sh: $path could not be read, so its tests are unread" >&2; exit 70; }
   while IFS=$'\t' read -r start finish asserts title; do
     [ -n "$start" ] || continue
     body=$(printf '%s\n' "$content" | sed -n "${start},${finish}p")

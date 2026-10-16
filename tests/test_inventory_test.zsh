@@ -257,6 +257,14 @@ drop_case
 
 new_case
 write_added_test
+rm "$WORK/head/test/quote_test.rb"
+assert_equals "70 yes" \
+  "$(inventory >/dev/null 2>"$WORK/err"; echo "$? $(grep -q 'test/quote_test.rb.*unread' "$WORK/err" && echo yes || echo no)")" \
+  "stops and reports a test file it cannot read as unread rather than as holding no tests"
+drop_case
+
+new_case
+write_added_test
 CLAUDE_REPLY='Title: does not name a behaviour
 Body: tests that behaviour' inventory >/dev/null 2>&1
 assert_equals "test/quote_test.rb 2 test-title-names-no-behaviour Tests tests" \
