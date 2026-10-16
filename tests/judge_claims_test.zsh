@@ -384,6 +384,21 @@ assert_equals "0" "$(grep -c 'The title names no behaviour.' "$WORK/stdin")" \
   "never hands the judge a comment the test inventory wrote"
 drop_claims
 
+new_claims
+jq -n --arg draft "$DRAFT" --arg commit "$COMMIT" '{
+  draft: $draft,
+  claims: [ { text: "The loader reads two lines.", pointer: { test_titles: true },
+    captured: { commit: $commit, lines: "reads two lines\nstarts empty" } } ]
+}' > "$CLAIMS"
+judge >/dev/null 2>&1
+assert_equals "Test titles in the repo at $COMMIT:
+reads two lines
+starts empty
+no-file" \
+  "$(awk '/^Test titles in the repo/ { on = 1 } on && NF { print } /^starts empty/ { exit }' "$WORK/stdin"; grep -q '^File ' "$WORK/stdin" && echo file || echo no-file)" \
+  "hands the judge the test titles for a claim pointing at them, and no file"
+drop_claims
+
 rm -rf "$TEMPLATE"
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

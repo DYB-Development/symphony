@@ -55,6 +55,10 @@ trap 'rm -f "$ask"' EXIT
 
     number=$((number + 1))
     printf '\n%s. "%s"\n' "$number" "$text"
+    if [ "$(jq -r ".claims[$index].pointer.test_titles // false" "$claims")" = true ]; then
+      printf 'Test titles in the repo at %s:\n%s\n' "$commit" "$lines"
+      continue
+    fi
     printf 'Lines captured at %s in %s:\n%s\n' "$commit" "$path" "$lines"
     if printf '%s\n' "$sent" | grep -Fxq -- "$commit:$path"; then
       printf 'File %s at that commit: shown above\n' "$path"

@@ -408,6 +408,26 @@
     {
       "file": "agents/review-scribe.md",
       "contains": "The Conformance section is pasted from a script, so it carries no claim."
+    },
+    {
+      "file": "rules/claim-checking.md",
+      "contains": "A finding that changed code has behaviour no test reaches carries two claims: one pointing at that code, and one whose pointer is `{ \"test_titles\": true }`."
+    },
+    {
+      "file": "rules/claim-checking.md",
+      "contains": "The capture resolves that pointer to every test title in the repo at the head commit, leaving out the tests the pull request adds that the test inventory found invalid."
+    },
+    {
+      "file": "rules/claim-checking.md",
+      "contains": "- For a claim pointing at the test titles, the list of titles in place of a file. The claim says no test reaches a behaviour, and it is refuted when a listed title names that behaviour."
+    },
+    {
+      "file": "rules/claim-checking.md",
+      "contains": "Every other claim is judged against the code captured for it, never against test titles."
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "A Tests finding that changed code has behaviour no test reaches carries a second claim, word for word the same sentence, whose pointer is `{ \"test_titles\": true }`."
     }
   ]
 }

@@ -250,6 +250,9 @@ is how the person who ran you sees which step you are on.
 
    Every Findings bullet that reports a finding has a claim pointing at the lines it is about.
 
+   A Tests finding that changed code has behaviour no test reaches carries a second claim, word for word the same sentence, whose pointer is `{ "test_titles": true }`.
+   The judge refutes it when a test in the repo already names that behaviour.
+
    Every nested Missed changes bullet has two claims on the `RIGHT` side: one pointing at the path and line it names, and one pointing at the code that line disagrees with.
 
    The Commits bullet is pasted from a script, so it carries no claim.
