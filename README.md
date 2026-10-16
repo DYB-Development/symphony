@@ -212,6 +212,14 @@ scribe reads the repo rather than the conversation.
 | `/review <n>` | A pull request is reviewed against every check, drafted for you to read, and posted only when you say so |
 | `/audit` | One named section of a repo is measured and scored, and nothing is posted or filed |
 
+A review starts with a pattern scan, which matches every line the pull request
+adds against the pattern packs in `rules/patterns/`. The core pack applies to
+every repo. A pack for a framework or a library applies when the reviewed repo's
+`Gemfile.lock` or `package.json` at the pull request's head lists it. Each hit
+becomes an inline comment in the draft. When a pattern is wrong about one line,
+a comment on that line reading `symphony-allow: <pattern name>` excuses it from that one pattern.
+A marker naming no pattern the review knows is reported as a hit of its own.
+
 Tasks in dyb_web's Pipelines hub are run by conductor
 (https://github.com/DYB-Development/conductor), not by symphony. Conductor runs
 the commands and agent sessions dyb_web gives each step, so symphony holds only
