@@ -281,6 +281,14 @@ assert_equals "app/x.rb 1 debug-print" \
   "lists every hit it skipped because of a false-hit marker"
 drop_case
 
+new_case
+write_line_diff 'total = 1 # symphony-allow:'
+scan >/dev/null 2>&1
+assert_equals "app/x.rb 1 unknown-false-hit-marker Patterns" \
+  "$(jq -r '.hits[] | "\(.path) \(.line) \(.pattern) \(.check)"' "$RESULT" 2>/dev/null)" \
+  "reports a false-hit marker that names no pattern"
+drop_case
+
 core_checks_for() {
   new_case
   printf 'diff --git a/config/x b/config/x\n--- a/config/x\n+++ b/config/x\n@@ -1,0 +1,1 @@\n+%s\n' "$1" > "$WORK/diff"
