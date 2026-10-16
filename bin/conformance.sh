@@ -32,6 +32,7 @@ pr=$2
 draft=$3
 
 result="${draft%.json}.conformance.json"
+rm -f "$result"
 
 inventory="${draft%.json}.tests.json"
 
@@ -41,6 +42,9 @@ if [ -z "$ticket" ]; then
   jq -n '{ticket: null, criteria: []}' > "$result"
   exit 0
 fi
+
+jq -e '.tests | type == "array"' "$inventory" >/dev/null 2>&1 ||
+  { echo "conformance.sh: the test judgement did not finish, so no criterion was ticked" >&2; exit 70; }
 
 criteria=$(gh issue view "$ticket" --repo "$repo" --json body --jq '.body' | awk '
   /^## Acceptance criteria/ { on = 1; next }
