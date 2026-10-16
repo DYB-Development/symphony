@@ -164,6 +164,9 @@ core_checks_for() {
 assert_equals "Security" "$(core_checks_for '-----BEGIN RSA PRIVATE KEY-----')" \
   "finds a private key written into an added line with the core pack"
 
+assert_equals "Security" "$(core_checks_for 'DATABASE_URL=postgres://app:Hx7pQ2mZ9w@db.internal:5432/app')" \
+  "finds a connection string carrying a password with the core pack"
+
 wrong_examples=()
 for pack in "$SCRIPT_DIR"/../rules/patterns/*.json; do
   while IFS=$'\037' read -r name regex match miss; do

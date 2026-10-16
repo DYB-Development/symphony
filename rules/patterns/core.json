@@ -22,6 +22,17 @@
         "match": "-----BEGIN RSA PRIVATE KEY-----",
         "miss": "-----BEGIN PUBLIC KEY-----"
       }
+    },
+    {
+      "name": "connection-string-with-password",
+      "check": "Security",
+      "regex": "[A-Za-z][A-Za-z0-9+.-]*://[^:/@$[:space:]]+:[^@/${}[:space:]]+@",
+      "reason": "A connection string written into the code carries its password to everyone who can read the repo.",
+      "fix": "Read the connection string, or at least its password, from the environment.",
+      "examples": {
+        "match": "DATABASE_URL=postgres://app:Hx7pQ2mZ9w@db.internal:5432/app",
+        "miss": "DATABASE_URL=postgres://app:${DB_PASSWORD}@db.internal:5432/app"
+      }
     }
   ]
 }
