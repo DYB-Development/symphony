@@ -94,6 +94,34 @@ assert_equals "test/models/quote_test.rb 2 1 sums the line items into the total"
   "lists a test the pull request adds with its file, line, assertion count and title"
 drop_case
 
+new_case
+head_file test/models/quote_test.rb <<'RB'
+class QuoteTest < ActiveSupport::TestCase
+  test "starts with no line items" do
+    assert_empty Quote.new.line_items
+  end
+
+  test "sums the line items into the total" do
+    quote = quotes(:two_items)
+    assert_equal 30, quote.total
+  end
+end
+RB
+write_diff <<'DIFF'
+diff --git a/test/models/quote_test.rb b/test/models/quote_test.rb
+--- a/test/models/quote_test.rb
++++ b/test/models/quote_test.rb
+@@ -6,3 +6,4 @@ class QuoteTest < ActiveSupport::TestCase
+   test "sums the line items into the total" do
++    quote = quotes(:two_items)
+     assert_equal 30, quote.total
+   end
+DIFF
+inventory >/dev/null 2>&1
+assert_equals "sums the line items into the total" "$(jq -r '.tests[].title' "$RESULT" 2>/dev/null)" \
+  "lists a test whose body the pull request changes and no untouched test beside it"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
