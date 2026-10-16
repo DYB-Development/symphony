@@ -8,6 +8,7 @@ usage: review-draft.sh --render <draft.json>
        review-draft.sh --post <owner/repo> <pr-number> <draft.json>
        review-draft.sh --check-lines <draft.json> <owner/repo> <pr-number>
        review-draft.sh --add-scan <draft.json> <scan.json>
+       review-draft.sh --check-scan <draft.json>
 
 Reads the draft review written by `review-scribe`. `--render` prints it for
 reading before any of it reaches the pull request. `--post` posts it, once I
@@ -21,7 +22,8 @@ answer. `--link` does that substitution on its own.
 prints that event last.
 
 `--add-scan` adds each hit in a pattern scan result to the draft as an inline
-comment on the hit's line.
+comment on the hit's line. `--check-scan` fails when the summary's Findings
+bullet for a scan comment's check does not link to that comment.
 See ~/.claude/rules/pr-review.md.
 USAGE
   exit 64
@@ -118,6 +120,21 @@ if [ "$mode" = "--add-scan" ]; then
       body: "**\(.check) — \(.pattern | gsub("-"; " "))**\n\n\(.reason)\n\n\(.fix)"
     }]' "$draft")
   printf '%s\n' "$updated" > "$draft"
+  exit 0
+fi
+
+if [ "$mode" = "--check-scan" ]; then
+  [ $# -eq 2 ] || usage
+  draft=$2
+
+  unlinked=$(jq -r '(.summary // "" | split("\n")) as $lines
+    | .comments | to_entries[] | select(.value.source == "scan")
+    | (.value.body | capture("^\\*\\*(?<check>[^*]+) — ").check) as $check
+    | "{{comment:\(.key + 1)}}" as $token
+    | select([$lines[] | select(startswith("- ❌ **\($check)**") and contains($token))] | length == 0)
+    | "fail  comment \(.key + 1) is not linked from the \($check) bullet"' "$draft")
+
+  [ -z "$unlinked" ] || { printf '%s\n' "$unlinked"; exit 1; }
   exit 0
 fi
 

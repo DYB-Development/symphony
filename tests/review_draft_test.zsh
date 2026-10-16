@@ -540,6 +540,18 @@ drop_gh
 drop_draft
 
 echo ""
+echo "review-draft.sh --check-scan:"
+
+write_draft <<'JSON'
+{ "summary": "## Findings\n\n- ❌ **Security** — a key is written into the code.\n- ✅ **Scalability** — nothing found", "event": "REQUEST_CHANGES", "comments": [], "replies": [] }
+JSON
+write_scan
+"$DRAFT" --add-scan "$DRAFT_FILE" "$SCAN_FILE" >/dev/null
+"$DRAFT" --check-scan "$DRAFT_FILE" >/dev/null 2>&1
+assert_equals "1" "$?" "fails a draft whose Findings bullet for a scan comment's check does not link to it"
+drop_draft
+
+echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 rm -rf "$SHARED_STUBS"
 [[ $FAIL -eq 0 ]]
