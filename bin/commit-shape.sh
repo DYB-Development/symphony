@@ -46,7 +46,6 @@ is_doc_file() {
 }
 
 root="$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-model="$("$root/bin/agent-model.sh" lookup commit-shape sonnet)"
 
 question='A commit should hold a test and the code it drives. You are shown one commit that does not. Decide which of these it is:
 
@@ -63,9 +62,8 @@ exception_of() {
     gh api "repos/$repo/commits/$1" --jq '.commit.message'
     printf '\nThe commit diff:\n\n'
     gh api "repos/$repo/commits/$1" -H 'Accept: application/vnd.github.diff'
-  } | claude -p --model "$model" --system-prompt "$question" --tools "" --setting-sources "" \
-      --no-session-persistence --strict-mcp-config) ||
-    { echo "commit-shape.sh: the question about commit $1 failed" >&2; exit 70; }
+  } | "$root/bin/ask-model.sh" commit-shape sonnet 'Exception: (interface|refactor|neither)' "$question") ||
+    return 1
   printf '%s\n' "$reply" | awk 'NF { last = $0 } END { print last }' \
     | sed -n -E 's/^Exception: (interface|refactor|neither)$/\1/p'
 }

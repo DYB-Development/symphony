@@ -79,7 +79,6 @@ head=$(gh pr view "$pr" --repo "$repo" --json headRefOid --jq '.headRefOid')
 added=$(printf '%s\n' "$diff" | "$(dirname "$0")/diff-lines.sh" | awk -F'\t' '$1 == "RIGHT" { print $2 "\t" $3 }')
 
 root="$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-model="$("$root/bin/agent-model.sh" lookup test-inventory sonnet)"
 
 question='You are shown one test: its title and its body. Answer two questions about it.
 
@@ -94,9 +93,8 @@ Body: tests that behaviour   or   Body: does not test that behaviour'
 verdict_on() {
   local reply
   reply=$(printf 'The title:\n\n%s\n\nThe body:\n\n%s\n' "$1" "$2" \
-    | claude -p --model "$model" --system-prompt "$question" --tools "" --setting-sources "" \
-        --no-session-persistence --strict-mcp-config) ||
-    { echo "test-inventory.sh: the question about the test \"$1\" failed" >&2; return 1; }
+    | "$root/bin/ask-model.sh" test-inventory sonnet 'Body: (tests|does not test) that behaviour' "$question") ||
+    return 1
   printf '%s\n' "$reply" | sed -n -E 's/^Title: (names|does not name) a behaviour$/\1/p' \
     | sed 's/^names$/true/; s/^does not name$/false/'
   printf '%s\n' "$reply" | sed -n -E 's/^Body: (tests|does not test) that behaviour$/\1/p' \

@@ -70,18 +70,12 @@ trap 'rm -f "$ask"' EXIT
   done
 } > "$ask"
 
-model="$("$root/bin/agent-model.sh" lookup judge-claims opus)"
-
-reply="$(claude -p --model "$model" --system-prompt "$rules" --tools "" --setting-sources "" --no-session-persistence --strict-mcp-config < "$ask")" ||
-  { echo "judge-claims.sh: the judge's run failed, so nothing was judged" >&2; exit 70; }
+reply="$("$root/bin/ask-model.sh" judge-claims opus 'Standing: [0-9]+' "$rules" < "$ask")" || exit 70
 
 printf '%s\n' "$reply"
 
-standing=$(printf '%s\n' "$reply" | awk 'NF { last = $0 } END { print last }')
 fell=0
 
-printf '%s' "$standing" | grep -qx 'Standing: [0-9][0-9]*' ||
-  { echo "judge-claims.sh: the judge's reply does not end with a count, so nothing was judged" >&2; exit 70; }
 
 for index in $to_judge; do
   text=$(jq -r ".claims[$index].text" "$claims")
