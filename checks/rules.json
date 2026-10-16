@@ -376,6 +376,18 @@
     {
       "file": "agents/review-scribe.md",
       "contains": "The Commits bullet is pasted from a script, so it carries no claim."
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "~/.claude/bin/test-inventory.sh <owner/repo> <n> <repo root>/.review-<pr>.json"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "~/.claude/bin/review-draft.sh --add-scan <repo root>/.review-<pr>.json <repo root>/.review-<pr>.tests.json"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "A comment the test inventory wrote is treated exactly like one the scan wrote."
     }
   ]
 }
