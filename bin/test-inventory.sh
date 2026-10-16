@@ -76,16 +76,7 @@ result="${draft%.json}.tests.json"
 diff=$(gh pr diff "$pr" --repo "$repo")
 head=$(gh pr view "$pr" --repo "$repo" --json headRefOid --jq '.headRefOid')
 
-added=$(printf '%s\n' "$diff" | awk '
-  /^diff --git / { in_hunk = 0; next }
-  !in_hunk && /^\+\+\+ / { path = substr($0, 5); sub(/^b\//, "", path); next }
-  /^@@ / { split($3, n, ","); line = n[1] + 0; if (line < 0) line = -line; in_hunk = 1; next }
-  !in_hunk { next }
-  /^\\/ { next }
-  /^-/ { next }
-  /^\+/ { print path "\t" line; line++; next }
-  { line++ }
-')
+added=$(printf '%s\n' "$diff" | "$(dirname "$0")/diff-lines.sh" | awk -F'\t' '$1 == "RIGHT" { print $2 "\t" $3 }')
 
 root="$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 model="$("$root/bin/agent-model.sh" lookup test-inventory sonnet)"

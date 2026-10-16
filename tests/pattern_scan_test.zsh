@@ -267,6 +267,13 @@ write_line_diff() {
 }
 
 new_case
+printf 'diff --git "a/app/my caf\\303\\251.rb" "b/app/my caf\\303\\251.rb"\n--- "a/app/my caf\\303\\251.rb"\n+++ "b/app/my caf\\303\\251.rb"\n@@ -1,0 +1,1 @@\n+binding.pry\n' > "$WORK/diff"
+scan >/dev/null 2>&1
+assert_equals "app/my café.rb 1" "$(jq -r '.hits[] | "\(.path) \(.line)"' "$RESULT" 2>/dev/null)" \
+  "reads the path of a file whose name git wrote in quotes with escapes"
+drop_case
+
+new_case
 write_line_diff 'binding.pry # symphony-allow: debug-print'
 scan >/dev/null 2>&1
 assert_equals "0" "$(jq '.hits | length' "$RESULT" 2>/dev/null)" \

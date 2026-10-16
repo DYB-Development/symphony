@@ -23,16 +23,7 @@ result="${draft%.json}.scan.json"
 
 diff=$(gh pr diff "$pr" --repo "$repo")
 
-added=$(printf '%s\n' "$diff" | awk '
-  /^diff --git / { in_hunk = 0; next }
-  !in_hunk && /^\+\+\+ / { path = substr($0, 5); sub(/^b\//, "", path); next }
-  /^@@ / { split($3, n, ","); line = n[1] + 0; if (line < 0) line = -line; in_hunk = 1; next }
-  !in_hunk { next }
-  /^\\/ { next }
-  /^-/ { next }
-  /^\+/ { print path "\t" line "\t" substr($0, 2); line++; next }
-  { line++ }
-')
+added=$(printf '%s\n' "$diff" | "$(dirname "$0")/diff-lines.sh" | awk '/^RIGHT\t/ { print substr($0, 7) }')
 
 unsaid=$(jq -r -n 'inputs | (input_filename | split("/") | last | rtrimstr(".json")) as $pack
   | select(.applies != "always" and ((.applies | type) != "object"
