@@ -197,6 +197,36 @@ assert_equals "2 true" "$(jq -r '.tests[] | "\(.assertions) \(.tests_more_than_o
   "marks a test with more than one assertion as testing more than one thing"
 drop_case
 
+write_added_test() {
+  head_file test/quote_test.rb <<'RB'
+class QuoteTest < Minitest::Test
+  test "works" do
+    assert_equal 30, quote.total
+  end
+end
+RB
+  write_diff <<'DIFF'
+diff --git a/test/quote_test.rb b/test/quote_test.rb
+--- a/test/quote_test.rb
++++ b/test/quote_test.rb
+@@ -1,2 +1,5 @@
+ class QuoteTest < Minitest::Test
++  test "works" do
++    assert_equal 30, quote.total
++  end
+ end
+DIFF
+}
+
+new_case
+write_added_test
+CLAUDE_REPLY='Title: does not name a behaviour
+Body: tests that behaviour' inventory >/dev/null 2>&1
+assert_equals "false true" \
+  "$(jq -r '.tests[] | "\(.title_names_a_behaviour) \(.body_tests_that_behaviour)"' "$RESULT" 2>/dev/null)" \
+  "records whether a model finds the title names a behaviour and the body tests it"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
