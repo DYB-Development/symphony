@@ -95,6 +95,15 @@ assert_equals '- [x] A rep sees the quote total on the quote page. Covered by "s
   "ticks a criterion a valid test covers and names the test"
 drop_case
 
+new_case
+with_ticket
+valid_test "sums the line items into the total"
+CLAUDE_REPLY="1: none" conformance >/dev/null 2>&1
+assert_equals '- [ ] A rep sees the quote total on the quote page. No valid test covers it.' \
+  "$(render 2>&1)" \
+  "leaves a criterion no valid test covers unticked and says so"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

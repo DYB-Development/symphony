@@ -20,7 +20,7 @@ if [ "${1:-}" = "--render" ]; then
   jq -r 'if .ticket == null then "No ticket referenced."
     else .criteria[] | if (.covered_by | length) > 0
       then "- [x] \(.text) Covered by \(.covered_by | map("\"\(.)\"") | join(", "))."
-      else empty end
+      else "- [ ] \(.text) No valid test covers it." end
     end' "$2"
   exit 0
 fi
