@@ -110,6 +110,12 @@ assert_equals "yes yes no" \
   "gives the model the flagged commit's message and diff and nothing from another commit"
 drop_case
 
+new_case
+add_commit c1 "Move the total into its own method" app/models/quote.rb
+CLAUDE_REPLY="It looks like a refactor to me." shape >/dev/null 2>&1
+assert_equals "70" "$?" "fails when the model's reply does not end in an exception line"
+drop_case
+
 echo ""
 echo "commit-shape.sh --render:"
 
