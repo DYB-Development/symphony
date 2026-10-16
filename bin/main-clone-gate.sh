@@ -44,10 +44,26 @@ first_dir() {
     | sed -E "s/^.*(-C|cd) +//; s/^['\"]//; s/['\"]$//"
 }
 
+assigned_value() {
+  printf '%s' "$2" \
+    | grep -Eo "(^|[;&| ])$1=('[^']*'|\"[^\"]*\"|[^ ;&|]+)" \
+    | head -1 \
+    | sed -E "s/^[;&| ]?$1=//; s/^['\"]//; s/['\"]$//"
+}
+
+with_variable_resolved() {
+  local dir="$1" command="$2" name value
+  case "$dir" in \$*) ;; *) printf '%s' "$dir"; return ;; esac
+  name=$(printf '%s' "$dir" | sed -E 's/^\$\{?([A-Za-z_][A-Za-z0-9_]*).*/\1/')
+  value=$(assigned_value "$name" "$command")
+  printf '%s%s' "$value" "$(printf '%s' "$dir" | sed -E 's/^\$\{?[A-Za-z_][A-Za-z0-9_]*\}?//')"
+}
+
 target_dir() {
   local command="$1" cwd="$2" dir
   dir=$(first_dir "git +-C +('[^']*'|\"[^\"]*\"|[^ ;&|]+)" "$command")
   [ -n "$dir" ] || dir=$(first_dir "(^|[;&|] *)cd +('[^']*'|\"[^\"]*\"|[^ ;&|]+)" "$command")
+  dir=$(with_variable_resolved "$dir" "$command")
   dir=${dir/#\~/$HOME}
   case "$dir" in
     "") printf '%s' "$cwd" ;;

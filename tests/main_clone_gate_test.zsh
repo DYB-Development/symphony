@@ -114,6 +114,11 @@ assert_equals "deny" "$(decision "$(bash_payload "cd $MAIN && git pull" "$LINKED
 drop_clones
 
 new_clones
+assert_equals "allow" "$(decision "$(bash_payload "WT=$LINKED; cd \"\$WT\" && git commit -m wip" "$MAIN")")" \
+  "a git commit after a cd to a variable holding a linked worktree is let through"
+drop_clones
+
+new_clones
 assert_equals "deny" "$(decision "$(bash_payload $'echo "a\tb" \'c d\'\ngit commit -m "wip"' "$MAIN")")" \
   "a git commit on a later line of a command with quotes and tabs is refused in the main clone"
 drop_clones
