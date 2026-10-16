@@ -221,6 +221,18 @@ assert_equals "$HEAD_COMMIT reads two lines" \
   "captures every test title in the repo at the head commit for a pointer at the test titles"
 drop_source
 
+new_source
+add_test_file
+CLAIMS="$WORK/.review-7.claims.json"
+write_titles_pointer
+jq -n '{ tests: [ { path: "test/quote_test.rb", line: 2, title: "reads two lines", assertions: 1 } ],
+  hits: [ { path: "test/quote_test.rb", line: 2, pattern: "test-body-misses-its-title", check: "Tests" } ] }' \
+  > "$WORK/.review-7.tests.json"
+capture >/dev/null 2>&1
+assert_equals "" "$(jq -r '.claims[0].captured.lines' "$CLAIMS" 2>/dev/null)" \
+  "leaves the pull request's invalid tests out of the captured test titles"
+drop_source
+
 rm -rf "$TEMPLATE"
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

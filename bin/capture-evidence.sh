@@ -50,6 +50,15 @@ available() {
   fi
 }
 
+inventory="${claims%.claims.json}.tests.json"
+
+without_invalid_tests() {
+  local invalid=""
+  [ ! -r "$inventory" ] || invalid=$(jq -r '.hits as $hits | .tests[]
+    | select(. as $t | any($hits[]; .path == $t.path and .line == $t.line)) | .title' "$inventory")
+  if [ -z "$invalid" ]; then cat; else grep -v -x -F -e "$invalid" || true; fi
+}
+
 count=$(jq '.claims | length' "$claims")
 index=0
 unresolved=0
@@ -75,7 +84,7 @@ while [ "$index" -lt "$count" ]; do
 
   if [ "$(printf '%s' "$pointer" | jq -r '.test_titles // false')" = true ]; then
     available "$head_commit" || exit 70
-    titles=$("$root/bin/test-inventory.sh" --titles "$head_commit")
+    titles=$("$root/bin/test-inventory.sh" --titles "$head_commit" | without_invalid_tests)
     claims_json=$(jq --argjson i "$index" --arg commit "$head_commit" --arg lines "$titles" \
       '.claims[$i].captured = { commit: $commit, lines: $lines }' "$claims")
     printf '%s\n' "$claims_json" > "$claims"
