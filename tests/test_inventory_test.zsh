@@ -235,6 +235,15 @@ assert_equals "yes yes no" \
   "gives the model the test's title and body and nothing else from its file"
 drop_case
 
+new_case
+write_added_test
+CLAUDE_REPLY='Title: does not name a behaviour
+Body: tests that behaviour' inventory >/dev/null 2>&1
+assert_equals "test/quote_test.rb 2 test-title-names-no-behaviour Tests tests" \
+  "$(jq -r '.hits[] | "\(.path) \(.line) \(.pattern) \(.check) \(.source)"' "$RESULT" 2>/dev/null)" \
+  "turns a test whose title names no behaviour into a Tests finding naming what it failed"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

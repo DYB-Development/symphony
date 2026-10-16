@@ -118,4 +118,14 @@ while IFS= read -r path; do
   done < <(tests_in "$content" "$lines")
 done < <(printf '%s\n' "$added" | cut -f1 | sort -u)
 
-jq -n --argjson tests "$tests" '{tests: $tests}' > "$result"
+jq -n --argjson tests "$tests" '{tests: $tests, hits: [$tests[] | . as $t | (
+    (select($t.title_names_a_behaviour | not) | {pattern: "test-title-names-no-behaviour",
+      reason: "The title \"\($t.title)\" names no behaviour, so a failure does not say what broke.",
+      fix: "Rename the test after the one behaviour it checks."}),
+    (select($t.title_names_a_behaviour and ($t.body_tests_that_behaviour | not)) | {pattern: "test-body-misses-its-title",
+      reason: "The body does not test what the title \"\($t.title)\" says, so it can pass while that behaviour is broken.",
+      fix: "Assert on the behaviour the title names, or rename the test after what it asserts."}),
+    (select($t.tests_more_than_one_thing) | {pattern: "test-asserts-more-than-one-thing",
+      reason: "The test makes \($t.assertions) assertions, so one failure hides whether the others still hold.",
+      fix: "Split it into one test per assertion."})
+  ) | {path: $t.path, line: $t.line, check: "Tests", source: "tests"} + .]}' > "$result"
