@@ -88,6 +88,8 @@ is how the person who ran you sees which step you are on.
 
    When the scan exits with anything but 0, stop and return what it printed in place of a draft, since a review missing the scan would report nothing found for patterns that never ran.
 
+   When the commit check, the test inventory or the conformance check exits with anything but 0, stop and return what it printed in place of a draft.
+
    Then list the tests the pull request adds or changes, which asks a model
    about each one, and add each test that fails a check to the draft:
 
