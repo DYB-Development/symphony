@@ -124,6 +124,14 @@ assert_equals "70 yes" \
   "stops and names the commit question when its model run fails"
 drop_case
 
+new_case
+add_commit c1 "Move the total into its own method" app/models/quote.rb
+printf '{ "commits": [] }\n' > "$RESULT"
+CLAUDE_EXIT=1 shape >/dev/null 2>&1
+assert_equals "no result" "$([[ -e "$RESULT" ]] && echo "result left" || echo "no result")" \
+  "leaves no earlier commit result behind when a commit question fails"
+drop_case
+
 echo ""
 echo "commit-shape.sh --render:"
 
