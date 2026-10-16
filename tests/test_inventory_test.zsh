@@ -147,6 +147,30 @@ assert_equals "2 1 sums the line items into the total" \
   "lists a JavaScript test written with it and counts its expect calls"
 drop_case
 
+new_case
+head_file test/quote_test.rb <<'RB'
+class QuoteTest < Minitest::Test
+  def test_sums_the_line_items_into_the_total
+    assert_equal 30, Quote.new([10, 20]).total
+  end
+end
+RB
+write_diff <<'DIFF'
+diff --git a/test/quote_test.rb b/test/quote_test.rb
+--- a/test/quote_test.rb
++++ b/test/quote_test.rb
+@@ -1,2 +1,5 @@
+ class QuoteTest < Minitest::Test
++  def test_sums_the_line_items_into_the_total
++    assert_equal 30, Quote.new([10, 20]).total
++  end
+ end
+DIFF
+inventory >/dev/null 2>&1
+assert_equals "sums the line items into the total" "$(jq -r '.tests[].title' "$RESULT" 2>/dev/null)" \
+  "reads the title of a test written as a test_ method from its name"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
