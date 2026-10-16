@@ -262,6 +262,17 @@ assert_equals "scoped Gemfile.lock" \
   "names each pack it applied and the file that showed the pack applies"
 drop_case
 
+write_line_diff() {
+  printf 'diff --git a/app/x.rb b/app/x.rb\n--- a/app/x.rb\n+++ b/app/x.rb\n@@ -1,0 +1,1 @@\n+%s\n' "$1" > "$WORK/diff"
+}
+
+new_case
+write_line_diff 'binding.pry # symphony-allow: debug-print'
+scan >/dev/null 2>&1
+assert_equals "0" "$(jq '.hits | length' "$RESULT" 2>/dev/null)" \
+  "does not report a line for a pattern its false-hit marker names"
+drop_case
+
 core_checks_for() {
   new_case
   printf 'diff --git a/config/x b/config/x\n--- a/config/x\n+++ b/config/x\n@@ -1,0 +1,1 @@\n+%s\n' "$1" > "$WORK/diff"

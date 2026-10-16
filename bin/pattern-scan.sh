@@ -82,12 +82,18 @@ incomplete=$(jq -r '.[] | . as $p | ["check", "reason", "fix"][]
   | select(($p[.] // "") == "") | "pattern-scan.sh: \($p.pack) pattern \($p.name) has no \(.)"' <<<"$patterns")
 [ -z "$incomplete" ] || { printf '%s\n' "$incomplete" >&2; exit 65; }
 
+marked_names() {
+  printf '%s' "$1" | grep -o -E 'symphony-allow: [A-Za-z0-9_-]+' | sed 's/^symphony-allow: //' || true
+}
+
 hits='[]'
 while IFS= read -r pattern; do
   regex=$(jq -r '.regex' <<<"$pattern")
+  name=$(jq -r '.name' <<<"$pattern")
   matches=$(printf '%s\n' "$added" | cut -f3- | grep -n -E -e "$regex" | cut -d: -f1 || true)
   for index in $matches; do
     row=$(printf '%s\n' "$added" | sed -n "${index}p")
+    if marked_names "$row" | grep -qxF -- "$name"; then continue; fi
     hits=$(jq -c --arg path "$(printf '%s' "$row" | cut -f1)" --argjson line "$(printf '%s' "$row" | cut -f2)" \
       --argjson pattern "$pattern" \
       '. + [{path: $path, line: $line, pattern: $pattern.name, check: $pattern.check,
