@@ -392,6 +392,22 @@
     {
       "file": "rules/claim-checking.md",
       "contains": "- A comment the test inventory wrote, which carries a finding about one test the pull request adds or changes."
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "~/.claude/bin/conformance.sh <owner/repo> <n> <repo root>/.review-<pr>.json"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "~/.claude/bin/conformance.sh --render <repo root>/.review-<pr>.conformance.json"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "Paste what it prints as the Conformance section, word for word, and name each unticked criterion in the verdict."
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "The Conformance section is pasted from a script, so it carries no claim."
     }
   ]
 }
