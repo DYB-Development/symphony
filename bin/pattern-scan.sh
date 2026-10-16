@@ -87,13 +87,18 @@ marked_names() {
 }
 
 hits='[]'
+skipped='[]'
 while IFS= read -r pattern; do
   regex=$(jq -r '.regex' <<<"$pattern")
   name=$(jq -r '.name' <<<"$pattern")
   matches=$(printf '%s\n' "$added" | cut -f3- | grep -n -E -e "$regex" | cut -d: -f1 || true)
   for index in $matches; do
     row=$(printf '%s\n' "$added" | sed -n "${index}p")
-    if marked_names "$row" | grep -qxF -- "$name"; then continue; fi
+    if marked_names "$row" | grep -qxF -- "$name"; then
+      skipped=$(jq -c --arg path "$(printf '%s' "$row" | cut -f1)" --argjson line "$(printf '%s' "$row" | cut -f2)" \
+        --arg pattern "$name" '. + [{path: $path, line: $line, pattern: $pattern}]' <<<"$skipped")
+      continue
+    fi
     hits=$(jq -c --arg path "$(printf '%s' "$row" | cut -f1)" --argjson line "$(printf '%s' "$row" | cut -f2)" \
       --argjson pattern "$pattern" \
       '. + [{path: $path, line: $line, pattern: $pattern.name, check: $pattern.check,
@@ -101,5 +106,5 @@ while IFS= read -r pattern; do
   done
 done < <(printf '%s\n' "$patterns" | jq -c '.[]')
 
-jq -n --argjson hits "$hits" --argjson patterns "$patterns" --argjson applied "$applied" \
-  '{hits: $hits, applied: $applied, patterns: [$patterns[] | {pack, name, check}]}' > "$result"
+jq -n --argjson hits "$hits" --argjson skipped "$skipped" --argjson patterns "$patterns" --argjson applied "$applied" \
+  '{hits: $hits, skipped: $skipped, applied: $applied, patterns: [$patterns[] | {pack, name, check}]}' > "$result"
