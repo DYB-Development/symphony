@@ -61,6 +61,9 @@ cannot work out for itself. It never holds a quote, a commit or a line of code.
 - **Every claim carries a pointer.** A claim with none fails rather than passing
   unchecked.
 
+A finding that changed code has behaviour no test reaches carries two claims: one pointing at that code, and one whose pointer is `{ "test_titles": true }`.
+The capture resolves that pointer to every test title in the repo at the head commit, leaving out the tests the pull request adds that the test inventory found invalid.
+
 ## What the capture records
 
 The capture resolves each pointer and writes what it read into the same file,
@@ -91,7 +94,7 @@ Once every pointer has resolved, a separate model run reads each claim beside
 the evidence captured for it and says whether the evidence bears the claim out.
 That judgement is the part no script can make.
 
-It is given four things and nothing else:
+It is given five things and nothing else:
 
 - The draft, as a person will read it, without the comments the pattern scan or the test inventory wrote.
 - Each claim to judge, with the commit and the lines captured for it.
@@ -101,6 +104,9 @@ It is given four things and nothing else:
   cut to a window around the lines, and the claim records that it was cut.
 - The claims already judged supported, named by their text alone. They are not
   judged again, and their sentences are never listed as uncited.
+- For a claim pointing at the test titles, the list of titles in place of a file. The claim says no test reaches a behaviour, and it is refuted when a listed title names that behaviour.
+
+Every other claim is judged against the code captured for it, never against test titles.
 
 It is given no tools, no settings and no servers, exactly as the draft reader
 is. It never sees the instructions the scribe was given, the conversation behind
