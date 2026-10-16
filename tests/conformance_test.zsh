@@ -104,6 +104,16 @@ assert_equals '- [ ] A rep sees the quote total on the quote page. No valid test
   "leaves a criterion no valid test covers unticked and says so"
 drop_case
 
+new_case
+with_ticket
+jq -n '{ tests: [ { path: "test/quote_test.rb", line: 2, title: "shows the quote total on the quote page", assertions: 3 } ],
+  hits: [ { path: "test/quote_test.rb", line: 2, pattern: "test-asserts-more-than-one-thing", check: "Tests" } ] }' \
+  > "$WORK/repo/.review-7.tests.json"
+conformance >/dev/null 2>&1
+assert_equals "0" "$(grep -c 'shows the quote total' "$WORK/asked" 2>/dev/null)" \
+  "never offers the model a test the inventory found a fault in"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

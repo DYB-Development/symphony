@@ -47,7 +47,8 @@ criteria=$(gh issue view "$ticket" --repo "$repo" --json body --jq '.body' | awk
   /^## / { on = 0 }
   on && /^- \[[ xX]\] / { sub(/^- \[[ xX]\] /, ""); print }
 ')
-titles=$(jq -r '.tests[].title' "$inventory")
+titles=$(jq -r '.hits as $hits | .tests[]
+  | select(. as $t | any($hits[]; .path == $t.path and .line == $t.line) | not) | .title' "$inventory")
 
 root="$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 model="$("$root/bin/agent-model.sh" lookup conformance sonnet)"
