@@ -86,6 +86,14 @@ assert_equals "c1 test-and-code" "$(jq -r '.commits[] | "\(.sha) \(.shape)"' "$R
   "does not flag a commit that holds a test file and a code file"
 drop_case
 
+new_case
+add_commit c1 "Describe the quote total" README.md docs/quotes.md
+shape >/dev/null 2>&1
+assert_equals "c1 docs-only no" \
+  "$(jq -r '.commits[] | "\(.sha) \(.shape)"' "$RESULT" 2>/dev/null) $([[ -e "$WORK/asked" ]] && echo asked || echo no)" \
+  "recognises a commit that changes only documentation without asking a model"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
