@@ -114,6 +114,37 @@ assert_equals "deny" "$(decision "$(bash_payload "cd $MAIN && git pull" "$LINKED
 drop_clones
 
 new_clones
+assert_equals "allow" "$(decision "$(bash_payload "WT=$LINKED; cd \"\$WT\" && git commit -m wip" "$MAIN")")" \
+  "a git commit after a cd to a variable holding a linked worktree is let through"
+drop_clones
+
+new_clones
+assert_equals "allow" "$(decision "$(bash_payload "WT=$LINKED; git -C \"\$WT\" commit -m wip" "$MAIN")")" \
+  "a git commit pointed at a variable holding a linked worktree is let through"
+drop_clones
+
+new_clones
+assert_equals "deny" "$(decision "$(bash_payload "APP=$MAIN; cd \"\$APP\" && git commit -m wip" "$LINKED")")" \
+  "a git commit after a cd to a variable holding the main clone is refused"
+drop_clones
+
+new_clones
+assert_equals "deny" "$(decision "$(bash_payload "APP=$MAIN; git -C \"\$APP\" commit -m wip" "$LINKED")")" \
+  "a git commit pointed at a variable holding the main clone is refused"
+drop_clones
+
+new_clones
+assert_equals "allow" "$(decision "$(bash_payload 'cd "$UNSET_WORKTREE" && git commit -m wip' "$MAIN")")" \
+  "a git commit after a cd to a variable with no known value is let through"
+drop_clones
+
+new_clones
+assert_equals "deny" \
+  "$( (export HOME="$BASE"; decision "$(bash_payload 'cd "$HOME/app" && git commit -m wip' "$LINKED")") )" \
+  "a git commit after a cd to a path under an environment variable naming the main clone is refused"
+drop_clones
+
+new_clones
 assert_equals "deny" "$(decision "$(bash_payload $'echo "a\tb" \'c d\'\ngit commit -m "wip"' "$MAIN")")" \
   "a git commit on a later line of a command with quotes and tabs is refused in the main clone"
 drop_clones

@@ -308,6 +308,10 @@
     {
       "file": "agents/review-scribe.md",
       "contains": "Skip every hit in a file the diff touched."
+    },
+    {
+      "file": "rules/agent-worktrees.md",
+      "contains": "A folder named through a shell variable is followed when the command assigns the variable or the environment holds it, and a command naming a variable with neither is let through."
     }
   ]
 }

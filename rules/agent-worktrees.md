@@ -66,6 +66,8 @@ refuses the ones aimed at a main clone:
   `pull` run in it, whether from its folder, after a `cd` into it, or through
   `git -C`.
 
+A folder named through a shell variable is followed when the command assigns the variable or the environment holds it, and a command naming a variable with neither is let through.
+
 Reading files and running `git status`, `log`, `diff`, `fetch` and
 `worktree add` there stay allowed, since those are how an agent looks at the
 repo and makes its worktree.
