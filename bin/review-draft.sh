@@ -131,7 +131,7 @@ if [ "$mode" = "--check-scan" ]; then
   draft=$2
 
   unlinked=$(jq -r '(.summary // "" | split("\n")) as $lines
-    | .comments | to_entries[] | select(.value.source == "scan")
+    | .comments | to_entries[] | select(.value.source != null)
     | (.value.body | capture("^\\*\\*(?<check>[^*]+) — ").check) as $check
     | "{{comment:\(.key + 1)}}" as $token
     | select([$lines[] | select(startswith("- ❌ **\($check)**") and contains($token))] | length == 0)

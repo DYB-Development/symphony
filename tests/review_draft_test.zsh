@@ -583,6 +583,16 @@ write_scan
 assert_equals "0" "$?" "passes a draft whose Findings bullet for a scan comment's check links to it"
 drop_draft
 
+write_draft <<'JSON'
+{ "summary": "## Findings\n\n- ❌ **Tests** — a test title names no behaviour.", "event": "REQUEST_CHANGES",
+  "comments": [ { "path": "test/quote_test.rb", "line": 2, "side": "RIGHT", "source": "tests",
+    "body": "**Tests — test title names no behaviour**\n\nThe title names no behaviour.\n\nRename the test." } ],
+  "replies": [] }
+JSON
+"$DRAFT" --check-scan "$DRAFT_FILE" >/dev/null 2>&1
+assert_equals "1" "$?" "fails a draft whose Tests bullet does not link a comment the test inventory wrote"
+drop_draft
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 rm -rf "$SHARED_STUBS"
