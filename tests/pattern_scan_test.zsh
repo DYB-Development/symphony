@@ -95,6 +95,21 @@ assert_equals "A debugger call stops the process that reaches it. | Remove the d
   "gives each hit the pattern's reason and what to do instead"
 drop_case
 
+new_case
+write_diff <<'DIFF'
+diff --git a/app/quote.rb b/app/quote.rb
+--- a/app/quote.rb
++++ b/app/quote.rb
+@@ -1,3 +1,3 @@
+ binding.pry
+-binding.pry
++total
+DIFF
+scan >/dev/null
+assert_equals "0" "$(jq '.hits | length' "$RESULT" 2>/dev/null)" \
+  "reports no line the pull request removes or leaves unchanged"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
