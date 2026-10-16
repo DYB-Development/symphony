@@ -122,6 +122,15 @@ assert_equals '- ❌ **Commits** — one commit changes code with no test.
   "renders a flagged commit that is no exception as a Commits finding naming the commit and what it holds"
 drop_case
 
+new_case
+add_commit c1aaaaaaaa "Move the total into its own method" app/models/quote.rb
+CLAUDE_REPLY="Exception: refactor" shape >/dev/null 2>&1
+assert_equals '- ✅ **Commits** — nothing found
+  - `c1aaaaa` Move the total into its own method — It holds no test and was found to be a refactor that changes no behaviour.' \
+  "$("$SHAPE" --render "$RESULT" 2>&1)" \
+  "lists a flagged commit found to be an exception with the exception it was found to be"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

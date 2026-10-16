@@ -21,7 +21,11 @@ if [ "${1:-}" = "--render" ]; then
     | if ($bare | length) == 0 then "- ✅ **Commits** — nothing found"
       else "- ❌ **Commits** — \(if ($bare | length) == 1 then "one commit changes" else "\($bare | length) commits change" end) code with no test.",
         ($bare[] | "  - `\(.sha[0:7])` \(.subject) — It changes code in \(.code_files | join(", ")) and holds no test. Add the test that drives this change.")
-      end' "$2"
+      end,
+      (.commits[] | select(.exception == "refactor" or .exception == "interface")
+        | "  - `\(.sha[0:7])` \(.subject) — It holds no test and was found to be \(
+            if .exception == "refactor" then "a refactor that changes no behaviour"
+            else "an interface change across several files" end).")' "$2"
   exit 0
 fi
 
