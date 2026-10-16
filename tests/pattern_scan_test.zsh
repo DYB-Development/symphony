@@ -27,10 +27,16 @@ assert_equals() {
 
 new_case() {
   WORK="$(mktemp -d "${TMPDIR:-/tmp}/pattern_scan_test.XXXXXX")"
-  mkdir -p "$WORK/bin" "$WORK/packs" "$WORK/repo"
+  mkdir -p "$WORK/bin" "$WORK/packs" "$WORK/repo" "$WORK/head"
   cat > "$WORK/bin/gh" <<SH
 #!/usr/bin/env bash
-cat "$WORK/diff"
+case "\$1 \$2" in
+  "pr diff") cat "$WORK/diff" ;;
+  "pr view") printf 'headsha\n' ;;
+  "api repos/acme/quotes/contents/"*)
+    file=\${2#repos/acme/quotes/contents/}
+    cat "$WORK/head/\${file%%\\?*}" 2>/dev/null || exit 1 ;;
+esac
 SH
   chmod +x "$WORK/bin/gh"
   cat > "$WORK/packs/test.json" <<'JSON'
@@ -200,6 +206,23 @@ jq '.applies = { library: "devise" }' "$WORK/packs/test.json" > "$WORK/packs/dev
 rm "$WORK/packs/test.json"
 scan >/dev/null 2>&1
 assert_equals "0" "$?" "accepts a pack that applies when the repo depends on a named library"
+drop_case
+
+debug_pack_applying_to() {
+  jq --argjson applies "$1" '.applies = $applies' "$WORK/packs/test.json" > "$WORK/packs/scoped.json"
+  rm "$WORK/packs/test.json"
+}
+
+write_pry_diff() {
+  printf 'diff --git a/app/x.rb b/app/x.rb\n--- a/app/x.rb\n+++ b/app/x.rb\n@@ -1,0 +1,1 @@\n+binding.pry\n' > "$WORK/diff"
+}
+
+new_case
+write_pry_diff
+debug_pack_applying_to '{"library": "pry"}'
+scan >/dev/null 2>&1
+assert_equals "0" "$(jq '.hits | length' "$RESULT" 2>/dev/null)" \
+  "does not apply a library pack when the repo does not depend on the library"
 drop_case
 
 core_checks_for() {

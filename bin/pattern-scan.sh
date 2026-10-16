@@ -41,7 +41,8 @@ unsaid=$(jq -r -n 'inputs | (input_filename | split("/") | last | rtrimstr(".jso
   "$packs_dir"/*.json)
 [ -z "$unsaid" ] || { printf '%s\n' "$unsaid" >&2; exit 65; }
 
-patterns=$(jq -c -n '[inputs | (input_filename | split("/") | last | rtrimstr(".json")) as $pack
+patterns=$(jq -c -n '[inputs | select(.applies == "always")
+  | (input_filename | split("/") | last | rtrimstr(".json")) as $pack
   | .patterns[] | . + {pack: $pack}]' "$packs_dir"/*.json)
 
 incomplete=$(jq -r '.[] | . as $p | ["check", "reason", "fix"][]
