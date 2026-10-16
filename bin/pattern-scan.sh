@@ -37,6 +37,10 @@ added=$(printf '%s\n' "$diff" | awk '
 patterns=$(jq -c -n '[inputs | (input_filename | split("/") | last | rtrimstr(".json")) as $pack
   | .patterns[] | . + {pack: $pack}]' "$packs_dir"/*.json)
 
+incomplete=$(jq -r '.[] | . as $p | ["check", "reason", "fix"][]
+  | select(($p[.] // "") == "") | "pattern-scan.sh: \($p.pack) pattern \($p.name) has no \(.)"' <<<"$patterns")
+[ -z "$incomplete" ] || { printf '%s\n' "$incomplete" >&2; exit 65; }
+
 hits='[]'
 while IFS= read -r pattern; do
   regex=$(jq -r '.regex' <<<"$pattern")
