@@ -303,6 +303,10 @@ assert_equals "rails-params-in-path" \
   "$(rails_patterns_for 'send_file(Rails.root.join("exports", params[:name]))')" \
   "finds request input reaching a file path in a Rails repo"
 
+assert_equals "rails-unescaped-output" \
+  "$(rails_patterns_for '<%= comment.body.html_safe %>')" \
+  "finds HTML output marked safe without escaping in a Rails repo"
+
 wrong_examples=()
 for pack in "$SCRIPT_DIR"/../rules/patterns/*.json; do
   while IFS=$'\037' read -r name regex match miss; do

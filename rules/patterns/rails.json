@@ -36,6 +36,17 @@
         "match": "send_file(Rails.root.join(\"exports\", params[:name]))",
         "miss": "send_file(export.file_path)"
       }
+    },
+    {
+      "name": "rails-unescaped-output",
+      "check": "Security",
+      "regex": "\\.html_safe([^A-Za-z0-9_?]|$)|(^|[^A-Za-z0-9_.])raw[( ]",
+      "reason": "Output marked safe is sent to the browser without escaping, so any markup in it runs on the page.",
+      "fix": "Let the view escape the value, or pass it through sanitize when some markup has to stay.",
+      "examples": {
+        "match": "<%= comment.body.html_safe %>",
+        "miss": "<%= comment.body %>"
+      }
     }
   ]
 }
