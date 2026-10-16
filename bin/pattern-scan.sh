@@ -34,6 +34,9 @@ added=$(printf '%s\n' "$diff" | awk '
   { line++ }
 ')
 
+patterns=$(jq -c -n '[inputs | (input_filename | split("/") | last | rtrimstr(".json")) as $pack
+  | .patterns[] | . + {pack: $pack}]' "$packs_dir"/*.json)
+
 hits='[]'
 while IFS= read -r pattern; do
   regex=$(jq -r '.regex' <<<"$pattern")
@@ -45,6 +48,7 @@ while IFS= read -r pattern; do
       '. + [{path: $path, line: $line, pattern: $pattern.name, check: $pattern.check,
              reason: $pattern.reason, fix: $pattern.fix}]' <<<"$hits")
   done
-done < <(jq -c '.patterns[]' "$packs_dir"/*.json)
+done < <(printf '%s\n' "$patterns" | jq -c '.[]')
 
-jq -n --argjson hits "$hits" '{hits: $hits}' > "$result"
+jq -n --argjson hits "$hits" --argjson patterns "$patterns" \
+  '{hits: $hits, patterns: [$patterns[] | {pack, name, check}]}' > "$result"

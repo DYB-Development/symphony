@@ -110,6 +110,20 @@ assert_equals "0" "$(jq '.hits | length' "$RESULT" 2>/dev/null)" \
   "reports no line the pull request removes or leaves unchanged"
 drop_case
 
+new_case
+write_diff <<'DIFF'
+diff --git a/app/quote.rb b/app/quote.rb
+--- a/app/quote.rb
++++ b/app/quote.rb
+@@ -1,0 +1,1 @@
++total
+DIFF
+scan >/dev/null
+assert_equals "test debug-print Patterns" \
+  "$(jq -r '.patterns[] | "\(.pack) \(.name) \(.check)"' "$RESULT" 2>/dev/null)" \
+  "lists every pattern that ran, with its pack, even when it matched nothing"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
