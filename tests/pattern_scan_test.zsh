@@ -225,6 +225,16 @@ drop_case
 
 new_case
 write_diff </dev/null
+printf '{ "hits": [], "patterns": [ { "pack": "test", "name": "debug-print", "check": "Patterns" } ] }\n' > "$RESULT"
+jq '.patterns[0].regex = "binding(pry"' "$WORK/packs/test.json" > "$WORK/packs/broken.json"
+rm "$WORK/packs/test.json"
+scan >/dev/null 2>&1
+assert_equals "no result" "$([[ -e "$RESULT" ]] && echo "result left" || echo "no result")" \
+  "leaves no scan result behind when a pattern could not run, so no check reads nothing found from it"
+drop_case
+
+new_case
+write_diff </dev/null
 jq 'del(.applies)' "$WORK/packs/test.json" > "$WORK/packs/broken.json"
 rm "$WORK/packs/test.json"
 scan >/dev/null 2>&1
