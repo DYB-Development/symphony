@@ -56,7 +56,7 @@ with_variable_resolved() {
   case "$dir" in \$*) ;; *) printf '%s' "$dir"; return ;; esac
   name=$(printf '%s' "$dir" | sed -E 's/^\$\{?([A-Za-z_][A-Za-z0-9_]*).*/\1/')
   value=$(assigned_value "$name" "$command")
-  [ -n "$value" ] || return 1
+  [ -n "$value" ] || value=$(printenv "$name") || return 1
   printf '%s%s' "$value" "$(printf '%s' "$dir" | sed -E 's/^\$\{?[A-Za-z_][A-Za-z0-9_]*\}?//')"
 }
 
