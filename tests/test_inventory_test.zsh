@@ -122,6 +122,31 @@ assert_equals "sums the line items into the total" "$(jq -r '.tests[].title' "$R
   "lists a test whose body the pull request changes and no untouched test beside it"
 drop_case
 
+new_case
+head_file src/quote.test.js <<'JS'
+describe("quote", () => {
+  it("sums the line items into the total", () => {
+    expect(total([10, 20])).toBe(30);
+  });
+});
+JS
+write_diff <<'DIFF'
+diff --git a/src/quote.test.js b/src/quote.test.js
+--- a/src/quote.test.js
++++ b/src/quote.test.js
+@@ -1,2 +1,5 @@
+ describe("quote", () => {
++  it("sums the line items into the total", () => {
++    expect(total([10, 20])).toBe(30);
++  });
+ });
+DIFF
+inventory >/dev/null 2>&1
+assert_equals "2 1 sums the line items into the total" \
+  "$(jq -r '.tests[] | "\(.line) \(.assertions) \(.title)"' "$RESULT" 2>/dev/null)" \
+  "lists a JavaScript test written with it and counts its expect calls"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
