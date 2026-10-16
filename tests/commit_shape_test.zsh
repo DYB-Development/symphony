@@ -101,6 +101,15 @@ assert_equals "c1 refactor" "$(jq -r '.commits[] | "\(.sha) \(.exception)"' "$RE
   "records the exception a model finds a flagged commit to be"
 drop_case
 
+new_case
+add_commit c1 "Add the quote total test" test/models/quote_test.rb app/models/quote.rb
+add_commit c2 "Move the total into its own method" app/models/quote.rb
+shape >/dev/null 2>&1
+assert_equals "yes yes no" \
+  "$(grep -q 'Move the total into its own method' "$WORK/asked" && echo yes || echo no) $(grep -q '^diff --git' "$WORK/asked" && echo yes || echo no) $(grep -q 'Add the quote total test' "$WORK/asked" && echo yes || echo no)" \
+  "gives the model the flagged commit's message and diff and nothing from another commit"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
