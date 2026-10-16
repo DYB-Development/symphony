@@ -73,6 +73,12 @@ incomplete=$(jq -r '.[] | . as $p | ["check", "reason", "fix"][]
   | select(($p[.] // "") == "") | "pattern-scan.sh: \($p.pack) pattern \($p.name) has no \(.)"' <<<"$patterns")
 [ -z "$incomplete" ] || { printf '%s\n' "$incomplete" >&2; exit 65; }
 
+is_valid_expression() {
+  local status=0
+  grep -E -e "$1" </dev/null >/dev/null 2>&1 || status=$?
+  [ "$status" -ne 2 ]
+}
+
 marked_names() {
   printf '%s' "$1" | grep -o -E 'symphony-allow: [A-Za-z0-9_-]+' | sed 's/^symphony-allow: //' || true
 }
@@ -82,6 +88,8 @@ skipped='[]'
 while IFS= read -r pattern; do
   regex=$(jq -r '.regex' <<<"$pattern")
   name=$(jq -r '.name' <<<"$pattern")
+  is_valid_expression "$regex" ||
+    { echo "pattern-scan.sh: $(jq -r '.pack' <<<"$pattern") pattern $name is not a valid expression" >&2; exit 70; }
   matches=$(printf '%s\n' "$added" | cut -f3- | grep -n -E -e "$regex" | cut -d: -f1 || true)
   for index in $matches; do
     row=$(printf '%s\n' "$added" | sed -n "${index}p")

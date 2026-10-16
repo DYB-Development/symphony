@@ -185,6 +185,21 @@ assert_equals "65" "$?" "refuses a pattern that does not name its check"
 drop_case
 
 new_case
+write_diff <<'DIFF'
+diff --git a/app/x.rb b/app/x.rb
+--- a/app/x.rb
++++ b/app/x.rb
+@@ -1,0 +1,1 @@
++binding.pry
+DIFF
+jq '.patterns[0].regex = "binding(pry"' "$WORK/packs/test.json" > "$WORK/packs/broken.json"
+rm "$WORK/packs/test.json"
+assert_equals "70 yes" \
+  "$(scan >/dev/null 2>"$WORK/err"; echo "$? $(grep -q 'debug-print' "$WORK/err" && echo yes || echo no)")" \
+  "stops and names a pattern that is not a valid expression"
+drop_case
+
+new_case
 write_diff </dev/null
 jq 'del(.applies)' "$WORK/packs/test.json" > "$WORK/packs/broken.json"
 rm "$WORK/packs/test.json"
