@@ -516,6 +516,15 @@ Read the value from the environment instead.' \
   "adds each scan hit as an inline comment on its line, carrying the pattern's reason and fix"
 drop_draft
 
+write_draft </dev/null
+rm "$DRAFT_FILE"
+write_scan
+"$DRAFT" --add-scan "$DRAFT_FILE" "$SCAN_FILE" >/dev/null 2>&1
+assert_equals "null null 1 0" \
+  "$(jq -r '"\(.summary) \(.event) \(.comments | length) \(.replies | length)"' "$DRAFT_FILE" 2>/dev/null)" \
+  "starts a draft holding only the scan's comments when there is no draft yet"
+drop_draft
+
 write_draft <<'JSON'
 { "summary": "One finding.", "event": null, "comments": [], "replies": [] }
 JSON

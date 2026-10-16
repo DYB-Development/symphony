@@ -115,6 +115,9 @@ if [ "$mode" = "--add-scan" ]; then
   draft=$2
   scan=$3
 
+  [ -e "$draft" ] ||
+    printf '{ "summary": null, "event": null, "comments": [], "replies": [] }\n' > "$draft"
+
   updated=$(jq --slurpfile scan "$scan" '.comments += [$scan[0].hits[] | {
       path, line, side: "RIGHT", source: "scan",
       body: "**\(.check) — \(.pattern | gsub("-"; " "))**\n\n\(.reason)\n\n\(.fix)"
