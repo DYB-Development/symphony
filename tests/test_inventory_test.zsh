@@ -172,6 +172,20 @@ assert_equals "sums the line items into the total" "$(jq -r '.tests[].title' "$R
 drop_case
 
 new_case
+head_file "test/my quote_test.rb" <<'RB'
+class QuoteTest < Minitest::Test
+  test "sums the line items into the total" do
+    assert_equal 30, quote.total
+  end
+end
+RB
+printf 'diff --git a/test/my quote_test.rb b/test/my quote_test.rb\n--- a/test/my quote_test.rb\t\n+++ b/test/my quote_test.rb\t\n@@ -1,2 +1,5 @@\n class QuoteTest < Minitest::Test\n+  test "sums the line items into the total" do\n+    assert_equal 30, quote.total\n+  end\n end\n' > "$WORK/diff"
+inventory >/dev/null 2>&1
+assert_equals "test/my quote_test.rb 2" "$(jq -r '.tests[] | "\(.path) \(.line)"' "$RESULT" 2>/dev/null)" \
+  "lists a test in a file whose name holds a space"
+drop_case
+
+new_case
 head_file test/quote_test.rb <<'RB'
 class QuoteTest < Minitest::Test
   test "sums the line items into the total" do
