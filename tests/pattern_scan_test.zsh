@@ -1,0 +1,86 @@
+#!/usr/bin/env zsh
+# Tests for bin/pattern-scan.sh. Each case runs against a stubbed `gh` that
+# prints a fixed diff, and a pack directory written for the case.
+#
+# Usage: zsh tests/pattern_scan_test.zsh
+setopt no_unset
+
+SCRIPT_DIR="${0:A:h}"
+SCAN="$SCRIPT_DIR/../bin/pattern-scan.sh"
+
+PASS=0
+FAIL=0
+
+ok()   { printf '  \033[32m✓\033[0m %s\n' "$1"; PASS=$((PASS+1)); }
+fail() { printf '  \033[31m✗\033[0m %s\n' "$1"; FAIL=$((FAIL+1)); }
+
+assert_equals() {
+  local expected="$1" actual="$2" label="$3"
+  if [[ "$expected" == "$actual" ]]; then
+    ok "$label"
+  else
+    fail "$label"
+    printf '      expected: %s\n' "${(qqq)expected}"
+    printf '      actual:   %s\n' "${(qqq)actual}"
+  fi
+}
+
+new_case() {
+  WORK="$(mktemp -d "${TMPDIR:-/tmp}/pattern_scan_test.XXXXXX")"
+  mkdir -p "$WORK/bin" "$WORK/packs" "$WORK/repo"
+  cat > "$WORK/bin/gh" <<SH
+#!/usr/bin/env bash
+cat "$WORK/diff"
+SH
+  chmod +x "$WORK/bin/gh"
+  cat > "$WORK/packs/test.json" <<'JSON'
+{
+  "version": 1,
+  "patterns": [
+    {
+      "name": "debug-print",
+      "check": "Patterns",
+      "regex": "binding\\.pry",
+      "reason": "A debugger call stops the process that reaches it.",
+      "fix": "Remove the debugger call.",
+      "examples": { "match": "binding.pry", "miss": "binding_pry_helper" }
+    }
+  ]
+}
+JSON
+  DRAFT_FILE="$WORK/repo/.review-7.json"
+  RESULT="$WORK/repo/.review-7.scan.json"
+}
+
+drop_case() {
+  rm -rf "$WORK"
+}
+
+write_diff() { cat > "$WORK/diff"; }
+
+scan() {
+  PATH="$WORK/bin:$PATH" SYMPHONY_PATTERNS_DIR="$WORK/packs" "$SCAN" acme/quotes 7 "$DRAFT_FILE"
+}
+
+echo "pattern-scan.sh:"
+
+new_case
+write_diff <<'DIFF'
+diff --git a/app/quote.rb b/app/quote.rb
+index 1111111..2222222 100644
+--- a/app/quote.rb
++++ b/app/quote.rb
+@@ -10,2 +10,3 @@ class Quote
+   def total
++    binding.pry
+     items.sum(&:price)
+DIFF
+scan >/dev/null
+assert_equals "app/quote.rb 11 debug-print Patterns" \
+  "$(jq -r '.hits[] | "\(.path) \(.line) \(.pattern) \(.check)"' "$RESULT" 2>/dev/null)" \
+  "lists an added line that matches a pattern with its file, line, pattern and check"
+drop_case
+
+echo ""
+printf '%d passed, %d failed\n' "$PASS" "$FAIL"
+[[ $FAIL -eq 0 ]]
