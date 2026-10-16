@@ -1,0 +1,99 @@
+#!/usr/bin/env zsh
+# Tests for bin/test-inventory.sh. Each case runs against a stubbed `gh` that
+# answers from files written for the case, and a stubbed `claude`.
+#
+# Usage: zsh tests/test_inventory_test.zsh
+setopt no_unset
+
+SCRIPT_DIR="${0:A:h}"
+INVENTORY="$SCRIPT_DIR/../bin/test-inventory.sh"
+
+PASS=0
+FAIL=0
+
+ok()   { printf '  \033[32m✓\033[0m %s\n' "$1"; PASS=$((PASS+1)); }
+fail() { printf '  \033[31m✗\033[0m %s\n' "$1"; FAIL=$((FAIL+1)); }
+
+assert_equals() {
+  local expected="$1" actual="$2" label="$3"
+  if [[ "$expected" == "$actual" ]]; then
+    ok "$label"
+  else
+    fail "$label"
+    printf '      expected: %s\n' "${(qqq)expected}"
+    printf '      actual:   %s\n' "${(qqq)actual}"
+  fi
+}
+
+new_case() {
+  WORK="$(mktemp -d "${TMPDIR:-/tmp}/test_inventory_test.XXXXXX")"
+  mkdir -p "$WORK/bin" "$WORK/head" "$WORK/repo"
+  cat > "$WORK/bin/gh" <<SH
+#!/usr/bin/env bash
+case "\$1 \$2" in
+  "pr diff") cat "$WORK/diff" ;;
+  "pr view") printf 'headsha\n' ;;
+  "api repos/acme/quotes/contents/"*)
+    file=\${2#repos/acme/quotes/contents/}
+    cat "$WORK/head/\${file%%\\?*}" 2>/dev/null || exit 1 ;;
+esac
+SH
+  chmod +x "$WORK/bin/gh"
+  cat > "$WORK/bin/claude" <<SH
+#!/usr/bin/env bash
+cat >> "$WORK/asked"
+printf '%s\n' "\${CLAUDE_REPLY:-Title: names a behaviour
+Body: tests that behaviour}"
+SH
+  chmod +x "$WORK/bin/claude"
+  DRAFT_FILE="$WORK/repo/.review-7.json"
+  RESULT="$WORK/repo/.review-7.tests.json"
+}
+
+drop_case() {
+  rm -rf "$WORK"
+}
+
+head_file() {
+  mkdir -p "$WORK/head/${1:h}"
+  cat > "$WORK/head/$1"
+}
+
+write_diff() { cat > "$WORK/diff"; }
+
+inventory() {
+  PATH="$WORK/bin:$PATH" SYMPHONY_AGENT_MODELS_FILE="$WORK/no-models.json" "$INVENTORY" acme/quotes 7 "$DRAFT_FILE"
+}
+
+echo "test-inventory.sh:"
+
+new_case
+head_file test/models/quote_test.rb <<'RB'
+class QuoteTest < ActiveSupport::TestCase
+  test "sums the line items into the total" do
+    quote = quotes(:two_items)
+    assert_equal 30, quote.total
+  end
+end
+RB
+write_diff <<'DIFF'
+diff --git a/test/models/quote_test.rb b/test/models/quote_test.rb
+--- a/test/models/quote_test.rb
++++ b/test/models/quote_test.rb
+@@ -1,2 +1,6 @@
+ class QuoteTest < ActiveSupport::TestCase
++  test "sums the line items into the total" do
++    quote = quotes(:two_items)
++    assert_equal 30, quote.total
++  end
+ end
+DIFF
+inventory >/dev/null 2>&1
+assert_equals "test/models/quote_test.rb 2 1 sums the line items into the total" \
+  "$(jq -r '.tests[] | "\(.path) \(.line) \(.assertions) \(.title)"' "$RESULT" 2>/dev/null)" \
+  "lists a test the pull request adds with its file, line, assertion count and title"
+drop_case
+
+echo ""
+printf '%d passed, %d failed\n' "$PASS" "$FAIL"
+[[ $FAIL -eq 0 ]]
