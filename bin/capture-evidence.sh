@@ -38,6 +38,18 @@ draft=$(jq -r '.draft' "$claims")
 [ -r "$draft" ] ||
   { echo "capture-evidence.sh: the draft $draft cannot be read, so nothing was captured" >&2; exit 70; }
 
+root="$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+available() {
+  if ! git cat-file -e "$1^{commit}" 2>/dev/null; then
+    git fetch -q --no-tags --depth 1 --all 2>/dev/null || true
+  fi
+  if ! git cat-file -e "$1^{commit}" 2>/dev/null; then
+    printf 'not captured  %s could not be downloaded\n' "$1"
+    return 1
+  fi
+}
+
 count=$(jq '.claims | length' "$claims")
 index=0
 unresolved=0
@@ -61,6 +73,16 @@ while [ "$index" -lt "$count" ]; do
     continue
   fi
 
+  if [ "$(printf '%s' "$pointer" | jq -r '.test_titles // false')" = true ]; then
+    available "$head_commit" || exit 70
+    titles=$("$root/bin/test-inventory.sh" --titles "$head_commit")
+    claims_json=$(jq --argjson i "$index" --arg commit "$head_commit" --arg lines "$titles" \
+      '.claims[$i].captured = { commit: $commit, lines: $lines }' "$claims")
+    printf '%s\n' "$claims_json" > "$claims"
+    index=$((index + 1))
+    continue
+  fi
+
   path=$(printf '%s' "$pointer" | jq -r .path)
   from=$(printf '%s' "$pointer" | jq -r .from)
   to=$(printf '%s' "$pointer" | jq -r .to)
@@ -76,14 +98,7 @@ while [ "$index" -lt "$count" ]; do
   commit=$head_commit
   [ "$side" = LEFT ] && commit=$base_commit
 
-  if ! git cat-file -e "$commit^{commit}" 2>/dev/null; then
-    git fetch -q --no-tags --depth 1 --all 2>/dev/null || true
-  fi
-
-  if ! git cat-file -e "$commit^{commit}" 2>/dev/null; then
-    printf 'not captured  %s could not be downloaded\n' "$commit"
-    exit 70
-  fi
+  available "$commit" || exit 70
 
   if [ "$(git cat-file -t "$commit:$path" 2>/dev/null)" != blob ]; then
     printf 'unresolved  %s is not a file at %s\n' "$path" "$commit"

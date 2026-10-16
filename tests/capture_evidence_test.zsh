@@ -190,6 +190,37 @@ code=$?
 assert_equals "0" "$?" "reports a pointer naming a directory as unresolved"
 drop_source
 
+add_test_file() {
+  mkdir -p "$SOURCE/test"
+  cat > "$SOURCE/test/quote_test.rb" <<'RB'
+class QuoteTest < Minitest::Test
+  test "reads two lines" do
+    assert_equal 2, loader.lines.size
+  end
+end
+RB
+  git -C "$SOURCE" add -A
+  git -C "$SOURCE" -c user.email=test@example.com -c user.name=Test commit -q -m tests
+  HEAD_COMMIT="$(git -C "$SOURCE" rev-parse HEAD)"
+  answer_pull_request "$HEAD_COMMIT" "$HEAD_COMMIT"
+}
+
+write_titles_pointer() {
+  jq -n --arg draft "$DRAFT" '{
+    draft: $draft,
+    claims: [ { text: "The loader reads two lines.", pointer: { test_titles: true } } ]
+  }' > "$CLAIMS"
+}
+
+new_source
+add_test_file
+write_titles_pointer
+capture >/dev/null 2>&1
+assert_equals "$HEAD_COMMIT reads two lines" \
+  "$(jq -r '.claims[0].captured | "\(.commit) \(.lines)"' "$CLAIMS" 2>/dev/null)" \
+  "captures every test title in the repo at the head commit for a pointer at the test titles"
+drop_source
+
 rm -rf "$TEMPLATE"
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
