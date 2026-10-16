@@ -86,6 +86,16 @@ is how the person who ran you sees which step you are on.
    Each hit is now an inline comment in the draft, marked as written by the
    scan. Never edit or remove a comment the scan wrote.
 
+   Then list the tests the pull request adds or changes, which asks a model
+   about each one, and add each test that fails a check to the draft:
+
+   ```
+   ~/.claude/bin/test-inventory.sh <owner/repo> <n> <repo root>/.review-<pr>.json
+   ~/.claude/bin/review-draft.sh --add-scan <repo root>/.review-<pr>.json <repo root>/.review-<pr>.tests.json
+   ```
+
+   A comment the test inventory wrote is treated exactly like one the scan wrote.
+
    Then check the shape of every commit, which asks a model about each commit
    that holds no test:
 

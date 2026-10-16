@@ -40,7 +40,7 @@ trap 'rm -f "$ask"' EXIT
 
 {
   printf 'The draft:\n\n'
-  jq '.comments |= map(select(.source != "scan"))' "$draft" 2>/dev/null || cat "$draft"
+  jq '.comments |= map(select(.source == null))' "$draft" 2>/dev/null || cat "$draft"
   printf '\nClaims already judged supported:\n'
   jq -r "$still_stands"' .claims[] | select(still_stands) | "- \"\(.text)\""' "$claims"
   printf '\nThe claims:\n'

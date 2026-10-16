@@ -536,6 +536,20 @@ assert_equals "1. config/payments.rb:3 (written by the pattern scan)" \
 drop_draft
 
 write_draft <<'JSON'
+{ "summary": "One finding.", "event": null, "comments": [], "replies": [] }
+JSON
+TESTS_FILE="$DRAFT_DIR/review.tests.json"
+cat > "$TESTS_FILE" <<'JSON'
+{ "hits": [ { "path": "test/quote_test.rb", "line": 2, "pattern": "test-title-names-no-behaviour", "check": "Tests",
+  "source": "tests", "reason": "The title names no behaviour.", "fix": "Rename the test." } ] }
+JSON
+"$DRAFT" --add-scan "$DRAFT_FILE" "$TESTS_FILE" >/dev/null
+assert_equals "1. test/quote_test.rb:2 (written by the test inventory)" \
+  "$("$DRAFT" --render "$DRAFT_FILE" | grep '^1\. ')" \
+  "marks a comment the test inventory wrote as written by the test inventory when rendered"
+drop_draft
+
+write_draft <<'JSON'
 { "summary": "One finding.", "event": "REQUEST_CHANGES", "comments": [], "replies": [] }
 JSON
 write_scan
@@ -567,6 +581,16 @@ write_scan
 "$DRAFT" --add-scan "$DRAFT_FILE" "$SCAN_FILE" >/dev/null
 "$DRAFT" --check-scan "$DRAFT_FILE" >/dev/null 2>&1
 assert_equals "0" "$?" "passes a draft whose Findings bullet for a scan comment's check links to it"
+drop_draft
+
+write_draft <<'JSON'
+{ "summary": "## Findings\n\n- ❌ **Tests** — a test title names no behaviour.", "event": "REQUEST_CHANGES",
+  "comments": [ { "path": "test/quote_test.rb", "line": 2, "side": "RIGHT", "source": "tests",
+    "body": "**Tests — test title names no behaviour**\n\nThe title names no behaviour.\n\nRename the test." } ],
+  "replies": [] }
+JSON
+"$DRAFT" --check-scan "$DRAFT_FILE" >/dev/null 2>&1
+assert_equals "1" "$?" "fails a draft whose Tests bullet does not link a comment the test inventory wrote"
 drop_draft
 
 echo ""

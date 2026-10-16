@@ -375,6 +375,15 @@ assert_equals "0" "$(grep -c 'A key written into the code is exposed.' "$WORK/st
   "never hands the judge a comment the pattern scan wrote"
 drop_claims
 
+new_claims
+jq -n '{ summary: "The loader reads two lines.", event: null, replies: [], comments: [
+  { path: "quote.rb", line: 2, side: "RIGHT", body: "The loader reads two lines." },
+  { path: "quote.rb", line: 3, side: "RIGHT", source: "tests", body: "The title names no behaviour." } ] }' > "$DRAFT"
+judge >/dev/null 2>&1
+assert_equals "0" "$(grep -c 'The title names no behaviour.' "$WORK/stdin")" \
+  "never hands the judge a comment the test inventory wrote"
+drop_claims
+
 rm -rf "$TEMPLATE"
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
