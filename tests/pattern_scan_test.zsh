@@ -282,6 +282,19 @@ assert_equals "Security" "$(core_checks_for 'aws_access_key_id = AKIAIOSFODNN7EX
 assert_equals "Security" "$(core_checks_for 'auth_token: "q3Lm9Pz2Wv8Rt5Ny7Kb"')" \
   "finds a token written into an added line with the core pack"
 
+rails_patterns_for() {
+  new_case
+  printf 'diff --git a/app/x.rb b/app/x.rb\n--- a/app/x.rb\n+++ b/app/x.rb\n@@ -1,0 +1,1 @@\n+%s\n' "$1" > "$WORK/diff"
+  printf 'GEM\n  specs:\n    rails (7.1.3)\n' > "$WORK/head/Gemfile.lock"
+  PATH="$WORK/bin:$PATH" "$SCAN" acme/quotes 7 "$DRAFT_FILE" >/dev/null
+  jq -r '[.hits[] | select(.pattern | startswith("rails-")) | .pattern] | join(",")' "$RESULT" 2>/dev/null
+  drop_case
+}
+
+assert_equals "rails-params-in-query" \
+  "$(rails_patterns_for 'Quote.where("name = '"'"'#{params[:name]}'"'"'")')" \
+  "finds request input written into a database query in a Rails repo"
+
 wrong_examples=()
 for pack in "$SCRIPT_DIR"/../rules/patterns/*.json; do
   while IFS=$'\037' read -r name regex match miss; do

@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "applies": { "framework": "rails" },
+  "patterns": [
+    {
+      "name": "rails-params-in-query",
+      "check": "Security",
+      "regex": "(where|order|group|having|joins|pluck|select|find_by_sql|exists\\?)\\(.*#\\{[^}]*params",
+      "reason": "Request input written into a query string reaches the database unchecked, so a request can change the query.",
+      "fix": "Pass the value as a bound parameter or a hash condition instead of interpolating it.",
+      "examples": {
+        "match": "Quote.where(\"name = '#{params[:name]}'\")",
+        "miss": "Quote.where(name: params[:name])"
+      }
+    }
+  ]
+}
