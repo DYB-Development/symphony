@@ -113,6 +113,24 @@ drop_repo
 
 new_repo
 arm >/dev/null
+assert_equals "" "$(check 'gh issue create --body "the git log shows; git commit runs"')" \
+  "leaves a command whose quoted text only mentions a commit alone"
+drop_repo
+
+new_repo
+arm >/dev/null
+assert_contains '"permissionDecision":"deny"' "$(check "git -C \"$REPO\" commit -m \"wip\"")" \
+  "refuses a commit that names its repo in quotes"
+drop_repo
+
+new_repo
+arm >/dev/null
+assert_contains '"permissionDecision":"deny"' "$(check 'GIT_AUTHOR_NAME=me git commit -m "wip"')" \
+  "refuses a commit preceded by an environment assignment"
+drop_repo
+
+new_repo
+arm >/dev/null
 assert_contains '"permissionDecision":"deny"' \
   "$(check 'git commit -m "explain what NO_DECISION=1 is for"')" \
   "still refuses when the override is only mentioned in the message"
