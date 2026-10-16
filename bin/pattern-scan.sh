@@ -41,8 +41,35 @@ unsaid=$(jq -r -n 'inputs | (input_filename | split("/") | last | rtrimstr(".jso
   "$packs_dir"/*.json)
 [ -z "$unsaid" ] || { printf '%s\n' "$unsaid" >&2; exit 65; }
 
-patterns=$(jq -c -n '[inputs | select(.applies == "always")
+head=$(gh pr view "$pr" --repo "$repo" --json headRefOid --jq '.headRefOid')
+
+file_at_head() {
+  gh api "repos/$repo/contents/$1?ref=$head" -H 'Accept: application/vnd.github.raw' 2>/dev/null || true
+}
+
+gemfile_lock=$(file_at_head Gemfile.lock)
+
+file_showing_dependency() {
+  if grep -q -E "^    $1 \(" <<<"$gemfile_lock"; then printf 'Gemfile.lock'; fi
+}
+
+applied='[]'
+for pack_file in "$packs_dir"/*.json; do
+  pack=$(basename "$pack_file" .json)
+  dependency=$(jq -r '.applies | if type == "object" then .framework // .library else "" end' "$pack_file")
+  if [ -z "$dependency" ]; then
+    shown_by=""
+  else
+    shown_by=$(file_showing_dependency "$dependency")
+    [ -n "$shown_by" ] || continue
+  fi
+  applied=$(jq -c --arg pack "$pack" --arg shown_by "$shown_by" \
+    '. + [{pack: $pack, shown_by: (if $shown_by == "" then null else $shown_by end)}]' <<<"$applied")
+done
+
+patterns=$(jq -c -n --argjson applied "$applied" '[inputs
   | (input_filename | split("/") | last | rtrimstr(".json")) as $pack
+  | select(any($applied[]; .pack == $pack))
   | .patterns[] | . + {pack: $pack}]' "$packs_dir"/*.json)
 
 incomplete=$(jq -r '.[] | . as $p | ["check", "reason", "fix"][]

@@ -225,6 +225,15 @@ assert_equals "0" "$(jq '.hits | length' "$RESULT" 2>/dev/null)" \
   "does not apply a library pack when the repo does not depend on the library"
 drop_case
 
+new_case
+write_pry_diff
+debug_pack_applying_to '{"library": "pry"}'
+printf 'GEM\n  remote: https://rubygems.org/\n  specs:\n    pry (0.14.2)\n' > "$WORK/head/Gemfile.lock"
+scan >/dev/null 2>&1
+assert_equals "1" "$(jq '.hits | length' "$RESULT" 2>/dev/null)" \
+  "applies a library pack when the repo's Gemfile.lock at the head commit lists the library"
+drop_case
+
 core_checks_for() {
   new_case
   printf 'diff --git a/config/x b/config/x\n--- a/config/x\n+++ b/config/x\n@@ -1,0 +1,1 @@\n+%s\n' "$1" > "$WORK/diff"
