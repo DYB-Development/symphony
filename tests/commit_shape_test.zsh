@@ -111,5 +111,17 @@ assert_equals "yes yes no" \
 drop_case
 
 echo ""
+echo "commit-shape.sh --render:"
+
+new_case
+add_commit c1aaaaaaaa "Add the quote total" app/models/quote.rb
+shape >/dev/null 2>&1
+assert_equals '- ❌ **Commits** — one commit changes code with no test.
+  - `c1aaaaa` Add the quote total — It changes code in app/models/quote.rb and holds no test. Add the test that drives this change.' \
+  "$("$SHAPE" --render "$RESULT" 2>&1)" \
+  "renders a flagged commit that is no exception as a Commits finding naming the commit and what it holds"
+drop_case
+
+echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
