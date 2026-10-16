@@ -86,6 +86,13 @@ is how the person who ran you sees which step you are on.
    Each hit is now an inline comment in the draft, marked as written by the
    scan. Never edit or remove a comment the scan wrote.
 
+   Then check the shape of every commit, which asks a model about each commit
+   that holds no test:
+
+   ```
+   ~/.claude/bin/commit-shape.sh <owner/repo> <n> <repo root>/.review-<pr>.json
+   ```
+
 2. **Read enough of the repo to judge, and stop there.** A finding needs the
    file the diff changed and what it calls. A pattern break needs the existing
    file that does it the other way — find that file or drop the finding.
@@ -157,6 +164,14 @@ is how the person who ran you sees which step you are on.
    and the nested bullet for each file in the form `pr-review.md` gives, each
    naming the path and line in the head commit that is now wrong.
 
+   For a review or a re-review, the Commits bullet comes from the commit check:
+
+   ```
+   ~/.claude/bin/commit-shape.sh --render <repo root>/.review-<pr>.commits.json
+   ```
+
+   Paste what it prints as the Commits bullet, word for word.
+
    Raise every finding; there is no cap. When the list is long, say in the
    verdict that the PR needs reworking rather than reviewing.
 
@@ -216,6 +231,8 @@ is how the person who ran you sees which step you are on.
    Every Findings bullet that reports a finding has a claim pointing at the lines it is about.
 
    Every nested Missed changes bullet has two claims on the `RIGHT` side: one pointing at the path and line it names, and one pointing at the code that line disagrees with.
+
+   The Commits bullet is pasted from a script, so it carries no claim.
 
    A bullet saying `nothing found` or `nothing to check` carries no claim yet,
    since a later unit covers those.
