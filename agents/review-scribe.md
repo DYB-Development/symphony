@@ -146,11 +146,21 @@ is how the person who ran you sees which step you are on.
    gh issue view <n> --repo <owner/repo>
    ```
 
-   Read the acceptance criteria and say for each whether the diff covers it, in
-   the ticket's own order and words. A criterion the diff does not cover is a
-   summary bullet, never an inline comment. No ticket to read means
-   `No ticket referenced.` — never invent criteria and check the diff against
-   your own.
+   When the ticket is a GitHub issue the pull request closes, a valid test the
+   pull request adds has to cover a criterion before it is ticked:
+
+   ```
+   ~/.claude/bin/conformance.sh <owner/repo> <n> <repo root>/.review-<pr>.json
+   ~/.claude/bin/conformance.sh --render <repo root>/.review-<pr>.conformance.json
+   ```
+
+   Paste what it prints as the Conformance section, word for word, and name each unticked criterion in the verdict.
+
+   For any other ticket, such as a Jira key, read the acceptance criteria and
+   say for each whether the diff covers it, in the ticket's own order and words.
+   A criterion the diff does not cover is a summary bullet, never an inline
+   comment. No ticket to read means `No ticket referenced.` — never invent
+   criteria and check the diff against your own.
 
 5. **Write each inline comment** in the form from `pr-review.md`: a bold header
    line carrying the check and the issue in a few words, one sentence naming
@@ -243,6 +253,8 @@ is how the person who ran you sees which step you are on.
    Every nested Missed changes bullet has two claims on the `RIGHT` side: one pointing at the path and line it names, and one pointing at the code that line disagrees with.
 
    The Commits bullet is pasted from a script, so it carries no claim.
+
+   The Conformance section is pasted from a script, so it carries no claim.
 
    A bullet saying `nothing found` or `nothing to check` carries no claim yet,
    since a later unit covers those.
