@@ -428,6 +428,10 @@
     {
       "file": "agents/review-scribe.md",
       "contains": "A Tests finding that changed code has behaviour no test reaches carries a second claim, word for word the same sentence, whose pointer is `{ \"test_titles\": true }`."
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "When the scan exits with anything but 0, stop and return what it printed in place of a draft, since a review missing the scan would report nothing found for patterns that never ran."
     }
   ]
 }

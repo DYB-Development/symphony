@@ -20,10 +20,17 @@ draft=$3
 
 packs_dir=${SYMPHONY_PATTERNS_DIR:-"$(cd "$(dirname "$0")/.." && pwd)/rules/patterns"}
 result="${draft%.json}.scan.json"
+rm -f "$result"
 
-diff=$(gh pr diff "$pr" --repo "$repo")
+diff=$(gh pr diff "$pr" --repo "$repo") ||
+  { echo "pattern-scan.sh: the diff for $repo#$pr could not be read, so nothing was scanned" >&2; exit 70; }
 
 added=$(printf '%s\n' "$diff" | "$(dirname "$0")/diff-lines.sh" | awk '/^RIGHT\t/ { print substr($0, 7) }')
+
+for pack_file in "$packs_dir"/*.json; do
+  jq -e . "$pack_file" >/dev/null 2>&1 ||
+    { echo "pattern-scan.sh: pack $(basename "$pack_file" .json) cannot be read" >&2; exit 70; }
+done
 
 unsaid=$(jq -r -n 'inputs | (input_filename | split("/") | last | rtrimstr(".json")) as $pack
   | select(.applies != "always" and ((.applies | type) != "object"
@@ -35,11 +42,21 @@ unsaid=$(jq -r -n 'inputs | (input_filename | split("/") | last | rtrimstr(".jso
 head=$(gh pr view "$pr" --repo "$repo" --json headRefOid --jq '.headRefOid')
 
 file_at_head() {
-  gh api "repos/$repo/contents/$1?ref=$head" -H 'Accept: application/vnd.github.raw' 2>/dev/null || true
+  local errors
+  errors=$(mktemp)
+  if gh api "repos/$repo/contents/$1?ref=$head" -H 'Accept: application/vnd.github.raw' 2>"$errors"; then
+    rm -f "$errors"
+  elif grep -q 'HTTP 404' "$errors"; then
+    rm -f "$errors"
+  else
+    rm -f "$errors"
+    echo "pattern-scan.sh: $1 could not be read, so no pack was chosen" >&2
+    return 1
+  fi
 }
 
-gemfile_lock=$(file_at_head Gemfile.lock)
-package_json=$(file_at_head package.json)
+gemfile_lock=$(file_at_head Gemfile.lock) || exit 70
+package_json=$(file_at_head package.json) || exit 70
 
 file_showing_dependency() {
   if grep -q -E "^    $1 \(" <<<"$gemfile_lock"; then
@@ -73,6 +90,12 @@ incomplete=$(jq -r '.[] | . as $p | ["check", "reason", "fix"][]
   | select(($p[.] // "") == "") | "pattern-scan.sh: \($p.pack) pattern \($p.name) has no \(.)"' <<<"$patterns")
 [ -z "$incomplete" ] || { printf '%s\n' "$incomplete" >&2; exit 65; }
 
+is_valid_expression() {
+  local status=0
+  grep -E -e "$1" </dev/null >/dev/null 2>&1 || status=$?
+  [ "$status" -ne 2 ]
+}
+
 marked_names() {
   printf '%s' "$1" | grep -o -E 'symphony-allow: [A-Za-z0-9_-]+' | sed 's/^symphony-allow: //' || true
 }
@@ -82,6 +105,8 @@ skipped='[]'
 while IFS= read -r pattern; do
   regex=$(jq -r '.regex' <<<"$pattern")
   name=$(jq -r '.name' <<<"$pattern")
+  is_valid_expression "$regex" ||
+    { echo "pattern-scan.sh: $(jq -r '.pack' <<<"$pattern") pattern $name is not a valid expression" >&2; exit 70; }
   matches=$(printf '%s\n' "$added" | cut -f3- | grep -n -E -e "$regex" | cut -d: -f1 || true)
   for index in $matches; do
     row=$(printf '%s\n' "$added" | sed -n "${index}p")
