@@ -151,6 +151,8 @@ is how the person who ran you sees which step you are on.
    `{{comment:N}}`, where N is that comment's position in your `comments` array,
    counting from 1. A check with no finding carries no link.
 
+   A comment the scan wrote is a finding under the check its header names, so that check's bullet opens with ❌ and links to it.
+
    A Missed changes finding has no inline comment and no link. Write its bullet
    and the nested bullet for each file in the form `pr-review.md` gives, each
    naming the path and line in the head commit that is now wrong.
@@ -227,6 +229,14 @@ is how the person who ran you sees which step you are on.
    A comment that does not is a comment on code this pull request did not
    change. Cut it, or move it to a line the diff touches. That check reads the
    diff alone and captures nothing.
+
+   Then check that the summary links every comment the scan wrote:
+
+   ```
+   ~/.claude/bin/review-draft.sh --check-scan <repo root>/.review-<pr>.json
+   ```
+
+   Link each comment it names from its check's Findings bullet.
 
    Then have the tooling read the lines:
 
