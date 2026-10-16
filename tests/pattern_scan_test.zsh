@@ -139,6 +139,20 @@ assert_equals "$WORK/elsewhere/.review-12.scan.json" "$(ls "$WORK"/elsewhere/.re
   "writes its result beside the review draft, named after it"
 drop_case
 
+new_case
+write_diff <<'DIFF'
+diff --git a/config/payments.rb b/config/payments.rb
+--- a/config/payments.rb
++++ b/config/payments.rb
+@@ -1,0 +1,1 @@
++STRIPE_API_KEY = "q8Zr2mWx7pLk4vNt9sYbHj3c"
+DIFF
+PATH="$WORK/bin:$PATH" "$SCAN" acme/quotes 7 "$DRAFT_FILE" >/dev/null
+assert_equals "core credential-in-code Security" \
+  "$(jq -r '.hits[] as $hit | .patterns[] | select(.name == $hit.pattern) | "\(.pack) \(.name) \(.check)"' "$RESULT" 2>/dev/null)" \
+  "finds a credential written into the code with the core pack this package ships"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
