@@ -94,6 +94,13 @@ assert_equals "c1 docs-only no" \
   "recognises a commit that changes only documentation without asking a model"
 drop_case
 
+new_case
+add_commit c1 "Move the total into its own method" app/models/quote.rb
+CLAUDE_REPLY="Exception: refactor" shape >/dev/null 2>&1
+assert_equals "c1 refactor" "$(jq -r '.commits[] | "\(.sha) \(.exception)"' "$RESULT" 2>/dev/null)" \
+  "records the exception a model finds a flagged commit to be"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
