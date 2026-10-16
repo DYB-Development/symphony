@@ -78,6 +78,11 @@ CLAUDE_REPLY="I could not count them." ask >/dev/null 2>&1
 assert_equals "70" "$?" "fails a reply that does not end in the line the run expects"
 drop_case
 
+new_case
+CLAUDE_EXIT=1 ask >/dev/null 2>&1
+assert_equals "70" "$?" "fails a run that does not finish"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
