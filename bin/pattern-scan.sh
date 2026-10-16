@@ -35,14 +35,16 @@ added=$(printf '%s\n' "$diff" | awk '
 ')
 
 hits='[]'
-while IFS=$'\037' read -r name check regex; do
+while IFS= read -r pattern; do
+  regex=$(jq -r '.regex' <<<"$pattern")
   matches=$(printf '%s\n' "$added" | cut -f3- | grep -n -E -e "$regex" | cut -d: -f1 || true)
   for index in $matches; do
     row=$(printf '%s\n' "$added" | sed -n "${index}p")
     hits=$(jq -c --arg path "$(printf '%s' "$row" | cut -f1)" --argjson line "$(printf '%s' "$row" | cut -f2)" \
-      --arg pattern "$name" --arg check "$check" \
-      '. + [{path: $path, line: $line, pattern: $pattern, check: $check}]' <<<"$hits")
+      --argjson pattern "$pattern" \
+      '. + [{path: $path, line: $line, pattern: $pattern.name, check: $pattern.check,
+             reason: $pattern.reason, fix: $pattern.fix}]' <<<"$hits")
   done
-done < <(jq -r '.patterns[] | [.name, .check, .regex] | join("\u001f")' "$packs_dir"/*.json)
+done < <(jq -c '.patterns[]' "$packs_dir"/*.json)
 
 jq -n --argjson hits "$hits" '{hits: $hits}' > "$result"
