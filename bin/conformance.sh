@@ -51,7 +51,6 @@ titles=$(jq -r '.hits as $hits | .tests[]
   | select(. as $t | any($hits[]; .path == $t.path and .line == $t.line) | not) | .title' "$inventory")
 
 root="$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-model="$("$root/bin/agent-model.sh" lookup conformance sonnet)"
 
 question='You are shown the acceptance criteria of a ticket and the titles of the tests a pull request adds. Decide which titles cover which criterion. A title covers a criterion when the behaviour it names is the behaviour the criterion asks for.
 
@@ -64,9 +63,7 @@ reply=$({
   printf '%s\n' "$criteria" | awk '{ print NR ". " $0 }'
   printf '\nThe test titles:\n\n'
   printf '%s\n' "$titles" | awk 'NF { print NR ". " $0 }'
-} | claude -p --model "$model" --system-prompt "$question" --tools "" --setting-sources "" \
-    --no-session-persistence --strict-mcp-config) ||
-  { echo "conformance.sh: the question about the criteria failed" >&2; exit 70; }
+} | "$root/bin/ask-model.sh" conformance sonnet '[0-9]+: *(none|[0-9]+(, *[0-9]+)*)' "$question") || exit 70
 
 jq -n --argjson ticket "$ticket" --arg criteria "$criteria" --arg titles "$titles" --arg reply "$reply" '
   ($titles | split("\n") | map(select(length > 0))) as $titles

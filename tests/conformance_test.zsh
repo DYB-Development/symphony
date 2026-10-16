@@ -123,6 +123,13 @@ assert_equals "yes yes no no" \
   "gives the model the acceptance criteria and test titles and nothing else from the ticket"
 drop_case
 
+new_case
+with_ticket
+valid_test "shows the quote total on the quote page"
+CLAUDE_REPLY="The first test covers it." conformance >/dev/null 2>&1
+assert_equals "70" "$?" "fails when the model's reply does not end in a criterion line"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
