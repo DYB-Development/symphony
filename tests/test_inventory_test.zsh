@@ -44,6 +44,7 @@ SH
 cat >> "$WORK/asked"
 printf '%s\n' "\${CLAUDE_REPLY:-Title: names a behaviour
 Body: tests that behaviour}"
+exit "\${CLAUDE_EXIT:-0}"
 SH
   chmod +x "$WORK/bin/claude"
   DRAFT_FILE="$WORK/repo/.review-7.json"
@@ -253,6 +254,29 @@ new_case
 write_added_test
 CLAUDE_REPLY="The test looks fine." inventory >/dev/null 2>&1
 assert_equals "70" "$?" "fails when the model's reply does not end in its body line"
+drop_case
+
+new_case
+write_added_test
+rm "$WORK/head/test/quote_test.rb"
+assert_equals "70 yes" \
+  "$(inventory >/dev/null 2>"$WORK/err"; echo "$? $(grep -q 'test/quote_test.rb.*unread' "$WORK/err" && echo yes || echo no)")" \
+  "stops and reports a test file it cannot read as unread rather than as holding no tests"
+drop_case
+
+new_case
+write_added_test
+printf '{ "tests": [ { "path": "test/quote_test.rb", "line": 2, "title": "an old test", "assertions": 1 } ], "hits": [] }\n' > "$RESULT"
+CLAUDE_REPLY="The test looks fine." inventory >/dev/null 2>&1
+assert_equals "no result" "$([[ -e "$RESULT" ]] && echo "result left" || echo "no result")" \
+  "leaves no earlier test list behind when its judgement does not finish"
+drop_case
+
+new_case
+write_added_test
+assert_equals "70 yes" \
+  "$(CLAUDE_EXIT=1 inventory >/dev/null 2>"$WORK/err"; echo "$? $(grep -q 'test-inventory' "$WORK/err" && echo yes || echo no)")" \
+  "stops and names the test question when its model run fails"
 drop_case
 
 new_case

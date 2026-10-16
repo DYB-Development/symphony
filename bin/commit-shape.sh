@@ -36,6 +36,7 @@ pr=$2
 draft=$3
 
 result="${draft%.json}.commits.json"
+rm -f "$result"
 
 is_test_file() {
   grep -q -E '(^|/)(test|tests|spec|__tests__)/|_test\.|_spec\.|\.test\.|\.spec\.' <<<"$1"

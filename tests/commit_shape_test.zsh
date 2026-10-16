@@ -47,6 +47,7 @@ SH
 #!/usr/bin/env bash
 cat > "$WORK/asked"
 printf '%s\n' "\${CLAUDE_REPLY:-Exception: neither}"
+exit "\${CLAUDE_EXIT:-0}"
 SH
   chmod +x "$WORK/bin/claude"
   DRAFT_FILE="$WORK/repo/.review-7.json"
@@ -114,6 +115,21 @@ new_case
 add_commit c1 "Move the total into its own method" app/models/quote.rb
 CLAUDE_REPLY="It looks like a refactor to me." shape >/dev/null 2>&1
 assert_equals "70" "$?" "fails when the model's reply does not end in an exception line"
+drop_case
+
+new_case
+add_commit c1 "Move the total into its own method" app/models/quote.rb
+assert_equals "70 yes" \
+  "$(CLAUDE_EXIT=1 shape >/dev/null 2>"$WORK/err"; echo "$? $(grep -q 'commit-shape' "$WORK/err" && echo yes || echo no)")" \
+  "stops and names the commit question when its model run fails"
+drop_case
+
+new_case
+add_commit c1 "Move the total into its own method" app/models/quote.rb
+printf '{ "commits": [] }\n' > "$RESULT"
+CLAUDE_EXIT=1 shape >/dev/null 2>&1
+assert_equals "no result" "$([[ -e "$RESULT" ]] && echo "result left" || echo "no result")" \
+  "leaves no earlier commit result behind when a commit question fails"
 drop_case
 
 echo ""

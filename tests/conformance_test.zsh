@@ -41,6 +41,7 @@ SH
 #!/usr/bin/env bash
 cat >> "$WORK/asked"
 printf '%s\n' "\${CLAUDE_REPLY:-1: none}"
+exit "\${CLAUDE_EXIT:-0}"
 SH
   chmod +x "$WORK/bin/claude"
   DRAFT_FILE="$WORK/repo/.review-7.json"
@@ -128,6 +129,23 @@ with_ticket
 valid_test "shows the quote total on the quote page"
 CLAUDE_REPLY="The first test covers it." conformance >/dev/null 2>&1
 assert_equals "70" "$?" "fails when the model's reply does not end in a criterion line"
+drop_case
+
+new_case
+with_ticket
+rm "$WORK/repo/.review-7.tests.json"
+printf '{ "ticket": 12, "criteria": [ { "text": "A rep sees the quote total on the quote page.", "covered_by": ["an old test"] } ] }\n' > "$RESULT"
+assert_equals "70 no result" \
+  "$(conformance >/dev/null 2>&1; echo "$? $([[ -e "$RESULT" ]] && echo "result left" || echo "no result")")" \
+  "stops and ticks no criterion when the test judgement did not finish"
+drop_case
+
+new_case
+with_ticket
+valid_test "shows the quote total on the quote page"
+assert_equals "70 yes" \
+  "$(CLAUDE_EXIT=1 conformance >/dev/null 2>"$WORK/err"; echo "$? $(grep -q 'conformance' "$WORK/err" && echo yes || echo no)")" \
+  "stops and names the conformance question when its model run fails"
 drop_case
 
 echo ""
