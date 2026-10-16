@@ -73,6 +73,11 @@ assert_equals "--tools  --setting-sources  --no-session-persistence --strict-mcp
   "runs the model with no tools, no settings and no servers"
 drop_case
 
+new_case
+CLAUDE_REPLY="I could not count them." ask >/dev/null 2>&1
+assert_equals "70" "$?" "fails a reply that does not end in the line the run expects"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
