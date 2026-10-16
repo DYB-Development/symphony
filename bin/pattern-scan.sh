@@ -21,7 +21,8 @@ draft=$3
 packs_dir=${SYMPHONY_PATTERNS_DIR:-"$(cd "$(dirname "$0")/.." && pwd)/rules/patterns"}
 result="${draft%.json}.scan.json"
 
-diff=$(gh pr diff "$pr" --repo "$repo")
+diff=$(gh pr diff "$pr" --repo "$repo") ||
+  { echo "pattern-scan.sh: the diff for $repo#$pr could not be read, so nothing was scanned" >&2; exit 70; }
 
 added=$(printf '%s\n' "$diff" | "$(dirname "$0")/diff-lines.sh" | awk '/^RIGHT\t/ { print substr($0, 7) }')
 

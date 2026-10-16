@@ -31,7 +31,7 @@ new_case() {
   cat > "$WORK/bin/gh" <<SH
 #!/usr/bin/env bash
 case "\$1 \$2" in
-  "pr diff") cat "$WORK/diff" ;;
+  "pr diff") [ ! -e "$WORK/diff.fails" ] || exit 1; cat "$WORK/diff" ;;
   "pr view") printf 'headsha\n' ;;
   "api repos/acme/quotes/contents/"*)
     file=\${2#repos/acme/quotes/contents/}
@@ -205,6 +205,12 @@ printf '{ "version": 1, "applies": "always", "patterns": [\n' > "$WORK/packs/hal
 assert_equals "70 yes" \
   "$(scan >/dev/null 2>"$WORK/err"; echo "$? $(grep -q 'pack half' "$WORK/err" && echo yes || echo no)")" \
   "stops and names a pack that cannot be read"
+drop_case
+
+new_case
+touch "$WORK/diff.fails"
+scan >/dev/null 2>&1
+assert_equals "70" "$?" "stops when the diff cannot be read rather than reporting no hits"
 drop_case
 
 new_case
