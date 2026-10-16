@@ -33,6 +33,17 @@
         "match": "DATABASE_URL=postgres://app:Hx7pQ2mZ9w@db.internal:5432/app",
         "miss": "DATABASE_URL=postgres://app:${DB_PASSWORD}@db.internal:5432/app"
       }
+    },
+    {
+      "name": "cloud-access-key-id",
+      "check": "Security",
+      "regex": "(AKIA|ASIA)[0-9A-Z]{16}",
+      "reason": "A cloud access key id written into the code is half of a credential and usually sits beside the other half.",
+      "fix": "Remove the key, rotate it, and read it from the environment or the provider's credential chain.",
+      "examples": {
+        "match": "aws_access_key_id = AKIAIOSFODNN7EXAMPLE",
+        "miss": "aws_access_key_id = ENV[\"AWS_ACCESS_KEY_ID\"]"
+      }
     }
   ]
 }
