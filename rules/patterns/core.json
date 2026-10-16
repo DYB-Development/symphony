@@ -11,6 +11,17 @@
         "match": "STRIPE_API_KEY = \"q8Zr2mWx7pLk4vNt9sYbHj3c\"",
         "miss": "STRIPE_API_KEY = ENV.fetch(\"STRIPE_API_KEY\")"
       }
+    },
+    {
+      "name": "private-key-in-code",
+      "check": "Security",
+      "regex": "-----BEGIN ([A-Z]+ )*PRIVATE KEY-----",
+      "reason": "A private key written into the code lets anyone who can read the repo act as its owner.",
+      "fix": "Keep the key in the app's credential store or a secrets manager and load it at runtime.",
+      "examples": {
+        "match": "-----BEGIN RSA PRIVATE KEY-----",
+        "miss": "-----BEGIN PUBLIC KEY-----"
+      }
     }
   ]
 }

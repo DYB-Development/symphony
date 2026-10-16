@@ -153,6 +153,17 @@ assert_equals "core credential-in-code Security" \
   "finds a credential written into the code with the core pack this package ships"
 drop_case
 
+core_checks_for() {
+  new_case
+  printf 'diff --git a/config/x b/config/x\n--- a/config/x\n+++ b/config/x\n@@ -1,0 +1,1 @@\n+%s\n' "$1" > "$WORK/diff"
+  PATH="$WORK/bin:$PATH" "$SCAN" acme/quotes 7 "$DRAFT_FILE" >/dev/null
+  jq -r '[.hits[].check] | unique | join(",")' "$RESULT" 2>/dev/null
+  drop_case
+}
+
+assert_equals "Security" "$(core_checks_for '-----BEGIN RSA PRIVATE KEY-----')" \
+  "finds a private key written into an added line with the core pack"
+
 wrong_examples=()
 for pack in "$SCRIPT_DIR"/../rules/patterns/*.json; do
   while IFS=$'\037' read -r name regex match miss; do
