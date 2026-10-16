@@ -171,6 +171,32 @@ assert_equals "sums the line items into the total" "$(jq -r '.tests[].title' "$R
   "reads the title of a test written as a test_ method from its name"
 drop_case
 
+new_case
+head_file test/quote_test.rb <<'RB'
+class QuoteTest < Minitest::Test
+  test "sums the line items into the total" do
+    assert_equal 30, quote.total
+    assert_equal 2, quote.line_items.size
+  end
+end
+RB
+write_diff <<'DIFF'
+diff --git a/test/quote_test.rb b/test/quote_test.rb
+--- a/test/quote_test.rb
++++ b/test/quote_test.rb
+@@ -1,2 +1,6 @@
+ class QuoteTest < Minitest::Test
++  test "sums the line items into the total" do
++    assert_equal 30, quote.total
++    assert_equal 2, quote.line_items.size
++  end
+ end
+DIFF
+inventory >/dev/null 2>&1
+assert_equals "2 true" "$(jq -r '.tests[] | "\(.assertions) \(.tests_more_than_one_thing)"' "$RESULT" 2>/dev/null)" \
+  "marks a test with more than one assertion as testing more than one thing"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

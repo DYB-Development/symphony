@@ -84,7 +84,8 @@ while IFS= read -r path; do
   while IFS=$'\t' read -r start _ asserts title; do
     [ -n "$start" ] || continue
     tests=$(jq -c --arg path "$path" --argjson line "$start" --argjson assertions "$asserts" --arg title "$title" \
-      '. + [{path: $path, line: $line, title: $title, assertions: $assertions}]' <<<"$tests")
+      '. + [{path: $path, line: $line, title: $title, assertions: $assertions,
+             tests_more_than_one_thing: ($assertions > 1)}]' <<<"$tests")
   done < <(tests_in "$content" "$lines")
 done < <(printf '%s\n' "$added" | cut -f1 | sort -u)
 
