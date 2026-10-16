@@ -352,6 +352,10 @@
     {
       "file": "agents/review-scribe.md",
       "contains": "A comment the scan wrote is a finding under the check its header names, so that check's bullet opens with ❌ and links to it."
+    },
+    {
+      "file": "README.md",
+      "contains": "a comment on that line reading `symphony-allow: <pattern name>` excuses it from that one pattern"
     }
   ]
 }

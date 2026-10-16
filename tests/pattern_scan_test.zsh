@@ -27,10 +27,16 @@ assert_equals() {
 
 new_case() {
   WORK="$(mktemp -d "${TMPDIR:-/tmp}/pattern_scan_test.XXXXXX")"
-  mkdir -p "$WORK/bin" "$WORK/packs" "$WORK/repo"
+  mkdir -p "$WORK/bin" "$WORK/packs" "$WORK/repo" "$WORK/head"
   cat > "$WORK/bin/gh" <<SH
 #!/usr/bin/env bash
-cat "$WORK/diff"
+case "\$1 \$2" in
+  "pr diff") cat "$WORK/diff" ;;
+  "pr view") printf 'headsha\n' ;;
+  "api repos/acme/quotes/contents/"*)
+    file=\${2#repos/acme/quotes/contents/}
+    cat "$WORK/head/\${file%%\\?*}" 2>/dev/null || exit 1 ;;
+esac
 SH
   chmod +x "$WORK/bin/gh"
   cat > "$WORK/packs/test.json" <<'JSON'
@@ -202,6 +208,95 @@ scan >/dev/null 2>&1
 assert_equals "0" "$?" "accepts a pack that applies when the repo depends on a named library"
 drop_case
 
+debug_pack_applying_to() {
+  jq --argjson applies "$1" '.applies = $applies' "$WORK/packs/test.json" > "$WORK/packs/scoped.json"
+  rm "$WORK/packs/test.json"
+}
+
+write_pry_diff() {
+  printf 'diff --git a/app/x.rb b/app/x.rb\n--- a/app/x.rb\n+++ b/app/x.rb\n@@ -1,0 +1,1 @@\n+binding.pry\n' > "$WORK/diff"
+}
+
+new_case
+write_pry_diff
+debug_pack_applying_to '{"library": "pry"}'
+scan >/dev/null 2>&1
+assert_equals "0" "$(jq '.hits | length' "$RESULT" 2>/dev/null)" \
+  "does not apply a library pack when the repo does not depend on the library"
+drop_case
+
+new_case
+write_pry_diff
+debug_pack_applying_to '{"library": "pry"}'
+printf 'GEM\n  remote: https://rubygems.org/\n  specs:\n    pry (0.14.2)\n' > "$WORK/head/Gemfile.lock"
+scan >/dev/null 2>&1
+assert_equals "1" "$(jq '.hits | length' "$RESULT" 2>/dev/null)" \
+  "applies a library pack when the repo's Gemfile.lock at the head commit lists the library"
+drop_case
+
+new_case
+write_pry_diff
+debug_pack_applying_to '{"library": "pry"}'
+printf '{\n  "dependencies": {\n    "pry": "^1.0.0"\n  }\n}\n' > "$WORK/head/package.json"
+scan >/dev/null 2>&1
+assert_equals "1" "$(jq '.hits | length' "$RESULT" 2>/dev/null)" \
+  "applies a library pack when the repo's package.json at the head commit depends on the library"
+drop_case
+
+new_case
+write_pry_diff
+debug_pack_applying_to '{"framework": "rails"}'
+printf 'GEM\n  specs:\n    rails (7.1.3)\n' > "$WORK/head/Gemfile.lock"
+scan >/dev/null 2>&1
+assert_equals "1" "$(jq '.hits | length' "$RESULT" 2>/dev/null)" \
+  "applies a framework pack when the repo's Gemfile.lock at the head commit lists the framework"
+drop_case
+
+new_case
+write_pry_diff
+debug_pack_applying_to '{"framework": "rails"}'
+printf 'GEM\n  specs:\n    rails (7.1.3)\n' > "$WORK/head/Gemfile.lock"
+scan >/dev/null 2>&1
+assert_equals "scoped Gemfile.lock" \
+  "$(jq -r '.applied[] | select(.pack == "scoped") | "\(.pack) \(.shown_by)"' "$RESULT" 2>/dev/null)" \
+  "names each pack it applied and the file that showed the pack applies"
+drop_case
+
+write_line_diff() {
+  printf 'diff --git a/app/x.rb b/app/x.rb\n--- a/app/x.rb\n+++ b/app/x.rb\n@@ -1,0 +1,1 @@\n+%s\n' "$1" > "$WORK/diff"
+}
+
+new_case
+write_line_diff 'binding.pry # symphony-allow: debug-print'
+scan >/dev/null 2>&1
+assert_equals "0" "$(jq '.hits | length' "$RESULT" 2>/dev/null)" \
+  "does not report a line for a pattern its false-hit marker names"
+drop_case
+
+new_case
+write_line_diff 'binding.pry # symphony-allow: debug-print'
+scan >/dev/null 2>&1
+assert_equals "app/x.rb 1 debug-print" \
+  "$(jq -r '.skipped[] | "\(.path) \(.line) \(.pattern)"' "$RESULT" 2>/dev/null)" \
+  "lists every hit it skipped because of a false-hit marker"
+drop_case
+
+new_case
+write_line_diff 'total = 1 # symphony-allow:'
+scan >/dev/null 2>&1
+assert_equals "app/x.rb 1 unknown-false-hit-marker Patterns" \
+  "$(jq -r '.hits[] | "\(.path) \(.line) \(.pattern) \(.check)"' "$RESULT" 2>/dev/null)" \
+  "reports a false-hit marker that names no pattern"
+drop_case
+
+new_case
+write_line_diff 'total = 1 # symphony-allow: no-such-pattern'
+scan >/dev/null 2>&1
+assert_equals "app/x.rb 1 unknown-false-hit-marker" \
+  "$(jq -r '.hits[] | "\(.path) \(.line) \(.pattern)"' "$RESULT" 2>/dev/null)" \
+  "reports a false-hit marker naming a pattern that does not exist"
+drop_case
+
 core_checks_for() {
   new_case
   printf 'diff --git a/config/x b/config/x\n--- a/config/x\n+++ b/config/x\n@@ -1,0 +1,1 @@\n+%s\n' "$1" > "$WORK/diff"
@@ -221,6 +316,39 @@ assert_equals "Security" "$(core_checks_for 'aws_access_key_id = AKIAIOSFODNN7EX
 
 assert_equals "Security" "$(core_checks_for 'auth_token: "q3Lm9Pz2Wv8Rt5Ny7Kb"')" \
   "finds a token written into an added line with the core pack"
+
+rails_patterns_for() {
+  new_case
+  printf 'diff --git a/app/x.rb b/app/x.rb\n--- a/app/x.rb\n+++ b/app/x.rb\n@@ -1,0 +1,1 @@\n+%s\n' "$1" > "$WORK/diff"
+  printf 'GEM\n  specs:\n    rails (7.1.3)\n' > "$WORK/head/Gemfile.lock"
+  PATH="$WORK/bin:$PATH" "$SCAN" acme/quotes 7 "$DRAFT_FILE" >/dev/null
+  jq -r '[.hits[] | select(.pattern | startswith("rails-")) | .pattern] | join(",")' "$RESULT" 2>/dev/null
+  drop_case
+}
+
+assert_equals "rails-params-in-query" \
+  "$(rails_patterns_for 'Quote.where("name = '"'"'#{params[:name]}'"'"'")')" \
+  "finds request input written into a database query in a Rails repo"
+
+assert_equals "rails-params-in-command" \
+  "$(rails_patterns_for 'system("convert #{params[:file]} out.png")')" \
+  "finds request input written into a shell command in a Rails repo"
+
+assert_equals "rails-params-in-path" \
+  "$(rails_patterns_for 'send_file(Rails.root.join("exports", params[:name]))')" \
+  "finds request input reaching a file path in a Rails repo"
+
+assert_equals "rails-unescaped-output" \
+  "$(rails_patterns_for '<%= comment.body.html_safe %>')" \
+  "finds HTML output marked safe without escaping in a Rails repo"
+
+assert_equals "rails-query-in-loop" \
+  "$(rails_patterns_for 'items.each { |item| Product.find(item.product_id) }')" \
+  "finds a query inside a loop in a Rails repo"
+
+assert_equals "rails-unbounded-fetch" \
+  "$(rails_patterns_for 'Quote.all.each do |quote|')" \
+  "finds a fetch of every row with no limit in a Rails repo"
 
 wrong_examples=()
 for pack in "$SCRIPT_DIR"/../rules/patterns/*.json; do

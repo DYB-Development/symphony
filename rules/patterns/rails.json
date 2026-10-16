@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "applies": {
+    "framework": "rails"
+  },
+  "patterns": [
+    {
+      "name": "rails-params-in-query",
+      "check": "Security",
+      "regex": "(where|order|group|having|joins|pluck|select|find_by_sql|exists\\?)\\(.*#\\{[^}]*params",
+      "reason": "Request input written into a query string reaches the database unchecked, so a request can change the query.",
+      "fix": "Pass the value as a bound parameter or a hash condition instead of interpolating it.",
+      "examples": {
+        "match": "Quote.where(\"name = '#{params[:name]}'\")",
+        "miss": "Quote.where(name: params[:name])"
+      }
+    },
+    {
+      "name": "rails-params-in-command",
+      "check": "Security",
+      "regex": "(system|exec|spawn|Open3\\.[a-z0-9_]+|%x)[( {].*#\\{[^}]*params|`[^`]*#\\{[^}]*params",
+      "reason": "Request input written into a shell command lets a request run commands of its own on the server.",
+      "fix": "Pass the command and each argument separately, so no shell reads the input.",
+      "examples": {
+        "match": "system(\"convert #{params[:file]} out.png\")",
+        "miss": "system(\"convert\", params[:file], \"out.png\")"
+      }
+    },
+    {
+      "name": "rails-params-in-path",
+      "check": "Security",
+      "regex": "(File\\.(read|open|write|join)|send_file|Rails\\.root\\.join)[( ].*params\\[",
+      "reason": "Request input in a file path lets a request read or write a file outside the folder meant for it.",
+      "fix": "Look the file up from a record or an allowed list of names, and never build its path from the request.",
+      "examples": {
+        "match": "send_file(Rails.root.join(\"exports\", params[:name]))",
+        "miss": "send_file(export.file_path)"
+      }
+    },
+    {
+      "name": "rails-unescaped-output",
+      "check": "Security",
+      "regex": "\\.html_safe([^A-Za-z0-9_?]|$)|(^|[^A-Za-z0-9_.])raw[( ]",
+      "reason": "Output marked safe is sent to the browser without escaping, so any markup in it runs on the page.",
+      "fix": "Let the view escape the value, or pass it through sanitize when some markup has to stay.",
+      "examples": {
+        "match": "<%= comment.body.html_safe %>",
+        "miss": "<%= comment.body %>"
+      }
+    },
+    {
+      "name": "rails-query-in-loop",
+      "check": "Scalability",
+      "regex": "\\.(each|map|each_with_object|find_each)[^|]*\\|[^|]*\\|.*[A-Z][A-Za-z0-9_]*\\.(find|find_by|where|count|exists\\?)[ (]",
+      "reason": "A query inside a loop runs once per item, so the number of queries grows with the collection.",
+      "fix": "Load the records once before the loop, with includes or one where on all the ids.",
+      "examples": {
+        "match": "items.each { |item| Product.find(item.product_id) }",
+        "miss": "items.each { |item| total += item.price }"
+      }
+    },
+    {
+      "name": "rails-unbounded-fetch",
+      "check": "Scalability",
+      "regex": "[A-Z][A-Za-z0-9_]*\\.all\\.(each|map|to_a|select|reject|sort_by)",
+      "reason": "Fetching every row loads the whole table into memory at once, so the request grows with the table.",
+      "fix": "Walk the rows in batches with find_each, or limit and paginate the query.",
+      "examples": {
+        "match": "Quote.all.each do |quote|",
+        "miss": "Quote.find_each do |quote|"
+      }
+    }
+  ]
+}
