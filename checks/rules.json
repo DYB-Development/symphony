@@ -336,6 +336,14 @@
     {
       "file": "agents/review-scribe.md",
       "contains": "Never edit or remove a comment the scan wrote."
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "jq -r '.patterns[] | \"\\(.check)\\t\\(.name)\"' <repo root>/.review-<pr>.scan.json"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "Raise no finding that one of those patterns describes, since the scan already looked for it on every added line."
     }
   ]
 }

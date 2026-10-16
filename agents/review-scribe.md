@@ -113,6 +113,14 @@ is how the person who ran you sees which step you are on.
    A finding is something you can point at on a line. If you cannot name the
    line, it is not a finding.
 
+   First read which patterns the scan ran:
+
+   ```
+   jq -r '.patterns[] | "\(.check)\t\(.name)"' <repo root>/.review-<pr>.scan.json
+   ```
+
+   Raise no finding that one of those patterns describes, since the scan already looked for it on every added line.
+
 4. **Check conformance against the real ticket.** Find it from the PR: the
    `Closes #N` trailer, an issue linked on the PR, or a ticket key in the body
    or the branch name.
