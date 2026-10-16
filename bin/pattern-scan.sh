@@ -48,9 +48,15 @@ file_at_head() {
 }
 
 gemfile_lock=$(file_at_head Gemfile.lock)
+package_json=$(file_at_head package.json)
 
 file_showing_dependency() {
-  if grep -q -E "^    $1 \(" <<<"$gemfile_lock"; then printf 'Gemfile.lock'; fi
+  if grep -q -E "^    $1 \(" <<<"$gemfile_lock"; then
+    printf 'Gemfile.lock'
+  elif jq -e --arg name "$1" '[.dependencies, .devDependencies] | any(has($name)?)' \
+      <<<"$package_json" >/dev/null 2>&1; then
+    printf 'package.json'
+  fi
 }
 
 applied='[]'

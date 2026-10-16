@@ -234,6 +234,15 @@ assert_equals "1" "$(jq '.hits | length' "$RESULT" 2>/dev/null)" \
   "applies a library pack when the repo's Gemfile.lock at the head commit lists the library"
 drop_case
 
+new_case
+write_pry_diff
+debug_pack_applying_to '{"library": "pry"}'
+printf '{\n  "dependencies": {\n    "pry": "^1.0.0"\n  }\n}\n' > "$WORK/head/package.json"
+scan >/dev/null 2>&1
+assert_equals "1" "$(jq '.hits | length' "$RESULT" 2>/dev/null)" \
+  "applies a library pack when the repo's package.json at the head commit depends on the library"
+drop_case
+
 core_checks_for() {
   new_case
   printf 'diff --git a/config/x b/config/x\n--- a/config/x\n+++ b/config/x\n@@ -1,0 +1,1 @@\n+%s\n' "$1" > "$WORK/diff"
