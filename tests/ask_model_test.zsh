@@ -60,6 +60,11 @@ ask >/dev/null 2>&1
 assert_equals "haiku" "$(model_asked)" "asks the model the agent models file names for the run"
 drop_case
 
+new_case
+ask >/dev/null 2>&1
+assert_equals "sonnet" "$(model_asked)" "asks the fallback model when the agent models file names none for the run"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
