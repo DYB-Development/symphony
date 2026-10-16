@@ -186,6 +186,22 @@ scan >/dev/null 2>&1
 assert_equals "65" "$?" "refuses a pack that does not say when it applies"
 drop_case
 
+new_case
+write_diff </dev/null
+jq '.applies = { framework: "rails" }' "$WORK/packs/test.json" > "$WORK/packs/rails.json"
+rm "$WORK/packs/test.json"
+scan >/dev/null 2>&1
+assert_equals "0" "$?" "accepts a pack that applies when the repo uses a named framework"
+drop_case
+
+new_case
+write_diff </dev/null
+jq '.applies = { library: "devise" }' "$WORK/packs/test.json" > "$WORK/packs/devise.json"
+rm "$WORK/packs/test.json"
+scan >/dev/null 2>&1
+assert_equals "0" "$?" "accepts a pack that applies when the repo depends on a named library"
+drop_case
+
 core_checks_for() {
   new_case
   printf 'diff --git a/config/x b/config/x\n--- a/config/x\n+++ b/config/x\n@@ -1,0 +1,1 @@\n+%s\n' "$1" > "$WORK/diff"
