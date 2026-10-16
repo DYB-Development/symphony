@@ -20,4 +20,5 @@ system_prompt=$4
 
 model="$("$(dirname "$0")/agent-model.sh" lookup "$name" "$fallback")"
 
-claude -p --model "$model" --system-prompt "$system_prompt"
+claude -p --model "$model" --system-prompt "$system_prompt" --tools "" --setting-sources "" \
+  --no-session-persistence --strict-mcp-config

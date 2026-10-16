@@ -65,6 +65,14 @@ ask >/dev/null 2>&1
 assert_equals "sonnet" "$(model_asked)" "asks the fallback model when the agent models file names none for the run"
 drop_case
 
+new_case
+ask >/dev/null 2>&1
+assert_equals "--tools  --setting-sources  --no-session-persistence --strict-mcp-config" \
+  "$(awk '$0 == "--tools" || $0 == "--setting-sources" { printf "%s ", $0; getline; printf "%s ", $0; next }
+          $0 == "--no-session-persistence" || $0 == "--strict-mcp-config" { printf "%s ", $0 }' "$WORK/args" | sed 's/ $//')" \
+  "runs the model with no tools, no settings and no servers"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
