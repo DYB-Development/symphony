@@ -1,5 +1,6 @@
 {
   "version": 1,
+  "applies": "always",
   "patterns": [
     {
       "name": "credential-in-code",
@@ -10,6 +11,39 @@
       "examples": {
         "match": "STRIPE_API_KEY = \"q8Zr2mWx7pLk4vNt9sYbHj3c\"",
         "miss": "STRIPE_API_KEY = ENV.fetch(\"STRIPE_API_KEY\")"
+      }
+    },
+    {
+      "name": "private-key-in-code",
+      "check": "Security",
+      "regex": "-----BEGIN ([A-Z]+ )*PRIVATE KEY-----",
+      "reason": "A private key written into the code lets anyone who can read the repo act as its owner.",
+      "fix": "Keep the key in the app's credential store or a secrets manager and load it at runtime.",
+      "examples": {
+        "match": "-----BEGIN RSA PRIVATE KEY-----",
+        "miss": "-----BEGIN PUBLIC KEY-----"
+      }
+    },
+    {
+      "name": "connection-string-with-password",
+      "check": "Security",
+      "regex": "[A-Za-z][A-Za-z0-9+.-]*://[^:/@$[:space:]]+:[^@/${}[:space:]]+@",
+      "reason": "A connection string written into the code carries its password to everyone who can read the repo.",
+      "fix": "Read the connection string, or at least its password, from the environment.",
+      "examples": {
+        "match": "DATABASE_URL=postgres://app:Hx7pQ2mZ9w@db.internal:5432/app",
+        "miss": "DATABASE_URL=postgres://app:${DB_PASSWORD}@db.internal:5432/app"
+      }
+    },
+    {
+      "name": "cloud-access-key-id",
+      "check": "Security",
+      "regex": "(AKIA|ASIA)[0-9A-Z]{16}",
+      "reason": "A cloud access key id written into the code is half of a credential and usually sits beside the other half.",
+      "fix": "Remove the key, rotate it, and read it from the environment or the provider's credential chain.",
+      "examples": {
+        "match": "aws_access_key_id = AKIAIOSFODNN7EXAMPLE",
+        "miss": "aws_access_key_id = ENV[\"AWS_ACCESS_KEY_ID\"]"
       }
     }
   ]

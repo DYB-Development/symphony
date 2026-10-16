@@ -36,6 +36,7 @@ SH
   cat > "$WORK/packs/test.json" <<'JSON'
 {
   "version": 1,
+  "applies": "always",
   "patterns": [
     {
       "name": "debug-print",
@@ -152,6 +153,74 @@ assert_equals "core credential-in-code Security" \
   "$(jq -r '.hits[] as $hit | .patterns[] | select(.name == $hit.pattern) | "\(.pack) \(.name) \(.check)"' "$RESULT" 2>/dev/null)" \
   "finds a credential written into the code with the core pack this package ships"
 drop_case
+
+new_case
+write_diff </dev/null
+jq 'del(.patterns[0].fix)' "$WORK/packs/test.json" > "$WORK/packs/broken.json"
+rm "$WORK/packs/test.json"
+scan >/dev/null 2>&1
+assert_equals "65" "$?" "refuses a pattern that does not say what to do instead"
+drop_case
+
+new_case
+write_diff </dev/null
+jq 'del(.patterns[0].reason)' "$WORK/packs/test.json" > "$WORK/packs/broken.json"
+rm "$WORK/packs/test.json"
+scan >/dev/null 2>&1
+assert_equals "65" "$?" "refuses a pattern that does not say why it is a problem"
+drop_case
+
+new_case
+write_diff </dev/null
+jq 'del(.patterns[0].check)' "$WORK/packs/test.json" > "$WORK/packs/broken.json"
+rm "$WORK/packs/test.json"
+scan >/dev/null 2>&1
+assert_equals "65" "$?" "refuses a pattern that does not name its check"
+drop_case
+
+new_case
+write_diff </dev/null
+jq 'del(.applies)' "$WORK/packs/test.json" > "$WORK/packs/broken.json"
+rm "$WORK/packs/test.json"
+scan >/dev/null 2>&1
+assert_equals "65" "$?" "refuses a pack that does not say when it applies"
+drop_case
+
+new_case
+write_diff </dev/null
+jq '.applies = { framework: "rails" }' "$WORK/packs/test.json" > "$WORK/packs/rails.json"
+rm "$WORK/packs/test.json"
+scan >/dev/null 2>&1
+assert_equals "0" "$?" "accepts a pack that applies when the repo uses a named framework"
+drop_case
+
+new_case
+write_diff </dev/null
+jq '.applies = { library: "devise" }' "$WORK/packs/test.json" > "$WORK/packs/devise.json"
+rm "$WORK/packs/test.json"
+scan >/dev/null 2>&1
+assert_equals "0" "$?" "accepts a pack that applies when the repo depends on a named library"
+drop_case
+
+core_checks_for() {
+  new_case
+  printf 'diff --git a/config/x b/config/x\n--- a/config/x\n+++ b/config/x\n@@ -1,0 +1,1 @@\n+%s\n' "$1" > "$WORK/diff"
+  PATH="$WORK/bin:$PATH" "$SCAN" acme/quotes 7 "$DRAFT_FILE" >/dev/null
+  jq -r '[.hits[].check] | unique | join(",")' "$RESULT" 2>/dev/null
+  drop_case
+}
+
+assert_equals "Security" "$(core_checks_for '-----BEGIN RSA PRIVATE KEY-----')" \
+  "finds a private key written into an added line with the core pack"
+
+assert_equals "Security" "$(core_checks_for 'DATABASE_URL=postgres://app:Hx7pQ2mZ9w@db.internal:5432/app')" \
+  "finds a connection string carrying a password with the core pack"
+
+assert_equals "Security" "$(core_checks_for 'aws_access_key_id = AKIAIOSFODNN7EXAMPLE')" \
+  "finds a cloud access key id with the core pack"
+
+assert_equals "Security" "$(core_checks_for 'auth_token: "q3Lm9Pz2Wv8Rt5Ny7Kb"')" \
+  "finds a token written into an added line with the core pack"
 
 wrong_examples=()
 for pack in "$SCRIPT_DIR"/../rules/patterns/*.json; do
