@@ -40,6 +40,15 @@ commit_root() {
   git -C "${dir:-.}" rev-parse --show-toplevel 2>/dev/null
 }
 
+without_quoted_text() {
+  printf '%s' "$1" | tr '\n' ';' | sed "s/\"[^\"]*\"/Q/g; s/'[^']*'/Q/g"
+}
+
+runs_commit() {
+  without_quoted_text "$1" \
+    | grep -Eq '(^|[;&|(]) *([A-Za-z_]+=[^ ]* +)*git( +-[Cc] +[^ ;&|]+)* +commit([^A-Za-z-]|$)'
+}
+
 payload=$(cat)
 session="" command=""
 fields=$(printf '%s' "$payload" | jq -r '
@@ -58,8 +67,7 @@ case "${1:-}" in
   check)
     marker=$(marker_for "$session")
     [ -f "$marker" ] || exit 0
-    printf '%s' "$command" | grep -Eq "(^|[^A-Za-z])git([^A-Za-z]|$)" || exit 0
-    printf '%s' "$command" | grep -Eq "(^|[^A-Za-z])commit([^A-Za-z]|$)" || exit 0
+    runs_commit "$command" || exit 0
     root=$(commit_root "$command") || exit 0
     [ -n "$root" ] || exit 0
     armed=$(modified_at "$marker")
