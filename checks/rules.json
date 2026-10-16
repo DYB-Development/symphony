@@ -360,6 +360,22 @@
     {
       "file": "rules/repo-audit.md",
       "contains": "always reports `Commits` as `nothing-to-check`."
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "~/.claude/bin/commit-shape.sh <owner/repo> <n> <repo root>/.review-<pr>.json"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "~/.claude/bin/commit-shape.sh --render <repo root>/.review-<pr>.commits.json"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "Paste what it prints as the Commits bullet, word for word."
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "The Commits bullet is pasted from a script, so it carries no claim."
     }
   ]
 }
