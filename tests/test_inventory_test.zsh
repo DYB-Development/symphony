@@ -253,7 +253,18 @@ drop_case
 new_case
 write_added_test
 CLAUDE_REPLY="The test looks fine." inventory >/dev/null 2>&1
-assert_equals "70" "$?" "fails when the model's reply does not end in its body line"
+assert_equals "70" "$?" "fails when the model's reply holds no title or body line"
+drop_case
+
+new_case
+write_added_test
+CLAUDE_REPLY='Title: names a behaviour
+Body: does not test that behaviour
+
+The body asserts on the total, but the title promises nothing about it.' inventory >/dev/null 2>&1
+assert_equals "true false" \
+  "$(jq -r '.tests[] | "\(.title_names_a_behaviour) \(.body_tests_that_behaviour)"' "$RESULT" 2>/dev/null)" \
+  "reads the title and body lines from a reply that explains itself after them"
 drop_case
 
 new_case

@@ -91,15 +91,27 @@ Reply with exactly two lines and nothing else:
 Title: names a behaviour   or   Title: does not name a behaviour
 Body: tests that behaviour   or   Body: does not test that behaviour'
 
+first_line_starting() {
+  printf '%s\n' "$2" | grep -m1 "^$1" || true
+}
+
 verdict_on() {
-  local reply
+  local reply title body
   reply=$(printf 'The title:\n\n%s\n\nThe body:\n\n%s\n' "$1" "$2" \
-    | "$root/bin/ask-model.sh" test-inventory sonnet 'Body: (tests|does not test) that behaviour' "$question") ||
+    | "$root/bin/ask-model.sh" test-inventory sonnet '.*' "$question") ||
     return 1
-  printf '%s\n' "$reply" | sed -n -E 's/^Title: (names|does not name) a behaviour$/\1/p' \
-    | sed 's/^names$/true/; s/^does not name$/false/'
-  printf '%s\n' "$reply" | sed -n -E 's/^Body: (tests|does not test) that behaviour$/\1/p' \
-    | sed 's/^tests$/true/; s/^does not test$/false/'
+  title=$(first_line_starting 'Title:' "$reply")
+  body=$(first_line_starting 'Body:' "$reply")
+  case "$title" in
+    'Title: names a behaviour') echo true ;;
+    'Title: does not name a behaviour') echo false ;;
+    *) echo "test-inventory.sh: the test-inventory reply has no Title line in either allowed form" >&2; return 1 ;;
+  esac
+  case "$body" in
+    'Body: tests that behaviour') echo true ;;
+    'Body: does not test that behaviour') echo false ;;
+    *) echo "test-inventory.sh: the test-inventory reply has no Body line in either allowed form" >&2; return 1 ;;
+  esac
 }
 
 tests='[]'
