@@ -199,9 +199,13 @@ def spans:
   if .type == "assistant" then
     .message.content[]? | select(.type? == "tool_use")
     | { id, kind: "call", tool: .name, detail: (.input.command // "" | first_line) }
+  elif (.message.content | type == "string") then
+    .message.content | select(startswith("<task-notification>"))
+    | { id: (capture("<tool-use-id>(?<id>[^<]+)</tool-use-id>").id), kind: "finished" }
   else
-    .message.content | arrays | .[] | select(.type? == "tool_result")
-    | { id: .tool_use_id, kind: "answer" }
+    (.toolUseResult | type == "object" and (has("backgroundTaskId") or .isAsync == true)) as $background
+    | .message.content | arrays | .[] | select(.type? == "tool_result")
+    | { id: .tool_use_id, kind: (if $background then "backgrounded" else "answer" end) }
   end;
 
 select(type == "object")
@@ -372,11 +376,15 @@ list_spans() {
       order[++calls] = call
       row[call] = $12 OFS "tool" OFS $4 OFS $14 OFS $15
     }
-    $10 == "answer" && !(call in ended) { ended[call] = $9 }
+    $10 == "answer" && !(call in answered) { answered[call] = $9 }
+    $10 == "backgrounded" { background[call] = 1 }
+    $10 == "finished" && !(call in finished) { finished[call] = $9 }
     END {
       for (index_ = 1; index_ <= calls; index_++) {
         call = order[index_]
-        if (call in ended) print started[call], ended[call], row[call]
+        if (call in background) {
+          if (call in finished) print started[call], finished[call], row[call]
+        } else if (call in answered) print started[call], answered[call], row[call]
       }
     }
   ' | sort -t $'\t' -k1,1n -s

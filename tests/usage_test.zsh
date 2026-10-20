@@ -530,6 +530,14 @@ assert_equals "1767398400	1767398405	session_1	tool	builder	Bash	git status" "$(
   "prints a timed row for a tool call on this branch, ending when its result was recorded"
 drop_repo
 
+new_repo
+call_entry toolu_1 session_1 "$REPO" 2026-01-03T00:00:00Z "" Bash '{"command": "bin/pr-wait.sh", "run_in_background": true}'
+answer_entry toolu_1 session_1 "$REPO" 2026-01-03T00:00:01Z '{"backgroundTaskId": "b1"}'
+user_entry note_1 session_1 "$REPO" 2026-01-03T00:10:00Z '"<task-notification>\n<task-id>b1</task-id>\n<tool-use-id>toolu_1</tool-use-id>\n<status>completed</status>\n</task-notification>"'
+assert_equals "1767398400	1767399000	session_1	tool		Bash	bin/pr-wait.sh" "$("$USAGE" --spans)" \
+  "ends a background command's row when the notification that it finished was recorded"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
