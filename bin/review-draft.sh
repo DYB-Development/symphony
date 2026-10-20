@@ -6,7 +6,7 @@ usage() {
 usage: review-draft.sh --render <draft.json>
        review-draft.sh --link <draft.json> <comment-url>...
        review-draft.sh --post <owner/repo> <pr-number> <draft.json>
-       review-draft.sh --check-lines <draft.json> <owner/repo> <pr-number>
+       review-draft.sh --check-lines <draft.json> <owner/repo> <pr-number> [--diff <file>]
        review-draft.sh --add-scan <draft.json> <scan.json>
        review-draft.sh --check-scan <draft.json>
 
@@ -21,6 +21,10 @@ answer. `--link` does that substitution on its own.
 `REQUEST_CHANGES`, and with event COMMENT when the draft names none. `--render`
 prints that event last.
 
+`--check-lines` fails when an inline comment sits on a line the pull request's
+diff does not touch, and `--diff` reads that diff from a file instead of
+fetching it from GitHub.
+
 `--add-scan` adds each hit in a pattern scan result to the draft as an inline
 comment on the hit's line. `--check-scan` fails when the summary's Findings
 bullet for a scan comment's check does not link to that comment.
@@ -32,7 +36,12 @@ USAGE
 mode=${1:-}
 
 if [ "$mode" = "--check-lines" ]; then
-  [ $# -eq 4 ] || usage
+  diff_file=""
+  if [ $# -eq 6 ] && [ "$5" = "--diff" ]; then
+    diff_file=$6
+  elif [ $# -ne 4 ]; then
+    usage
+  fi
   draft=$2
   repo=$3
   pr=$4
@@ -45,8 +54,13 @@ if [ "$mode" = "--check-lines" ]; then
   jq -e '.comments | type == "array"' "$draft" >/dev/null 2>&1 ||
     { echo "review-draft.sh: $draft names no comments to check, so nothing was checked" >&2; exit 70; }
 
-  diff=$(gh pr diff "$pr" --repo "$repo") ||
-    { echo "review-draft.sh: the diff for $repo#$pr could not be read" >&2; exit 70; }
+  if [ -n "$diff_file" ]; then
+    diff=$(cat "$diff_file") ||
+      { echo "review-draft.sh: $diff_file could not be read" >&2; exit 70; }
+  else
+    diff=$(gh pr diff "$pr" --repo "$repo") ||
+      { echo "review-draft.sh: the diff for $repo#$pr could not be read" >&2; exit 70; }
+  fi
 
   touched=$(printf '%s\n' "$diff" | "$(dirname "$0")/diff-lines.sh" | awk -F'\t' '{ print $1 ":" $2 ":" $3 }')
 
