@@ -174,6 +174,11 @@ assert_equals "- Ticking criteria and recording decisions: 3m" "$(one_minute_eac
   "$TIME_SPENT" --render | grep '^- Ticking criteria and recording decisions:')" \
   "counts ticking a criterion, recording a decision and recording a ticket as one kind"
 
+assert_equals "- Full-suite checks: 5m" "$(one_minute_each Bash "bun run typecheck" "npx vue-tsc --noEmit" \
+  "cd ~/projects/app && ./run_tests.sh 2>&1 | tail -2" "bin/rails test" "~/.claude/bin/conformance.sh" |
+  "$TIME_SPENT" --render | grep '^- Full-suite checks:')" \
+  "counts the type check, the whole unit suite and the conformance check as full-suite checks"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
