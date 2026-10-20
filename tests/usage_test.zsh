@@ -573,6 +573,13 @@ call_entry toolu_1 session_1 "$REPO" 2026-01-03T00:00:00Z "" Bash '{"command": "
 assert_equals "" "$("$USAGE" --spans)" "prints no row for a tool call with no recorded result"
 drop_repo
 
+new_repo
+call_entry toolu_1 session_1 "$REPO" 2026-01-03T00:00:00Z "" Agent '{"subagent_type": "pr-scribe"}'
+answer_entry toolu_1 session_1 "$REPO" 2026-01-03T00:00:01Z '{"isAsync": true, "status": "async_launched"}'
+assert_equals "" "$("$USAGE" --spans)" \
+  "prints no row for a background agent with no notification that it finished"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
