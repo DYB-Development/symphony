@@ -601,6 +601,12 @@ drop_repo
 
 new_repo
 call_entry toolu_1 session_1 "$REPO" 2026-01-03T00:00:00Z "" Bash '{"command": "git status"}'
+assert_equals "usage.sh: no tool call on this branch has a result paired with it, so its time is not measured" \
+  "$("$USAGE" --spans 2>&1 >/dev/null)" "warns that no tool call result could be paired"
+drop_repo
+
+new_repo
+call_entry toolu_1 session_1 "$REPO" 2026-01-03T00:00:00Z "" Bash '{"command": "git status"}'
 answer_entry toolu_1 session_1 "$REPO" 2026-01-03T00:00:05Z
 jq -nc --arg cwd "$REPO" '{type: "system", subtype: "turn_duration", uuid: "t1", sessionId: "session_1", cwd: $cwd,
   timestamp: "2026-01-03T00:01:00Z", elapsed: "60s"}' >> "$TRANSCRIPT"
