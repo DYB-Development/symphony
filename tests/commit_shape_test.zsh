@@ -61,10 +61,10 @@ drop_case() {
 add_commit() {
   local sha="$1" message="$2"
   shift 2
-  printf '%s\n' "$sha" >> "$WORK/commits/order"
+  printf '%s %s\n' "$sha" "${PARENTS:-1}" >> "$WORK/commits/order"
   printf '%s\n' "$message" > "$WORK/commits/$sha.message"
   printf '%s\n' "$@" > "$WORK/commits/$sha.files"
-  printf 'diff --git a/%s b/%s\n+changed\n' "$1" "$1" > "$WORK/commits/$sha.diff"
+  printf 'diff --git a/%s b/%s\n+changed\n' "${1:-}" "${1:-}" > "$WORK/commits/$sha.diff"
 }
 
 shape() {
@@ -85,6 +85,30 @@ add_commit c1 "Add the quote total" test/models/quote_test.rb app/models/quote.r
 shape >/dev/null 2>&1
 assert_equals "c1 test-and-code" "$(jq -r '.commits[] | "\(.sha) \(.shape)"' "$RESULT" 2>/dev/null)" \
   "does not flag a commit that holds a test file and a code file"
+drop_case
+
+new_case
+add_commit c1 "Cover the quote total" test/models/quote_test.rb test/fixtures/quotes.yml
+shape >/dev/null 2>&1
+assert_equals "c1 test-only no" \
+  "$(jq -r '.commits[] | "\(.sha) \(.shape)"' "$RESULT" 2>/dev/null) $([[ -e "$WORK/asked" ]] && echo asked || echo no)" \
+  "treats a commit that changes only test files as holding a test without asking a model"
+drop_case
+
+new_case
+PARENTS=2 add_commit c1 "Merge branch 'main' into feature" app/models/quote.rb
+add_commit c2 "Add the quote total" test/models/quote_test.rb app/models/quote.rb
+shape >/dev/null 2>&1
+assert_equals "c2" "$(jq -r '.commits[].sha' "$RESULT" 2>/dev/null)" \
+  "leaves a merge commit out of the commits it reads"
+drop_case
+
+new_case
+add_commit c1 "Start the quote total"
+shape >/dev/null 2>&1
+assert_equals "c1 empty no" \
+  "$(jq -r '.commits[] | "\(.sha) \(.shape)"' "$RESULT" 2>/dev/null) $([[ -e "$WORK/asked" ]] && echo asked || echo no)" \
+  "flags no commit that changes no code file, so a flagged commit always names its code files"
 drop_case
 
 new_case
@@ -151,6 +175,16 @@ assert_equals '- ✅ **Commits** — nothing found
   - `c1aaaaa` Move the total into its own method — It holds no test and was found to be a refactor that changes no behaviour.' \
   "$("$SHAPE" --render "$RESULT" 2>&1)" \
   "lists a flagged commit found to be an exception with the exception it was found to be"
+drop_case
+
+new_case
+jq -n '{ commits: [
+  { sha: "c1aaaaaaaa", subject: "Add the quote total", code_files: ["app/models/quote.rb"], shape: "flagged", exception: "neither" },
+  { sha: "c2aaaaaaaa", subject: "Add the tax total", code_files: ["app/models/tax.rb"], shape: "flagged", exception: "neither" },
+  { sha: "c3aaaaaaaa", subject: "Move the total into its own method", code_files: ["app/models/quote.rb"], shape: "flagged", exception: "refactor" } ] }' > "$RESULT"
+assert_equals '- ❌ **Commits** — 2 commits change code with no test, and one more was found to be an exception.' \
+  "$("$SHAPE" --render "$RESULT" 2>&1 | head -1)" \
+  "counts every commit it lists under a Commits finding in the headline"
 drop_case
 
 echo ""

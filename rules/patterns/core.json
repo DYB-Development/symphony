@@ -5,6 +5,7 @@
     {
       "name": "credential-in-code",
       "check": "Security",
+      "skips_test_files": true,
       "regex": "([Pp]assword|PASSWORD|[Ss]ecret|SECRET|[Tt]oken|TOKEN|[Aa]pi_?[Kk]ey|API_?KEY)[A-Za-z_]*[\"']?[[:space:]]*(=|:|=>)[[:space:]]*[\"'][^\"'[:space:]]{12,}[\"']",
       "reason": "A password, secret, token or API key written into the code reaches everyone who can read the repo.",
       "fix": "Read the value from the environment or the app's credential store instead.",

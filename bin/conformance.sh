@@ -39,6 +39,11 @@ inventory="${draft%.json}.tests.json"
 ticket=$(gh pr view "$pr" --repo "$repo" --json closingIssuesReferences --jq '.closingIssuesReferences[0].number // empty')
 
 if [ -z "$ticket" ]; then
+  ticket=$(gh pr view "$pr" --repo "$repo" --json body --jq '.body' |
+    grep -ioE '^(close[sd]?|fix(e[sd])?|resolve[sd]?) +#[0-9]+' | head -n 1 | grep -oE '[0-9]+$' || true)
+fi
+
+if [ -z "$ticket" ]; then
   jq -n '{ticket: null, criteria: []}' > "$result"
   exit 0
 fi

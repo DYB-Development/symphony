@@ -20,7 +20,7 @@ is_test_file() {
 }
 
 tests_in() {
-  awk -v lines="$2" '
+  LC_ALL=C awk -v lines="$2" '
     function indent_of(s) { match(s, /^[ \t]*/); return RLENGTH }
     function title_of(s,   t, quote, closing) {
       if (match(s, /^[ \t]*(test|it|specify|scenario)[ (]+["'"'"'`]/)) {
@@ -39,7 +39,7 @@ tests_in() {
       return ""
     }
     function close_test(last) {
-      if (open && (touched || lines == "all")) print start "\t" last "\t" asserts "\t" title
+      if (open && (touched || lines == "all")) print start "\t" last "\t" asserts "\t" title "\t" (touched ? touched : start)
       open = 0
     }
     {
@@ -50,7 +50,7 @@ tests_in() {
         open = 1; start = NR; depth = indent_of($0); title = t; asserts = 0; touched = 0
       }
       if (open) {
-        if (index(lines, "," NR ",")) touched = 1
+        if (!touched && index(lines, "," NR ",")) touched = NR
         s = $0
         asserts += gsub(/(^|[^A-Za-z_])(assert|refute)[a-z_]*[ (]|(^|[^A-Za-z_])expect[ (]/, "", s)
       }
@@ -132,11 +132,11 @@ while IFS= read -r path; do
   lines=",$(printf '%s\n' "$added" | awk -F'\t' -v p="$path" '$1 == p { printf "%s,", $2 }')"
   content=$(gh api "repos/$repo/contents/$path?ref=$head" -H 'Accept: application/vnd.github.raw' 2>/dev/null) ||
     { echo "test-inventory.sh: $path could not be read, so its tests are unread" >&2; exit 70; }
-  while IFS=$'\t' read -r start finish asserts title; do
+  while IFS=$'\t' read -r start finish asserts title touched; do
     [ -n "$start" ] || continue
     body=$(printf '%s\n' "$content" | sed -n "${start},${finish}p")
     verdict=$(verdict_on "$title" "$body") || exit 70
-    tests=$(jq -c --arg path "$path" --argjson line "$start" --argjson assertions "$asserts" --arg title "$title" \
+    tests=$(jq -c --arg path "$path" --argjson line "$touched" --argjson assertions "$asserts" --arg title "$title" \
       --argjson names "$(sed -n 1p <<<"$verdict")" --argjson tests_it "$(sed -n 2p <<<"$verdict")" \
       '. + [{path: $path, line: $line, title: $title, assertions: $assertions,
              tests_more_than_one_thing: ($assertions > 1),

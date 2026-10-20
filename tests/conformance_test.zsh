@@ -29,10 +29,11 @@ new_case() {
   WORK="$(mktemp -d "${TMPDIR:-/tmp}/conformance_test.XXXXXX")"
   mkdir -p "$WORK/bin" "$WORK/repo"
   : > "$WORK/ticket"
+  : > "$WORK/body"
   cat > "$WORK/bin/gh" <<SH
 #!/usr/bin/env bash
 case "\$1 \$2" in
-  "pr view") cat "$WORK/ticket" ;;
+  "pr view") if [[ "\$*" == *closingIssuesReferences* ]]; then cat "$WORK/ticket"; else cat "$WORK/body"; fi ;;
   "issue view") cat "$WORK/issue" ;;
 esac
 SH
@@ -146,6 +147,17 @@ valid_test "shows the quote total on the quote page"
 assert_equals "70 yes" \
   "$(CLAUDE_EXIT=1 conformance >/dev/null 2>"$WORK/err"; echo "$? $(grep -q 'conformance' "$WORK/err" && echo yes || echo no)")" \
   "stops and names the conformance question when its model run fails"
+drop_case
+
+new_case
+with_ticket
+: > "$WORK/ticket"
+printf 'Adds the quote total.\n\nCloses #12\n' > "$WORK/body"
+valid_test "shows the quote total on the quote page"
+CLAUDE_REPLY="1: 1" conformance >/dev/null 2>&1
+assert_equals '- [x] A rep sees the quote total on the quote page. Covered by "shows the quote total on the quote page".' \
+  "$(render 2>&1)" \
+  "reads the ticket from a Closes trailer in the body when GitHub reports no closing issue"
 drop_case
 
 echo ""

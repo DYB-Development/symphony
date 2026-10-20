@@ -181,6 +181,19 @@ assert_equals "core credential-in-code Security" \
 drop_case
 
 new_case
+write_diff <<'DIFF'
+diff --git a/src/webhooks.test.ts b/src/webhooks.test.ts
+--- a/src/webhooks.test.ts
++++ b/src/webhooks.test.ts
+@@ -1,0 +1,1 @@
++const platform = { webhookSecret: 'whsec_platform' }
+DIFF
+PATH="$WORK/bin:$PATH" "$SCAN" acme/quotes 7 "$DRAFT_FILE" >/dev/null
+assert_equals "0" "$(jq '[.hits[] | select(.pattern == "credential-in-code")] | length' "$RESULT" 2>/dev/null)" \
+  "leaves a fixture secret in a test file out of the credential hits"
+drop_case
+
+new_case
 write_diff </dev/null
 jq 'del(.patterns[0].fix)' "$WORK/packs/test.json" > "$WORK/packs/broken.json"
 rm "$WORK/packs/test.json"
