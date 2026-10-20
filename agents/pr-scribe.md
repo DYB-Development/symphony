@@ -59,10 +59,10 @@ is how the person who ran you sees which step you are on.
    If the branch is not pushed yet, push it (`git push -u origin <branch>`).
    Never rewrite commits — no amend, no rebase, no force-push.
 
-2. **Write all eight sections** from `pr-body.md`, in its order. Every section
+2. **Write all nine sections** from `pr-body.md`, in its order. Every section
    appears in every body: **One Sentence Summary**, **ACs Covered**, **Decision
    Log**, **Code Example**, **Out of Scope**, **Ticket Billed Against**,
-   **Tokens Used**, **Effort**. Never
+   **Tokens Used**, **Effort**, **Time Spent**. Never
    drop one and never invent one that is not in `pr-body.md`. A section with
    nothing real to say keeps its heading and its whole content is the line
    `Not relevant.` — do not pad it, and do not manufacture a bullet to fill it.
@@ -120,7 +120,7 @@ is how the person who ran you sees which step you are on.
    ~/.claude/bin/ticket.sh --render
    ```
    It prints the whole `## Ticket Billed Against` section and you **paste that
-   output verbatim into the body**, third to last of the eight. With no ticket
+   output verbatim into the body**, fourth to last of the nine. With no ticket
    recorded it
    prints `Not specified.`, which you paste unchanged — never guess a ticket
    from the branch name, the commits, or the issue, and never record one
@@ -133,26 +133,29 @@ is how the person who ran you sees which step you are on.
    ~/.claude/bin/usage.sh --render
    ```
    It prints the whole `## Tokens Used` section and you **paste that output
-   verbatim into the body**, second to last of the eight. The numbers are what the session
+   verbatim into the body**, third to last of the nine. The numbers are what the session
    transcripts recorded for this repo while this branch was checked out, so they
    grow every time you are spawned to update the PR. Never total them yourself,
    never adjust one, and never explain them in the body. With no transcript
    naming the branch it prints `Not measured.`, which you paste unchanged.
 
-7. **Render the effort section; do not write it.** Like the tokens, this
-   section is not yours to compose. Run:
+7. **Render the effort and time spent sections; do not write them.** Like the
+   tokens, these sections are not yours to compose. Run:
    ```
    ~/.claude/bin/usage.sh --rows | ~/.claude/bin/effort.sh --render
+   ~/.claude/bin/usage.sh --spans | ~/.claude/bin/time-spent.sh --render
    ```
-   It prints the whole `## Effort` section and you **paste that output verbatim
-   into the body**, last of the eight. It is rendered again every time you are
-   spawned to update the PR, so a later session such as review fixes reaches the
-   body then. Never count anything yourself, never adjust a figure, and never
-   explain them in the body. With no transcript naming the branch it prints
-   `Not measured.`, which you paste unchanged.
+   The first prints the whole `## Effort` section and the second the whole
+   `## Time Spent` section. You **paste each output verbatim into the body**,
+   Effort second to last of the nine and Time Spent last, directly after it.
+   Both are rendered again every time you are spawned to update the PR, so a
+   later session such as review fixes reaches the body then. Never count
+   anything yourself, never adjust a figure, and never explain them in the body.
+   With no transcript naming the branch each prints `Not measured.`, which you
+   paste unchanged.
 
 8. **Add the `Closes #<n>` trailer** on its own line at the end when there is an
-   issue. That trailer is machine-readable wiring, not a ninth section.
+   issue. That trailer is machine-readable wiring, not a tenth section.
 
 9. **Append the version stamp; do not write it.** Below `Closes #<n>`, under a
    `---` rule, run:
@@ -168,7 +171,7 @@ is how the person who ran you sees which step you are on.
    over from another body, and never edit a `+` off a version: that `+` means
    the file had uncommitted edits, which is a fact about what ran.
 
-   The stamp is a trailer like `Closes #<n>`, not a ninth section. Its
+   The stamp is a trailer like `Closes #<n>`, not a tenth section. Its
    `## Generation Metadata` heading is printed by the script, so it is pasted
    like every other line and the one-sentence rule does not reach it.
 
@@ -189,6 +192,8 @@ is how the person who ran you sees which step you are on.
      `usage.sh --render` printed.
    - Effort is exempt for the same reason: it is whatever `effort.sh --render`
      printed.
+   - Time Spent is exempt for the same reason: it is whatever
+     `time-spent.sh --render` printed.
    - Any Out of Scope bullet that does not point somewhere else.
 
    Cutting a section's last bullet leaves the heading with `Not relevant.` under
@@ -208,7 +213,7 @@ is how the person who ran you sees which step you are on.
    Rewrite each sentence the reader flagged or took to mean something you did
    not mean, in that file, then read it again. A rewrite changes how a sentence
    reads and never what it claims. The Decision Log, Ticket Billed Against,
-   Tokens Used and Effort are pasted from a script, so a sentence flagged in one of them
+   Tokens Used, Effort and Time Spent are pasted from a script, so a sentence flagged in one of them
    stays as it is.
 
 13. **Open or update it** from that same file:
