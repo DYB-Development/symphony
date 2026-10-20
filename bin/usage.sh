@@ -21,7 +21,9 @@ measure and its amount, separated by tabs. `--spans` prints one timed row per
 tool call, turn and wait on this branch instead, oldest first, as its start,
 its end, the session, the kind, the agent type, the tool and the first line of
 its command, separated by tabs. A tool call whose result was never recorded
-is printed with the kind unfinished, ending when its turn ended. `--agent-run`
+is printed with the kind unfinished, ending when its turn ended. It prints no
+spans, and warns on standard error, when no tool call on this branch has a
+result paired with it or no turn on it records a duration. `--agent-run`
 prints the model and the total tokens of the latest run of one agent type on
 this branch, separated by a tab, and prints nothing when the transcripts hold
 no such run.
@@ -159,7 +161,7 @@ def rejections:
 
 def effort:
   if .type == "system" then
-    { kind: "turn", amount: (.durationMs // 0) }
+    { kind: "turn", amount: (.durationMs // "") }
   elif typed_prompt then
     { kind: "prompt", amount: 1 },
     { kind: "typed", amount: (.message.content | gsub(pasted_block; "") | words) },
@@ -381,10 +383,12 @@ list_spans() {
     }
     $10 == "turn" { turn_ended[$12, ++turns[$12]] = $9 }
     $10 == "turn" && $2 == branch && !counted[$1]++ {
-      print $9 - int($11 / 1000), $9, $12, "turn", "", "", ""
+      turns_here++
+      if ($11 != "") timed_turns++
+      line[++lines] = $9 - int($11 / 1000) OFS $9 OFS $12 OFS "turn" OFS "" OFS "" OFS ""
     }
     $10 == "waited" && $2 == branch && !counted[$1]++ {
-      print $9 - $11, $9, $12, "wait", "", "", ""
+      line[++lines] = $9 - $11 OFS $9 OFS $12 OFS "wait" OFS "" OFS "" OFS ""
     }
     $10 == "answer" && !(call in answered) { answered[call] = $9 }
     $10 == "backgrounded" { background[call] = 1 }
@@ -398,13 +402,24 @@ list_spans() {
       return ended
     }
     END {
+      paired = 0
       for (index_ = 1; index_ <= calls; index_++) {
         call = order[index_]
+        if ((call in answered) || (call in finished)) paired++
         if (call in background) {
-          if (call in finished) print started[call], finished[call], session[call], "tool", row[call]
-        } else if (call in answered) print started[call], answered[call], session[call], "tool", row[call]
-        else if (turn_end(call) != "") print started[call], turn_end(call), session[call], "unfinished", row[call]
+          if (call in finished) line[++lines] = started[call] OFS finished[call] OFS session[call] OFS "tool" OFS row[call]
+        } else if (call in answered) line[++lines] = started[call] OFS answered[call] OFS session[call] OFS "tool" OFS row[call]
+        else if (turn_end(call) != "") line[++lines] = started[call] OFS turn_end(call) OFS session[call] OFS "unfinished" OFS row[call]
       }
+      if (calls > 0 && paired == 0) {
+        print "usage.sh: no tool call on this branch has a result paired with it, so its time is not measured" > "/dev/stderr"
+        exit
+      }
+      if (turns_here > 0 && timed_turns == 0) {
+        print "usage.sh: no turn on this branch records a duration, so its time is not measured" > "/dev/stderr"
+        exit
+      }
+      for (index_ = 1; index_ <= lines; index_++) print line[index_]
     }
   ' | sort -t $'\t' -k1,1n -s
 }
