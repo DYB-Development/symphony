@@ -21,10 +21,12 @@ is_test_file() {
 tests_in() {
   awk -v lines="$2" '
     function indent_of(s) { match(s, /^[ \t]*/); return RLENGTH }
-    function title_of(s,   t) {
+    function title_of(s,   t, quote, closing) {
       if (match(s, /^[ \t]*(test|it|specify|scenario)[ (]+["'"'"'`]/)) {
+        quote = substr(s, RSTART + RLENGTH - 1, 1)
         t = substr(s, RSTART + RLENGTH)
-        sub(/["'"'"'`].*$/, "", t)
+        closing = index(t, quote)
+        if (closing) t = substr(t, 1, closing - 1)
         return t
       }
       if (match(s, /^[ \t]*def test_[A-Za-z0-9_]+/)) {

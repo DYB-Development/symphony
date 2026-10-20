@@ -149,6 +149,30 @@ assert_equals "2 1 sums the line items into the total" \
 drop_case
 
 new_case
+head_file src/key.test.js <<'JS'
+describe("key", () => {
+  it("gives the browser the platform's publishable key", () => {
+    expect(publicKey()).toBe("pk_test");
+  });
+});
+JS
+write_diff <<'DIFF'
+diff --git a/src/key.test.js b/src/key.test.js
+--- a/src/key.test.js
++++ b/src/key.test.js
+@@ -1,2 +1,5 @@
+ describe("key", () => {
++  it("gives the browser the platform's publishable key", () => {
++    expect(publicKey()).toBe("pk_test");
++  });
+ });
+DIFF
+inventory >/dev/null 2>&1
+assert_equals "gives the browser the platform's publishable key" "$(jq -r '.tests[].title' "$RESULT" 2>/dev/null)" \
+  "keeps an apostrophe inside a double-quoted test title"
+drop_case
+
+new_case
 head_file test/quote_test.rb <<'RB'
 class QuoteTest < Minitest::Test
   def test_sums_the_line_items_into_the_total
