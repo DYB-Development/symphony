@@ -2,6 +2,14 @@
   "version": 1,
   "rules": [
     {
+      "file": "bin/effort.sh",
+      "absent": "function duration("
+    },
+    {
+      "file": "bin/time-spent.sh",
+      "absent": "function duration("
+    },
+    {
       "file": "rules/pr-body.md",
       "contains": "draft-reader rounds and claim-judge rounds"
     },
