@@ -192,6 +192,8 @@ is how the person who ran you sees which step you are on.
      `usage.sh --render` printed.
    - Effort is exempt for the same reason: it is whatever `effort.sh --render`
      printed.
+   - Time Spent is exempt for the same reason: it is whatever
+     `time-spent.sh --render` printed.
    - Any Out of Scope bullet that does not point somewhere else.
 
    Cutting a section's last bullet leaves the heading with `Not relevant.` under
@@ -211,7 +213,7 @@ is how the person who ran you sees which step you are on.
    Rewrite each sentence the reader flagged or took to mean something you did
    not mean, in that file, then read it again. A rewrite changes how a sentence
    reads and never what it claims. The Decision Log, Ticket Billed Against,
-   Tokens Used and Effort are pasted from a script, so a sentence flagged in one of them
+   Tokens Used, Effort and Time Spent are pasted from a script, so a sentence flagged in one of them
    stays as it is.
 
 13. **Open or update it** from that same file:

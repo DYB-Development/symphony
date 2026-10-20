@@ -3,6 +3,10 @@
   "rules": [
     {
       "file": "agents/pr-scribe.md",
+      "contains": "Tokens Used, Effort and Time Spent are pasted from a script, so a sentence flagged in one of them"
+    },
+    {
+      "file": "agents/pr-scribe.md",
       "contains": "~/.claude/bin/usage.sh --spans | ~/.claude/bin/time-spent.sh --render"
     },
     {
