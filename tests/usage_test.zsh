@@ -558,6 +558,16 @@ assert_equals "1767398400	1767398700	session_1	wait			" "$("$USAGE" --spans | gr
   "prints a row for a wait, from the end of a turn to the next prompt"
 drop_repo
 
+new_repo
+commit_at 2026-01-01T00:00:00Z
+worktree_at 2026-01-02T00:00:00Z "$REPO/trees/feature" feature
+call_entry toolu_1 session_1 "$REPO" 2026-01-03T00:00:00Z "" Bash "$(jq -nc --arg c "cd $REPO && git status" '{command: $c}')"
+answer_entry toolu_1 session_1 "$REPO" 2026-01-03T00:00:05Z
+cd "$REPO/trees/feature"
+assert_equals "" "$("$USAGE" --spans)" \
+  "prints no row for a tool call made in a worktree that held another branch"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
