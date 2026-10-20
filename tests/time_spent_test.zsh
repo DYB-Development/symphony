@@ -75,6 +75,14 @@ assert_equals "## Time Spent
 assert_equals "- Waiting on the owner: 10m" "$(span 0 3600 s1 wait "" "" "" | "$TIME_SPENT" --render | grep '^- Waiting on the owner:')" \
   "counts no more than ten minutes of one wait on the owner"
 
+assert_equals "## Time Spent
+
+- Total: 10m
+- Waiting on the owner: 5m
+- Model time: 0m
+- Tool calls: 5m" "$({ span 0 600 s1 wait "" "" ""; span 0 600 s1 tool "" Bash "bin/pr-wait.sh"; } | "$TIME_SPENT" --render)" \
+  "splits a stretch two spans share evenly between them"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
