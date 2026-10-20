@@ -149,6 +149,13 @@ assert_equals "- Worktree setup: 5m" "$(one_minute_each Bash "bundle install" "b
   "$TIME_SPENT" --render | grep '^- Worktree setup:')" \
   "counts installing, building, adding a worktree, creating its databases and migrating as worktree setup"
 
+assert_equals "- Reading: 6m" "$({ span 0 60 s1 tool "" Read ""; span 60 120 s1 tool "" Grep ""
+  span 120 180 s1 tool "" Glob ""; span 180 240 s1 tool "" Bash "cat README.md"
+  span 240 300 s1 tool "" Bash "cd ~/projects/app && git log --oneline"
+  span 300 360 s1 tool "" Bash "sed -n 1,20p bin/usage.sh"; } |
+  "$TIME_SPENT" --render | grep '^- Reading:')" \
+  "counts reading a file, searching files and printing files or history as reading"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
