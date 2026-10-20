@@ -23,6 +23,7 @@ awk -F '\t' '
   $4 == "tool" && $6 == "Agent" && $7 ~ /-scribe$/ { print $1, $2, $7; next }
   $4 == "tool" && $6 == "Agent" { print $1, $2, "run"; next }
   $4 == "tool" { print $1, $2, "Tool calls" }
+  $4 == "turn" { print $1, $2, "run" }
 ' > "$work/claims"
 
 cut -f1,2 "$work/claims" | tr '\t' '\n' | sort -n -u > "$work/boundaries"
@@ -52,10 +53,15 @@ totals=$(awk -F '\t' -v claims_file="$work/claims" '
       start = boundary[index_]
       finish = boundary[index_ + 1]
       sharing = 0
-      for (claim = 1; claim <= claims; claim++)
-        if (kind[claim] != "run" && from[claim] <= start && to[claim] >= finish) share[++sharing] = kind[claim]
+      running = 0
+      for (claim = 1; claim <= claims; claim++) {
+        if (from[claim] > start || to[claim] < finish) continue
+        if (kind[claim] == "run") running = 1
+        else share[++sharing] = kind[claim]
+      }
+      if (sharing == 0 && running) share[++sharing] = "Model time"
       for (shared = 1; shared <= sharing; shared++) spent[share[shared]] += (finish - start) / sharing
-      total += finish - start
+      if (sharing > 0) total += finish - start
     }
     printf "Total: %s\n", duration(total)
     printf "Waiting on the owner: %s\n", duration(spent["Waiting on the owner"])

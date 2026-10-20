@@ -64,6 +64,14 @@ assert_equals "## Time Spent
 assert_equals "- Tool calls: 5m" "$(span 0 300 s1 tool builder Bash "bin/rails test" | "$TIME_SPENT" --render | grep '^- Tool calls:')" \
   "counts a tool call made by an agent other than a scribe as tool calls"
 
+assert_equals "## Time Spent
+
+- Total: 20m
+- Waiting on the owner: 0m
+- Model time: 16m
+- Tool calls: 4m" "$({ span 0 600 s1 turn "" "" ""; span 120 360 s1 tool "" Bash "bin/rails test"; span 900 1500 s1 tool "" Agent builder; } | "$TIME_SPENT" --render)" \
+  "counts the time in a turn or an agent run that no tool call covers as model time"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
