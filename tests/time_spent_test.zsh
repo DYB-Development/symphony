@@ -52,6 +52,15 @@ assert_equals "## Time Spent
 assert_equals "" "$(span 0 600 s1 tool "" Agent builder | "$TIME_SPENT" --render | grep builder)" \
   "renders no line of its own for an agent whose type does not end in -scribe"
 
+assert_equals "## Time Spent
+
+- Total: 10m
+- Waiting on the owner: 0m
+- Model time: 0m
+- Tool calls: 0m
+- pr-scribe: 10m" "$({ span 0 600 s1 tool "" Agent pr-scribe; span 60 360 s1 tool pr-scribe Bash "git diff"; } | "$TIME_SPENT" --render)" \
+  "counts the whole of a scribe's run, its own tool calls included, in that scribe's line"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

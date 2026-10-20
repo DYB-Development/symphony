@@ -19,6 +19,7 @@ trap 'rm -rf "$work"' EXIT
 
 awk -F '\t' '
   BEGIN { OFS = "\t" }
+  $4 == "tool" && $5 ~ /-scribe$/ { print $1, $2, $5; next }
   $4 == "tool" && $6 == "Agent" && $7 ~ /-scribe$/ { print $1, $2, $7; next }
   $4 == "tool" && $6 == "Agent" { print $1, $2, "run"; next }
   $4 == "tool" { print $1, $2, "Tool calls" }
@@ -50,9 +51,10 @@ totals=$(awk -F '\t' -v claims_file="$work/claims" '
     for (index_ = 1; index_ < boundaries; index_++) {
       start = boundary[index_]
       finish = boundary[index_ + 1]
+      sharing = 0
       for (claim = 1; claim <= claims; claim++)
-        if (kind[claim] != "run" && from[claim] <= start && to[claim] >= finish)
-          spent[kind[claim]] += finish - start
+        if (kind[claim] != "run" && from[claim] <= start && to[claim] >= finish) share[++sharing] = kind[claim]
+      for (shared = 1; shared <= sharing; shared++) spent[share[shared]] += (finish - start) / sharing
       total += finish - start
     }
     printf "Total: %s\n", duration(total)
