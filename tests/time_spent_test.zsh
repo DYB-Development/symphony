@@ -156,6 +156,13 @@ assert_equals "- Reading: 6m" "$({ span 0 60 s1 tool "" Read ""; span 60 120 s1 
   "$TIME_SPENT" --render | grep '^- Reading:')" \
   "counts reading a file, searching files and printing files or history as reading"
 
+assert_equals "- Test-first cycles: 5m" "$({ span 0 60 s1 tool "" Edit ""; span 60 120 s1 tool "" Write ""
+  span 120 180 s1 tool "" Bash "cd ~/projects/app && zsh tests/usage_test.zsh 2>&1 | tail -1"
+  span 180 240 s1 tool "" Bash "bin/rails test test/models/quote_test.rb"
+  span 240 300 s1 tool "" Bash "./run_tests.sh tests/usage_test.zsh"; } |
+  "$TIME_SPENT" --render | grep '^- Test-first cycles:')" \
+  "counts editing or writing a file and running one named test file as test-first cycles"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
