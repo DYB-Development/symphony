@@ -163,6 +163,11 @@ assert_equals "- Test-first cycles: 5m" "$({ span 0 60 s1 tool "" Edit ""; span 
   "$TIME_SPENT" --render | grep '^- Test-first cycles:')" \
   "counts editing or writing a file and running one named test file as test-first cycles"
 
+assert_equals "- Commits: 2m" "$(one_minute_each Bash "git commit -qm \"Add the thing" \
+  "cd ~/projects/app && git add a b && git commit -qam \"Fix it" |
+  "$TIME_SPENT" --render | grep '^- Commits:')" \
+  "counts committing as commits"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
