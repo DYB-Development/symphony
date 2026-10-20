@@ -614,6 +614,13 @@ assert_equals "" "$("$USAGE" --spans 2>/dev/null)" \
   "prints no spans when no turn on the branch records a duration"
 drop_repo
 
+new_repo
+jq -nc --arg cwd "$REPO" '{type: "system", subtype: "turn_duration", uuid: "t1", sessionId: "session_1", cwd: $cwd,
+  timestamp: "2026-01-03T00:01:00Z", elapsed: "60s"}' >> "$TRANSCRIPT"
+assert_equals "usage.sh: no turn on this branch records a duration, so its time is not measured" \
+  "$("$USAGE" --spans 2>&1 >/dev/null)" "warns that no turn records a duration"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
