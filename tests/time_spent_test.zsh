@@ -226,6 +226,10 @@ assert_equals "- pr-scribe: 20m" "$({ span 0 300 s1 turn "" "" ""; span 0 1200 s
   span 300 1500 s1 wait "" "" ""; } | "$TIME_SPENT" --render | grep '^- pr-scribe:')" \
   "counts in full an agent that kept running after the turn that started it ended"
 
+assert_equals "- Total: 30m" "$({ span 0 300 s1 turn "" "" ""; span 0 1800 s1 tool "" Agent builder; } |
+  "$TIME_SPENT" --render | grep '^- Total:')" \
+  "counts in the total the time an agent ran in the background outside any turn"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
