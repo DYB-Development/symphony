@@ -79,6 +79,12 @@ assert_equals "$REPO	$TRANSCRIPT" "$(index)" \
 rm -rf "$OTHER"
 drop_repo
 
+new_repo
+tool_call "$REPO" '{"command": "true"}' agent_1
+assert_equals "$REPO	${TRANSCRIPT:r}/subagents/agent-agent_1.jsonl" "$(index)" \
+  "records a subagent's own transcript rather than its session's"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

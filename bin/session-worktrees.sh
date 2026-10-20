@@ -35,7 +35,12 @@ record_pair() {
 record() {
   local payload transcript path
   payload=$(cat)
-  transcript=$(printf '%s' "$payload" | jq -r '.transcript_path // empty' 2>/dev/null)
+  transcript=$(printf '%s' "$payload" | jq -r '
+    (.transcript_path // "") as $session
+    | if $session == "" then empty
+      elif (.agent_id // "") == "" then $session
+      else "\($session | sub("\\.jsonl$"; ""))/subagents/agent-\(.agent_id).jsonl"
+      end' 2>/dev/null)
   [ -n "$transcript" ] || return 0
   printf '%s' "$payload" | worked_in | sort -u | while IFS= read -r path; do
     [ -d "$path" ] || path=$(dirname "$path")
