@@ -287,8 +287,9 @@ it was spent waiting on the owner, on the model, on each kind of tool call and
 on each scribe. One line for the total, then one line each for waiting on the
 owner, model time, worktree setup, reading, test-first cycles, commits, ticking
 criteria and recording decisions, full-suite checks, other tool calls,
-draft-reader rounds and claim-judge rounds when any ran, each with how many ran,
-and every scribe that ran on the branch, named by its agent type. This section is **generated, not written**:
+unfinished tool calls when any were found, draft-reader rounds and claim-judge
+rounds when any ran, each with how many ran, and every scribe that ran on the
+branch, named by its agent type. This section is **generated, not written**:
 `~/.claude/bin/usage.sh --spans | ~/.claude/bin/time-spent.sh --render` prints
 it from the same transcripts as Tokens Used, charged to the branch the same
 way, and the Scribe pastes that output verbatim, directly after Effort. An agent
@@ -299,9 +300,11 @@ rather than the scribe's. A tool call made by the main session or by any other
 agent takes the kind of the first entry in `~/.claude/rules/time-kinds.tsv`
 that matches its tool and command, and other tool calls when none does, so a
 command joins a kind by adding a line there. Time inside a turn or an agent run
-that no tool call covers counts as model time. Each wait on the owner counts for no more
-than ten minutes, a stretch that two pieces of work share is split evenly
-between them, and the kinds add up to the total. Like Effort it is a
+that no tool call covers counts as model time. A tool call whose result was
+never recorded counts as unfinished up to the end of its turn. Each wait on the
+owner counts for no more than ten minutes, and an agent still running while the
+owner waits takes that time in full. Any other stretch that two pieces of work
+share is split evenly between them, and the kinds add up to the total. Like Effort it is a
 measurement taken when the body was last written, and it prints
 `Not measured.` when no transcript names the branch.
 

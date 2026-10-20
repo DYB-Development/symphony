@@ -2,6 +2,10 @@
   "version": 1,
   "rules": [
     {
+      "file": "rules/pr-body.md",
+      "contains": "unfinished tool calls when any were found"
+    },
+    {
       "file": "bin/effort.sh",
       "absent": "function duration("
     },
