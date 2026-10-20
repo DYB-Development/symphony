@@ -159,7 +159,7 @@ def rejections:
 
 def effort:
   if .type == "system" then
-    { kind: "turn", amount: (.durationMs // 0) }
+    { kind: "turn", amount: (.durationMs // "") }
   elif typed_prompt then
     { kind: "prompt", amount: 1 },
     { kind: "typed", amount: (.message.content | gsub(pasted_block; "") | words) },
@@ -381,6 +381,8 @@ list_spans() {
     }
     $10 == "turn" { turn_ended[$12, ++turns[$12]] = $9 }
     $10 == "turn" && $2 == branch && !counted[$1]++ {
+      turns_here++
+      if ($11 != "") timed_turns++
       line[++lines] = $9 - int($11 / 1000) OFS $9 OFS $12 OFS "turn" OFS "" OFS "" OFS ""
     }
     $10 == "waited" && $2 == branch && !counted[$1]++ {
@@ -409,6 +411,10 @@ list_spans() {
       }
       if (calls > 0 && paired == 0) {
         print "usage.sh: no tool call on this branch has a result paired with it, so its time is not measured" > "/dev/stderr"
+        exit
+      }
+      if (turns_here > 0 && timed_turns == 0) {
+        print "usage.sh: no turn on this branch records a duration, so its time is not measured" > "/dev/stderr"
         exit
       }
       for (index_ = 1; index_ <= lines; index_++) print line[index_]

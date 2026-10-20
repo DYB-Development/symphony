@@ -599,6 +599,15 @@ assert_equals "" "$("$USAGE" --spans 2>/dev/null)" \
   "prints no spans when no tool call on the branch has a result paired with it"
 drop_repo
 
+new_repo
+call_entry toolu_1 session_1 "$REPO" 2026-01-03T00:00:00Z "" Bash '{"command": "git status"}'
+answer_entry toolu_1 session_1 "$REPO" 2026-01-03T00:00:05Z
+jq -nc --arg cwd "$REPO" '{type: "system", subtype: "turn_duration", uuid: "t1", sessionId: "session_1", cwd: $cwd,
+  timestamp: "2026-01-03T00:01:00Z", elapsed: "60s"}' >> "$TRANSCRIPT"
+assert_equals "" "$("$USAGE" --spans 2>/dev/null)" \
+  "prints no spans when no turn on the branch records a duration"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
