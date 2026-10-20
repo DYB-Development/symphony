@@ -551,6 +551,13 @@ assert_equals "1767398310	1767398400	session_1	turn			" "$("$USAGE" --spans)" \
   "prints a row for a turn, starting its duration before it ended"
 drop_repo
 
+new_repo
+turn_entry turn_1 session_1 "$REPO" 2026-01-03T00:00:00Z 60000
+user_entry prompt_1 session_1 "$REPO" 2026-01-03T00:05:00Z '"next"'
+assert_equals "1767398400	1767398700	session_1	wait			" "$("$USAGE" --spans | grep '	wait	')" \
+  "prints a row for a wait, from the end of a turn to the next prompt"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
