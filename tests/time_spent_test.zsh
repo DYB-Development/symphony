@@ -29,6 +29,15 @@ span() {
   printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$@"
 }
 
+one_minute_each() {
+  local tool="$1" at=0 command
+  shift
+  for command in "$@"; do
+    span "$at" $((at + 60)) s1 tool "" "$tool" "$command"
+    at=$((at + 60))
+  done
+}
+
 echo "time-spent.sh:"
 
 assert_equals "## Time Spent
@@ -133,6 +142,12 @@ assert_equals "3 3" "$({ span 0 90 s1 tool "" Bash "git status"; span 200 290 s1
 assert_equals "## Time Spent
 
 Not measured." "$(: | "$TIME_SPENT" --render)" "renders Not measured when there is no span on the branch"
+
+assert_equals "- Worktree setup: 5m" "$(one_minute_each Bash "bundle install" "bun run build" \
+  "git -C ~/projects/app worktree add -b feat/x ~/projects/app-feat-x" \
+  "~/.claude/bin/worktree-databases.sh create ~/projects/app-feat-x" "bin/rails db:migrate" |
+  "$TIME_SPENT" --render | grep '^- Worktree setup:')" \
+  "counts installing, building, adding a worktree, creating its databases and migrating as worktree setup"
 
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
