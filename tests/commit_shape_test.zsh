@@ -88,6 +88,14 @@ assert_equals "c1 test-and-code" "$(jq -r '.commits[] | "\(.sha) \(.shape)"' "$R
 drop_case
 
 new_case
+add_commit c1 "Cover the quote total" test/models/quote_test.rb test/fixtures/quotes.yml
+shape >/dev/null 2>&1
+assert_equals "c1 test-only no" \
+  "$(jq -r '.commits[] | "\(.sha) \(.shape)"' "$RESULT" 2>/dev/null) $([[ -e "$WORK/asked" ]] && echo asked || echo no)" \
+  "treats a commit that changes only test files as holding a test without asking a model"
+drop_case
+
+new_case
 add_commit c1 "Describe the quote total" README.md docs/quotes.md
 shape >/dev/null 2>&1
 assert_equals "c1 docs-only no" \

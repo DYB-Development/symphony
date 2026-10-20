@@ -88,6 +88,7 @@ while IFS= read -r sha; do
   subject=$(gh api "repos/$repo/commits/$sha" --jq '.commit.message' | head -1)
 
   if [ "$tests" -gt 0 ] && [ "$code" -gt 0 ]; then shape="test-and-code"
+  elif [ "$tests" -gt 0 ] && [ "$code" -eq 0 ]; then shape="test-only"
   elif [ "$docs" -gt 0 ] && [ "$tests" -eq 0 ] && [ "$code" -eq 0 ]; then shape="docs-only"
   else shape=flagged; fi
 
