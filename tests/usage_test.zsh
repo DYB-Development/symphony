@@ -568,6 +568,11 @@ assert_equals "" "$("$USAGE" --spans)" \
   "prints no row for a tool call made in a worktree that held another branch"
 drop_repo
 
+new_repo
+call_entry toolu_1 session_1 "$REPO" 2026-01-03T00:00:00Z "" Bash '{"command": "git status"}'
+assert_equals "" "$("$USAGE" --spans)" "prints no row for a tool call with no recorded result"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
