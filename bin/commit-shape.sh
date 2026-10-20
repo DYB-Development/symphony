@@ -18,8 +18,12 @@ USAGE
 if [ "${1:-}" = "--render" ]; then
   [ $# -eq 2 ] || usage
   jq -r '[.commits[] | select(.exception == "neither")] as $bare
+    | ([.commits[] | select(.exception == "refactor" or .exception == "interface")] | length) as $excepted
     | if ($bare | length) == 0 then "- ✅ **Commits** — nothing found"
-      else "- ❌ **Commits** — \(if ($bare | length) == 1 then "one commit changes" else "\($bare | length) commits change" end) code with no test.",
+      else "- ❌ **Commits** — \(if ($bare | length) == 1 then "one commit changes" else "\($bare | length) commits change" end) code with no test\(
+        if $excepted == 0 then ""
+        elif $excepted == 1 then ", and one more was found to be an exception"
+        else ", and \($excepted) more were found to be exceptions" end).",
         ($bare[] | "  - `\(.sha[0:7])` \(.subject) — It changes code in \(.code_files | join(", ")) and holds no test. Add the test that drives this change.")
       end,
       (.commits[] | select(.exception == "refactor" or .exception == "interface")

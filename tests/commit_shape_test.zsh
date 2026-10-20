@@ -177,6 +177,16 @@ assert_equals '- ✅ **Commits** — nothing found
   "lists a flagged commit found to be an exception with the exception it was found to be"
 drop_case
 
+new_case
+jq -n '{ commits: [
+  { sha: "c1aaaaaaaa", subject: "Add the quote total", code_files: ["app/models/quote.rb"], shape: "flagged", exception: "neither" },
+  { sha: "c2aaaaaaaa", subject: "Add the tax total", code_files: ["app/models/tax.rb"], shape: "flagged", exception: "neither" },
+  { sha: "c3aaaaaaaa", subject: "Move the total into its own method", code_files: ["app/models/quote.rb"], shape: "flagged", exception: "refactor" } ] }' > "$RESULT"
+assert_equals '- ❌ **Commits** — 2 commits change code with no test, and one more was found to be an exception.' \
+  "$("$SHAPE" --render "$RESULT" 2>&1 | head -1)" \
+  "counts every commit it lists under a Commits finding in the headline"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
