@@ -297,6 +297,19 @@ Total: 100" "$("$USAGE")" "reads only the indexed transcripts when no project di
 drop_repo
 
 new_repo
+TRANSCRIPT="$CLAUDE_CONFIG_DIR/projects/another-repo/session.jsonl"
+mkdir -p "${TRANSCRIPT:h}"
+command_entry msg_1 main /elsewhere 2026-01-03T00:00:00Z "cd $REPO && git status" 10 20 30 40
+command_entry msg_2 main /elsewhere 2026-01-03T00:00:01Z "git diff" 1 1 1 1
+printf '%s\t%s\n' "$REPO" "$TRANSCRIPT" > "$CLAUDE_CONFIG_DIR/session-worktrees.tsv"
+assert_equals "Input: 11
+Output: 21
+Cache read: 31
+Cache write: 41
+Total: 104" "$("$USAGE")" "charges a session started outside this clone for the messages after it names a worktree"
+drop_repo
+
+new_repo
 agent_entry agent_1 pr-scribe msg_1 main "$REPO" 10 20 30 40
 assert_equals "pr-scribe — main — 100" "$("$USAGE" --runs)" \
   "names a scribe run, the branch it ran on and what it cost"
