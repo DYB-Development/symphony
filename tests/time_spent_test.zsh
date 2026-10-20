@@ -49,6 +49,9 @@ assert_equals "## Time Spent
 - review-scribe: 10m" "$({ span 0 600 s1 tool "" Agent review-scribe; span 600 900 s1 tool "" Agent pr-scribe; } | "$TIME_SPENT" --render)" \
   "renders one line per scribe that ran, named by its agent type"
 
+assert_equals "" "$(span 0 600 s1 tool "" Agent builder | "$TIME_SPENT" --render | grep builder)" \
+  "renders no line of its own for an agent whose type does not end in -scribe"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
