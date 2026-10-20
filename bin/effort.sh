@@ -19,22 +19,9 @@ case "${1:-}" in
   *) usage ;;
 esac
 
-totals=$(awk -F '\t' -v idle_cap=600 '
-  function grouped(number,   digits, out) {
-    digits = sprintf("%d", number)
-    while (length(digits) > 3) {
-      out = "," substr(digits, length(digits) - 2) out
-      digits = substr(digits, 1, length(digits) - 3)
-    }
-    return digits out
-  }
+format=$(cat "$(dirname "$0")/format.awk")
 
-  function duration(seconds,   minutes) {
-    minutes = int(seconds / 60)
-    if (minutes < 60) return minutes "m"
-    return int(minutes / 60) "h " minutes % 60 "m"
-  }
-
+totals=$(awk -F '\t' -v idle_cap=600 "$format"'
   { total[$3] += $4 }
   $3 == "prompt" && !seen[$2]++ { sessions++ }
   $3 == "waited" { active += $4 < idle_cap ? $4 : idle_cap }
@@ -48,8 +35,8 @@ totals=$(awk -F '\t' -v idle_cap=600 '
     printf "Questions answered: %s\n", grouped(total["answered"])
     printf "Interruptions: %s\n", grouped(total["interrupted"])
     printf "Rejected tool calls: %s\n", grouped(total["rejected"])
-    printf "Claude working time: %s\n", duration(total["turn"] / 1000)
-    printf "Your active time: %s\n", duration(active)
+    printf "Claude working time: %s\n", duration(int(total["turn"] / 60000))
+    printf "Your active time: %s\n", duration(int(active / 60))
   }
 ')
 
