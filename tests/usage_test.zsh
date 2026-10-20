@@ -538,6 +538,13 @@ assert_equals "1767398400	1767399000	session_1	tool		Bash	bin/pr-wait.sh" "$("$U
   "ends a background command's row when the notification that it finished was recorded"
 drop_repo
 
+new_repo
+call_entry toolu_1 session_1 "$REPO" 2026-01-03T00:00:00Z "" Agent '{"subagent_type": "pr-scribe", "prompt": "open the pr"}'
+answer_entry toolu_1 session_1 "$REPO" 2026-01-03T00:02:00Z
+assert_equals "1767398400	1767398520	session_1	tool		Agent	pr-scribe" "$("$USAGE" --spans)" \
+  "names the type of the agent a call started in place of a command"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

@@ -198,7 +198,7 @@ def first_line:
 def spans:
   if .type == "assistant" then
     .message.content[]? | select(.type? == "tool_use")
-    | { id, kind: "call", tool: .name, detail: (.input.command // "" | first_line) }
+    | { id, kind: "call", tool: .name, detail: (.input.subagent_type // .input.command // "" | first_line) }
   elif (.message.content | type == "string") then
     .message.content | select(startswith("<task-notification>"))
     | { id: (capture("<tool-use-id>(?<id>[^<]+)</tool-use-id>").id), kind: "finished" }
