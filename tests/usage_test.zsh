@@ -161,6 +161,23 @@ turn_entry() {
       timestamp: $at, durationMs: $milliseconds}' >> "$TRANSCRIPT"
 }
 
+call_entry() {
+  local call="$1" session="$2" cwd="$3" at="$4" agent="$5" tool="$6" input="$7"
+  jq -nc --arg call "$call" --arg session "$session" --arg cwd "$cwd" --arg at "$at" \
+    --arg agent "$agent" --arg tool "$tool" --argjson input "$input" \
+    '{type: "assistant", sessionId: $session, attributionAgent: $agent, cwd: $cwd, timestamp: $at,
+      message: {id: "msg_\($call)", content: [{type: "tool_use", id: $call, name: $tool, input: $input}]}}' >> "$TRANSCRIPT"
+}
+
+answer_entry() {
+  local call="$1" session="$2" cwd="$3" at="$4" result="${5:-{\}}"
+  jq -nc --arg call "$call" --arg session "$session" --arg cwd "$cwd" --arg at "$at" \
+    --argjson result "$result" \
+    '{type: "user", uuid: "result_\($call)", sessionId: $session, cwd: $cwd, timestamp: $at,
+      message: {role: "user", content: [{type: "tool_result", tool_use_id: $call, content: "ok"}]},
+      toolUseResult: $result}' >> "$TRANSCRIPT"
+}
+
 echo "usage.sh:"
 
 new_repo
@@ -504,6 +521,63 @@ new_repo
 model_entry agent_1 pr-scribe msg_1 main claude-opus-5-5 60 2026-01-01T00:00:00Z
 assert_equals "" "$("$USAGE" --agent-run builder)" \
   "prints nothing when no run of that agent type is on the branch"
+drop_repo
+
+new_repo
+call_entry toolu_1 session_1 "$REPO" 2026-01-03T00:00:00Z builder Bash '{"command": "git status\ngit log"}'
+answer_entry toolu_1 session_1 "$REPO" 2026-01-03T00:00:05Z
+assert_equals "1767398400	1767398405	session_1	tool	builder	Bash	git status" "$("$USAGE" --spans)" \
+  "prints a timed row for a tool call on this branch, ending when its result was recorded"
+drop_repo
+
+new_repo
+call_entry toolu_1 session_1 "$REPO" 2026-01-03T00:00:00Z "" Bash '{"command": "bin/pr-wait.sh", "run_in_background": true}'
+answer_entry toolu_1 session_1 "$REPO" 2026-01-03T00:00:01Z '{"backgroundTaskId": "b1"}'
+user_entry note_1 session_1 "$REPO" 2026-01-03T00:10:00Z '"<task-notification>\n<task-id>b1</task-id>\n<tool-use-id>toolu_1</tool-use-id>\n<status>completed</status>\n</task-notification>"'
+assert_equals "1767398400	1767399000	session_1	tool		Bash	bin/pr-wait.sh" "$("$USAGE" --spans)" \
+  "ends a background command's row when the notification that it finished was recorded"
+drop_repo
+
+new_repo
+call_entry toolu_1 session_1 "$REPO" 2026-01-03T00:00:00Z "" Agent '{"subagent_type": "pr-scribe", "prompt": "open the pr"}'
+answer_entry toolu_1 session_1 "$REPO" 2026-01-03T00:02:00Z
+assert_equals "1767398400	1767398520	session_1	tool		Agent	pr-scribe" "$("$USAGE" --spans)" \
+  "names the type of the agent a call started in place of a command"
+drop_repo
+
+new_repo
+turn_entry turn_1 session_1 "$REPO" 2026-01-03T00:00:00Z 90000
+assert_equals "1767398310	1767398400	session_1	turn			" "$("$USAGE" --spans)" \
+  "prints a row for a turn, starting its duration before it ended"
+drop_repo
+
+new_repo
+turn_entry turn_1 session_1 "$REPO" 2026-01-03T00:00:00Z 60000
+user_entry prompt_1 session_1 "$REPO" 2026-01-03T00:05:00Z '"next"'
+assert_equals "1767398400	1767398700	session_1	wait			" "$("$USAGE" --spans | grep '	wait	')" \
+  "prints a row for a wait, from the end of a turn to the next prompt"
+drop_repo
+
+new_repo
+commit_at 2026-01-01T00:00:00Z
+worktree_at 2026-01-02T00:00:00Z "$REPO/trees/feature" feature
+call_entry toolu_1 session_1 "$REPO" 2026-01-03T00:00:00Z "" Bash "$(jq -nc --arg c "cd $REPO && git status" '{command: $c}')"
+answer_entry toolu_1 session_1 "$REPO" 2026-01-03T00:00:05Z
+cd "$REPO/trees/feature"
+assert_equals "" "$("$USAGE" --spans)" \
+  "prints no row for a tool call made in a worktree that held another branch"
+drop_repo
+
+new_repo
+call_entry toolu_1 session_1 "$REPO" 2026-01-03T00:00:00Z "" Bash '{"command": "git status"}'
+assert_equals "" "$("$USAGE" --spans)" "prints no row for a tool call with no recorded result"
+drop_repo
+
+new_repo
+call_entry toolu_1 session_1 "$REPO" 2026-01-03T00:00:00Z "" Agent '{"subagent_type": "pr-scribe"}'
+answer_entry toolu_1 session_1 "$REPO" 2026-01-03T00:00:01Z '{"isAsync": true, "status": "async_launched"}'
+assert_equals "" "$("$USAGE" --spans)" \
+  "prints no row for a background agent with no notification that it finished"
 drop_repo
 
 echo ""
