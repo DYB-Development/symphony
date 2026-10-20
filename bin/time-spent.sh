@@ -51,12 +51,9 @@ awk -F '\t' -v idle_cap=600 -v kinds_file="$kinds" '
 
 cut -f1,2 "$work/claims" | tr '\t' '\n' | sort -n -u > "$work/boundaries"
 
-totals=$(awk -F '\t' -v claims_file="$work/claims" -v kinds_file="$kinds" '
-  function duration(minutes) {
-    if (minutes < 60) return minutes "m"
-    return int(minutes / 60) "h " minutes % 60 "m"
-  }
+format=$(cat "$here/format.awk")
 
+totals=$(awk -F '\t' -v claims_file="$work/claims" -v kinds_file="$kinds" "$format"'
   function apportion(   name, counted, largest, picked) {
     counted = 0
     for (name in spent) {
