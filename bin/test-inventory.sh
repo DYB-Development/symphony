@@ -19,7 +19,7 @@ is_test_file() {
 }
 
 tests_in() {
-  awk -v lines="$2" '
+  LC_ALL=C awk -v lines="$2" '
     function indent_of(s) { match(s, /^[ \t]*/); return RLENGTH }
     function title_of(s,   t, quote, closing) {
       if (match(s, /^[ \t]*(test|it|specify|scenario)[ (]+["'"'"'`]/)) {

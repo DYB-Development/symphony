@@ -410,6 +410,21 @@ sums the line items into the total" \
   "lists every test title in the repo's test files at a commit"
 rm -rf "$TITLES_REPO"
 
+TITLES_REPO="$(mktemp -d "${TMPDIR:-/tmp}/test_inventory_titles.XXXXXX")"
+git -C "$TITLES_REPO" init -q --template=
+git -C "$TITLES_REPO" config user.email test@example.com
+git -C "$TITLES_REPO" config user.name Test
+mkdir -p "$TITLES_REPO/test/fixtures"
+printf 'class QuoteTest < Minitest::Test\n  test "sums the line items into the total" do\n  end\nend\n' > "$TITLES_REPO/test/quote_test.rb"
+printf '%%PDF-1.4\n\xff\xfe\x80\x81\xc3\x28\n%%%%EOF\n' > "$TITLES_REPO/test/fixtures/quote.pdf"
+git -C "$TITLES_REPO" add -A
+git -C "$TITLES_REPO" commit -q -m first
+assert_equals "sums the line items into the total
+0" \
+  "$(cd "$TITLES_REPO" && LC_ALL=en_US.UTF-8 "$INVENTORY" --titles HEAD 2>/dev/null; echo "$?")" \
+  "lists the test titles in a UTF-8 locale when a test directory holds a binary file"
+rm -rf "$TITLES_REPO"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
