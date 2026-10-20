@@ -3,6 +3,10 @@
   "rules": [
     {
       "file": "rules/pr-body.md",
+      "contains": "`~/.claude/rules/time-kinds.tsv`"
+    },
+    {
+      "file": "rules/pr-body.md",
       "contains": "All nine sections appear in every body"
     },
     {

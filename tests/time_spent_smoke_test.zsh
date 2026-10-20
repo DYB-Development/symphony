@@ -35,7 +35,13 @@ expected="## Time Spent
 - Total: 5m
 - Waiting on the owner: 2m
 - Model time: 2m
-- Tool calls: 1m"
+- Worktree setup: 0m
+- Reading: 0m
+- Test-first cycles: 0m
+- Commits: 0m
+- Ticking criteria and recording decisions: 0m
+- Full-suite checks: 1m
+- Other tool calls: 0m"
 actual="$("$USAGE" --spans | "$TIME_SPENT" --render)"
 cd "$SCRIPT_DIR"
 rm -rf "$REPO"

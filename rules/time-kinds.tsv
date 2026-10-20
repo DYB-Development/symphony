@@ -1,0 +1,9 @@
+kind	tool	command
+Worktree setup	^Bash$	(bundle install|(npm|bun|yarn|pnpm) (ci|install)|run build|worktree add|worktree-databases\.sh|db:(migrate|prepare|create|setup)|bin/setup)
+Reading	^(Read|Grep|Glob)$	
+Reading	^Bash$	^(cd [^&;]+&& )?(cat|head|tail|sed -n|grep|rg|ls|find|wc|git( -C [^ ]+)? (log|show|diff|status|blame)|gh (issue|pr) view)( |$)
+Test-first cycles	^(Edit|Write|NotebookEdit)$	
+Test-first cycles	^Bash$	(_test\.zsh|run_tests\.sh [a-zA-Z./]|bin/rails test [a-zA-Z./]|bun test [a-zA-Z./]|rspec |pytest )
+Commits	^Bash$	git( -C [^ ]+)? commit
+Ticking criteria and recording decisions	^Bash$	(tick-criterion|decide|ticket)\.sh
+Full-suite checks	^Bash$	run_tests\.sh|bin/rails test|bun test|(^|[ /])(vue-)?tsc( |$)|typecheck|type-check|conformance\.sh
