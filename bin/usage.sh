@@ -35,9 +35,15 @@ other's tokens.
 A worktree of this branch that has been removed is still found when its folder
 sat next to the main clone and was named after the clone and the branch, with
 any / in the branch written as -.
+A session started outside this clone is charged from the first tool record that
+names a worktree of it, until a tool record names an absolute path outside the
+clone or the session's directory changes.
 Transcripts are read from the directories under $CLAUDE_CONFIG_DIR/projects, or
-~/.claude/projects, whose names carry a path of this clone, and from all of them
-when none does.
+~/.claude/projects, whose names carry a path of this clone. They are also read
+from the transcripts that session-worktrees.tsv, beside that projects directory,
+lists for a worktree of this clone, which is how work done from a session started
+in another repo is found. Every directory under projects is read only when
+neither finds a transcript.
 See ~/.claude/rules/pr-body.md.
 USAGE
   exit 64
@@ -56,12 +62,14 @@ root=$(git rev-parse --show-toplevel) || {
 
 branch=$(git branch --show-current)
 projects="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/projects"
+index="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/session-worktrees.tsv"
 
 work=$(mktemp -d "${TMPDIR:-/tmp}/usage.XXXXXX")
 trap 'rm -rf "$work"' EXIT
 
 worktrees="$work/worktrees"
 timelines="$work/timelines"
+indexed="$work/indexed"
 
 main_clone=$(git worktree list --porcelain | sed -n '1s/^worktree //p')
 named="$main_clone-${branch//\//-}"
@@ -99,6 +107,14 @@ write_timelines() {
 write_worktrees > "$worktrees"
 write_timelines > "$timelines"
 
+indexed_transcripts() {
+  [ -f "$index" ] || return 0
+  awk -F '\t' 'NR == FNR { listed[$0]; next } ($1 in listed) && $2 != "" { print $2 }' "$worktrees" "$index" |
+    sort -u | while IFS= read -r transcript; do
+      [ -f "$transcript" ] && printf '%s\n' "$transcript"
+    done
+}
+
 transcript_dirs() {
   local worktree named found=''
   while IFS= read -r worktree; do
@@ -108,7 +124,7 @@ transcript_dirs() {
   done < "$worktrees"
   if [ -n "$found" ]; then
     printf '%s' "$found" | sort -u
-  else
+  elif [ ! -s "$indexed" ]; then
     printf '%s\n' "$projects"
   fi
 }
@@ -116,9 +132,11 @@ transcript_dirs() {
 transcript_files() {
   local patterns=() worktree
   while IFS= read -r worktree; do patterns+=(-e "$worktree"); done < "$worktrees"
-  transcript_dirs | grep -v '^$' | tr '\n' '\0' |
-    xargs -0 grep -rlF --include='*.jsonl' "${patterns[@]}" 2>/dev/null || true
+  { transcript_dirs; cat "$indexed"; } | grep -v '^$' | tr '\n' '\0' |
+    xargs -0 grep -rlF --include='*.jsonl' "${patterns[@]}" 2>/dev/null | sort -u || true
 }
+
+indexed_transcripts > "$indexed"
 
 extract=$(cat <<'JQ'
 def stamp:
@@ -278,8 +296,10 @@ BEGIN {
   }
 
   home = worktree_of($3)
+  moved = $3 != cwd
+  cwd = $3
   if (found != "") working = found
-  else if (home == "") next
+  else if (home == "" && (moved || working == "" || ("|" $10) ~ /\|\//)) { working = ""; next }
   else if (working == "") working = home
 
   if ($11 == "prompt" || $11 == "turn") release()

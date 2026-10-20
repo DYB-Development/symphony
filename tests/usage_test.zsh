@@ -269,6 +269,61 @@ Total: 100" "$("$USAGE")" "reads only the project directory named for a repo who
 drop_repo
 
 new_repo
+TRANSCRIPT="$CLAUDE_CONFIG_DIR/projects/$(printf '%s' "$REPO" | tr -c 'a-zA-Z0-9' '-')/session.jsonl"
+mkdir -p "${TRANSCRIPT:h}"
+entry msg_1 main "$REPO" 10 20 30 40
+TRANSCRIPT="$CLAUDE_CONFIG_DIR/projects/another-repo/session.jsonl"
+mkdir -p "${TRANSCRIPT:h}"
+entry msg_2 main "$REPO" 1 1 1 1
+printf '%s\t%s\n' "$REPO" "$TRANSCRIPT" > "$CLAUDE_CONFIG_DIR/session-worktrees.tsv"
+assert_equals "Input: 11
+Output: 21
+Cache read: 31
+Cache write: 41
+Total: 104" "$("$USAGE")" "reads a transcript under another repo's project directory that the index lists for this clone"
+drop_repo
+
+new_repo
+entry msg_1 main "$REPO" 1 1 1 1
+TRANSCRIPT="$CLAUDE_CONFIG_DIR/projects/another-repo/session.jsonl"
+mkdir -p "${TRANSCRIPT:h}"
+entry msg_2 main "$REPO" 10 20 30 40
+printf '%s\t%s\n' "$REPO" "$TRANSCRIPT" > "$CLAUDE_CONFIG_DIR/session-worktrees.tsv"
+assert_equals "Input: 10
+Output: 20
+Cache read: 30
+Cache write: 40
+Total: 100" "$("$USAGE")" "reads only the indexed transcripts when no project directory is named for this clone"
+drop_repo
+
+new_repo
+TRANSCRIPT="$CLAUDE_CONFIG_DIR/projects/another-repo/session.jsonl"
+mkdir -p "${TRANSCRIPT:h}"
+command_entry msg_1 main /elsewhere 2026-01-03T00:00:00Z "cd $REPO && git status" 10 20 30 40
+command_entry msg_2 main /elsewhere 2026-01-03T00:00:01Z "git diff" 1 1 1 1
+printf '%s\t%s\n' "$REPO" "$TRANSCRIPT" > "$CLAUDE_CONFIG_DIR/session-worktrees.tsv"
+assert_equals "Input: 11
+Output: 21
+Cache read: 31
+Cache write: 41
+Total: 104" "$("$USAGE")" "charges a session started outside this clone for the messages after it names a worktree"
+drop_repo
+
+new_repo
+TRANSCRIPT="$CLAUDE_CONFIG_DIR/projects/another-repo/session.jsonl"
+mkdir -p "${TRANSCRIPT:h}"
+command_entry msg_1 main /elsewhere 2026-01-03T00:00:00Z "cd $REPO && git status" 10 20 30 40
+command_entry msg_2 main /elsewhere 2026-01-03T00:00:01Z "cd /elsewhere && make" 1 1 1 1
+command_entry msg_3 main /elsewhere 2026-01-03T00:00:02Z "git diff" 1 1 1 1
+printf '%s\t%s\n' "$REPO" "$TRANSCRIPT" > "$CLAUDE_CONFIG_DIR/session-worktrees.tsv"
+assert_equals "Input: 10
+Output: 20
+Cache read: 30
+Cache write: 40
+Total: 100" "$("$USAGE")" "stops charging a session started outside this clone once it names a path outside it"
+drop_repo
+
+new_repo
 agent_entry agent_1 pr-scribe msg_1 main "$REPO" 10 20 30 40
 assert_equals "pr-scribe — main — 100" "$("$USAGE" --runs)" \
   "names a scribe run, the branch it ran on and what it cost"
