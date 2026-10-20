@@ -151,6 +151,7 @@ settings that are not its own alone:
 | `Stop` | `owner-turn.sh stop` | Shows the session's flags as the last lines of the turn when the owner is waited on |
 | `PreToolUse` | `working-line.sh record` | Keeps the description of the session's most recent tool call as its working line |
 | `Stop` | `working-line.sh record` | Clears the working line when the session ends its turn |
+| `PreToolUse` | `session-worktrees.sh record` | Records which worktree each session and subagent transcript works in, so `usage.sh` finds work done from a session started in another repo |
 | `SubagentStop` | `agent-progress.sh record` | Logs that a subagent finished |
 | `Stop` | `turn-sound.sh play` | Plays a sound when a session finishes its turn |
 | `Stop` | `stray-test-workers.sh` | Stops any Rails test worker whose test run has gone, since nothing else will and it can run for days |
