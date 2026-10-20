@@ -55,16 +55,28 @@ is how the person who ran you sees which step you are on.
    the diff tells you fact. Never raise a finding on code you have not read.
 
    ```
-   gh pr view <n> --repo <owner/repo> --json title,body,headRefName,baseRefName
-   gh pr diff <n> --repo <owner/repo>
+   gh pr view <n> --repo <owner/repo> --json title,body,headRefName,baseRefName,baseRefOid,headRefOid
    ```
+
+   Build the diff once, from the local clone, into a directory made for this
+   run. Run `mktemp -d` once and use the path it prints as `<run dir>` in every
+   later command. GitHub refuses to send the diff of a pull request that
+   changes more than 300 files, and the local clone has no such limit.
+
+   ```
+   mktemp -d
+   git -C <repo root> fetch origin pull/<n>/head <baseRefName>
+   git -C <repo root> --no-pager diff --no-color --no-ext-diff <baseRefOid>...<headRefOid> > <run dir>/pr.diff
+   ```
+
+   Read the diff from `<run dir>/pr.diff`, and pass that file to every script
+   below that takes `--diff`, so none of them fetches the diff again.
 
    For a re-review, read what changed since your last pass and the review you
    left:
 
    ```
    gh api repos/<owner/repo>/pulls/<n>/reviews --jq '.[] | "\(.id)\t\(.submitted_at)\t\(.user.login)"'
-   gh pr diff <n> --repo <owner/repo>
    git log --oneline <base>..<head>
    ```
 
@@ -79,7 +91,7 @@ is how the person who ran you sees which step you are on.
    request adds, and start the draft from what it finds:
 
    ```
-   ~/.claude/bin/pattern-scan.sh <owner/repo> <n> <repo root>/.review-<pr>.json
+   ~/.claude/bin/pattern-scan.sh <owner/repo> <n> <repo root>/.review-<pr>.json --diff <run dir>/pr.diff
    ~/.claude/bin/review-draft.sh --add-scan <repo root>/.review-<pr>.json <repo root>/.review-<pr>.scan.json
    ```
 
@@ -94,7 +106,7 @@ is how the person who ran you sees which step you are on.
    about each one, and add each test that fails a check to the draft:
 
    ```
-   ~/.claude/bin/test-inventory.sh <owner/repo> <n> <repo root>/.review-<pr>.json
+   ~/.claude/bin/test-inventory.sh <owner/repo> <n> <repo root>/.review-<pr>.json --diff <run dir>/pr.diff
    ~/.claude/bin/review-draft.sh --add-scan <repo root>/.review-<pr>.json <repo root>/.review-<pr>.tests.json
    ```
 
@@ -269,7 +281,7 @@ is how the person who ran you sees which step you are on.
    First check that every comment sits on a line the diff touches:
 
    ```
-   ~/.claude/bin/review-draft.sh --check-lines <repo root>/.review-<pr>.json <owner/repo> <n>
+   ~/.claude/bin/review-draft.sh --check-lines <repo root>/.review-<pr>.json <owner/repo> <n> --diff <run dir>/pr.diff
    ```
 
    A comment that does not is a comment on code this pull request did not

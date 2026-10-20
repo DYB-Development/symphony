@@ -472,6 +472,30 @@
     {
       "file": "agents/review-scribe.md",
       "contains": "When the commit check, the test inventory or the conformance check exits with anything but 0, stop and return what it printed in place of a draft."
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "git -C <repo root> fetch origin pull/<n>/head <baseRefName>"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "git -C <repo root> --no-pager diff --no-color --no-ext-diff <baseRefOid>...<headRefOid> > <run dir>/pr.diff"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "~/.claude/bin/pattern-scan.sh <owner/repo> <n> <repo root>/.review-<pr>.json --diff <run dir>/pr.diff"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "~/.claude/bin/test-inventory.sh <owner/repo> <n> <repo root>/.review-<pr>.json --diff <run dir>/pr.diff"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "contains": "~/.claude/bin/review-draft.sh --check-lines <repo root>/.review-<pr>.json <owner/repo> <n> --diff <run dir>/pr.diff"
+    },
+    {
+      "file": "agents/review-scribe.md",
+      "absent": "gh pr diff"
     }
   ]
 }

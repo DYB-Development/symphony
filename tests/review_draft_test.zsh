@@ -385,6 +385,31 @@ assert_equals "0" "$?" "documents the line check in its own usage"
 
 LINES_DIR="$(mktemp -d "${TMPDIR:-/tmp}/review_lines_test.XXXXXX")"
 LINES_FILE="$LINES_DIR/review.json"
+printf '#!/usr/bin/env bash\nexit 1\n' > "$LINES_DIR/gh"
+chmod +x "$LINES_DIR/gh"
+cat > "$LINES_DIR/given.diff" <<'DIFF'
+diff --git a/app/models/quote.rb b/app/models/quote.rb
+index 1111111..2222222 100644
+--- a/app/models/quote.rb
++++ b/app/models/quote.rb
+@@ -40,3 +40,4 @@ class Quote
+   def convert
++    order.save
+   end
+ end
+DIFF
+cat > "$LINES_FILE" <<'JSON'
+{ "summary": "One finding.",
+  "comments": [ { "path": "app/models/quote.rb", "line": 41, "side": "RIGHT", "body": "a finding" } ],
+  "replies": [] }
+JSON
+assert_equals "on the diff  app/models/quote.rb:41" \
+  "$(PATH="$LINES_DIR:$PATH" "$DRAFT" --check-lines "$LINES_FILE" acme/quotes 7 --diff "$LINES_DIR/given.diff" 2>&1)" \
+  "checks comment lines against a diff file passed in without fetching the diff from GitHub"
+rm -rf "$LINES_DIR"
+
+LINES_DIR="$(mktemp -d "${TMPDIR:-/tmp}/review_lines_test.XXXXXX")"
+LINES_FILE="$LINES_DIR/review.json"
 ln -s "$SHARED_STUBS/gh-5" "$LINES_DIR/gh"
 cat > "$LINES_FILE" <<'JSON'
 { "summary": "One finding.",

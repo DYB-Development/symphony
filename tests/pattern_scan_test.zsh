@@ -91,6 +91,24 @@ assert_equals "app/quote.rb 11 debug-print Patterns" \
 drop_case
 
 new_case
+cat > "$WORK/given.diff" <<'DIFF'
+diff --git a/app/quote.rb b/app/quote.rb
+index 1111111..2222222 100644
+--- a/app/quote.rb
++++ b/app/quote.rb
+@@ -10,2 +10,3 @@ class Quote
+   def total
++    binding.pry
+     items.sum(&:price)
+DIFF
+touch "$WORK/diff.fails"
+PATH="$WORK/bin:$PATH" SYMPHONY_PATTERNS_DIR="$WORK/packs" "$SCAN" acme/quotes 7 "$DRAFT_FILE" --diff "$WORK/given.diff" >/dev/null 2>&1
+assert_equals "app/quote.rb 11 debug-print" \
+  "$(jq -r '.hits[] | "\(.path) \(.line) \(.pattern)"' "$RESULT" 2>/dev/null)" \
+  "scans a diff file passed in without fetching the diff from GitHub"
+drop_case
+
+new_case
 write_diff <<'DIFF'
 diff --git a/app/quote.rb b/app/quote.rb
 --- a/app/quote.rb

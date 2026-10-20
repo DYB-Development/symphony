@@ -31,7 +31,7 @@ new_case() {
   cat > "$WORK/bin/gh" <<SH
 #!/usr/bin/env bash
 case "\$1 \$2" in
-  "pr diff") cat "$WORK/diff" ;;
+  "pr diff") [ ! -e "$WORK/diff.fails" ] || exit 1; cat "$WORK/diff" ;;
   "pr view") printf 'headsha\n' ;;
   "api repos/acme/quotes/contents/"*)
     file=\${2#repos/acme/quotes/contents/}
@@ -93,6 +93,34 @@ inventory >/dev/null 2>&1
 assert_equals "test/models/quote_test.rb 2 1 sums the line items into the total" \
   "$(jq -r '.tests[] | "\(.path) \(.line) \(.assertions) \(.title)"' "$RESULT" 2>/dev/null)" \
   "lists a test the pull request adds with its file, line, assertion count and title"
+drop_case
+
+new_case
+head_file test/models/quote_test.rb <<'RB'
+class QuoteTest < ActiveSupport::TestCase
+  test "sums the line items into the total" do
+    quote = quotes(:two_items)
+    assert_equal 30, quote.total
+  end
+end
+RB
+cat > "$WORK/given.diff" <<'DIFF'
+diff --git a/test/models/quote_test.rb b/test/models/quote_test.rb
+--- a/test/models/quote_test.rb
++++ b/test/models/quote_test.rb
+@@ -1,2 +1,6 @@
+ class QuoteTest < ActiveSupport::TestCase
++  test "sums the line items into the total" do
++    quote = quotes(:two_items)
++    assert_equal 30, quote.total
++  end
+ end
+DIFF
+touch "$WORK/diff.fails"
+PATH="$WORK/bin:$PATH" SYMPHONY_AGENT_MODELS_FILE="$WORK/no-models.json" "$INVENTORY" acme/quotes 7 "$DRAFT_FILE" --diff "$WORK/given.diff" >/dev/null 2>&1
+assert_equals "test/models/quote_test.rb sums the line items into the total" \
+  "$(jq -r '.tests[] | "\(.path) \(.title)"' "$RESULT" 2>/dev/null)" \
+  "lists the tests in a diff file passed in without fetching the diff from GitHub"
 drop_case
 
 new_case
