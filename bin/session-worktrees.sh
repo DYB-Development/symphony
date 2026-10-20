@@ -14,18 +14,31 @@ USAGE
 
 index="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/session-worktrees.tsv"
 
-record() {
-  local payload fields cwd="" transcript="" root line
-  payload=$(cat)
-  fields=$(printf '%s' "$payload" | jq -r '
-    def text: (. // "") | tostring;
-    @sh "cwd=\(.cwd | text) transcript=\(.transcript_path | text)"')
-  eval "$fields"
-  root=$(git -C "$cwd" rev-parse --show-toplevel 2>/dev/null) || return 0
-  line="$root"$'\t'"$transcript"
+worked_in() {
+  jq -r '
+    .cwd // empty,
+    ((.tool_input.command // "") | tostring
+      | scan("(?:^|[;&|(\\s])(?:cd|-C)\\s+([^\\s;&|)\u0027\"]+)") | .[0])
+  ' 2>/dev/null
+}
+
+record_pair() {
+  local root line
+  root=$(git -C "$1" rev-parse --show-toplevel 2>/dev/null) || return 0
+  line="$root"$'\t'"$2"
   grep -qxF -- "$line" "$index" 2>/dev/null && return 0
   mkdir -p "$(dirname "$index")"
   printf '%s\n' "$line" >> "$index"
+}
+
+record() {
+  local payload transcript path
+  payload=$(cat)
+  transcript=$(printf '%s' "$payload" | jq -r '.transcript_path // empty' 2>/dev/null)
+  [ -n "$transcript" ] || return 0
+  printf '%s' "$payload" | worked_in | sort -u | while IFS= read -r path; do
+    [ -d "$path" ] && record_pair "$path" "$transcript"
+  done
 }
 
 case "${1:-}" in

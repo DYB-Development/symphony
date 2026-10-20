@@ -63,6 +63,14 @@ assert_equals "$REPO	$TRANSCRIPT" "$(index)" \
   "records a transcript and worktree pair once however many tool calls it makes"
 drop_repo
 
+new_repo
+OTHER="$(cd "$(mktemp -d "${TMPDIR:-/tmp}/session_worktrees_test.XXXXXX")" && pwd -P)"
+tool_call "$OTHER" "$(jq -nc --arg repo "$REPO" '{command: "git -C \($repo) status"}')"
+assert_equals "$REPO	$TRANSCRIPT" "$(index)" \
+  "records a worktree a command names from a session started outside it"
+rm -rf "$OTHER"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
