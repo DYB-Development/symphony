@@ -215,6 +215,10 @@ assert_equals "- pr-scribe: 7m" "$({ span 0 600 s1 tool "" Agent pr-scribe
   "$TIME_SPENT" --render | grep '^- pr-scribe:')" \
   "shows a scribe's run with its rounds taken out"
 
+assert_equals "- Unfinished tool calls: 2m" "$({ span 0 300 s1 turn "" "" ""; span 60 180 s1 unfinished "" Bash "bin/rails server"; } |
+  "$TIME_SPENT" --render | grep '^- Unfinished tool calls:')" \
+  "counts a tool call that never finished on an unfinished tool calls line"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

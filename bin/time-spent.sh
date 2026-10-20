@@ -41,7 +41,8 @@ awk -F '\t' -v idle_cap=600 -v kinds_file="$kinds" '
   }
   $4 == "tool" && $5 ~ /-scribe$/ && $7 ~ /read-draft\.sh/ { print $1, $2, "Draft-reader rounds", $5; next }
   $4 == "tool" && $5 ~ /-scribe$/ && $7 ~ /judge-claims\.sh/ { print $1, $2, "Claim-judge rounds", $5; next }
-  $4 == "tool" && $5 ~ /-scribe$/ { print $1, $2, $5, $5; next }
+  ($4 == "tool" || $4 == "unfinished") && $5 ~ /-scribe$/ { print $1, $2, $5, $5; next }
+  $4 == "unfinished" { print $1, $2, "Unfinished tool calls"; next }
   $4 == "tool" && $6 == "Agent" && $7 ~ /-scribe$/ { print $1, $2, $7, $7, "run"; next }
   $4 == "tool" && $6 == "Agent" { print $1, $2, "run"; next }
   $4 == "tool" { print $1, $2, kind_of($6, $7) }
@@ -90,6 +91,7 @@ totals=$(awk -F '\t' -v claims_file="$work/claims" -v kinds_file="$kinds" "$form
       owner[claims] = field[4]
       container[claims] = field[5] == "run"
       if (field[3] ~ / rounds$/) rounds[field[3]]++
+      if (field[3] == "Unfinished tool calls") unfinished = 1
     }
   }
 
@@ -126,6 +128,7 @@ totals=$(awk -F '\t' -v claims_file="$work/claims" -v kinds_file="$kinds" "$form
     printf "Model time: %s\n", duration(minutes["Model time"])
     for (index_ = 1; index_ <= listed_kinds; index_++)
       printf "%s: %s\n", order[index_], duration(minutes[order[index_]])
+    if (unfinished) printf "Unfinished tool calls: %s\n", duration(minutes["Unfinished tool calls"])
     for (index_ = 1; index_ <= 2; index_++) {
       name = index_ == 1 ? "Draft-reader rounds" : "Claim-judge rounds"
       if (name in rounds)
@@ -133,7 +136,7 @@ totals=$(awk -F '\t' -v claims_file="$work/claims" -v kinds_file="$kinds" "$form
     }
     fflush()
     for (name in spent)
-      if (!(name in listed) && !(name in rounds))
+      if (!(name in listed) && !(name in rounds) && name != "Unfinished tool calls")
         printf "%s: %s\n", name, duration(minutes[name]) | "sort"
     close("sort")
   }
