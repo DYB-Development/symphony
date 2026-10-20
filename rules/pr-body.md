@@ -287,9 +287,9 @@ it was spent waiting on the owner, on the model, on each kind of tool call and
 on each scribe. One line for the total, then one line each for waiting on the
 owner, model time, worktree setup, reading, test-first cycles, commits, ticking
 criteria and recording decisions, full-suite checks, other tool calls,
-unfinished tool calls when any were found, draft-reader rounds and claim-judge
-rounds when any ran, each with how many ran, and every scribe that ran on the
-branch, named by its agent type. This section is **generated, not written**:
+unfinished tool calls when any were found,
+draft-reader rounds and claim-judge rounds when any ran, each with how many ran,
+and every scribe that ran on the branch, named by its agent type. This section is **generated, not written**:
 `~/.claude/bin/usage.sh --spans | ~/.claude/bin/time-spent.sh --render` prints
 it from the same transcripts as Tokens Used, charged to the branch the same
 way, and the Scribe pastes that output verbatim, directly after Effort. An agent
