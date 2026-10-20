@@ -168,6 +168,12 @@ assert_equals "- Commits: 2m" "$(one_minute_each Bash "git commit -qm \"Add the 
   "$TIME_SPENT" --render | grep '^- Commits:')" \
   "counts committing as commits"
 
+assert_equals "- Ticking criteria and recording decisions: 3m" "$(one_minute_each Bash \
+  "~/.claude/bin/tick-criterion.sh acme/app 12 1" "cd ~/projects/app && ~/.claude/bin/decide.sh \"Which?\" \"This.\"" \
+  "~/.claude/bin/ticket.sh \"ACME-12\"" |
+  "$TIME_SPENT" --render | grep '^- Ticking criteria and recording decisions:')" \
+  "counts ticking a criterion, recording a decision and recording a ticket as one kind"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
