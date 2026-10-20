@@ -91,6 +91,7 @@ while read -r sha parents; do
   if [ "$tests" -gt 0 ] && [ "$code" -gt 0 ]; then shape="test-and-code"
   elif [ "$tests" -gt 0 ] && [ "$code" -eq 0 ]; then shape="test-only"
   elif [ "$docs" -gt 0 ] && [ "$tests" -eq 0 ] && [ "$code" -eq 0 ]; then shape="docs-only"
+  elif [ "$code" -eq 0 ]; then shape="empty"
   else shape=flagged; fi
 
   exception=""

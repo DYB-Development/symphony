@@ -64,7 +64,7 @@ add_commit() {
   printf '%s %s\n' "$sha" "${PARENTS:-1}" >> "$WORK/commits/order"
   printf '%s\n' "$message" > "$WORK/commits/$sha.message"
   printf '%s\n' "$@" > "$WORK/commits/$sha.files"
-  printf 'diff --git a/%s b/%s\n+changed\n' "$1" "$1" > "$WORK/commits/$sha.diff"
+  printf 'diff --git a/%s b/%s\n+changed\n' "${1:-}" "${1:-}" > "$WORK/commits/$sha.diff"
 }
 
 shape() {
@@ -101,6 +101,14 @@ add_commit c2 "Add the quote total" test/models/quote_test.rb app/models/quote.r
 shape >/dev/null 2>&1
 assert_equals "c2" "$(jq -r '.commits[].sha' "$RESULT" 2>/dev/null)" \
   "leaves a merge commit out of the commits it reads"
+drop_case
+
+new_case
+add_commit c1 "Start the quote total"
+shape >/dev/null 2>&1
+assert_equals "c1 empty no" \
+  "$(jq -r '.commits[] | "\(.sha) \(.shape)"' "$RESULT" 2>/dev/null) $([[ -e "$WORK/asked" ]] && echo asked || echo no)" \
+  "flags no commit that changes no code file, so a flagged commit always names its code files"
 drop_case
 
 new_case
