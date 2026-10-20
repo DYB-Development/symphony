@@ -71,6 +71,14 @@ assert_equals "$REPO	$TRANSCRIPT" "$(index)" \
 rm -rf "$OTHER"
 drop_repo
 
+new_repo
+OTHER="$(cd "$(mktemp -d "${TMPDIR:-/tmp}/session_worktrees_test.XXXXXX")" && pwd -P)"
+tool_call "$OTHER" "$(jq -nc --arg file "$REPO/new.txt" '{file_path: $file, content: "x"}')"
+assert_equals "$REPO	$TRANSCRIPT" "$(index)" \
+  "records the worktree of a file a tool call writes from a session started outside it"
+rm -rf "$OTHER"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

@@ -17,6 +17,7 @@ index="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/session-worktrees.tsv"
 worked_in() {
   jq -r '
     .cwd // empty,
+    (.tool_input | objects | (.file_path, .notebook_path, .path) | strings),
     ((.tool_input.command // "") | tostring
       | scan("(?:^|[;&|(\\s])(?:cd|-C)\\s+([^\\s;&|)\u0027\"]+)") | .[0])
   ' 2>/dev/null
@@ -37,6 +38,7 @@ record() {
   transcript=$(printf '%s' "$payload" | jq -r '.transcript_path // empty' 2>/dev/null)
   [ -n "$transcript" ] || return 0
   printf '%s' "$payload" | worked_in | sort -u | while IFS= read -r path; do
+    [ -d "$path" ] || path=$(dirname "$path")
     [ -d "$path" ] && record_pair "$path" "$transcript"
   done
 }
