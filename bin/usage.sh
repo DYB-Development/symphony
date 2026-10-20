@@ -293,7 +293,7 @@ BEGIN {
   moved = $3 != cwd
   cwd = $3
   if (found != "") working = found
-  else if (home == "" && (moved || working == "")) { working = ""; next }
+  else if (home == "" && (moved || working == "" || ("|" $10) ~ /\|\//)) { working = ""; next }
   else if (working == "") working = home
 
   if ($11 == "prompt" || $11 == "turn") release()
