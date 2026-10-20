@@ -581,10 +581,22 @@ assert_equals "" "$("$USAGE" --spans)" \
 drop_repo
 
 new_repo
+call_entry toolu_0 session_1 "$REPO" 2026-01-02T23:59:00Z "" Bash '{"command": "git status"}'
+answer_entry toolu_0 session_1 "$REPO" 2026-01-02T23:59:01Z
 call_entry toolu_1 session_1 "$REPO" 2026-01-03T00:00:00Z "" Bash '{"command": "bin/rails server"}'
 turn_entry turn_1 session_1 "$REPO" 2026-01-03T00:02:00Z 120000
 assert_equals "1767398400	1767398520	session_1	unfinished		Bash	bin/rails server" "$("$USAGE" --spans | grep '	unfinished	')" \
   "prints an unfinished row for a tool call with no recorded result, ending when its turn ended"
+drop_repo
+
+new_repo
+call_entry toolu_1 session_1 "$REPO" 2026-01-03T00:00:00Z "" Bash '{"command": "git status"}'
+jq -nc --arg cwd "$REPO" '{type: "user", uuid: "r1", sessionId: "session_1", cwd: $cwd, timestamp: "2026-01-03T00:00:05Z",
+  message: {role: "user", content: [{type: "tool_output", call_id: "toolu_1", content: "ok"}]}}' >> "$TRANSCRIPT"
+turn_entry turn_1 session_1 "$REPO" 2026-01-03T00:01:00Z 60000
+user_entry prompt_1 session_1 "$REPO" 2026-01-03T00:05:00Z '"next"'
+assert_equals "" "$("$USAGE" --spans 2>/dev/null)" \
+  "prints no spans when no tool call on the branch has a result paired with it"
 drop_repo
 
 echo ""

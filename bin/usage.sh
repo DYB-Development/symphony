@@ -381,10 +381,10 @@ list_spans() {
     }
     $10 == "turn" { turn_ended[$12, ++turns[$12]] = $9 }
     $10 == "turn" && $2 == branch && !counted[$1]++ {
-      print $9 - int($11 / 1000), $9, $12, "turn", "", "", ""
+      line[++lines] = $9 - int($11 / 1000) OFS $9 OFS $12 OFS "turn" OFS "" OFS "" OFS ""
     }
     $10 == "waited" && $2 == branch && !counted[$1]++ {
-      print $9 - $11, $9, $12, "wait", "", "", ""
+      line[++lines] = $9 - $11 OFS $9 OFS $12 OFS "wait" OFS "" OFS "" OFS ""
     }
     $10 == "answer" && !(call in answered) { answered[call] = $9 }
     $10 == "backgrounded" { background[call] = 1 }
@@ -398,13 +398,20 @@ list_spans() {
       return ended
     }
     END {
+      paired = 0
       for (index_ = 1; index_ <= calls; index_++) {
         call = order[index_]
+        if ((call in answered) || (call in finished)) paired++
         if (call in background) {
-          if (call in finished) print started[call], finished[call], session[call], "tool", row[call]
-        } else if (call in answered) print started[call], answered[call], session[call], "tool", row[call]
-        else if (turn_end(call) != "") print started[call], turn_end(call), session[call], "unfinished", row[call]
+          if (call in finished) line[++lines] = started[call] OFS finished[call] OFS session[call] OFS "tool" OFS row[call]
+        } else if (call in answered) line[++lines] = started[call] OFS answered[call] OFS session[call] OFS "tool" OFS row[call]
+        else if (turn_end(call) != "") line[++lines] = started[call] OFS turn_end(call) OFS session[call] OFS "unfinished" OFS row[call]
       }
+      if (calls > 0 && paired == 0) {
+        print "usage.sh: no tool call on this branch has a result paired with it, so its time is not measured" > "/dev/stderr"
+        exit
+      }
+      for (index_ = 1; index_ <= lines; index_++) print line[index_]
     }
   ' | sort -t $'\t' -k1,1n -s
 }
