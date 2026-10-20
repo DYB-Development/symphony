@@ -186,6 +186,13 @@ assert_equals "- First: 1m" "$(one_minute_each Bash "make all" |
   "decides a tool call's kind by the first pattern that matches it"
 rm -f "$KINDS"
 
+KINDS="$(mktemp "${TMPDIR:-/tmp}/time_kinds.XXXXXX")"
+{ cat "$SCRIPT_DIR/../rules/time-kinds.tsv"; printf 'Commits\t^Bash$\t^jj describe\n'; } > "$KINDS"
+assert_equals "- Commits: 1m" "$(one_minute_each Bash "jj describe -m \"Fix it\"" |
+  TIME_KINDS_FILE="$KINDS" "$TIME_SPENT" --render | grep '^- Commits:')" \
+  "adds a command to a kind when only the pattern list changes"
+rm -f "$KINDS"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
