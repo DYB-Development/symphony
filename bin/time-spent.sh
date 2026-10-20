@@ -17,13 +17,14 @@ USAGE
 work=$(mktemp -d "${TMPDIR:-/tmp}/time-spent.XXXXXX")
 trap 'rm -rf "$work"' EXIT
 
-awk -F '\t' '
+awk -F '\t' -v idle_cap=600 '
   BEGIN { OFS = "\t" }
   $4 == "tool" && $5 ~ /-scribe$/ { print $1, $2, $5; next }
   $4 == "tool" && $6 == "Agent" && $7 ~ /-scribe$/ { print $1, $2, $7; next }
   $4 == "tool" && $6 == "Agent" { print $1, $2, "run"; next }
   $4 == "tool" { print $1, $2, "Tool calls" }
   $4 == "turn" { print $1, $2, "run" }
+  $4 == "wait" { print $1, ($2 - $1 < idle_cap ? $2 : $1 + idle_cap), "Waiting on the owner" }
 ' > "$work/claims"
 
 cut -f1,2 "$work/claims" | tr '\t' '\n' | sort -n -u > "$work/boundaries"
