@@ -3,16 +3,22 @@ set -euo pipefail
 
 usage() {
   cat >&2 <<'USAGE'
-usage: pattern-scan.sh <owner/repo> <pr-number> <draft.json>
+usage: pattern-scan.sh <owner/repo> <pr-number> <draft.json> [--diff <file>]
 
 Matches every line a pull request adds against the patterns in the packs under
-rules/patterns, and writes each hit beside the review draft.
+rules/patterns, and writes each hit beside the review draft. `--diff` reads the
+pull request's diff from a file instead of fetching it from GitHub.
 See ~/.claude/rules/pr-review.md.
 USAGE
   exit 64
 }
 
-[ $# -eq 3 ] || usage
+diff_file=""
+if [ $# -eq 5 ] && [ "$4" = "--diff" ]; then
+  diff_file=$5
+elif [ $# -ne 3 ]; then
+  usage
+fi
 
 repo=$1
 pr=$2
@@ -22,8 +28,13 @@ packs_dir=${SYMPHONY_PATTERNS_DIR:-"$(cd "$(dirname "$0")/.." && pwd)/rules/patt
 result="${draft%.json}.scan.json"
 rm -f "$result"
 
-diff=$(gh pr diff "$pr" --repo "$repo") ||
-  { echo "pattern-scan.sh: the diff for $repo#$pr could not be read, so nothing was scanned" >&2; exit 70; }
+if [ -n "$diff_file" ]; then
+  diff=$(cat "$diff_file") ||
+    { echo "pattern-scan.sh: $diff_file could not be read, so nothing was scanned" >&2; exit 70; }
+else
+  diff=$(gh pr diff "$pr" --repo "$repo") ||
+    { echo "pattern-scan.sh: the diff for $repo#$pr could not be read, so nothing was scanned" >&2; exit 70; }
+fi
 
 added=$(printf '%s\n' "$diff" | "$(dirname "$0")/diff-lines.sh" | awk '/^RIGHT\t/ { print substr($0, 7) }')
 
