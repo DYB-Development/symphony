@@ -249,7 +249,9 @@ message the transcripts recorded while a worktree of this clone held the branch,
 which includes each scribe run made on it. A message is charged to the worktree
 its own agent run was working in, taken from the paths in that run's tool
 records, so two agents working two branches of one clone at once are not charged
-for each other's tokens. A worktree of the branch that has since been removed is
+for each other's tokens. A session started in another repo is counted too, since
+a hook records each transcript that works in a worktree and the script reads the
+transcripts it recorded for this clone. A worktree of the branch that has since been removed is
 still counted when its folder followed the naming rule in
 `~/.claude/rules/agent-worktrees.md`, and is not counted when it had any other
 name. Work done on another branch is not in them, and neither

@@ -35,9 +35,15 @@ other's tokens.
 A worktree of this branch that has been removed is still found when its folder
 sat next to the main clone and was named after the clone and the branch, with
 any / in the branch written as -.
+A session started outside this clone is charged from the first tool record that
+names a worktree of it, until a tool record names an absolute path outside the
+clone or the session's directory changes.
 Transcripts are read from the directories under $CLAUDE_CONFIG_DIR/projects, or
-~/.claude/projects, whose names carry a path of this clone, and from all of them
-when none does.
+~/.claude/projects, whose names carry a path of this clone. They are also read
+from the transcripts that session-worktrees.tsv, beside that projects directory,
+lists for a worktree of this clone, which is how work done from a session started
+in another repo is found. Every directory under projects is read only when
+neither finds a transcript.
 See ~/.claude/rules/pr-body.md.
 USAGE
   exit 64
