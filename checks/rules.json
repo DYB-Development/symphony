@@ -3,6 +3,10 @@
   "rules": [
     {
       "file": "agents/pr-scribe.md",
+      "contains": "~/.claude/bin/usage.sh --spans | ~/.claude/bin/time-spent.sh --render"
+    },
+    {
+      "file": "agents/pr-scribe.md",
       "contains": "~/.claude/bin/owner-turn.sh \"pull request\" \"Review PR #<n>\" \"<the PR URL>\""
     },
     {
