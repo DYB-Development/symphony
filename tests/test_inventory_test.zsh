@@ -324,6 +324,31 @@ assert_equals "test/quote_test.rb 2 test-title-names-no-behaviour Tests tests" \
 drop_case
 
 new_case
+head_file test/quote_test.rb <<'RB'
+class QuoteTest < Minitest::Test
+  test "works" do
+    quote = quotes(:two_items)
+    assert_equal 30, quote.total
+  end
+end
+RB
+write_diff <<'DIFF'
+diff --git a/test/quote_test.rb b/test/quote_test.rb
+--- a/test/quote_test.rb
++++ b/test/quote_test.rb
+@@ -2,3 +2,4 @@ class QuoteTest < Minitest::Test
+   test "works" do
++    quote = quotes(:two_items)
+     assert_equal 30, quote.total
+   end
+DIFF
+CLAUDE_REPLY='Title: does not name a behaviour
+Body: tests that behaviour' inventory >/dev/null 2>&1
+assert_equals "3" "$(jq -r '.hits[].line' "$RESULT" 2>/dev/null)" \
+  "puts a finding on the first line of the test the diff touches when its title line is untouched"
+drop_case
+
+new_case
 write_added_test
 CLAUDE_REPLY='Title: names a behaviour
 Body: does not test that behaviour' inventory >/dev/null 2>&1
