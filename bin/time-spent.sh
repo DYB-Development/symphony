@@ -92,6 +92,7 @@ totals=$(awk -F '\t' -v claims_file="$work/claims" -v kinds_file="$kinds" '
       kind[claims] = field[3]
       owner[claims] = field[4]
       container[claims] = field[5] == "run"
+      if (field[3] ~ / rounds$/) rounds[field[3]]++
     }
   }
 
@@ -128,9 +129,14 @@ totals=$(awk -F '\t' -v claims_file="$work/claims" -v kinds_file="$kinds" '
     printf "Model time: %s\n", duration(minutes["Model time"])
     for (index_ = 1; index_ <= listed_kinds; index_++)
       printf "%s: %s\n", order[index_], duration(minutes[order[index_]])
+    for (index_ = 1; index_ <= 2; index_++) {
+      name = index_ == 1 ? "Draft-reader rounds" : "Claim-judge rounds"
+      if (name in rounds)
+        printf "%s: %s (%d round%s)\n", name, duration(minutes[name]), rounds[name], (rounds[name] == 1 ? "" : "s")
+    }
     fflush()
     for (name in spent)
-      if (!(name in listed))
+      if (!(name in listed) && !(name in rounds))
         printf "%s: %s\n", name, duration(minutes[name]) | "sort"
     close("sort")
   }
