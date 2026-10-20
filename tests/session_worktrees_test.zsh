@@ -56,6 +56,13 @@ assert_equals "$REPO	$TRANSCRIPT" "$(index)" \
   "records the worktree a session works in beside its transcript"
 drop_repo
 
+new_repo
+tool_call "$REPO" '{"command": "true"}'
+tool_call "$REPO" '{"command": "true"}'
+assert_equals "$REPO	$TRANSCRIPT" "$(index)" \
+  "records a transcript and worktree pair once however many tool calls it makes"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
