@@ -284,6 +284,19 @@ Total: 104" "$("$USAGE")" "reads a transcript under another repo's project direc
 drop_repo
 
 new_repo
+entry msg_1 main "$REPO" 1 1 1 1
+TRANSCRIPT="$CLAUDE_CONFIG_DIR/projects/another-repo/session.jsonl"
+mkdir -p "${TRANSCRIPT:h}"
+entry msg_2 main "$REPO" 10 20 30 40
+printf '%s\t%s\n' "$REPO" "$TRANSCRIPT" > "$CLAUDE_CONFIG_DIR/session-worktrees.tsv"
+assert_equals "Input: 10
+Output: 20
+Cache read: 30
+Cache write: 40
+Total: 100" "$("$USAGE")" "reads only the indexed transcripts when no project directory is named for this clone"
+drop_repo
+
+new_repo
 agent_entry agent_1 pr-scribe msg_1 main "$REPO" 10 20 30 40
 assert_equals "pr-scribe — main — 100" "$("$USAGE" --runs)" \
   "names a scribe run, the branch it ran on and what it cost"
