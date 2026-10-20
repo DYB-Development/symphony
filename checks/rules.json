@@ -2,6 +2,10 @@
   "version": 1,
   "rules": [
     {
+      "file": "rules/pr-body.md",
+      "contains": "All nine sections appear in every body"
+    },
+    {
       "file": "agents/pr-scribe.md",
       "contains": "Tokens Used, Effort and Time Spent are pasted from a script, so a sentence flagged in one of them"
     },

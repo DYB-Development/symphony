@@ -43,15 +43,19 @@ now do or no longer have to deal with.>
 ## Effort
 
 - <one measure per line, from the sessions to the owner's active time>
+
+## Time Spent
+
+- <the total, then one line per kind of work, each as a duration>
 ```
 
-All eight sections appear in every body, always in that order. Nothing else,
+All nine sections appear in every body, always in that order. Nothing else,
 apart from the two trailers below.
 Never add a section that is not on this list, and never drop one — when Design
 Decisions, Code Example, or Out of Scope has nothing to say, the section stays
 and its whole content is the line `Not relevant.` Ticket Billed Against says
 `Not specified.` instead, since a missing ticket is a fact about the billing and
-not an empty section. Tokens Used and Effort say `Not measured.` for the same
+not an empty section. Tokens Used, Effort and Time Spent say `Not measured.` for the same
 reason, since no transcript naming the branch is a fact about the measurement. One Sentence
 Summary and ACs Covered always have something to say.
 
@@ -118,8 +122,8 @@ is a refactor, and writes the title that way.
 ## The `Closes #N` trailer
 
 A PR that resolves an issue ends with `Closes #<n>` on its own line after the
-last section. That trailer is machine-readable wiring, not a ninth section — it
-is one of the two things allowed outside the eight.
+last section. That trailer is machine-readable wiring, not a tenth section — it
+is one of the two things allowed outside the nine.
 
 ## The version stamp
 
@@ -152,7 +156,7 @@ The model is named by its id, never its display name — `claude-opus-5[1m]`, no
 same model the same way, so the script refuses a display name outright.
 
 It is a trailer, not a section. Its `## Generation Metadata` heading comes from
-the script like the rest of it, so it is never counted among the eight, never
+the script like the rest of it, so it is never counted among the nine, never
 written by hand, and the one-sentence rule does not reach it.
 
 ## One sentence means one sentence
@@ -276,6 +280,23 @@ things. A prompt is charged to the branch of the worktree its turn ends in, so
 the prompt that asks for a branch counts on that branch even when the session
 was elsewhere when it was typed. Like Tokens Used it
 is a measurement taken when the body was last written, and it prints
+`Not measured.` when no transcript names the branch.
+
+**Time Spent** — where the branch's time went, so a reader can see how much of
+it was spent waiting on the owner, on the model, on tool calls and on each
+scribe. One line for the total, then one line each for waiting on the owner,
+model time, tool calls, and every scribe that ran on the branch, named by its
+agent type. This section is **generated, not written**:
+`~/.claude/bin/usage.sh --spans | ~/.claude/bin/time-spent.sh --render` prints
+it from the same transcripts as Tokens Used, charged to the branch the same
+way, and the Scribe pastes that output verbatim, directly after Effort. An agent
+is a scribe when its type ends in `-scribe`, and the whole of a scribe's run
+counts in its own line. A tool call made by the main session or by any other
+agent counts as tool calls, and time inside a turn or an agent run that no tool
+call covers counts as model time. Each wait on the owner counts for no more
+than ten minutes, a stretch that two pieces of work share is split evenly
+between them, and the kinds add up to the total. Like Effort it is a
+measurement taken when the body was last written, and it prints
 `Not measured.` when no transcript names the branch.
 
 ## What does not go in a PR body
