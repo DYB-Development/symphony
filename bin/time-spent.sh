@@ -19,6 +19,7 @@ trap 'rm -rf "$work"' EXIT
 
 awk -F '\t' '
   BEGIN { OFS = "\t" }
+  $4 == "tool" && $6 == "Agent" { print $1, $2, $7; next }
   $4 == "tool" { print $1, $2, "Tool calls" }
 ' > "$work/claims"
 
@@ -56,6 +57,11 @@ totals=$(awk -F '\t' -v claims_file="$work/claims" '
     printf "Waiting on the owner: %s\n", duration(spent["Waiting on the owner"])
     printf "Model time: %s\n", duration(spent["Model time"])
     printf "Tool calls: %s\n", duration(spent["Tool calls"])
+    fflush()
+    for (name in spent)
+      if (name != "Waiting on the owner" && name != "Model time" && name != "Tool calls")
+        printf "%s: %s\n", name, duration(spent[name]) | "sort"
+    close("sort")
   }
 ' "$work/boundaries")
 

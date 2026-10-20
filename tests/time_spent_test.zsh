@@ -39,6 +39,16 @@ assert_equals "## Time Spent
 - Tool calls: 1h 30m" "$(span 0 5400 s1 tool "" Bash "bin/rails test" | "$TIME_SPENT" --render)" \
   "renders a total and one line per kind"
 
+assert_equals "## Time Spent
+
+- Total: 15m
+- Waiting on the owner: 0m
+- Model time: 0m
+- Tool calls: 0m
+- pr-scribe: 5m
+- review-scribe: 10m" "$({ span 0 600 s1 tool "" Agent review-scribe; span 600 900 s1 tool "" Agent pr-scribe; } | "$TIME_SPENT" --render)" \
+  "renders one line per scribe that ran, named by its agent type"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
