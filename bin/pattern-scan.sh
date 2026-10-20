@@ -96,6 +96,10 @@ is_valid_expression() {
   [ "$status" -ne 2 ]
 }
 
+is_test_file() {
+  grep -q -E '(^|/)(test|tests|spec|__tests__)/|_test\.|_spec\.|\.test\.|\.spec\.' <<<"$1"
+}
+
 marked_names() {
   printf '%s' "$1" | grep -o -E 'symphony-allow: [A-Za-z0-9_-]+' | sed 's/^symphony-allow: //' || true
 }
@@ -107,9 +111,13 @@ while IFS= read -r pattern; do
   name=$(jq -r '.name' <<<"$pattern")
   is_valid_expression "$regex" ||
     { echo "pattern-scan.sh: $(jq -r '.pack' <<<"$pattern") pattern $name is not a valid expression" >&2; exit 70; }
+  skips_test_files=$(jq -r '.skips_test_files // false' <<<"$pattern")
   matches=$(printf '%s\n' "$added" | cut -f3- | grep -n -E -e "$regex" | cut -d: -f1 || true)
   for index in $matches; do
     row=$(printf '%s\n' "$added" | sed -n "${index}p")
+    if [ "$skips_test_files" = true ] && is_test_file "$(printf '%s' "$row" | cut -f1)"; then
+      continue
+    fi
     if marked_names "$row" | grep -qxF -- "$name"; then
       skipped=$(jq -c --arg path "$(printf '%s' "$row" | cut -f1)" --argjson line "$(printf '%s' "$row" | cut -f2)" \
         --arg pattern "$name" '. + [{path: $path, line: $line, pattern: $pattern}]' <<<"$skipped")
