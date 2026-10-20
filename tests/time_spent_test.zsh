@@ -36,7 +36,13 @@ assert_equals "## Time Spent
 - Total: 1h 30m
 - Waiting on the owner: 0m
 - Model time: 0m
-- Tool calls: 1h 30m" "$(span 0 5400 s1 tool "" Bash "bin/rails test" | "$TIME_SPENT" --render)" \
+- Worktree setup: 0m
+- Reading: 0m
+- Test-first cycles: 0m
+- Commits: 0m
+- Ticking criteria and recording decisions: 0m
+- Full-suite checks: 0m
+- Other tool calls: 1h 30m" "$(span 0 5400 s1 tool "" Bash "bin/pr-wait.sh" | "$TIME_SPENT" --render)" \
   "renders a total and one line per kind"
 
 assert_equals "## Time Spent
@@ -44,7 +50,13 @@ assert_equals "## Time Spent
 - Total: 15m
 - Waiting on the owner: 0m
 - Model time: 0m
-- Tool calls: 0m
+- Worktree setup: 0m
+- Reading: 0m
+- Test-first cycles: 0m
+- Commits: 0m
+- Ticking criteria and recording decisions: 0m
+- Full-suite checks: 0m
+- Other tool calls: 0m
 - pr-scribe: 5m
 - review-scribe: 10m" "$({ span 0 600 s1 tool "" Agent review-scribe; span 600 900 s1 tool "" Agent pr-scribe; } | "$TIME_SPENT" --render)" \
   "renders one line per scribe that ran, named by its agent type"
@@ -57,11 +69,17 @@ assert_equals "## Time Spent
 - Total: 10m
 - Waiting on the owner: 0m
 - Model time: 0m
-- Tool calls: 0m
+- Worktree setup: 0m
+- Reading: 0m
+- Test-first cycles: 0m
+- Commits: 0m
+- Ticking criteria and recording decisions: 0m
+- Full-suite checks: 0m
+- Other tool calls: 0m
 - pr-scribe: 10m" "$({ span 0 600 s1 tool "" Agent pr-scribe; span 60 360 s1 tool pr-scribe Bash "git diff"; } | "$TIME_SPENT" --render)" \
   "counts the whole of a scribe's run, its own tool calls included, in that scribe's line"
 
-assert_equals "- Tool calls: 5m" "$(span 0 300 s1 tool builder Bash "bin/rails test" | "$TIME_SPENT" --render | grep '^- Tool calls:')" \
+assert_equals "- Other tool calls: 5m" "$(span 0 300 s1 tool builder Bash "bin/pr-wait.sh" | "$TIME_SPENT" --render | grep '^- Other tool calls:')" \
   "counts a tool call made by an agent other than a scribe as tool calls"
 
 assert_equals "## Time Spent
@@ -69,7 +87,13 @@ assert_equals "## Time Spent
 - Total: 20m
 - Waiting on the owner: 0m
 - Model time: 16m
-- Tool calls: 4m" "$({ span 0 600 s1 turn "" "" ""; span 120 360 s1 tool "" Bash "bin/rails test"; span 900 1500 s1 tool "" Agent builder; } | "$TIME_SPENT" --render)" \
+- Worktree setup: 0m
+- Reading: 0m
+- Test-first cycles: 0m
+- Commits: 0m
+- Ticking criteria and recording decisions: 0m
+- Full-suite checks: 0m
+- Other tool calls: 4m" "$({ span 0 600 s1 turn "" "" ""; span 120 360 s1 tool "" Bash "bin/pr-wait.sh"; span 900 1500 s1 tool "" Agent builder; } | "$TIME_SPENT" --render)" \
   "counts the time in a turn or an agent run that no tool call covers as model time"
 
 assert_equals "- Waiting on the owner: 10m" "$(span 0 3600 s1 wait "" "" "" | "$TIME_SPENT" --render | grep '^- Waiting on the owner:')" \
@@ -80,7 +104,13 @@ assert_equals "## Time Spent
 - Total: 10m
 - Waiting on the owner: 5m
 - Model time: 0m
-- Tool calls: 5m" "$({ span 0 600 s1 wait "" "" ""; span 0 600 s1 tool "" Bash "bin/pr-wait.sh"; } | "$TIME_SPENT" --render)" \
+- Worktree setup: 0m
+- Reading: 0m
+- Test-first cycles: 0m
+- Commits: 0m
+- Ticking criteria and recording decisions: 0m
+- Full-suite checks: 0m
+- Other tool calls: 5m" "$({ span 0 600 s1 wait "" "" ""; span 0 600 s1 tool "" Bash "bin/pr-wait.sh"; } | "$TIME_SPENT" --render)" \
   "splits a stretch two spans share evenly between them"
 
 minutes_of_kinds_and_total() {
