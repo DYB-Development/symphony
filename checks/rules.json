@@ -3,6 +3,10 @@
   "rules": [
     {
       "file": "rules/pr-body.md",
+      "contains": "draft-reader rounds and claim-judge rounds"
+    },
+    {
+      "file": "rules/pr-body.md",
       "contains": "`~/.claude/rules/time-kinds.tsv`"
     },
     {
