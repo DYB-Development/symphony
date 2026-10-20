@@ -545,6 +545,12 @@ assert_equals "1767398400	1767398520	session_1	tool		Agent	pr-scribe" "$("$USAGE
   "names the type of the agent a call started in place of a command"
 drop_repo
 
+new_repo
+turn_entry turn_1 session_1 "$REPO" 2026-01-03T00:00:00Z 90000
+assert_equals "1767398310	1767398400	session_1	turn			" "$("$USAGE" --spans)" \
+  "prints a row for a turn, starting its duration before it ended"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

@@ -18,7 +18,7 @@ first, each with the branch it worked on and what it cost, whichever branch is
 checked out now. `--rows` prints what the owner put into this branch instead,
 one row per measure, oldest first, as the time, the session, the kind of
 measure and its amount, separated by tabs. `--spans` prints one timed row per
-tool call on this branch instead, oldest first, as its start, its end, the
+tool call and turn on this branch instead, oldest first, as its start, its end, the
 session, the kind, the agent type, the tool and the first line of its command,
 separated by tabs. `--agent-run` prints the model and
 the total tokens of the latest run of one agent type on this branch, separated by
@@ -375,6 +375,9 @@ list_spans() {
       started[call] = $9
       order[++calls] = call
       row[call] = $12 OFS "tool" OFS $4 OFS $14 OFS $15
+    }
+    $10 == "turn" && $2 == branch && !counted[$1]++ {
+      print $9 - int($11 / 1000), $9, $12, "turn", "", "", ""
     }
     $10 == "answer" && !(call in answered) { answered[call] = $9 }
     $10 == "backgrounded" { background[call] = 1 }
