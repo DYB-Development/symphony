@@ -6,7 +6,8 @@ usage() {
 usage: usage.sh --spans | time-spent.sh --render
 
 Prints the PR body's Time Spent section from the spans `usage.sh --spans`
-prints on standard input: the total, then one line per kind of work.
+prints on standard input: the total, then one line per kind of work. It says
+`Not measured.` when no span names this branch.
 See ~/.claude/rules/pr-body.md.
 USAGE
   exit 64
@@ -98,4 +99,8 @@ totals=$(awk -F '\t' -v claims_file="$work/claims" '
 ' "$work/boundaries")
 
 printf '## Time Spent\n\n'
-printf '%s\n' "$totals" | sed 's/^/- /'
+if [ -n "$totals" ]; then
+  printf '%s\n' "$totals" | sed 's/^/- /'
+else
+  printf 'Not measured.\n'
+fi

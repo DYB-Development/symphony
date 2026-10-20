@@ -100,6 +100,10 @@ minutes_of_kinds_and_total() {
 assert_equals "3 3" "$({ span 0 90 s1 tool "" Bash "git status"; span 200 290 s1 wait "" "" ""; } | "$TIME_SPENT" --render | minutes_of_kinds_and_total)" \
   "renders kinds whose minutes add up to the total"
 
+assert_equals "## Time Spent
+
+Not measured." "$(: | "$TIME_SPENT" --render)" "renders Not measured when there is no span on the branch"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
