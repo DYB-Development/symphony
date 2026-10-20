@@ -179,6 +179,13 @@ assert_equals "- Full-suite checks: 5m" "$(one_minute_each Bash "bun run typeche
   "$TIME_SPENT" --render | grep '^- Full-suite checks:')" \
   "counts the type check, the whole unit suite and the conformance check as full-suite checks"
 
+KINDS="$(mktemp "${TMPDIR:-/tmp}/time_kinds.XXXXXX")"
+printf 'kind\ttool\tcommand\nFirst\t^Bash$\tmake\nSecond\t^Bash$\tmake all\n' > "$KINDS"
+assert_equals "- First: 1m" "$(one_minute_each Bash "make all" |
+  TIME_KINDS_FILE="$KINDS" "$TIME_SPENT" --render | grep '^- First:')" \
+  "decides a tool call's kind by the first pattern that matches it"
+rm -f "$KINDS"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
