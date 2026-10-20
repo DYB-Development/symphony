@@ -222,6 +222,10 @@ assert_equals "- Unfinished tool calls: 2m" "$({ span 0 300 s1 turn "" "" ""; sp
 assert_equals "" "$(span 0 60 s1 tool "" Bash "git status" | "$TIME_SPENT" --render | grep '^- Unfinished tool calls:')" \
   "prints no unfinished tool calls line when every tool call finished"
 
+assert_equals "- pr-scribe: 20m" "$({ span 0 300 s1 turn "" "" ""; span 0 1200 s1 tool "" Agent pr-scribe
+  span 300 1500 s1 wait "" "" ""; } | "$TIME_SPENT" --render | grep '^- pr-scribe:')" \
+  "counts in full an agent that kept running after the turn that started it ended"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

@@ -44,7 +44,7 @@ awk -F '\t' -v idle_cap=600 -v kinds_file="$kinds" '
   ($4 == "tool" || $4 == "unfinished") && $5 ~ /-scribe$/ { print $1, $2, $5, $5; next }
   $4 == "unfinished" { print $1, $2, "Unfinished tool calls"; next }
   $4 == "tool" && $6 == "Agent" && $7 ~ /-scribe$/ { print $1, $2, $7, $7, "run"; next }
-  $4 == "tool" && $6 == "Agent" { print $1, $2, "run"; next }
+  $4 == "tool" && $6 == "Agent" { print $1, $2, "run", "", "agent"; next }
   $4 == "tool" { print $1, $2, kind_of($6, $7) }
   $4 == "turn" { print $1, $2, "run" }
   $4 == "wait" { print $1, ($2 - $1 < idle_cap ? $2 : $1 + idle_cap), "Waiting on the owner" }
@@ -90,6 +90,7 @@ totals=$(awk -F '\t' -v claims_file="$work/claims" -v kinds_file="$kinds" "$form
       kind[claims] = field[3]
       owner[claims] = field[4]
       container[claims] = field[5] == "run"
+      agent[claims] = field[5] != ""
       if (field[3] ~ / rounds$/) rounds[field[3]]++
       if (field[3] == "Unfinished tool calls") unfinished = 1
     }
@@ -104,10 +105,14 @@ totals=$(awk -F '\t' -v claims_file="$work/claims" -v kinds_file="$kinds" "$form
       finish = boundary[index_ + 1]
       sharing = 0
       running = 0
+      agent_running = 0
       split("", covered)
       split("", held)
+      for (claim = 1; claim <= claims; claim++)
+        if (agent[claim] && from[claim] <= start && to[claim] >= finish) agent_running = 1
       for (claim = 1; claim <= claims; claim++) {
         if (from[claim] > start || to[claim] < finish) continue
+        if (agent_running && kind[claim] == "Waiting on the owner") continue
         if (kind[claim] == "run") running = 1
         else if (container[claim]) held[owner[claim]] = kind[claim]
         else {
