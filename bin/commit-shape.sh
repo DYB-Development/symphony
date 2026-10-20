@@ -70,8 +70,9 @@ exception_of() {
 }
 
 commits='[]'
-while IFS= read -r sha; do
+while read -r sha parents; do
   [ -n "$sha" ] || continue
+  [ "$parents" -lt 2 ] || continue
   tests=0
   code=0
   docs=0
@@ -99,6 +100,6 @@ while IFS= read -r sha; do
     --arg shape "$shape" --arg exception "$exception" \
     '. + [{sha: $sha, subject: $subject, code_files: $code_files, shape: $shape,
            exception: (if $exception == "" then null else $exception end)}]' <<<"$commits")
-done < <(gh api "repos/$repo/pulls/$pr/commits" --paginate --jq '.[].sha')
+done < <(gh api "repos/$repo/pulls/$pr/commits" --paginate --jq '.[] | "\(.sha) \(.parents | length)"')
 
 jq -n --argjson commits "$commits" '{commits: $commits}' > "$result"
