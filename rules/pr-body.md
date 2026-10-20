@@ -283,17 +283,20 @@ is a measurement taken when the body was last written, and it prints
 `Not measured.` when no transcript names the branch.
 
 **Time Spent** — where the branch's time went, so a reader can see how much of
-it was spent waiting on the owner, on the model, on tool calls and on each
-scribe. One line for the total, then one line each for waiting on the owner,
-model time, tool calls, and every scribe that ran on the branch, named by its
-agent type. This section is **generated, not written**:
+it was spent waiting on the owner, on the model, on each kind of tool call and
+on each scribe. One line for the total, then one line each for waiting on the
+owner, model time, worktree setup, reading, test-first cycles, commits, ticking
+criteria and recording decisions, full-suite checks, other tool calls, and
+every scribe that ran on the branch, named by its agent type. This section is **generated, not written**:
 `~/.claude/bin/usage.sh --spans | ~/.claude/bin/time-spent.sh --render` prints
 it from the same transcripts as Tokens Used, charged to the branch the same
 way, and the Scribe pastes that output verbatim, directly after Effort. An agent
 is a scribe when its type ends in `-scribe`, and the whole of a scribe's run
 counts in its own line. A tool call made by the main session or by any other
-agent counts as tool calls, and time inside a turn or an agent run that no tool
-call covers counts as model time. Each wait on the owner counts for no more
+agent takes the kind of the first entry in `~/.claude/rules/time-kinds.tsv`
+that matches its tool and command, and other tool calls when none does, so a
+command joins a kind by adding a line there. Time inside a turn or an agent run
+that no tool call covers counts as model time. Each wait on the owner counts for no more
 than ten minutes, a stretch that two pieces of work share is split evenly
 between them, and the kinds add up to the total. Like Effort it is a
 measurement taken when the body was last written, and it prints
