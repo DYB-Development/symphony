@@ -85,6 +85,12 @@ assert_equals "$REPO	${TRANSCRIPT:r}/subagents/agent-agent_1.jsonl" "$(index)" \
   "records a subagent's own transcript rather than its session's"
 drop_repo
 
+new_repo
+mkdir -p "$INDEX"
+tool_call "$REPO" '{"command": "true"}' 2>/dev/null
+assert_equals "0" "$?" "lets the tool call run when the index cannot be written"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

@@ -49,6 +49,6 @@ record() {
 }
 
 case "${1:-}" in
-  record) [ $# -eq 1 ] || usage; record ;;
+  record) [ $# -eq 1 ] || usage; record 2>/dev/null; exit 0 ;;
   *) usage ;;
 esac
