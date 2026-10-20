@@ -21,7 +21,9 @@ measure and its amount, separated by tabs. `--spans` prints one timed row per
 tool call, turn and wait on this branch instead, oldest first, as its start,
 its end, the session, the kind, the agent type, the tool and the first line of
 its command, separated by tabs. A tool call whose result was never recorded
-is printed with the kind unfinished, ending when its turn ended. `--agent-run`
+is printed with the kind unfinished, ending when its turn ended. It prints no
+spans, and warns on standard error, when no tool call on this branch has a
+result paired with it or no turn on it records a duration. `--agent-run`
 prints the model and the total tokens of the latest run of one agent type on
 this branch, separated by a tab, and prints nothing when the transcripts hold
 no such run.
