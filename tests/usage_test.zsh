@@ -580,6 +580,13 @@ assert_equals "" "$("$USAGE" --spans)" \
   "prints no row for a background agent with no notification that it finished"
 drop_repo
 
+new_repo
+call_entry toolu_1 session_1 "$REPO" 2026-01-03T00:00:00Z "" Bash '{"command": "bin/rails server"}'
+turn_entry turn_1 session_1 "$REPO" 2026-01-03T00:02:00Z 120000
+assert_equals "1767398400	1767398520	session_1	unfinished		Bash	bin/rails server" "$("$USAGE" --spans | grep '	unfinished	')" \
+  "prints an unfinished row for a tool call with no recorded result, ending when its turn ended"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
