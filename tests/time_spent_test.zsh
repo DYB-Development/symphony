@@ -219,6 +219,9 @@ assert_equals "- Unfinished tool calls: 2m" "$({ span 0 300 s1 turn "" "" ""; sp
   "$TIME_SPENT" --render | grep '^- Unfinished tool calls:')" \
   "counts a tool call that never finished on an unfinished tool calls line"
 
+assert_equals "" "$(span 0 60 s1 tool "" Bash "git status" | "$TIME_SPENT" --render | grep '^- Unfinished tool calls:')" \
+  "prints no unfinished tool calls line when every tool call finished"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
