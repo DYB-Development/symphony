@@ -3,12 +3,13 @@ set -euo pipefail
 
 usage() {
   cat >&2 <<'USAGE'
-usage: test-inventory.sh <owner/repo> <pr-number> <draft.json>
+usage: test-inventory.sh <owner/repo> <pr-number> <draft.json> [--diff <file>]
        test-inventory.sh --titles <sha>
 
 Lists every test a pull request adds or changes, with its title, file, line and
-number of assertions, and writes the list beside the review draft. `--titles`
-prints the title of every test in the current repo at one revision.
+number of assertions, and writes the list beside the review draft. `--diff`
+reads the pull request's diff from a file instead of fetching it from GitHub.
+`--titles` prints the title of every test in the current repo at one revision.
 See ~/.claude/rules/review-checks.md.
 USAGE
   exit 64
@@ -67,7 +68,12 @@ if [ "${1:-}" = "--titles" ]; then
   exit 0
 fi
 
-[ $# -eq 3 ] || usage
+diff_file=""
+if [ $# -eq 5 ] && [ "$4" = "--diff" ]; then
+  diff_file=$5
+elif [ $# -ne 3 ]; then
+  usage
+fi
 
 repo=$1
 pr=$2
@@ -76,7 +82,11 @@ draft=$3
 result="${draft%.json}.tests.json"
 rm -f "$result"
 
-diff=$(gh pr diff "$pr" --repo "$repo")
+if [ -n "$diff_file" ]; then
+  diff=$(cat "$diff_file")
+else
+  diff=$(gh pr diff "$pr" --repo "$repo")
+fi
 head=$(gh pr view "$pr" --repo "$repo" --json headRefOid --jq '.headRefOid')
 
 added=$(printf '%s\n' "$diff" | "$(dirname "$0")/diff-lines.sh" | awk -F'\t' '$1 == "RIGHT" { print $2 "\t" $3 }')
