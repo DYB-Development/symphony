@@ -306,7 +306,11 @@ owner counts for no more than ten minutes, and an agent still running while the
 owner waits takes that time in full. Any other stretch that two pieces of work
 share is split evenly between them, and the kinds add up to the total. Like Effort it is a
 measurement taken when the body was last written, and it prints
-`Not measured.` when no transcript names the branch.
+`Not measured.` when no transcript names the branch. It also prints
+`Not measured.`, with a warning saying which was missing, when the branch has
+tool calls but no result can be paired with any of them, or has turns but no
+turn records a duration, since either means the transcripts no longer carry
+what it reads.
 
 ## What does not go in a PR body
 

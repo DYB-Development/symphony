@@ -3,6 +3,10 @@
   "rules": [
     {
       "file": "rules/pr-body.md",
+      "contains": "turn records a duration, since either means the transcripts no longer carry"
+    },
+    {
+      "file": "rules/pr-body.md",
       "contains": "unfinished tool calls when any were found"
     },
     {
