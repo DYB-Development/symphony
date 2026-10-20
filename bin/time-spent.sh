@@ -39,8 +39,9 @@ awk -F '\t' -v idle_cap=600 -v kinds_file="$kinds" '
       command_pattern[patterns] = field[3]
     }
   }
-  $4 == "tool" && $5 ~ /-scribe$/ { print $1, $2, $5; next }
-  $4 == "tool" && $6 == "Agent" && $7 ~ /-scribe$/ { print $1, $2, $7; next }
+  $4 == "tool" && $5 ~ /-scribe$/ && $7 ~ /read-draft\.sh/ { print $1, $2, "Draft-reader rounds", $5; next }
+  $4 == "tool" && $5 ~ /-scribe$/ { print $1, $2, $5, $5; next }
+  $4 == "tool" && $6 == "Agent" && $7 ~ /-scribe$/ { print $1, $2, $7, $7, "run"; next }
   $4 == "tool" && $6 == "Agent" { print $1, $2, "run"; next }
   $4 == "tool" { print $1, $2, kind_of($6, $7) }
   $4 == "turn" { print $1, $2, "run" }
@@ -88,6 +89,8 @@ totals=$(awk -F '\t' -v claims_file="$work/claims" -v kinds_file="$kinds" '
       from[claims] = field[1] + 0
       to[claims] = field[2] + 0
       kind[claims] = field[3]
+      owner[claims] = field[4]
+      container[claims] = field[5] == "run"
     }
   }
 
@@ -100,11 +103,19 @@ totals=$(awk -F '\t' -v claims_file="$work/claims" -v kinds_file="$kinds" '
       finish = boundary[index_ + 1]
       sharing = 0
       running = 0
+      split("", covered)
+      split("", held)
       for (claim = 1; claim <= claims; claim++) {
         if (from[claim] > start || to[claim] < finish) continue
         if (kind[claim] == "run") running = 1
-        else share[++sharing] = kind[claim]
+        else if (container[claim]) held[owner[claim]] = kind[claim]
+        else {
+          share[++sharing] = kind[claim]
+          if (owner[claim] != "") covered[owner[claim]] = 1
+        }
       }
+      for (run in held)
+        if (!(run in covered)) share[++sharing] = held[run]
       if (sharing == 0 && running) share[++sharing] = "Model time"
       for (shared = 1; shared <= sharing; shared++) spent[share[shared]] += (finish - start) / sharing
       if (sharing > 0) total += finish - start

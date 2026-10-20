@@ -193,6 +193,11 @@ assert_equals "- Commits: 1m" "$(one_minute_each Bash "jj describe -m \"Fix it\"
   "adds a command to a kind when only the pattern list changes"
 rm -f "$KINDS"
 
+assert_equals "- Draft-reader rounds: 1m" "$({ span 0 600 s1 tool "" Agent pr-scribe
+  span 100 160 s1 tool pr-scribe Bash "~/.claude/bin/read-draft.sh /tmp/run.x/body.md"; } |
+  "$TIME_SPENT" --render | grep '^- Draft-reader rounds:')" \
+  "counts a scribe's call that starts the draft reader as draft-reader rounds"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
