@@ -83,6 +83,23 @@ assert_equals "## Time Spent
 - Tool calls: 5m" "$({ span 0 600 s1 wait "" "" ""; span 0 600 s1 tool "" Bash "bin/pr-wait.sh"; } | "$TIME_SPENT" --render)" \
   "splits a stretch two spans share evenly between them"
 
+minutes_of_kinds_and_total() {
+  awk -F ': ' '
+    /^- / {
+      minutes = 0
+      count = split($2, part, " ")
+      for (index_ = 1; index_ <= count; index_++)
+        minutes += part[index_] ~ /h$/ ? part[index_] * 60 : part[index_] + 0
+      if ($1 == "- Total") total = minutes
+      else kinds += minutes
+    }
+    END { print kinds, total }
+  '
+}
+
+assert_equals "3 3" "$({ span 0 90 s1 tool "" Bash "git status"; span 200 290 s1 wait "" "" ""; } | "$TIME_SPENT" --render | minutes_of_kinds_and_total)" \
+  "renders kinds whose minutes add up to the total"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

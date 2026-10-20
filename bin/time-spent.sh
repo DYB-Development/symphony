@@ -30,10 +30,27 @@ awk -F '\t' -v idle_cap=600 '
 cut -f1,2 "$work/claims" | tr '\t' '\n' | sort -n -u > "$work/boundaries"
 
 totals=$(awk -F '\t' -v claims_file="$work/claims" '
-  function duration(seconds,   minutes) {
-    minutes = int(seconds / 60)
+  function duration(minutes) {
     if (minutes < 60) return minutes "m"
     return int(minutes / 60) "h " minutes % 60 "m"
+  }
+
+  function apportion(   name, counted, largest, picked) {
+    counted = 0
+    for (name in spent) {
+      minutes[name] = int(spent[name] / 60)
+      counted += minutes[name]
+    }
+    for (; counted < int(total / 60); counted++) {
+      largest = -1
+      for (name in spent)
+        if (!(name in rounded_up) && spent[name] - minutes[name] * 60 > largest) {
+          largest = spent[name] - minutes[name] * 60
+          picked = name
+        }
+      minutes[picked]++
+      rounded_up[picked] = 1
+    }
   }
 
   BEGIN {
@@ -64,14 +81,18 @@ totals=$(awk -F '\t' -v claims_file="$work/claims" '
       for (shared = 1; shared <= sharing; shared++) spent[share[shared]] += (finish - start) / sharing
       if (sharing > 0) total += finish - start
     }
-    printf "Total: %s\n", duration(total)
-    printf "Waiting on the owner: %s\n", duration(spent["Waiting on the owner"])
-    printf "Model time: %s\n", duration(spent["Model time"])
-    printf "Tool calls: %s\n", duration(spent["Tool calls"])
+    spent["Waiting on the owner"] += 0
+    spent["Model time"] += 0
+    spent["Tool calls"] += 0
+    apportion()
+    printf "Total: %s\n", duration(int(total / 60))
+    printf "Waiting on the owner: %s\n", duration(minutes["Waiting on the owner"])
+    printf "Model time: %s\n", duration(minutes["Model time"])
+    printf "Tool calls: %s\n", duration(minutes["Tool calls"])
     fflush()
     for (name in spent)
       if (name != "Waiting on the owner" && name != "Model time" && name != "Tool calls")
-        printf "%s: %s\n", name, duration(spent[name]) | "sort"
+        printf "%s: %s\n", name, duration(minutes[name]) | "sort"
     close("sort")
   }
 ' "$work/boundaries")
