@@ -7,6 +7,7 @@ usage: usage.sh
        usage.sh --render
        usage.sh --runs
        usage.sh --rows
+       usage.sh --spans
        usage.sh --agent-run <agent type>
 
 Totals the tokens the session transcripts recorded for this branch, broken down
@@ -16,7 +17,10 @@ branch. `--runs` lists every scribe run recorded for this clone instead, oldest
 first, each with the branch it worked on and what it cost, whichever branch is
 checked out now. `--rows` prints what the owner put into this branch instead,
 one row per measure, oldest first, as the time, the session, the kind of
-measure and its amount, separated by tabs. `--agent-run` prints the model and
+measure and its amount, separated by tabs. `--spans` prints one timed row per
+tool call on this branch instead, oldest first, as its start, its end, the
+session, the kind, the agent type, the tool and the first line of its command,
+separated by tabs. `--agent-run` prints the model and
 the total tokens of the latest run of one agent type on this branch, separated by
 a tab, and prints nothing when the transcripts hold no such run.
 A message is charged to the branch the worktree it was working in held when it
@@ -36,7 +40,7 @@ USAGE
 }
 
 case "${1:-}" in
-  "" | --render | --runs | --rows) ;;
+  "" | --render | --runs | --rows | --spans) ;;
   --agent-run) [ -n "${2:-}" ] || usage ;;
   *) usage ;;
 esac
@@ -168,7 +172,7 @@ def effort:
     { kind: "answered", amount: (.toolUseResult.answers | length) }
   else empty end;
 
-def row($id; $kind; $amount):
+def fields($id; $kind; $amount):
   [ $id,
     (.timestamp | stamp),
     (.cwd // ""),
@@ -183,14 +187,30 @@ def row($id; $kind; $amount):
     $amount,
     (.sessionId // ""),
     (.message.model // "")
-  ]
-  | @tsv;
+  ];
+
+def row($id; $kind; $amount):
+  fields($id; $kind; $amount) | @tsv;
+
+def first_line:
+  split("\n")[0];
+
+def spans:
+  if .type == "assistant" then
+    .message.content[]? | select(.type? == "tool_use")
+    | { id, kind: "call", tool: .name, detail: (.input.command // "" | first_line) }
+  else
+    .message.content | arrays | .[] | select(.type? == "tool_result")
+    | { id: .tool_use_id, kind: "answer" }
+  end;
 
 select(type == "object")
 | select(.type == "assistant" or .type == "user" or .subtype == "turn_duration")
 | . as $entry
 | if .type == "assistant" then row(.message.id // ""; "tokens"; 0) else row(""; ""; 0) end,
-  (effort | . as $effort | $entry | row("\(.uuid // ""):\($effort.kind)"; $effort.kind; $effort.amount))
+  (effort | . as $effort | $entry | row("\(.uuid // ""):\($effort.kind)"; $effort.kind; $effort.amount)),
+  (spans | . as $span | $entry
+    | fields("\($span.id):\($span.kind)"; $span.kind; 0) + [$span.tool // "", $span.detail // ""] | @tsv)
 JQ
 )
 
@@ -258,7 +278,7 @@ BEGIN {
   if ($11 == "turn") turn_ended[$13] = $2 + 0
   if ($1 == "" || working == "") next
 
-  rest = $4 OFS $5 OFS $6 OFS $7 OFS $8 OFS $9 OFS $2 OFS $11 OFS $12 OFS $13 OFS $14
+  rest = $4 OFS $5 OFS $6 OFS $7 OFS $8 OFS $9 OFS $2 OFS $11 OFS $12 OFS $13 OFS $14 OFS $15 OFS $16
   if ($11 == "prompt" && ($13 in turn_ended)) {
     held++
     held_id[held] = $1 ":waited"
@@ -340,6 +360,28 @@ list_rows() {
   ' | sort -t $'\t' -k1,1n -s
 }
 
+list_spans() {
+  awk -F '\t' -v branch="$branch" '
+    BEGIN { OFS = "\t" }
+    {
+      call = $1
+      sub(/:[a-z]+$/, "", call)
+    }
+    $10 == "call" && $2 == branch && !(call in started) {
+      started[call] = $9
+      order[++calls] = call
+      row[call] = $12 OFS "tool" OFS $4 OFS $14 OFS $15
+    }
+    $10 == "answer" && !(call in ended) { ended[call] = $9 }
+    END {
+      for (index_ = 1; index_ <= calls; index_++) {
+        call = order[index_]
+        if (call in ended) print started[call], ended[call], row[call]
+      }
+    }
+  ' | sort -t $'\t' -k1,1n -s
+}
+
 agent_run() {
   sort -t $'\t' -k9,9n | awk -F '\t' -v branch="$branch" -v type="$1" '
     $2 == branch && $4 == type && $10 == "tokens" && !counted[$1]++ {
@@ -354,6 +396,11 @@ agent_run() {
 
 if [ "${1:-}" = "--agent-run" ]; then
   attributed | agent_run "$2"
+  exit 0
+fi
+
+if [ "${1:-}" = "--spans" ]; then
+  attributed | list_spans
   exit 0
 fi
 
