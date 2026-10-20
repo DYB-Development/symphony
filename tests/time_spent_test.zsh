@@ -61,6 +61,9 @@ assert_equals "## Time Spent
 - pr-scribe: 10m" "$({ span 0 600 s1 tool "" Agent pr-scribe; span 60 360 s1 tool pr-scribe Bash "git diff"; } | "$TIME_SPENT" --render)" \
   "counts the whole of a scribe's run, its own tool calls included, in that scribe's line"
 
+assert_equals "- Tool calls: 5m" "$(span 0 300 s1 tool builder Bash "bin/rails test" | "$TIME_SPENT" --render | grep '^- Tool calls:')" \
+  "counts a tool call made by an agent other than a scribe as tool calls"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
