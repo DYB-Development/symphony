@@ -40,6 +40,7 @@ awk -F '\t' -v idle_cap=600 -v kinds_file="$kinds" '
     }
   }
   $4 == "tool" && $5 ~ /-scribe$/ && $7 ~ /read-draft\.sh/ { print $1, $2, "Draft-reader rounds", $5; next }
+  $4 == "tool" && $5 ~ /-scribe$/ && $7 ~ /judge-claims\.sh/ { print $1, $2, "Claim-judge rounds", $5; next }
   $4 == "tool" && $5 ~ /-scribe$/ { print $1, $2, $5, $5; next }
   $4 == "tool" && $6 == "Agent" && $7 ~ /-scribe$/ { print $1, $2, $7, $7, "run"; next }
   $4 == "tool" && $6 == "Agent" { print $1, $2, "run"; next }

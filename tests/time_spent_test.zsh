@@ -198,6 +198,11 @@ assert_equals "- Draft-reader rounds: 1m" "$({ span 0 600 s1 tool "" Agent pr-sc
   "$TIME_SPENT" --render | grep '^- Draft-reader rounds:')" \
   "counts a scribe's call that starts the draft reader as draft-reader rounds"
 
+assert_equals "- Claim-judge rounds: 2m" "$({ span 0 600 s1 tool "" Agent review-scribe
+  span 100 220 s1 tool review-scribe Bash "~/.claude/bin/judge-claims.sh ~/projects/app/.review-12.claims.json"; } |
+  "$TIME_SPENT" --render | grep '^- Claim-judge rounds:')" \
+  "counts a scribe's call that starts the claim judge as claim-judge rounds"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
