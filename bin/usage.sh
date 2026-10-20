@@ -20,9 +20,11 @@ one row per measure, oldest first, as the time, the session, the kind of
 measure and its amount, separated by tabs. `--spans` prints one timed row per
 tool call, turn and wait on this branch instead, oldest first, as its start,
 its end, the session, the kind, the agent type, the tool and the first line of
-its command, separated by tabs. `--agent-run` prints the model and the total
-tokens of the latest run of one agent type on this branch, separated by
-a tab, and prints nothing when the transcripts hold no such run.
+its command, separated by tabs. A tool call whose result was never recorded
+is printed with the kind unfinished, ending when its turn ended. `--agent-run`
+prints the model and the total tokens of the latest run of one agent type on
+this branch, separated by a tab, and prints nothing when the transcripts hold
+no such run.
 A message is charged to the branch the worktree it was working in held when it
 was recorded, read from that worktree's own reflog. The worktree comes from the
 absolute paths in that agent run's own tool records, carried forward to the
@@ -374,8 +376,10 @@ list_spans() {
     $10 == "call" && $2 == branch && !(call in started) {
       started[call] = $9
       order[++calls] = call
-      row[call] = $12 OFS "tool" OFS $4 OFS $14 OFS $15
+      session[call] = $12
+      row[call] = $4 OFS $14 OFS $15
     }
+    $10 == "turn" { turn_ended[$12, ++turns[$12]] = $9 }
     $10 == "turn" && $2 == branch && !counted[$1]++ {
       print $9 - int($11 / 1000), $9, $12, "turn", "", "", ""
     }
@@ -385,12 +389,21 @@ list_spans() {
     $10 == "answer" && !(call in answered) { answered[call] = $9 }
     $10 == "backgrounded" { background[call] = 1 }
     $10 == "finished" && !(call in finished) { finished[call] = $9 }
+    function turn_end(call,   turn, ended) {
+      ended = ""
+      for (turn = 1; turn <= turns[session[call]]; turn++)
+        if (turn_ended[session[call], turn] >= started[call] &&
+            (ended == "" || turn_ended[session[call], turn] < ended))
+          ended = turn_ended[session[call], turn]
+      return ended
+    }
     END {
       for (index_ = 1; index_ <= calls; index_++) {
         call = order[index_]
         if (call in background) {
-          if (call in finished) print started[call], finished[call], row[call]
-        } else if (call in answered) print started[call], answered[call], row[call]
+          if (call in finished) print started[call], finished[call], session[call], "tool", row[call]
+        } else if (call in answered) print started[call], answered[call], session[call], "tool", row[call]
+        else if (turn_end(call) != "") print started[call], turn_end(call), session[call], "unfinished", row[call]
       }
     }
   ' | sort -t $'\t' -k1,1n -s

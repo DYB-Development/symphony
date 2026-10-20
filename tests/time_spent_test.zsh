@@ -215,6 +215,21 @@ assert_equals "- pr-scribe: 7m" "$({ span 0 600 s1 tool "" Agent pr-scribe
   "$TIME_SPENT" --render | grep '^- pr-scribe:')" \
   "shows a scribe's run with its rounds taken out"
 
+assert_equals "- Unfinished tool calls: 2m" "$({ span 0 300 s1 turn "" "" ""; span 60 180 s1 unfinished "" Bash "bin/rails server"; } |
+  "$TIME_SPENT" --render | grep '^- Unfinished tool calls:')" \
+  "counts a tool call that never finished on an unfinished tool calls line"
+
+assert_equals "" "$(span 0 60 s1 tool "" Bash "git status" | "$TIME_SPENT" --render | grep '^- Unfinished tool calls:')" \
+  "prints no unfinished tool calls line when every tool call finished"
+
+assert_equals "- pr-scribe: 20m" "$({ span 0 300 s1 turn "" "" ""; span 0 1200 s1 tool "" Agent pr-scribe
+  span 300 1500 s1 wait "" "" ""; } | "$TIME_SPENT" --render | grep '^- pr-scribe:')" \
+  "counts in full an agent that kept running after the turn that started it ended"
+
+assert_equals "- Total: 30m" "$({ span 0 300 s1 turn "" "" ""; span 0 1800 s1 tool "" Agent builder; } |
+  "$TIME_SPENT" --render | grep '^- Total:')" \
+  "counts in the total the time an agent ran in the background outside any turn"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
