@@ -52,6 +52,19 @@ into a single test or a single commit.
 
 ---
 
+## Use the Command That Exists
+
+- **When a command exists to make something, run it. Never write its output by hand.**
+  A migration comes from `bin/rails generate migration`, a model or controller
+  from its generator, a lockfile from the package manager, and a release from the
+  release script.
+- A hand-written copy skips what the command does. A migration typed with a
+  rounded version such as `20261021180000` collides with another typed the same
+  way, and the CI of each branch passes because neither branch holds both.
+- When no command exists for the thing, say so before writing it by hand.
+
+---
+
 ## What to Test
 
 - **Test our own code only.**

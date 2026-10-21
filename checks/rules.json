@@ -211,6 +211,10 @@
     },
     {
       "file": "rules/develop_process_rules.md",
+      "contains": "**When a command exists to make something, run it. Never write its output by hand.**"
+    },
+    {
+      "file": "rules/develop_process_rules.md",
       "contains": "~/.claude/bin/tick-criterion.sh <owner/repo> <issue> <position>"
     },
     {
