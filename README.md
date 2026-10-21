@@ -363,6 +363,7 @@ here.
 | The phrases nothing may use | `banned-phrases.txt` |
 | The development process followed | `develop_process_rules.md` |
 | When a decision is recorded | `decision-log.md` |
+| What a session carries to the next one in a repo | `lessons.md` |
 
 Replace a whole file, not part of one — the overlay swaps files, it does not
 merge them. Take a copy of the shipped one and edit it, so nothing a scribe
