@@ -38,12 +38,14 @@ any / in the branch written as -.
 A session started outside this clone is charged from the first tool record that
 names a worktree of it, until a tool record names an absolute path outside the
 clone or the session's directory changes.
-Transcripts are read from the directories under $CLAUDE_CONFIG_DIR/projects, or
-~/.claude/projects, whose names carry a path of this clone. They are also read
-from the transcripts that session-worktrees.tsv, beside that projects directory,
-lists for a worktree of this clone, which is how work done from a session started
-in another repo is found. Every directory under projects is read only when
-neither finds a transcript.
+Only transcripts that can hold this branch are read: those naming a worktree
+whose own history shows it holding the branch, or the folder named after the
+branch. They are found in the directories under $CLAUDE_CONFIG_DIR/projects, or
+~/.claude/projects, whose names carry the path of one of those worktrees, and in
+the transcripts that session-worktrees.tsv, beside that projects directory,
+lists for one of them, which is how work done from a session started in another
+repo is found. Every directory under projects is searched only when neither
+finds a transcript.
 See ~/.claude/rules/pr-body.md.
 USAGE
   exit 64
@@ -70,6 +72,7 @@ trap 'rm -rf "$work"' EXIT
 worktrees="$work/worktrees"
 timelines="$work/timelines"
 indexed="$work/indexed"
+held="$work/held"
 
 main_clone=$(git worktree list --porcelain | sed -n '1s/^worktree //p')
 named="$main_clone-${branch//\//-}"
@@ -106,10 +109,11 @@ write_timelines() {
 
 write_worktrees > "$worktrees"
 write_timelines > "$timelines"
+awk -F '\t' -v branch="$branch" '$3 == branch && !seen[$1]++ { print $1 }' "$timelines" > "$held"
 
 indexed_transcripts() {
   [ -f "$index" ] || return 0
-  awk -F '\t' 'NR == FNR { listed[$0]; next } ($1 in listed) && $2 != "" { print $2 }' "$worktrees" "$index" |
+  awk -F '\t' 'NR == FNR { listed[$0]; next } ($1 in listed) && $2 != "" { print $2 }' "$held" "$index" |
     sort -u | while IFS= read -r transcript; do
       [ -f "$transcript" ] && printf '%s\n' "$transcript"
     done
@@ -121,7 +125,7 @@ transcript_dirs() {
     named=$(find "$projects" -maxdepth 1 -type d \
       -name "*$(printf '%s' "$worktree" | tr -c 'a-zA-Z0-9' '-')*" 2>/dev/null) || named=''
     [ -n "$named" ] && found+="$named"$'\n'
-  done < "$worktrees"
+  done < "$held"
   if [ -n "$found" ]; then
     printf '%s' "$found" | sort -u
   elif [ ! -s "$indexed" ]; then
@@ -131,7 +135,7 @@ transcript_dirs() {
 
 transcript_files() {
   local patterns=() worktree
-  while IFS= read -r worktree; do patterns+=(-e "$worktree"); done < "$worktrees"
+  while IFS= read -r worktree; do patterns+=(-e "$worktree"); done < "$held"
   { transcript_dirs; cat "$indexed"; } | grep -v '^$' | tr '\n' '\0' |
     xargs -0 grep -rlF --include='*.jsonl' "${patterns[@]}" 2>/dev/null | sort -u || true
 }

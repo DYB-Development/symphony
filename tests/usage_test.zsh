@@ -178,6 +178,17 @@ answer_entry() {
       toolUseResult: $result}' >> "$TRANSCRIPT"
 }
 
+transcripts_read() {
+  local spy="$REPO/spy"
+  mkdir -p "$spy"
+  printf '#!/usr/bin/env bash\nprintf "%%s\\n" "${@: -1}" >> "%s/read.log"\nexec "%s" "$@"\n' \
+    "$spy" "$(command -v jq)" > "$spy/jq"
+  chmod +x "$spy/jq"
+  : > "$spy/read.log"
+  PATH="$spy:$PATH" "$USAGE" >/dev/null
+  sort "$spy/read.log"
+}
+
 echo "usage.sh:"
 
 new_repo
@@ -675,6 +686,48 @@ jq -nc --arg cwd "$REPO" '{type: "system", subtype: "turn_duration", uuid: "t1",
 assert_equals "usage.sh: no turn on this branch records a duration, so its time is not measured" \
   "$("$USAGE" --spans 2>&1 >/dev/null)" "warns that no turn records a duration"
 drop_repo
+
+new_repo
+commit_at 2026-01-01T00:00:00Z
+worktree_at 2026-01-02T00:00:00Z "$REPO-feature" feature
+worktree_at 2026-01-02T00:00:00Z "$REPO-other" other
+entry_at msg_1 main "$REPO" 2026-01-03T00:00:00Z 1 1 1 1
+another_transcript other
+entry_at msg_2 other "$REPO-other" 2026-01-03T00:00:00Z 1 1 1 1
+another_transcript feature
+entry_at msg_3 feature "$REPO-feature" 2026-01-03T00:00:00Z 1 1 1 1
+cd "$REPO-feature"
+assert_equals "$TRANSCRIPT" "$(transcripts_read)" \
+  "reads no transcript that names only the main clone or another worktree"
+drop_repo
+rm -rf "$REPO-feature" "$REPO-other"
+
+new_repo
+commit_at 2026-01-01T00:00:00Z
+worktree_at 2026-01-02T00:00:00Z "$REPO-feature" feature
+entry_at msg_1 feature "$REPO-feature" 2026-01-03T00:00:00Z 10 20 30 40
+TRANSCRIPT="$CLAUDE_CONFIG_DIR/projects/another-repo/session.jsonl"
+mkdir -p "${TRANSCRIPT:h}"
+entry_at msg_2 main "$REPO" 2026-01-03T00:00:00Z 1 1 1 1
+printf '%s\t%s\n' "$REPO" "$TRANSCRIPT" > "$CLAUDE_CONFIG_DIR/session-worktrees.tsv"
+cd "$REPO-feature"
+assert_equals "Total: 100" "$("$USAGE" | tail -1)" \
+  "searches every transcript when the index lists none for a worktree that held the branch"
+drop_repo
+rm -rf "$REPO-feature"
+
+new_repo
+commit_at 2026-01-01T00:00:00Z
+worktree_at 2026-01-02T00:00:00Z "$REPO-feature" feature
+entry_at msg_1 feature "$REPO-feature" 2026-01-03T00:00:00Z 10 20 30 40
+TRANSCRIPT="$CLAUDE_CONFIG_DIR/projects/$(printf '%s' "$REPO" | tr -c 'a-zA-Z0-9' '-')/session.jsonl"
+mkdir -p "${TRANSCRIPT:h}"
+entry_at msg_2 main "$REPO" 2026-01-03T00:00:00Z 1 1 1 1
+cd "$REPO-feature"
+assert_equals "Total: 100" "$("$USAGE" | tail -1)" \
+  "searches every transcript when only the main clone has a project directory"
+drop_repo
+rm -rf "$REPO-feature"
 
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
