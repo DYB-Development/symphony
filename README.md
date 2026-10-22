@@ -136,6 +136,7 @@ settings that are not its own alone:
 | Event | Runs | Why |
 |---|---|---|
 | `SessionStart` | `writing-style-hook.sh` | Carries the writing rules and the banned phrase list into the session |
+| `SessionStart` | `lessons-hook.sh` | Adds the repo's lessons file, kept outside the repo at `~/.claude/lessons/<repo>.md`, and names its path |
 | `SubagentStart` | `writing-style-hook.sh` | A subagent receives no rules of its own, so it gets them here |
 | `PostToolUse` | `decision-gate.sh arm` | Answering a question settles a choice, which has to be recorded |
 | `PostToolUse` | `agent-progress.sh record` | Logs each step a subagent marked, from what the mark printed, so a target or step passed in a shell variable is logged as its value |
