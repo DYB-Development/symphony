@@ -211,7 +211,9 @@ is how the person who ran you sees which step you are on.
    ~/.claude/bin/read-draft.sh <file>
    ```
    Rewrite each sentence the reader flagged or took to mean something you did
-   not mean, in that file, then read it again. A rewrite changes how a sentence
+   not mean, in that file, and open the PR without reading it again. One read
+   is the whole of this step for a PR body, in place of the rounds
+   `draft-reading.md` gives the other scribes. A rewrite changes how a sentence
    reads and never what it claims. The Decision Log, Ticket Billed Against,
    Tokens Used, Effort and Time Spent are pasted from a script, so a sentence flagged in one of them
    stays as it is.
@@ -240,7 +242,8 @@ is how the person who ran you sees which step you are on.
 
 Just the PR URL, and one line if you left an acceptance criterion unticked,
 saying which and why. Then `Still flagged:` with each sentence the reader flagged
-on its last read and the reader's note, or `none`, or that the read failed. You
+that you left as it was, such as one pasted from a script, and the reader's
+note, or `none`, or that the read failed. You
 are a tool — no preamble, no summary of the diff, no
 report of what you did. Your final message is the return value, not a
 human-facing message.
