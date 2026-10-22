@@ -47,6 +47,13 @@ TDD is the default for everything. Work one tiny cycle at a time:
 One assertion per test. One test per commit cycle. No batching multiple behaviors
 into a single test or a single commit.
 
+Run only the test file you are working in during a cycle. Run the whole suite
+once, before the branch merges, never after each commit.
+
+Write a test only for behavior that is added or changed. Code that is moved or
+refactored with its behavior unchanged gets no new test, since the tests that
+already exist are what show nothing changed.
+
 ---
 
 ## Commits
