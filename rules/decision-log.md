@@ -109,5 +109,5 @@ choices, so it must not survive into the next branch's work.
 A branch that builds a unit of a feature plan copies its entries into that
 feature's section of the repo's lessons file before its pull request opens,
 since the later units of the feature have to keep the same choices. The lessons
-file sits outside the repo, so the copy commits nothing. The file itself is
+file sits outside the repo, so the copy commits nothing. `.decisions.md` itself is
 still deleted at merge.
