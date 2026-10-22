@@ -24,6 +24,11 @@ esac
   exit 65
 }
 
+[ -x "$start_command" ] || {
+  echo "up: $PWD has no phone start command, which needs bin/phone" >&2
+  exit 65
+}
+
 port_in_use() {
   lsof -nP -iTCP:"$1" -sTCP:LISTEN >/dev/null 2>&1
 }

@@ -172,6 +172,13 @@ assert_equals "" "$(grep '^open' "$RUNS")" \
 drop_app
 
 new_app
+rm "$APP/bin/phone"
+OUTPUT="$(run_up "$APP" phone 2>&1)"
+assert_equals "65 has no phone start command " "$? $(grep -o 'has no phone start command' <<<"$OUTPUT") $(cat "$RUNS")" \
+  "up phone says the app has no phone start command, exits non-zero and neither sets up nor starts anything in an app without one"
+drop_app
+
+new_app
 run_up "$APP" >/dev/null 2>&1
 assert_equals "open http://localhost:3000" "$(grep '^open' "$RUNS")" \
   "opens the browser at the server's address once the server answers"
