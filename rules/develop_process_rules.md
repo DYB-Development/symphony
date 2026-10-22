@@ -16,6 +16,17 @@ exception as a standing change to the process.
 
 ---
 
+## Asking for Direction
+
+- **Never sit idle waiting for direction.** When the work needs the owner to
+  decide something before it can go on, ask in a question window with the
+  options laid out, rather than ending the turn with a question in plain text.
+- A question asked in plain text at the end of a turn leaves the session
+  stopped until the owner happens to read it. A question window puts the choice
+  in front of them with the options ready to pick.
+
+---
+
 ## Test-Driven Development
 
 TDD is the default for everything. Work one tiny cycle at a time:
