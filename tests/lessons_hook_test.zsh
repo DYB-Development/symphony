@@ -72,5 +72,13 @@ assert_contains \
   "$(context_from "$WORKTREE")" \
   "names the path the lessons file lives at, so a session knows where to write a new lesson"
 
+OTHER="$SANDBOX/billing"
+git init -q -b main "$OTHER"
+
+assert_equals \
+  "" \
+  "$(run_hook "$OTHER" 2>&1)" \
+  "adds nothing when the session's repo has no lessons file"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
