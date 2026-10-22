@@ -12,5 +12,10 @@ main_clone="$(dirname "$common_dir")"
 lessons_file="$lessons_dir/$(basename "$main_clone").md"
 [ -f "$lessons_file" ] || exit 0
 
-jq -nc --arg context "$(cat "$lessons_file")" \
+context="This repo's lessons are kept in $lessons_file, outside the repo, and are"
+context+=" never committed. Write a new lesson there, following the lessons rule."
+context+=$'\n\n'
+context+="$(cat "$lessons_file")"
+
+jq -nc --arg context "$context" \
   '{hookSpecificOutput: {hookEventName: "SessionStart", additionalContext: $context}}'

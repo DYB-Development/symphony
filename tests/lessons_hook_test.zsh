@@ -67,5 +67,10 @@ assert_contains \
   "$(context_from "$WORKTREE")" \
   "adds the main clone's lessons file when the session starts in a linked worktree of it"
 
+assert_contains \
+  "$SYMPHONY_LESSONS_DIR/shop.md" \
+  "$(context_from "$WORKTREE")" \
+  "names the path the lessons file lives at, so a session knows where to write a new lesson"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
