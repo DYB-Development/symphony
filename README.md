@@ -247,6 +247,11 @@ port counting up from 3000, and opens the browser at that address once the
 server answers. A folder without an executable `bin/setup` and `bin/dev` is
 refused and nothing in it is changed.
 
+To open the app on a phone instead, type `up phone`. It does the same, but
+starts the app's `bin/phone` on the first free port and opens no browser on the
+Mac, since `bin/phone` prints the address for the phone. An app without an
+executable `bin/phone` is refused and nothing in it is changed.
+
 Two things worth knowing. **Nothing posts without being read first** — a review
 is drafted and rendered for a person, and an audit posts nothing at all.
 **Nothing merges** — a review approves or requests changes only once its
