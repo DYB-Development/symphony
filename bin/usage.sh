@@ -38,12 +38,14 @@ any / in the branch written as -.
 A session started outside this clone is charged from the first tool record that
 names a worktree of it, until a tool record names an absolute path outside the
 clone or the session's directory changes.
-Transcripts are read from the directories under $CLAUDE_CONFIG_DIR/projects, or
-~/.claude/projects, whose names carry a path of this clone. They are also read
-from the transcripts that session-worktrees.tsv, beside that projects directory,
-lists for a worktree of this clone, which is how work done from a session started
-in another repo is found. Every directory under projects is read only when
-neither finds a transcript.
+Only transcripts that can hold this branch are read: those naming a worktree
+whose own history shows it holding the branch, or the folder named after the
+branch. They are found in the directories under $CLAUDE_CONFIG_DIR/projects, or
+~/.claude/projects, whose names carry the path of one of those worktrees, and in
+the transcripts that session-worktrees.tsv, beside that projects directory,
+lists for one of them, which is how work done from a session started in another
+repo is found. Every directory under projects is searched only when neither
+finds a transcript.
 See ~/.claude/rules/pr-body.md.
 USAGE
   exit 64
