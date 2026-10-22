@@ -716,6 +716,19 @@ assert_equals "Total: 100" "$("$USAGE" | tail -1)" \
 drop_repo
 rm -rf "$REPO-feature"
 
+new_repo
+commit_at 2026-01-01T00:00:00Z
+worktree_at 2026-01-02T00:00:00Z "$REPO-feature" feature
+entry_at msg_1 feature "$REPO-feature" 2026-01-03T00:00:00Z 10 20 30 40
+TRANSCRIPT="$CLAUDE_CONFIG_DIR/projects/$(printf '%s' "$REPO" | tr -c 'a-zA-Z0-9' '-')/session.jsonl"
+mkdir -p "${TRANSCRIPT:h}"
+entry_at msg_2 main "$REPO" 2026-01-03T00:00:00Z 1 1 1 1
+cd "$REPO-feature"
+assert_equals "Total: 100" "$("$USAGE" | tail -1)" \
+  "searches every transcript when only the main clone has a project directory"
+drop_repo
+rm -rf "$REPO-feature"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

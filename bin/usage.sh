@@ -123,7 +123,7 @@ transcript_dirs() {
     named=$(find "$projects" -maxdepth 1 -type d \
       -name "*$(printf '%s' "$worktree" | tr -c 'a-zA-Z0-9' '-')*" 2>/dev/null) || named=''
     [ -n "$named" ] && found+="$named"$'\n'
-  done < "$worktrees"
+  done < "$held"
   if [ -n "$found" ]; then
     printf '%s' "$found" | sort -u
   elif [ ! -s "$indexed" ]; then
