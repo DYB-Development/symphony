@@ -167,6 +167,12 @@ drop_app
 
 new_app
 run_up "$APP" phone >/dev/null 2>&1
+assert_equals "setup --skip-server" "$(sed -n 1p "$RUNS")" \
+  "up phone runs the app's own setup step, without its server, before anything is started"
+drop_app
+
+new_app
+run_up "$APP" phone >/dev/null 2>&1
 assert_equals "" "$(grep '^open' "$RUNS")" \
   "up phone opens no browser on the Mac, since the address is meant for the phone"
 drop_app
