@@ -111,7 +111,7 @@ awk -F '\t' -v branch="$branch" '$3 == branch && !seen[$1]++ { print $1 }' "$tim
 
 indexed_transcripts() {
   [ -f "$index" ] || return 0
-  awk -F '\t' 'NR == FNR { listed[$0]; next } ($1 in listed) && $2 != "" { print $2 }' "$worktrees" "$index" |
+  awk -F '\t' 'NR == FNR { listed[$0]; next } ($1 in listed) && $2 != "" { print $2 }' "$held" "$index" |
     sort -u | while IFS= read -r transcript; do
       [ -f "$transcript" ] && printf '%s\n' "$transcript"
     done
