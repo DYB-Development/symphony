@@ -1,9 +1,11 @@
 # Lessons
 
-`LESSONS.md` at a repo's root is where a session writes down what the owner
-taught it, so the next session in that repo starts knowing it. It is committed,
-and the repo's `CLAUDE.md` imports it, so every session in the repo loads it
-whole at the start and keeps it whole through a compaction.
+A repo's lessons file is where a session writes down what the owner taught it,
+so the next session in that repo starts knowing it. It lives outside the repo,
+at `~/.claude/lessons/<repo>.md`, and is never committed in any project. The
+SessionStart hook adds it to every session in the repo when the session starts,
+so the session has it whole from the start and keeps it whole through a
+compaction.
 
 It exists because of a gap: a correction given in conversation lives only in
 that conversation. A fresh session starts from the rules and the code, makes
@@ -21,8 +23,23 @@ session is lost in neither case.
   differently.
 - **Not a log of the work.** No progress, no narration, no record of who said
   what or when. Each line is an instruction a session can follow.
+- **Not part of the repo.** It is never committed, never imported by the repo's
+  `CLAUDE.md`, and never kept as a file at the repo's root.
 - **Not the code's documentation.** A lesson the code, a test or a check now
   enforces is removed, since the enforcement carries it from then on.
+
+## Where it lives
+
+`<repo>` is the folder name of the repo's main clone, so the main clone and
+every linked worktree made from it use the same file. The hook finds the main
+clone from the folder that holds the repo's shared git directory, the one
+`git rev-parse --git-common-dir` names, so a worktree at `app-feature-quotes`
+reads `~/.claude/lessons/app.md`.
+
+A file at the repo's root would not do, committed or not. Committed, it puts
+the owner's corrections into the repo's history. Ignored by git, it stays in the
+folder it was written in and never reaches a linked worktree, which is where
+every agent works.
 
 ## The format
 
@@ -67,26 +84,27 @@ rules file it belongs in, rather than writing it here.
 A decision made while building one unit of a feature plan is also one the later
 units have to keep, and `.decisions.md` is deleted when that unit merges. So
 before a branch whose issue sits in a stage of a feature plan opens its pull
-request, its `.decisions.md` entries are copied into that feature's section here,
-each as one line saying what was settled and what it was settled over. The
-section is created by the first unit that has a decision to copy.
+request, its `.decisions.md` entries are copied into that feature's section of
+the lessons file, each as one line saying what was settled and what it was
+settled over. Nothing is committed. The section is created by the first unit
+that has a decision to copy.
 
-**The pull request that builds a feature's last unit removes its section.** By
-then every decision in it is in the code, and nothing still to be built reads it.
+**A feature's section is removed once the pull request that builds its last
+unit merges.** By then every decision in it is in the code, and nothing still to
+be built reads it.
 
-## Committing it
+## Writing it
 
-A lesson goes in its own commit, holding `LESSONS.md` and nothing else, so it
-can be read and reverted apart from the code. A commit that only changes this
-file is documentation, and the Commits check does not read it.
-
-A repo with no `LESSONS.md` gets one the first time a lesson is written, and in
-the same commit its `CLAUDE.md` gains the line `@LESSONS.md`, creating
-`CLAUDE.md` when the repo has none.
+Edit the file at the path the hook names. A repo with no lessons file gets one
+the first time a lesson is written, at `~/.claude/lessons/<repo>.md`, starting
+from the format above. Writing a lesson changes nothing in the repo, so it adds
+no commit to the branch and no line to its pull request.
 
 ## When a session starts
 
-The file is loaded by the import, so a session does not read it separately.
+The SessionStart hook adds the file to the session's context, together with the
+path it lives at, so a session does not read it separately and knows where to
+write a new lesson. A repo with no lessons file adds nothing.
 A session working an issue whose `Part of` names a feature reads that feature's
 section before writing its first test, and treats every line in it as settled.
 Reversing one is a change of direction, which is the owner's to make, and the
@@ -94,7 +112,7 @@ reversal is written as a new line rather than an edit to the old one.
 
 ## Its life
 
-Committed and kept. The file is pruned, not cleared: a lesson the code now
-enforces is removed, and a feature section is removed by the pull request that
-finishes the feature. Anything else stays until the owner says it no longer
+Kept outside the repo, and never committed. The file is pruned, not cleared: a
+lesson the code now enforces is removed, and a feature section is removed once
+the pull request that finishes the feature merges. Anything else stays until the owner says it no longer
 holds.
