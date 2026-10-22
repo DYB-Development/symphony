@@ -40,12 +40,14 @@ case "${0##*/}" in
   dev)
     [ -f "$state/serve" ] && { echo $$ > "$state/server.pid"; exec sleep 300; }
     echo "dev PORT=$PORT" >> "$state/runs" ;;
+  phone) echo "phone PORT=$PORT" >> "$state/runs" ;;
 esac
 STUB
 chmod +x "$STUBS/stub"
 for name in lsof curl open; do ln -s "$STUBS/stub" "$STUBS/path/$name"; done
 ln -s "$STUBS/stub" "$STUBS/setup"
 ln -s "$STUBS/stub" "$STUBS/dev"
+ln -s "$STUBS/stub" "$STUBS/phone"
 UP_TEST_STATE=/nonexistent "$STUBS/stub" >/dev/null 2>&1
 
 TEMPLATE="$STUBS/template"
@@ -54,6 +56,7 @@ git clone -q --template= "$TEMPLATE/remote.git" "$TEMPLATE/app" 2>/dev/null
 mkdir -p "$TEMPLATE/app/bin"
 ln -s "$STUBS/setup" "$TEMPLATE/app/bin/setup"
 ln -s "$STUBS/dev" "$TEMPLATE/app/bin/dev"
+ln -s "$STUBS/phone" "$TEMPLATE/app/bin/phone"
 git -C "$TEMPLATE/app" add bin
 git -C "$TEMPLATE/app" commit -q -m init
 git -C "$TEMPLATE/app" push -q origin main 2>/dev/null
@@ -78,7 +81,9 @@ push_new_commit() {
 }
 
 run_up() {
-  (cd "$1" && PATH="$STUBS/path:$PATH" "$UP")
+  local dir="$1"
+  shift
+  (cd "$dir" && PATH="$STUBS/path:$PATH" "$UP" "$@")
 }
 
 drop_app() {
@@ -151,6 +156,32 @@ echo "-iTCP:3000" > "$BASE/busy"
 run_up "$APP" >/dev/null 2>&1
 assert_equals "dev PORT=3001" "$(grep '^dev' "$RUNS")" \
   "starts the app's server on the first free port counting up from 3000"
+drop_app
+
+new_app
+echo "-iTCP:3000" > "$BASE/busy"
+run_up "$APP" phone >/dev/null 2>&1
+assert_equals "phone PORT=3001" "$(grep '^phone' "$RUNS")" \
+  "up phone starts the app's phone start command on the first free port counting up from 3000"
+drop_app
+
+new_app
+run_up "$APP" phone >/dev/null 2>&1
+assert_equals "setup --skip-server" "$(sed -n 1p "$RUNS")" \
+  "up phone runs the app's own setup step, without its server, before anything is started"
+drop_app
+
+new_app
+run_up "$APP" phone >/dev/null 2>&1
+assert_equals "" "$(grep '^open' "$RUNS")" \
+  "up phone opens no browser on the Mac, since the address is meant for the phone"
+drop_app
+
+new_app
+rm "$APP/bin/phone"
+OUTPUT="$(run_up "$APP" phone 2>&1)"
+assert_equals "65 has no phone start command " "$? $(grep -o 'has no phone start command' <<<"$OUTPUT") $(cat "$RUNS")" \
+  "up phone says the app has no phone start command, exits non-zero and neither sets up nor starts anything in an app without one"
 drop_app
 
 new_app
