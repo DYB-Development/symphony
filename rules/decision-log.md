@@ -17,8 +17,8 @@ in the code. The log is that trace.
   know how the work went. Nothing about the work flows back into it.
 - **Not a committed doc.** Decisions about a branch die with the branch. What
   survives is the PR body, and, for a branch that builds a unit of a feature
-  plan, the copy its entries get in the repo's `LESSONS.md`. See
-  `~/.claude/rules/lessons.md`.
+  plan, the copy its entries get in the repo's lessons file, which is kept
+  outside the repo and never committed. See `~/.claude/rules/lessons.md`.
 - **Not `start_here.md`.** That is a resume bookmark saying where to pick up.
   This is a record of choices, and the two never merge into one file.
 - **Not a log of the work.** No progress, no what-I-tried, no test results, no
@@ -107,6 +107,7 @@ Created on demand during a cycle, read by the PR Scribe when the PR is written,
 choices, so it must not survive into the next branch's work.
 
 A branch that builds a unit of a feature plan copies its entries into that
-feature's section of `LESSONS.md` before its pull request opens, since the later
-units of the feature have to keep the same choices. The file itself is still
-deleted at merge.
+feature's section of the repo's lessons file before its pull request opens,
+since the later units of the feature have to keep the same choices. The lessons
+file sits outside the repo, so the copy commits nothing. The file itself is
+still deleted at merge.
