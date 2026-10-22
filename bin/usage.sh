@@ -70,6 +70,7 @@ trap 'rm -rf "$work"' EXIT
 worktrees="$work/worktrees"
 timelines="$work/timelines"
 indexed="$work/indexed"
+held="$work/held"
 
 main_clone=$(git worktree list --porcelain | sed -n '1s/^worktree //p')
 named="$main_clone-${branch//\//-}"
@@ -106,6 +107,7 @@ write_timelines() {
 
 write_worktrees > "$worktrees"
 write_timelines > "$timelines"
+awk -F '\t' -v branch="$branch" '$3 == branch && !seen[$1]++ { print $1 }' "$timelines" > "$held"
 
 indexed_transcripts() {
   [ -f "$index" ] || return 0
@@ -131,7 +133,7 @@ transcript_dirs() {
 
 transcript_files() {
   local patterns=() worktree
-  while IFS= read -r worktree; do patterns+=(-e "$worktree"); done < "$worktrees"
+  while IFS= read -r worktree; do patterns+=(-e "$worktree"); done < "$held"
   { transcript_dirs; cat "$indexed"; } | grep -v '^$' | tr '\n' '\0' |
     xargs -0 grep -rlF --include='*.jsonl' "${patterns[@]}" 2>/dev/null | sort -u || true
 }

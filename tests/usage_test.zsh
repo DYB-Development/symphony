@@ -178,6 +178,17 @@ answer_entry() {
       toolUseResult: $result}' >> "$TRANSCRIPT"
 }
 
+transcripts_read() {
+  local spy="$REPO/spy"
+  mkdir -p "$spy"
+  printf '#!/usr/bin/env bash\nprintf "%%s\\n" "${@: -1}" >> "%s/read.log"\nexec "%s" "$@"\n' \
+    "$spy" "$(command -v jq)" > "$spy/jq"
+  chmod +x "$spy/jq"
+  : > "$spy/read.log"
+  PATH="$spy:$PATH" "$USAGE" >/dev/null
+  sort "$spy/read.log"
+}
+
 echo "usage.sh:"
 
 new_repo
@@ -675,6 +686,21 @@ jq -nc --arg cwd "$REPO" '{type: "system", subtype: "turn_duration", uuid: "t1",
 assert_equals "usage.sh: no turn on this branch records a duration, so its time is not measured" \
   "$("$USAGE" --spans 2>&1 >/dev/null)" "warns that no turn records a duration"
 drop_repo
+
+new_repo
+commit_at 2026-01-01T00:00:00Z
+worktree_at 2026-01-02T00:00:00Z "$REPO-feature" feature
+worktree_at 2026-01-02T00:00:00Z "$REPO-other" other
+entry_at msg_1 main "$REPO" 2026-01-03T00:00:00Z 1 1 1 1
+another_transcript other
+entry_at msg_2 other "$REPO-other" 2026-01-03T00:00:00Z 1 1 1 1
+another_transcript feature
+entry_at msg_3 feature "$REPO-feature" 2026-01-03T00:00:00Z 1 1 1 1
+cd "$REPO-feature"
+assert_equals "$TRANSCRIPT" "$(transcripts_read)" \
+  "reads no transcript that names only the main clone or another worktree"
+drop_repo
+rm -rf "$REPO-feature" "$REPO-other"
 
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
