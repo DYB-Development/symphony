@@ -166,6 +166,12 @@ assert_equals "phone PORT=3001" "$(grep '^phone' "$RUNS")" \
 drop_app
 
 new_app
+run_up "$APP" phone >/dev/null 2>&1
+assert_equals "" "$(grep '^open' "$RUNS")" \
+  "up phone opens no browser on the Mac, since the address is meant for the phone"
+drop_app
+
+new_app
 run_up "$APP" >/dev/null 2>&1
 assert_equals "open http://localhost:3000" "$(grep '^open' "$RUNS")" \
   "opens the browser at the server's address once the server answers"

@@ -62,5 +62,5 @@ until curl -s -o /dev/null "$address"; do
   sleep 0.5
 done
 
-open "$address"
+[ "$start_command" = bin/phone ] || open "$address"
 wait "$server"
