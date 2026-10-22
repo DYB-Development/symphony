@@ -59,5 +59,13 @@ assert_contains \
   "$(context_from "$CLONE")" \
   "adds the repo's lessons file to the context when the session starts in the main clone"
 
+WORKTREE="$SANDBOX/shop-feature-quotes"
+git -C "$CLONE" worktree add -q -b feature/quotes "$WORKTREE"
+
+assert_contains \
+  "Build each form on its own page." \
+  "$(context_from "$WORKTREE")" \
+  "adds the main clone's lessons file when the session starts in a linked worktree of it"
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
