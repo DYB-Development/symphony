@@ -3,15 +3,21 @@ set -euo pipefail
 
 usage() {
   cat >&2 <<'USAGE'
-usage: up
+usage: up [phone]
 
 Gets the Rails app in the current folder running in the browser. In the app's
-main clone it first pulls the latest commits of the checked-out branch.
+main clone it first pulls the latest commits of the checked-out branch. With
+phone, it starts the app with bin/phone so a phone can open it.
 USAGE
   exit 64
 }
 
-[ $# -eq 0 ] || usage
+start_command=bin/dev
+case "$*" in
+  "") ;;
+  phone) start_command=bin/phone ;;
+  *) usage ;;
+esac
 
 [ -x bin/setup ] && [ -x bin/dev ] || {
   echo "up: $PWD holds no app up knows how to start, which needs bin/setup and bin/dev" >&2
@@ -44,7 +50,7 @@ bin/setup --skip-server
 port="$(first_free_port)"
 address="http://localhost:$port"
 
-PORT="$port" bin/dev &
+PORT="$port" "$start_command" &
 server=$!
 trap 'kill "$server" 2>/dev/null' EXIT
 
