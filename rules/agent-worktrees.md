@@ -24,6 +24,11 @@ git -C ~/projects/app worktree add -b feature/quotes ~/projects/app-feature-quot
 Every edit, test run and commit for that branch happens in that folder. Nothing
 in the main clone is edited, and its branch is never changed.
 
+**Never use `git stash` in a worktree.** The stash list is shared by every
+worktree of the repo, so a `git stash pop` can apply a stash another session
+made on another branch. Set work aside by committing it, or by moving files out
+of the worktree.
+
 **Right after making the worktree, create its databases:**
 
 ```
