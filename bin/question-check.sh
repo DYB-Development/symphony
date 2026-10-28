@@ -14,6 +14,14 @@ USAGE
 
 [ "${1:-}" = check ] || usage
 
-cat > /dev/null
+here="$(dirname "$0")"
+run="$(mktemp -d "${TMPDIR:-/tmp}/question-check.XXXXXX")"
+trap 'rm -rf "$run"' EXIT
+
+jq -r '.tool_input.questions[].question' > "$run/question.md"
+
+status=0
+"$here/read-draft.sh" "$run/question.md" > /dev/null || status=$?
+[ "$status" -eq 1 ] || exit 0
 
 jq -nc '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: "Rewrite the question in plain words and ask again."}}'

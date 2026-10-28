@@ -53,6 +53,9 @@ echo "question-check.sh check:"
 assert_equals "deny" "$(READER_REPLY="$FLAGGED_REPLY" READER_EXIT=0 check | jq -r '.hookSpecificOutput.permissionDecision')" \
   "refuses a question the reader flags"
 
+assert_equals "" "$(READER_REPLY="Flagged: 0" READER_EXIT=0 check)" \
+  "lets a question the reader followed through"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
