@@ -27,6 +27,7 @@ matches=$(jq -rn --arg search "$*" --arg common "$common_words" \
    | . + {shared: ((.question | words) - ((.question | words) - $words) | unique | length)}
    | select(.shared > 0)]
   | sort_by(.label == "default", -.shared)
+  | .[:5]
   | map("\(.label): \(.question)\n\(.answer)")
   | join("\n\n")
 ')

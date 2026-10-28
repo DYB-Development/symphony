@@ -115,6 +115,18 @@ default: When does the test suite run?
 Once." "$("$SEARCH" watch CI suite)" "prints the entry sharing the most words first"
 drop_store
 
+new_store
+defaults '{"version": 1, "answers": [
+  {"name": "one", "question": "Which branch first?", "answer": "1"},
+  {"name": "two", "question": "Which branch second?", "answer": "2"},
+  {"name": "three", "question": "Which branch third?", "answer": "3"},
+  {"name": "four", "question": "Which branch fourth?", "answer": "4"},
+  {"name": "five", "question": "Which branch fifth?", "answer": "5"},
+  {"name": "six", "question": "Which branch sixth?", "answer": "6"}
+]}'
+assert_equals "5" "$("$SEARCH" branch | grep -c '^default: ')" "prints at most five entries"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
