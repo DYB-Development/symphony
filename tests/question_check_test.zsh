@@ -56,6 +56,9 @@ assert_equals "deny" "$(READER_REPLY="$FLAGGED_REPLY" READER_EXIT=0 check | jq -
 assert_equals "" "$(READER_REPLY="Flagged: 0" READER_EXIT=0 check)" \
   "lets a question the reader followed through"
 
+assert_equals "" "$(READER_REPLY="$FLAGGED_REPLY" READER_EXIT=1 check 2>/dev/null)" \
+  "lets a question through when the reader fails"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
