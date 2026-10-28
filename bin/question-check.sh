@@ -21,11 +21,16 @@ trap 'rm -rf "$run"' EXIT
 jq -r '.tool_input.questions[].question' > "$run/question.md"
 
 status=0
-"$here/read-draft.sh" "$run/question.md" > /dev/null 2>&1 || status=$?
+"$here/read-draft.sh" "$run/question.md" > "$run/reply" 2>/dev/null || status=$?
 [ "$status" -eq 0 ] && exit 0
 if [ "$status" -ne 1 ]; then
   echo "question-check.sh: the draft reader failed, so the question was asked unchecked" >&2
   exit 0
 fi
 
-jq -nc '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: "Rewrite the question in plain words and ask again."}}'
+notes="$(grep -vE '^Flagged: [0-9]+$' "$run/reply" || true)"
+
+jq -nc '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $text}}' \
+  --arg text "The owner could not follow this question on one read. Rewrite it in plain words and ask again.
+
+$notes"

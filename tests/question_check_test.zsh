@@ -53,6 +53,14 @@ echo "question-check.sh check:"
 assert_equals "deny" "$(READER_REPLY="$FLAGGED_REPLY" READER_EXIT=0 check | jq -r '.hookSpecificOutput.permissionDecision')" \
   "refuses a question the reader flags"
 
+assert_equals 'The owner could not follow this question on one read. Rewrite it in plain words and ask again.
+
+1. "Should the shop run the reconciler?"
+   Means: It asks whether something called the reconciler should run.
+   Flag: The reconciler is never explained.' \
+  "$(READER_REPLY="$FLAGGED_REPLY" READER_EXIT=0 check | jq -r '.hookSpecificOutput.permissionDecisionReason')" \
+  "lists each flagged sentence with the reader's note and asks for a rewrite"
+
 assert_equals "" "$(READER_REPLY="Flagged: 0" READER_EXIT=0 check)" \
   "lets a question the reader followed through"
 
