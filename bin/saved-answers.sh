@@ -24,8 +24,10 @@ matches=$(jq -rn --arg search "$*" --arg common "$common_words" \
   ($search | words) as $words |
   ($repo | map(.name)) as $replaced |
   [($repo + ($defaults | map(select(.name as $name | $replaced | index($name) | not))))[]
-   | select((.question | words) - ((.question | words) - $words) | length > 0)
-   | "\(.label): \(.question)\n\(.answer)"]
+   | . + {shared: ((.question | words) - ((.question | words) - $words) | unique | length)}
+   | select(.shared > 0)]
+  | sort_by(.label == "default", -.shared)
+  | map("\(.label): \(.question)\n\(.answer)")
   | join("\n\n")
 ')
 

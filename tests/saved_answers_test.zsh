@@ -103,6 +103,18 @@ defaults '{"version": 1, "answers": [
 assert_equals "|1" "$("$SEARCH" how do I deploy this; printf '|%s' "$?")" "ignores common words that every question shares"
 drop_store
 
+new_store
+defaults '{"version": 1, "answers": [
+  {"name": "suite", "question": "When does the test suite run?", "answer": "Once."},
+  {"name": "ci", "question": "When is CI watched after the test suite runs?", "answer": "Once it opens."}
+]}'
+assert_equals "default: When is CI watched after the test suite runs?
+Once it opens.
+
+default: When does the test suite run?
+Once." "$("$SEARCH" watch CI suite)" "prints the entry sharing the most words first"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
