@@ -71,6 +71,15 @@ assert_equals "question-check.sh: the draft reader failed, so the question was a
   "$(READER_REPLY="$FLAGGED_REPLY" READER_EXIT=1 check 2>&1 >/dev/null)" \
   "warns in one line when the reader fails"
 
+sent_line() {
+  rm -f "$STUBS/stdin"
+  READER_REPLY="Flagged: 0" READER_EXIT=0 check > /dev/null
+  grep -Fx -- "$1" "$STUBS/stdin"
+}
+
+assert_equals "- **Skip it**" "$(sent_line "- **Skip it**")" \
+  "hands each option's label to the reader"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
