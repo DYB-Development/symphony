@@ -21,7 +21,8 @@ matches=$(jq -rn --argjson words "$words" \
   --argjson repo "$(entries "$repo" "$repo_answers_dir/$repo.json")" \
   --argjson defaults "$(entries default "$answers_dir/defaults.json")" '
   def words: ascii_downcase | [scan("[[:alnum:]]+")];
-  [($repo + $defaults)[]
+  ($repo | map(.name)) as $replaced |
+  [($repo + ($defaults | map(select(.name as $name | $replaced | index($name) | not))))[]
    | select((.question | words) - ((.question | words) - $words) | length > 0)
    | "\(.label): \(.question)\n\(.answer)"]
   | join("\n\n")

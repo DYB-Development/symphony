@@ -85,6 +85,17 @@ assert_equals "shop: Where does Postgres run in production?
 On the managed host." "$("$SEARCH" postgres)" "reads the answers named after the main clone from a linked worktree"
 drop_store
 
+new_store
+defaults '{"version": 1, "answers": [
+  {"name": "full-suite", "question": "When does the full test suite run?", "answer": "Once, right before the pull request opens."}
+]}'
+repo_answers shop '{"version": 1, "answers": [
+  {"name": "full-suite", "question": "When does the full test suite run?", "answer": "Never locally, CI runs it."}
+]}'
+assert_equals "shop: When does the full test suite run?
+Never locally, CI runs it." "$("$SEARCH" full suite)" "prints only the repo answer when a default carries the same name"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
