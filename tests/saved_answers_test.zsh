@@ -96,6 +96,13 @@ assert_equals "shop: When does the full test suite run?
 Never locally, CI runs it." "$("$SEARCH" full suite)" "prints only the repo answer when a default carries the same name"
 drop_store
 
+new_store
+defaults '{"version": 1, "answers": [
+  {"name": "postgres", "question": "How do I start Postgres?", "answer": "Postgres starts with pgstart."}
+]}'
+assert_equals "|1" "$("$SEARCH" how do I deploy this; printf '|%s' "$?")" "ignores common words that every question shares"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
