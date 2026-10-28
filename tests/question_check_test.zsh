@@ -89,5 +89,13 @@ assert_equals "" "$(READER_REPLY="$FLAGGED_REPLY" READER_EXIT=0 check "$TWO_QUES
   "leaves a prompt holding two questions to the one-question gate"
 
 echo ""
+echo "the AskUserQuestion hooks in hooks.json:"
+
+assert_equals '${CLAUDE_PLUGIN_ROOT}/bin/one-question-gate.sh check
+${CLAUDE_PLUGIN_ROOT}/bin/question-check.sh check' \
+  "$(jq -r '.hooks.PreToolUse[] | select(.matcher == "AskUserQuestion") | .hooks[].command | select(test("question"))' "$SCRIPT_DIR/../hooks/hooks.json")" \
+  "runs the plain-words check after the one-question gate"
+
+echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
