@@ -53,6 +53,13 @@ assert_equals "default: How do I start Postgres?
 Postgres starts with pgstart." "$("$SEARCH" start postgres)" "prints a default entry whose question shares a word"
 drop_store
 
+new_store
+defaults '{"version": 1, "answers": [
+  {"name": "postgres", "question": "How do I start Postgres?", "answer": "Postgres starts with pgstart."}
+]}'
+assert_equals "|1" "$("$SEARCH" deploy target; printf '|%s' "$?")" "prints nothing and exits 1 when no question shares a word"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
