@@ -127,6 +127,17 @@ defaults '{"version": 1, "answers": [
 assert_equals "5" "$("$SEARCH" branch | grep -c '^default: ')" "prints at most five entries"
 drop_store
 
+new_store
+unset SYMPHONY_REPO_ANSWERS_DIR
+export HOME="$WORK/home"
+mkdir -p "$HOME/.config/symphony/answers"
+printf '%s\n' '{"version": 1, "answers": [
+  {"name": "deploy", "question": "Where does Postgres run in production?", "answer": "On the managed host."}
+]}' > "$HOME/.config/symphony/answers/shop.json"
+assert_equals "shop: Where does Postgres run in production?
+On the managed host." "$("$SEARCH" postgres production)" "reads repo answers from the owner's symphony config folder by default"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
