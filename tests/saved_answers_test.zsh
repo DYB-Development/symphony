@@ -74,6 +74,17 @@ default: How do I start Postgres?
 Postgres starts with pgstart." "$("$SEARCH" postgres)" "prints the repo's matching entries from the repo answers folder before the matching defaults"
 drop_store
 
+new_store
+repo_answers shop '{"version": 1, "answers": [
+  {"name": "deploy", "question": "Where does Postgres run in production?", "answer": "On the managed host."}
+]}'
+git commit -q --allow-empty -m start
+git worktree add -q -b feature/quotes "$WORK/shop-feature-quotes"
+cd "$WORK/shop-feature-quotes"
+assert_equals "shop: Where does Postgres run in production?
+On the managed host." "$("$SEARCH" postgres)" "reads the answers named after the main clone from a linked worktree"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

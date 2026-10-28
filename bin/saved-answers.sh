@@ -4,13 +4,16 @@ set -euo pipefail
 answers_dir=${SYMPHONY_ANSWERS_DIR:-"$(cd "$(dirname "$0")/.." && pwd)/rules/answers"}
 repo_answers_dir=${SYMPHONY_REPO_ANSWERS_DIR:-"$HOME/.config/symphony/answers"}
 
-repo=$(basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)")
+repo=""
+if common=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null); then
+  repo=$(basename "$(dirname "$common")")
+fi
 
 words=$(printf '%s\n' "$*" | tr '[:upper:]' '[:lower:]' | tr -cs '[:alnum:]' '\n' | jq -R . | jq -sc 'map(select(length > 0))')
 
 entries() {
   local label="$1" file="$2"
-  [ -f "$file" ] || { echo '[]'; return; }
+  [ -n "$label" ] && [ -f "$file" ] || { echo '[]'; return; }
   jq -c --arg label "$label" '[.answers[] | . + {label: $label}]' "$file"
 }
 
