@@ -1,0 +1,140 @@
+{
+  "version": 1,
+  "answers": [
+    {
+      "name": "unclear-questions",
+      "question": "How should a question to the owner be written so the owner can follow it?",
+      "answer": "a hook on the question window runs each question and its options through the draft reader, and a flagged question is refused and rewritten before the owner sees it."
+    },
+    {
+      "name": "stopping",
+      "question": "Should I stop and ask the owner for a go-ahead before going on?",
+      "answer": "a Stop hook refuses a turn that ends by asking the owner something in plain text with no question window, so the session keeps working or asks in a question window."
+    },
+    {
+      "name": "two-files",
+      "question": "Can a commit change more than two files?",
+      "answer": "the two-files limit stays, and the rule lists the cases already allowed without asking: a migration with its schema, a registration line for something new, an interface change across files, and a rename or move."
+    },
+    {
+      "name": "already-decided",
+      "question": "Should I ask the owner something an earlier answer or a default already settles?",
+      "answer": "every answered question is saved with its project, and a hook refuses a new question that an earlier answer from that project, or a default answer, already settles, handing the session that answer; a question about a gem is refused unless its expert agent was asked first."
+    },
+    {
+      "name": "review-changes",
+      "question": "Can I change code or run tests while reviewing someone else's pull request?",
+      "answer": "while a session reviews someone else's pull request it is blocked from changing code and running tests until the review is posted, and a second review is always a new one."
+    },
+    {
+      "name": "owned-gem",
+      "question": "Should I write code an owned gem already does?",
+      "answer": "where an owned gem has its expert agent installed, a session is blocked from writing that gem's kind of code itself and hands it to the expert, and a project using an owned gem without its expert gets the expert installed first."
+    },
+    {
+      "name": "code-placement",
+      "question": "Which gem, app or repo should this code go in?",
+      "answer": "something one app needs lives in that app, a shared gem only gets what every app using it would want, a gem never knows about another gem or its host app, and separate systems talk through an API as an outside integration; a change to a shared gem is blocked until the session names the apps that need it, and goes in the app when only one does."
+    },
+    {
+      "name": "question-or-request",
+      "question": "Should I start work when the owner asks a question?",
+      "answer": "each owner message is checked as a question or a request, and on a question the session can only answer that turn, blocked from filing issues, opening pull requests, starting reviews or plans, or handing work to an agent, while work already underway keeps going."
+    },
+    {
+      "name": "gems-folder",
+      "question": "Where do gems live on this machine?",
+      "answer": "gems live in ~/projects/gems"
+    },
+    {
+      "name": "postgres-start",
+      "question": "How do I start Postgres?",
+      "answer": "Postgres starts with pgstart"
+    },
+    {
+      "name": "jira-tool",
+      "question": "Which tool reads and writes Jira?",
+      "answer": "the Atlassian connector is the Jira tool"
+    },
+    {
+      "name": "plan-or-build",
+      "question": "Should I write a plan or an issue before building work asked for in chat?",
+      "answer": "work asked for in chat is built directly under the develop process with no issue and no plan, a plan is written only when the owner runs /feature-plan or asks for a plan, and the CLAUDE.md line that turns large requests into plans changes to match."
+    },
+    {
+      "name": "migrations-and-data",
+      "question": "Can a migration change saved data?",
+      "answer": "a migration only describes the database structure and never rewrites saved data, saved data is changed by a script with tests that can run backwards, and data and structure change in steps so nothing breaks partway; a migration that rewrites saved data is refused."
+    },
+    {
+      "name": "fake-data",
+      "question": "Is this project's data fake or real?",
+      "answer": "the owner marked no project as having fake data, so every project's data is treated as real and changed only by tested scripts that can run backwards."
+    },
+    {
+      "name": "forbidden-tests",
+      "question": "Which code never gets a new test?",
+      "answer": "the develop rules list what never gets a new test (code only renamed or moved, seeds, migrations, data script setup, other people's gems and frameworks), a check refuses a commit that adds a test of seeds or a migration or adds a test to a commit that only renames or moves code, and a brief to an agent never asks for those tests."
+    },
+    {
+      "name": "background-jobs",
+      "question": "Can I check a background job's output while it is running?",
+      "answer": "a check refuses reading a background job's output or checking whether it is running until it has finished, and the session waits for the finish notice."
+    },
+    {
+      "name": "answer-the-question",
+      "question": "How should I reply when the owner's message asks something?",
+      "answer": "when the owner's message asks something, a check at the end of the turn compares the question with the reply and blocks the turn from ending until it is answered, and anything the owner needs to read goes in the reply rather than in command output."
+    },
+    {
+      "name": "full-test-suite",
+      "question": "When can the full test suite run?",
+      "answer": "single test files are always allowed; one full run right before the pull request opens and every other full run refused"
+    },
+    {
+      "name": "ci-watch",
+      "question": "Should I watch CI once a pull request opens?",
+      "answer": "watch CI once a pull request opens and open it in the browser when CI passes"
+    },
+    {
+      "name": "other-sessions",
+      "question": "Can I change branches, worktrees or pull requests another session created?",
+      "answer": "each session records the branches, worktrees and pull requests it created, and a check refuses edits, commits, pushes, comments or closes on anything else, while reading stays allowed."
+    },
+    {
+      "name": "pr-ci-watch",
+      "question": "Can a turn end while a pull request this session opened has no CI watch running?",
+      "answer": "a turn cannot end while a pull request this session opened has no CI watch running"
+    },
+    {
+      "name": "word-kind",
+      "question": "Can I use the word kind in code or in a question?",
+      "answer": "in every repo, a check refuses an edit that adds the word kind to code and a question to the owner that uses it; existing uses stay until renamed."
+    },
+    {
+      "name": "untrusted-agents",
+      "question": "Which agents can I hand work to?",
+      "answer": "a check refuses any agent that is not the owner's (a repo's own agents, the builder agent); allowed are the symphony scribes, the experts the_local installed from the owner's gems, and the general built-in agent, and work longer than three commands still goes to one of those."
+    },
+    {
+      "name": "merges-and-migrations",
+      "question": "Can I merge a pull request from the terminal or write a migration file by hand?",
+      "answer": "in every repo, any terminal merge or squash is refused, a migration file not made by the generator is refused, and a failing CI check is rerun or fixed, never merged past."
+    },
+    {
+      "name": "plan-questions",
+      "question": "How are the open decisions in a plan I wrote asked?",
+      "answer": "every open decision in a plan the session wrote is asked in its own question window right away, a turn cannot end while any are unasked, and the plan only records the answers; one question per window is already enforced."
+    },
+    {
+      "name": "deleting-history",
+      "question": "Can I delete saved records or code others may still need?",
+      "answer": "a record that others point to or that something was calculated from is archived and stays readable rather than deleted, code others may still need is moved before it is removed, and deleting saved records or such code is asked in a question window that says what would be lost."
+    },
+    {
+      "name": "fixed-lists",
+      "question": "Should choices and amounts be a fixed list in code?",
+      "answer": "choices and amounts a business would change are records an admin can add and edit, with starting values; a fixed list in code is only for values that never change, and a plan proposing one says why."
+    }
+  ]
+}
