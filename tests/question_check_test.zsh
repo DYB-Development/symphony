@@ -80,6 +80,9 @@ sent_line() {
 assert_equals "- **Skip it**" "$(sent_line "- **Skip it**")" \
   "hands each option's label to the reader"
 
+assert_equals "  The reconciler runs tonight." "$(sent_line "  The reconciler runs tonight.")" \
+  "hands each option's description to the reader under its label"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]

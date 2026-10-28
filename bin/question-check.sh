@@ -18,7 +18,7 @@ here="$(dirname "$0")"
 run="$(mktemp -d "${TMPDIR:-/tmp}/question-check.XXXXXX")"
 trap 'rm -rf "$run"' EXIT
 
-jq -r '.tool_input.questions[] | .question, "", (.options // [] | .[] | "- **\(.label)**")' > "$run/question.md"
+jq -r '.tool_input.questions[] | .question, "", (.options // [] | .[] | "- **\(.label)**", "  \(.description // "")")' > "$run/question.md"
 
 status=0
 "$here/read-draft.sh" "$run/question.md" > "$run/reply" 2>/dev/null || status=$?
