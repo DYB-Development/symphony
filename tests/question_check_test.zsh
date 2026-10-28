@@ -59,6 +59,10 @@ assert_equals "" "$(READER_REPLY="Flagged: 0" READER_EXIT=0 check)" \
 assert_equals "" "$(READER_REPLY="$FLAGGED_REPLY" READER_EXIT=1 check 2>/dev/null)" \
   "lets a question through when the reader fails"
 
+assert_equals "question-check.sh: the draft reader failed, so the question was asked unchecked" \
+  "$(READER_REPLY="$FLAGGED_REPLY" READER_EXIT=1 check 2>&1 >/dev/null)" \
+  "warns in one line when the reader fails"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
