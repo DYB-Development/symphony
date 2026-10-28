@@ -60,6 +60,20 @@ defaults '{"version": 1, "answers": [
 assert_equals "|1" "$("$SEARCH" deploy target; printf '|%s' "$?")" "prints nothing and exits 1 when no question shares a word"
 drop_store
 
+new_store
+defaults '{"version": 1, "answers": [
+  {"name": "postgres", "question": "How do I start Postgres?", "answer": "Postgres starts with pgstart."}
+]}'
+repo_answers shop '{"version": 1, "answers": [
+  {"name": "deploy", "question": "Where does Postgres run in production?", "answer": "On the managed host."}
+]}'
+assert_equals "shop: Where does Postgres run in production?
+On the managed host.
+
+default: How do I start Postgres?
+Postgres starts with pgstart." "$("$SEARCH" postgres)" "prints the repo's matching entries from the repo answers folder before the matching defaults"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
