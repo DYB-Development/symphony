@@ -18,7 +18,10 @@ here="$(dirname "$0")"
 run="$(mktemp -d "${TMPDIR:-/tmp}/question-check.XXXXXX")"
 trap 'rm -rf "$run"' EXIT
 
-jq -r '.tool_input.questions[] | .question, "", (.options // [] | .[] | "- **\(.label)**", "  \(.description // "")")' > "$run/question.md"
+cat > "$run/hook.json"
+[ "$(jq '.tool_input.questions // [] | length' "$run/hook.json")" -eq 1 ] || exit 0
+
+jq -r '.tool_input.questions[] | .question, "", (.options // [] | .[] | "- **\(.label)**", "  \(.description // "")")' "$run/hook.json" > "$run/question.md"
 
 status=0
 "$here/read-draft.sh" "$run/question.md" > "$run/reply" 2>/dev/null || status=$?

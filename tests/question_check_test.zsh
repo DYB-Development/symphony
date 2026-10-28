@@ -43,7 +43,7 @@ Flagged: 1'
 QUESTION='{session_id: "s1", tool_name: "AskUserQuestion", tool_input: {questions: [{question: "Should the shop run the reconciler?", options: [{label: "Run it", description: "The reconciler runs tonight."}, {label: "Skip it", description: "Nothing runs."}]}]}}'
 
 check() {
-  jq -nc "$QUESTION" |
+  jq -nc "${1:-$QUESTION}" |
     SYMPHONY_OVERLAY_DIR="$STUBS/no-overlay" SYMPHONY_AGENT_MODELS_FILE="$STUBS/no-models.json" \
     PATH="$STUBS:$PATH" "$CHECK" check
 }
@@ -82,6 +82,11 @@ assert_equals "- **Skip it**" "$(sent_line "- **Skip it**")" \
 
 assert_equals "  The reconciler runs tonight." "$(sent_line "  The reconciler runs tonight.")" \
   "hands each option's description to the reader under its label"
+
+TWO_QUESTIONS='{session_id: "s1", tool_name: "AskUserQuestion", tool_input: {questions: [{question: "Should the shop run the reconciler?"}, {question: "Which branch?"}]}}'
+
+assert_equals "" "$(READER_REPLY="$FLAGGED_REPLY" READER_EXIT=0 check "$TWO_QUESTIONS")" \
+  "leaves a prompt holding two questions to the one-question gate"
 
 echo ""
 echo "$PASS passed, $FAIL failed"
