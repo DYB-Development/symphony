@@ -138,6 +138,12 @@ assert_equals "shop: Where does Postgres run in production?
 On the managed host." "$("$SEARCH" postgres production)" "reads repo answers from the owner's symphony config folder by default"
 drop_store
 
+new_store
+unset SYMPHONY_ANSWERS_DIR
+assert_equals "default: Where do gems live on this machine?
+gems live in ~/projects/gems" "$("$SEARCH" where do gems live | sed -n 1,2p)" "finds a shipped default answer"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
