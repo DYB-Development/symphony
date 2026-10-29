@@ -15,8 +15,12 @@ last_text() {
       else .[$at].text end' "$1"
 }
 
+outside_code() {
+  awk '/^[[:space:]]*(```|~~~)/ { fenced = !fenced; next } !fenced'
+}
+
 closing_lines() {
-  grep -v '^[[:space:]]*$' | tail -n 3
+  outside_code | grep -v '^[[:space:]]*$' | tail -n 3
 }
 
 asks() {

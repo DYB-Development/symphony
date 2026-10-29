@@ -149,6 +149,17 @@ assert_equals "0 stop-check.sh: could not read the transcript, so the turn stopp
   "lets the turn stop with a warning when the transcript cannot be read"
 drop_transcript
 
+new_transcript
+prompt "Make the confirm prompt ask before it deletes an order."
+says "The delete command now asks first:
+
+\`\`\`
+Delete order 42?
+Should I go on? [y/N]
+\`\`\`"
+assert_equals "" "$(stop)" "does not count a question quoted inside a code block"
+drop_transcript
+
 echo ""
 echo "the Stop hooks in hooks.json:"
 
