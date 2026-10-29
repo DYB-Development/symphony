@@ -224,6 +224,10 @@ done
 assert_equals "" "${unrouted[*]}" \
   "the hooks send every edit and every shell command to the review block"
 
+assert_equals "\${CLAUDE_PLUGIN_ROOT}/bin/review-block.sh clear" \
+  "$(jq -r '.hooks.PostToolUse[] | select(.matcher == "Bash") | .hooks[].command | select(test("review-block"))' "$SCRIPT_DIR/../hooks/hooks.json")" \
+  "the hooks send each finished shell command to the review mark, so posting the review clears it"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
