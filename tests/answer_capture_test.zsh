@@ -64,6 +64,12 @@ assert_equals '["Postgres","MySQL"]' "$(review_list | jq -c 'map(.answer)')" \
   "adds each answer after the ones already waiting for review"
 drop_store
 
+new_store
+answered '{"answers": {"Which database should the shop use?": "Postgres"}, "annotations": {"Which database should the shop use?": {"notes": "Keep it on the same host as the app."}}}'
+assert_equals "Keep it on the same host as the app." "$(review_list | jq -r '.[0].notes')" \
+  "records the notes the owner added to an answer"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

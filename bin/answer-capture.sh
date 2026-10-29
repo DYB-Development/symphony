@@ -26,11 +26,12 @@ mkdir -p "$repo_answers_dir"
 
 printf '%s' "$payload" | jq --arg date "$(date +%F)" --slurpfile list "$review" '
   (.tool_response.answers // {}) as $answers |
+  (.tool_response.annotations // {}) as $annotations |
   .tool_input.questions as $questions |
   $list[0] | .entries += [$questions[] | {
     question,
     answer: ($answers[.question] // ""),
-    notes: "",
+    notes: ($annotations[.question].notes // ""),
     date: $date,
     status: "answered"
   }]' > "$review.tmp"
