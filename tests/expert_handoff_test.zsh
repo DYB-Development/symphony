@@ -132,5 +132,15 @@ assert_contains '"permissionDecision":"deny"' "$(edit "$STATE/shop-feature-quote
   "reads the main clone's patterns file from a linked worktree"
 drop_state
 
+new_state
+patterns default '{"widget_ui": ["app/views/**/*.erb"]}'
+git -C "$REPO" -c user.name=t -c user.email=t@example.com commit -q --allow-empty -m start
+git -C "$REPO" worktree add -q -b feature/quotes "$STATE/shop-feature-quotes"
+install_expert widget_ui
+mkdir -p "$STATE/shop-feature-quotes/app/views/quotes"
+assert_contains '"permissionDecision":"deny"' "$(edit "$STATE/shop-feature-quotes/app/views/quotes/show.html.erb")" \
+  "counts an expert installed only in the main clone as installed in its linked worktrees"
+drop_state
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ]

@@ -21,9 +21,17 @@ patterns_in() {
   [ -r "$1" ] && jq -c '.' "$1" 2>/dev/null || echo '{}'
 }
 
+main_clone() {
+  dirname "$(git -C "$1" rev-parse --path-format=absolute --git-common-dir)"
+}
+
+is_installed() {
+  [ -f "$1/.claude/agents/$2-develop.md" ] || [ -f "$(main_clone "$1")/.claude/agents/$2-develop.md" ]
+}
+
 patterns_for() {
   local repo
-  repo=$(basename "$(dirname "$(git -C "$1" rev-parse --path-format=absolute --git-common-dir)")")
+  repo=$(basename "$(main_clone "$1")")
   jq -cn --argjson shared "$(patterns_in "$experts_dir/default.json")" \
     --argjson own "$(patterns_in "$experts_dir/$repo.json")" '
     reduce ($own | to_entries[]) as $entry ($shared; .[$entry.key] += $entry.value)'
@@ -55,7 +63,7 @@ check() {
   relative="${path#"$root"/}"
   while IFS= read -r gem; do
     [ -n "$gem" ] || continue
-    [ -f "$root/.claude/agents/$gem-develop.md" ] || continue
+    is_installed "$root" "$gem" || continue
     case "$agent" in "$gem-develop"|"$gem-install") return 0 ;; esac
     refuse "$relative" "$gem"
     return 0
