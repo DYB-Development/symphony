@@ -64,6 +64,19 @@ start s1 pr-scribe >/dev/null
 assert_equals "0" "$(marks)" "marks nothing when the session spawns any other agent"
 drop_state
 
+edit() {
+  jq -nc --arg tool "$1" --arg path "$2" --arg session "${3:-s1}" \
+    '{session_id: $session, tool_name: $tool, tool_input: {file_path: $path}}' | "$BLOCK" check
+}
+
+echo "review-block.sh check:"
+
+new_state
+start s1 >/dev/null
+assert_contains '"permissionDecision":"deny"' "$(edit Edit "$REPO/app/models/quote.rb")" \
+  "refuses an edit to a file in the repo while the session is reviewing"
+drop_state
+
 echo "the hooks in hooks.json:"
 
 assert_equals "\${CLAUDE_PLUGIN_ROOT}/bin/review-block.sh start" \

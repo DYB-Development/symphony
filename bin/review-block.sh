@@ -4,9 +4,11 @@ set -euo pipefail
 usage() {
   cat >&2 <<'USAGE'
 usage: review-block.sh start  < hook.json
+       review-block.sh check  < hook.json
 
 Keeps a session that is reviewing a pull request from changing code. `start`
-marks the session as reviewing when it spawns the review scribe.
+marks the session as reviewing when it spawns the review scribe. `check`
+refuses a file edit while the session is marked.
 See ~/.claude/rules/pr-review.md.
 USAGE
   exit 64
@@ -16,6 +18,11 @@ mark_dir="${CLAUDE_REVIEW_BLOCK_DIR:-$HOME/.claude/review-block}"
 
 mark_for() {
   printf '%s/%s' "$mark_dir" "$(printf '%s' "$1" | shasum | cut -c1-40)"
+}
+
+refuse() {
+  jq -nc '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $text}}' \
+    --arg text "This session is reviewing a pull request, so it only reads code and writes the review. It edits no file outside its temporary folders, commits nothing and runs no tests. If the owner asked for a fix, post the review with ~/.claude/bin/review-draft.sh --post or drop it with ~/.claude/bin/review-block.sh drop first, then do the fix as its own task."
 }
 
 payload=$(cat)
@@ -31,6 +38,10 @@ case "${1:-}" in
     [ "$agent_type" = "review-scribe" ] || exit 0
     mkdir -p "$mark_dir"
     : > "$(mark_for "$session")"
+    ;;
+  check)
+    [ -f "$(mark_for "$session")" ] || exit 0
+    refuse
     ;;
   *) usage ;;
 esac
