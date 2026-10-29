@@ -36,8 +36,10 @@ refuse() {
 }
 
 check() {
-  local path dir root relative gem
-  path=$(jq -r '.tool_input.file_path // .tool_input.notebook_path // ""')
+  local payload path agent dir root relative gem
+  payload=$(cat)
+  path=$(printf '%s' "$payload" | jq -r '.tool_input.file_path // .tool_input.notebook_path // ""')
+  agent=$(printf '%s' "$payload" | jq -r '.agent_type // ""')
   [ -n "$path" ] || return 0
   dir=$(dirname "$path")
   while [ ! -d "$dir" ]; do dir=$(dirname "$dir"); done
@@ -46,6 +48,7 @@ check() {
   while IFS= read -r gem; do
     [ -n "$gem" ] || continue
     [ -f "$root/.claude/agents/$gem-develop.md" ] || continue
+    [ "$agent" != "$gem-develop" ] || return 0
     refuse "$relative" "$gem"
     return 0
   done < <(owning_gem "$relative")

@@ -72,5 +72,12 @@ assert_contains '"permissionDecision":"deny"' "$(edit "$REPO/app/views/quotes/sh
   "refuses the main session an edit to a file the installed expert owns"
 drop_state
 
+new_state
+install_expert widget_ui
+patterns default '{"widget_ui": ["app/views/**/*.erb"]}'
+assert_equals "" "$(edit "$REPO/app/views/quotes/show.html.erb" widget_ui-develop)" \
+  "lets the expert's own develop agent edit the file"
+drop_state
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ]
