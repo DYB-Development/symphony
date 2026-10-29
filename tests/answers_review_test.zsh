@@ -69,6 +69,13 @@ printf 'd\n' | "$REVIEW" > /dev/null
 assert_equals '[]|[]' "$(pending)|$(saved)" "removes a dropped entry from the review list without saving it"
 drop_store
 
+new_store
+waiting "[$DATABASE]"
+printf 'e\nPostgres, started with pgstart.\na\ndatabase\n' | "$REVIEW" > /dev/null
+assert_equals "Postgres, started with pgstart." "$(saved | jq -r '.[0].answer')" \
+  "saves the wording the owner typed when editing before approving"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
