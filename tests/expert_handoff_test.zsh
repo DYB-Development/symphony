@@ -99,5 +99,12 @@ assert_equals "" "$(edit "$REPO/app/views/quotes/show.html.erb")" \
   "lets the main session edit the file when the gem's expert is not installed"
 drop_state
 
+new_state
+install_expert widget_ui
+patterns default '{"widget_ui": ["app/views/**/*.erb"]}'
+assert_equals "" "$(edit "$REPO/app/models/quote.rb")" \
+  "lets the main session edit a file no expert's patterns match"
+drop_state
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ]
