@@ -160,6 +160,14 @@ Should I go on? [y/N]
 assert_equals "" "$(stop)" "does not count a question quoted inside a code block"
 drop_transcript
 
+new_transcript
+prompt "Why does the shop's invoice page show no total?"
+says "The total is now shown on every invoice, which answers the question you asked:
+
+> Why does the shop's invoice page show no total?"
+assert_equals "" "$(stop)" "does not count a question quoted inside a blockquote"
+drop_transcript
+
 echo ""
 echo "the Stop hooks in hooks.json:"
 
