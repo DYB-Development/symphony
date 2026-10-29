@@ -57,6 +57,13 @@ assert_equals '[{"question":"Which database should the shop use?","answer":"Post
   "records an answered question with its answer and the date in the repo's review list"
 drop_store
 
+new_store
+answered '{"answers": {"Which database should the shop use?": "Postgres"}}'
+answered '{"answers": {"Which database should the shop use?": "MySQL"}}'
+assert_equals '["Postgres","MySQL"]' "$(review_list | jq -c 'map(.answer)')" \
+  "adds each answer after the ones already waiting for review"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

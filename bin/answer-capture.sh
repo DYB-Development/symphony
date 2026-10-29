@@ -20,13 +20,18 @@ payload=$(cat)
 common=$(git -C "$(printf '%s' "$payload" | jq -r '.cwd // "."')" rev-parse --path-format=absolute --git-common-dir 2>/dev/null) || exit 0
 repo=$(basename "$(dirname "$common")")
 
+review="$repo_answers_dir/$repo.review.json"
 mkdir -p "$repo_answers_dir"
-printf '%s' "$payload" | jq --arg date "$(date +%F)" '
+[ -f "$review" ] || printf '%s\n' '{"version": 1, "entries": []}' > "$review"
+
+printf '%s' "$payload" | jq --arg date "$(date +%F)" --slurpfile list "$review" '
   (.tool_response.answers // {}) as $answers |
-  {version: 1, entries: [.tool_input.questions[] | {
+  .tool_input.questions as $questions |
+  $list[0] | .entries += [$questions[] | {
     question,
     answer: ($answers[.question] // ""),
     notes: "",
     date: $date,
     status: "answered"
-  }]}' > "$repo_answers_dir/$repo.review.json"
+  }]' > "$review.tmp"
+mv "$review.tmp" "$review"
