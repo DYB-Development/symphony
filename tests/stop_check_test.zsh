@@ -67,6 +67,32 @@ says "The invoice page now shows a total."
 assert_equals "" "$(stop)" "lets a turn that ends in a statement stop"
 drop_transcript
 
+phrase_blocks() {
+  new_transcript
+  prompt "Add a total to the shop's invoice page."
+  says "The invoice page now shows a total.
+
+$1"
+  stop
+  drop_transcript
+}
+
+assert_equals "$BLOCK
+$BLOCK
+$BLOCK
+$BLOCK
+$BLOCK
+$BLOCK
+$BLOCK" \
+  "$(phrase_blocks "Do you want the receipt done too." \
+    ; phrase_blocks "Should I add it to the receipt next." \
+    ; phrase_blocks "Shall I go on with the receipt." \
+    ; phrase_blocks "Want me to add it to the receipt." \
+    ; phrase_blocks "Would you like the receipt done as well." \
+    ; phrase_blocks "Let me know if the receipt needs it." \
+    ; phrase_blocks "Tell me if the receipt needs it.")" \
+  "refuses a turn whose closing lines ask the owner in words with no question mark"
+
 echo ""
 echo "the Stop hooks in hooks.json:"
 

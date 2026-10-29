@@ -12,7 +12,8 @@ closing_lines() {
 }
 
 asks() {
-  grep -Eq '\?[*_"'\'')]*([[:space:]]|$)'
+  grep -Eiq -e '\?[*_"'\'')]*([[:space:]]|$)' \
+    -e "do you want|should i|shall i|want me to|would you like|let me know|tell me if"
 }
 
 transcript=$(jq -r '.transcript_path // empty')
