@@ -140,16 +140,19 @@ settings that are not its own alone:
 | `PostToolUse` | `decision-gate.sh arm` | Answering a question settles a choice, which has to be recorded |
 | `PostToolUse` | `answer-capture.sh record` | Records each answered question in that repo's review list, where the owner approves it before it settles later questions |
 | `PostToolUse` | `agent-progress.sh record` | Logs each step a subagent marked, from what the mark printed, so a target or step passed in a shell variable is logged as its value |
+| `PostToolUse` | `review-block.sh clear` | Clears the session's review mark once a shell command posts the review with `review-draft.sh --post` or drops it with `review-block.sh drop` |
 | `PostToolUseFailure` | `answer-capture.sh record` | Records a question window the owner rejected as rejected in that repo's review list |
 | `PostToolUseFailure` | `agent-progress.sh record` | Logs each step a subagent marked in a command that then failed, from that command's output |
 | `PreToolUse` | `main-clone-gate.sh check` | Refuses an edit or a branch-changing git command aimed at a repo's main clone, which is kept for its owner |
 | `PreToolUse` | `decision-gate.sh check` | Refuses a commit while that choice is still unrecorded |
+| `PreToolUse` | `review-block.sh check` | Refuses, while the session is reviewing a pull request, an edit outside its temporary folders and the review draft, a git commit, push, merge, rebase or reset, and a run of the repo's tests |
 | `PreToolUse` | `agent-progress.sh record` | Logs each script a subagent is about to run |
 | `PreToolUse` | `one-question-gate.sh check` | Refuses a question prompt that asks more than one question |
 | `PreToolUse` | `question-check.sh check` | Refuses a question the draft reader could not follow on one read, and lets it through with a warning when the reader fails |
 | `PreToolUse` | `answer-gate.sh check` | Refuses a question an approved repo answer or a default already settles, quoting that answer, and lets it through with a warning when the search fails |
 | `PreToolUse` | `description-gate.sh check` | Refuses a shell command that carries no description of what it does |
 | `PreToolUse` | `agent-model.sh set` | Gives a spawned agent the model your agent models file names for it |
+| `PreToolUse` | `review-block.sh start` | Marks the session as reviewing a pull request when it spawns the review scribe, and a mark more than a day old is ignored |
 | `PreToolUse` | `owner-turn.sh record` | Records a question prompt, and each item an agent marks with `owner-turn.sh`, as something the owner is waited on for |
 | `UserPromptSubmit` | `owner-turn.sh record` | Records when the owner last prompted, which ends that session's flag in the status line |
 | `Stop` | `owner-turn.sh stop` | Shows the session's flags as the last lines of the turn when the owner is waited on |

@@ -220,6 +220,21 @@ what was raised before and is now fixed, and what still stands. A finding still
 present gets a fresh inline comment on the current line, since the old one
 points at a line that has moved.
 
+## The review block
+
+While a review is open the session reviews and does nothing else. Spawning
+`review-scribe` marks the session as reviewing that pull request, and
+`review-block.sh check` then refuses an edit to any file outside the session's
+temporary folders and the review draft, a git commit, push, merge, rebase or
+reset, and a run of the repo's tests. The mark clears once
+`review-draft.sh --post` posts the review, or once
+`~/.claude/bin/review-block.sh drop` gives it up without posting, and a mark
+more than a day old is ignored.
+
+A fix the owner asks for while a review is open waits until the review is
+posted or dropped, and is then its own task. `review-draft.sh --post` only ever
+creates a new review, so a second pass can never edit or dismiss the first.
+
 ## Replying to comments
 
 Answering an existing thread is not a review and posts none. It is a reply on

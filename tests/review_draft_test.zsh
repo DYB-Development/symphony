@@ -299,6 +299,20 @@ assert_equals "REQUEST_CHANGES" \
 drop_gh
 drop_draft
 
+write_draft <<'JSON'
+{ "summary": "Fixed since the last pass.", "event": "APPROVE", "comments": [], "replies": [] }
+JSON
+stub_gh
+( "$DRAFT" --post o/r 1 "$DRAFT_FILE" >/dev/null 2>&1 & pid=$!
+  ( sleep 10; kill -9 $pid 2>/dev/null ) & watch=$!
+  wait $pid 2>/dev/null; kill $watch 2>/dev/null )
+assert_equals "pulls/1/reviews -X POST
+pulls/1/reviews/4242 -X PUT" \
+  "$(grep -Eo 'pulls/1/reviews[^ ]* -X [A-Z]+' "$GH_LOG")" \
+  "creates a new review and changes no review but the one it just created"
+drop_gh
+drop_draft
+
 echo ""
 echo "review-draft.sh usage:"
 
