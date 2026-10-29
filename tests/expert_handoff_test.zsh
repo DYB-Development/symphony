@@ -106,5 +106,12 @@ assert_equals "" "$(edit "$REPO/app/models/quote.rb")" \
   "lets the main session edit a file no expert's patterns match"
 drop_state
 
+new_state
+install_expert widget_ui
+patterns default '{"widget_ui": ["app/views/**/*.erb"]}'
+assert_contains '"permissionDecision":"deny"' "$(edit "$REPO/app/views/index.html.erb")" \
+  "matches a double star pattern against a file with no folder in between"
+drop_state
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ]
