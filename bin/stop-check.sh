@@ -3,5 +3,18 @@ set -euo pipefail
 
 reason="This turn ends by asking the owner something in plain text, and nothing tells the owner a question is waiting. Keep working on the task you were given. If you truly need the owner to decide something before you can go on, ask in a question window with AskUserQuestion and lay out the options."
 
-cat >/dev/null
+last_text() {
+  jq -rs '[.[] | select(.type == "assistant") | .message.content[]? | select(.type == "text")] | last | .text // empty' "$1"
+}
+
+closing_lines() {
+  grep -v '^[[:space:]]*$' | tail -n 3
+}
+
+asks() {
+  grep -Eq '\?[*_"'\'')]*([[:space:]]|$)'
+}
+
+transcript=$(jq -r '.transcript_path // empty')
+last_text "$transcript" | closing_lines | asks || exit 0
 jq -nc --arg reason "$reason" '{decision: "block", reason: $reason}'

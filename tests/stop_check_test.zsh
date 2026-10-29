@@ -61,6 +61,12 @@ Should I also add it to the receipt?"
 assert_equals "$BLOCK" "$(stop)" "refuses a turn whose last line asks the owner a question"
 drop_transcript
 
+new_transcript
+prompt "Add a total to the shop's invoice page."
+says "The invoice page now shows a total."
+assert_equals "" "$(stop)" "lets a turn that ends in a statement stop"
+drop_transcript
+
 echo ""
 echo "the Stop hooks in hooks.json:"
 
