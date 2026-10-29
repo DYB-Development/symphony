@@ -64,6 +64,12 @@ start s1 pr-scribe >/dev/null
 assert_equals "0" "$(marks)" "marks nothing when the session spawns any other agent"
 drop_state
 
+echo "the hooks in hooks.json:"
+
+assert_equals "\${CLAUDE_PLUGIN_ROOT}/bin/review-block.sh start" \
+  "$(jq -r '.hooks.PreToolUse[] | select(.matcher == "Agent") | .hooks[].command | select(test("review-block"))' "$SCRIPT_DIR/../hooks/hooks.json")" \
+  "the hooks send each spawned agent to the review mark"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
