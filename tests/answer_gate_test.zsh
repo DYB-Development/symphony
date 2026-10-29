@@ -70,6 +70,11 @@ assert_equals "|0" "$(ask '[{"question": "Which branch should the release go out
   "lets a question through when no saved answer settles it"
 drop_store
 
+new_store
+assert_equals "" "$(ask '[{"question": "Which database should the shop use?"}, {"question": "Which database should the shop use?"}]')" \
+  "leaves a window holding several questions to the one-question gate"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

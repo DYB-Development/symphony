@@ -15,6 +15,7 @@ USAGE
 [ "${1:-}" = check ] || usage
 
 payload=$(cat)
+[ "$(printf '%s' "$payload" | jq '.tool_input.questions // [] | length')" -eq 1 ] || exit 0
 cd "$(printf '%s' "$payload" | jq -r '.cwd // "."')"
 question=$(printf '%s' "$payload" | jq -r '.tool_input.questions[0].question')
 
