@@ -94,6 +94,13 @@ assert_equals "" "$(edit Write "$REPO/.review-12.claims.json")" \
   "lets the reviewing session write the review draft and the files beside it"
 drop_state
 
+new_state
+start s1 >/dev/null
+assert_equals "" \
+  "$(jq -nc --arg path "$STATE/scratchpad/look.ipynb" '{session_id: "s1", tool_name: "NotebookEdit", tool_input: {notebook_path: $path}}' | "$BLOCK" check)" \
+  "reads a notebook edit's path, letting one in a temporary folder through"
+drop_state
+
 echo "the hooks in hooks.json:"
 
 assert_equals "\${CLAUDE_PLUGIN_ROOT}/bin/review-block.sh start" \
