@@ -77,6 +77,12 @@ assert_contains '"permissionDecision":"deny"' "$(edit Edit "$REPO/app/models/quo
   "refuses an edit to a file in the repo while the session is reviewing"
 drop_state
 
+new_state
+start s1 >/dev/null
+assert_equals "" "$(edit Edit "$REPO/app/models/quote.rb" s2)" \
+  "lets another session edit while one session is reviewing"
+drop_state
+
 echo "the hooks in hooks.json:"
 
 assert_equals "\${CLAUDE_PLUGIN_ROOT}/bin/review-block.sh start" \
