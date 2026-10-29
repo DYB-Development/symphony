@@ -127,6 +127,13 @@ printf 'a\n\ndatabase\n' | "$REVIEW" > /dev/null
 assert_equals '["database"]' "$(saved | jq -c 'map(.name)')" "asks for the name again when the owner leaves it empty"
 drop_store
 
+new_store
+printf '%s\n' '{"version": 1, "answers": [{"name": "database", "question": "Which database does the shop use?", "answer": "MySQL"}]}' > "$SYMPHONY_REPO_ANSWERS_DIR/shop.json"
+waiting "[$DATABASE]"
+printf 'a\ndatabase\n' | "$REVIEW" > /dev/null
+assert_equals '["Postgres"]' "$(saved | jq -c 'map(.answer)')" "replaces the repo answer that already carries the name"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

@@ -34,7 +34,7 @@ review_first() {
           read -r name || return 1
         done
         jq --arg name "$name" --arg answer "$wording" --argjson entry "$entry" \
-          '.answers += [{name: $name, question: $entry.question, answer: $answer}]' "$answers" > "$answers.tmp"
+          '.answers = [(.answers[] | select(.name != $name)), {name: $name, question: $entry.question, answer: $answer}]' "$answers" > "$answers.tmp"
         mv "$answers.tmp" "$answers"
         remove_first
         return 0
