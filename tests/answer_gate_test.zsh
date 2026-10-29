@@ -54,6 +54,17 @@ assert_equals "deny" "$(ask "$SETTLED" | jq -r '.hookSpecificOutput.permissionDe
   "refuses a question a saved answer settles"
 drop_store
 
+new_store
+assert_equals "The owner has already answered this question. Use the saved answer below instead of asking.
+
+shop: Which database does the shop use?
+Postgres, started with pgstart.
+
+If this saved answer does not fit, rephrase the question to say why it differs." \
+  "$(ask "$SETTLED" | jq -r '.hookSpecificOutput.permissionDecisionReason')" \
+  "quotes the saved question and answer, tells the session to use it, and says how to get past a wrong match"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

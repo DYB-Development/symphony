@@ -18,6 +18,11 @@ payload=$(cat)
 cd "$(printf '%s' "$payload" | jq -r '.cwd // "."')"
 question=$(printf '%s' "$payload" | jq -r '.tool_input.questions[0].question')
 
-"$(dirname "$0")/saved-answers.sh" --settles "$question" > /dev/null
+saved=$("$(dirname "$0")/saved-answers.sh" --settles "$question")
 
-jq -nc '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny"}}'
+jq -nc '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $text}}' \
+  --arg text "The owner has already answered this question. Use the saved answer below instead of asking.
+
+$saved
+
+If this saved answer does not fit, rephrase the question to say why it differs."
