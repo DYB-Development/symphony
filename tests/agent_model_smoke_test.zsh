@@ -28,7 +28,7 @@ assert_equals() {
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/agent_model_smoke.XXXXXX")"
 MODELS="$WORK/agent-models.json"
 
-registered="$(jq -r '.hooks.PreToolUse[] | select(.matcher == "Agent") | .hooks[].command' "$ROOT/hooks/hooks.json")"
+registered="$(jq -r '.hooks.PreToolUse[] | select(.matcher == "Agent") | .hooks[].command | select(test("agent-model"))' "$ROOT/hooks/hooks.json")"
 command="${registered//\$\{CLAUDE_PLUGIN_ROOT\}/$ROOT}"
 
 spawn() {
