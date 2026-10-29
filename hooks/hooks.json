@@ -28,6 +28,10 @@
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/bin/decision-gate.sh arm"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/answer-capture.sh record"
           }
         ]
       },
@@ -42,6 +46,15 @@
       }
     ],
     "PostToolUseFailure": [
+      {
+        "matcher": "AskUserQuestion",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/answer-capture.sh record"
+          }
+        ]
+      },
       {
         "matcher": "Bash",
         "hooks": [
@@ -97,6 +110,10 @@
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/bin/question-check.sh check"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/answer-gate.sh check"
           },
           {
             "type": "command",

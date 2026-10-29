@@ -144,6 +144,22 @@ assert_equals "default: Where do gems live on this machine?
 gems live in ~/projects/gems" "$("$SEARCH" where do gems live | sed -n 1,2p)" "finds a shipped default answer"
 drop_store
 
+new_store
+defaults '{"version": 1, "answers": [
+  {"name": "database", "question": "Which database does the shop use?", "answer": "Postgres."},
+  {"name": "replica", "question": "Where does the shop reporting replica run?", "answer": "On the second host."}
+]}'
+assert_equals "default: Which database does the shop use?
+Postgres." "$("$SEARCH" --settles which database should the shop use for reports)" "prints only the entries sharing at least half of the search's words when asked which ones settle it"
+drop_store
+
+new_store
+defaults '{"version": 1, "answers": [
+  {"name": "ci", "question": "Should I watch CI once a pull request opens?", "answer": "Watch it."}
+]}'
+assert_equals "|1" "$("$SEARCH" --settles which branch should this pull request target; printf '|%s' "$?")" "leaves out an entry whose shared words are under half of its own question's words when asked which ones settle it"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
