@@ -98,6 +98,13 @@ Approve (a), edit (e) or drop (d)? " "$(printf 'd\n' | "$REVIEW")" \
   "shows an entry's question and answer and asks what to do with it"
 drop_store
 
+new_store
+waiting '[{"question": "Which database should the shop use?", "answer": "Postgres", "notes": "Keep it on the same host as the app.", "date": "2026-10-28", "status": "answered"}]'
+printf 'a\ndatabase\n' | "$REVIEW" > /dev/null
+assert_equals "Postgres. Keep it on the same host as the app." "$(saved | jq -r '.[0].answer')" \
+  "saves the owner's notes after the chosen answer"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

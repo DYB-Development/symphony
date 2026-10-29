@@ -18,9 +18,9 @@ remove_first() {
 review_first() {
   local entry wording choice name
   entry=$(jq -c '.entries[0]' "$review")
-  wording=$(jq -r '.answer' <<< "$entry")
-  jq -r --arg position "$1" --arg total "$total" \
-    '"\($position) of \($total), \(.status) on \(.date)", "Question: \(.question)", "Answer: \(.answer)"' <<< "$entry"
+  wording=$(jq -r '[(.answer | rtrimstr(".")), .notes] | map(select(. != "")) | join(". ")' <<< "$entry")
+  jq -r --arg position "$1" --arg total "$total" --arg wording "$wording" \
+    '"\($position) of \($total), \(.status) on \(.date)", "Question: \(.question)", "Answer: \($wording)"' <<< "$entry"
   while printf 'Approve (a), edit (e) or drop (d)? ' && read -r choice; do
     case "$choice" in
       a)
