@@ -48,7 +48,7 @@ check() {
   while IFS= read -r gem; do
     [ -n "$gem" ] || continue
     [ -f "$root/.claude/agents/$gem-develop.md" ] || continue
-    [ "$agent" != "$gem-develop" ] || return 0
+    case "$agent" in "$gem-develop"|"$gem-install") return 0 ;; esac
     refuse "$relative" "$gem"
     return 0
   done < <(owning_gem "$relative")
