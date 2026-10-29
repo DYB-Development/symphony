@@ -4,7 +4,12 @@ set -euo pipefail
 reason="This turn ends by asking the owner something in plain text, and nothing tells the owner a question is waiting. Keep working on the task you were given. If you truly need the owner to decide something before you can go on, ask in a question window with AskUserQuestion and lay out the options."
 
 last_text() {
-  jq -rs '[.[] | select(.type == "assistant") | .message.content[]? | select(.type == "text")] | last | .text // empty' "$1"
+  jq -rs '
+    [.[] | select(.type == "assistant") | .message.content[]?]
+    | ([to_entries[] | select(.value.type == "text") | .key] | last) as $at
+    | if $at == null then empty
+      elif any(.[$at + 1:][]; .type == "tool_use" and .name == "AskUserQuestion") then empty
+      else .[$at].text end' "$1"
 }
 
 closing_lines() {

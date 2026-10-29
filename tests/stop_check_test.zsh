@@ -43,6 +43,11 @@ says() {
   jq -nc --arg text "$1" '{type: "assistant", message: {role: "assistant", content: [{type: "text", text: $text}]}}' >> "$TRANSCRIPT"
 }
 
+opens_question_window() {
+  jq -nc '{type: "assistant", message: {role: "assistant", content: [{type: "tool_use", id: "t1", name: "AskUserQuestion", input: {questions: [{question: "Add the total to the receipt too?"}]}}]}}' >> "$TRANSCRIPT"
+  jq -nc '{type: "user", message: {role: "user", content: [{type: "tool_result", tool_use_id: "t1", content: "Yes"}]}}' >> "$TRANSCRIPT"
+}
+
 stop() {
   jq -nc --arg path "$TRANSCRIPT" --argjson active "${1:-false}" \
     '{hook_event_name: "Stop", session_id: "s1", transcript_path: $path, stop_hook_active: $active}' \
@@ -111,6 +116,15 @@ The invoice tests cover both cases.
 
 All of them pass."
 assert_equals "" "$(stop)" "lets a turn stop when its question sits above the closing lines"
+drop_transcript
+
+new_transcript
+prompt "Add a total to the shop's invoice page."
+says "The invoice page now shows a total.
+
+Should I also add it to the receipt?"
+opens_question_window
+assert_equals "" "$(stop)" "lets a turn stop when it opened a question window after the question"
 drop_transcript
 
 echo ""
