@@ -153,6 +153,13 @@ assert_equals "default: Which database does the shop use?
 Postgres." "$("$SEARCH" --settles which database should the shop use for reports)" "prints only the entries sharing at least half of the search's words when asked which ones settle it"
 drop_store
 
+new_store
+defaults '{"version": 1, "answers": [
+  {"name": "ci", "question": "Should I watch CI once a pull request opens?", "answer": "Watch it."}
+]}'
+assert_equals "|1" "$("$SEARCH" --settles which branch should this pull request target; printf '|%s' "$?")" "leaves out an entry whose shared words are under half of its own question's words when asked which ones settle it"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

@@ -31,8 +31,10 @@ matches=$(jq -rn --arg search "$*" --arg common "$common_words" --argjson settle
   (if $settles then (($words | length) + 1) / 2 | floor else 1 end) as $needed |
   ($repo | map(.name)) as $replaced |
   [($repo + ($defaults | map(select(.name as $name | $replaced | index($name) | not))))[]
-   | . + {shared: ((.question | words) - ((.question | words) - $words) | unique | length)}
-   | select(.shared > 0 and .shared >= $needed)]
+   | (.question | words | unique) as $own
+   | . + {shared: ($own - ($own - $words) | length)}
+   | select(.shared > 0 and .shared >= $needed)
+   | select(($settles | not) or .shared * 2 >= ($own | length))]
   | sort_by(.label == "default", -.shared)
   | .[:5]
   | map("\(.label): \(.question)\n\(.answer)")
