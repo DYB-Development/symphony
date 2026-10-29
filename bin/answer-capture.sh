@@ -33,6 +33,6 @@ printf '%s' "$payload" | jq --arg date "$(date +%F)" --slurpfile list "$review" 
     answer: ($answers[.question] // ""),
     notes: ($annotations[.question].notes // ""),
     date: $date,
-    status: "answered"
+    status: (if ($answers[.question] // "") == "" then "unanswered" else "answered" end)
   }]' > "$review.tmp"
 mv "$review.tmp" "$review"

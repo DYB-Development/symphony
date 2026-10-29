@@ -70,6 +70,12 @@ assert_equals "Keep it on the same host as the app." "$(review_list | jq -r '.[0
   "records the notes the owner added to an answer"
 drop_store
 
+new_store
+answered '{"answers": {}}'
+assert_equals "unanswered" "$(review_list | jq -r '.[0].status')" \
+  "records a question the owner left unanswered as unanswered"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
