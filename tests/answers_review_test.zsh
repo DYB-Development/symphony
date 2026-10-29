@@ -121,6 +121,12 @@ printf 'a\nd\n' | "$REVIEW" > /dev/null
 assert_equals '[]' "$(saved)" "refuses to approve an entry with no answer until the owner edits one in"
 drop_store
 
+new_store
+waiting "[$DATABASE]"
+printf 'a\n\ndatabase\n' | "$REVIEW" > /dev/null
+assert_equals '["database"]' "$(saved | jq -c 'map(.name)')" "asks for the name again when the owner leaves it empty"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

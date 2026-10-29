@@ -28,8 +28,11 @@ review_first() {
           echo "There is no answer to save. Edit one in first."
           continue
         fi
-        printf 'Name: '
-        read -r name
+        name=""
+        while [ -z "$name" ]; do
+          printf 'Name: '
+          read -r name || return 1
+        done
         jq --arg name "$name" --arg answer "$wording" --argjson entry "$entry" \
           '.answers += [{name: $name, question: $entry.question, answer: $answer}]' "$answers" > "$answers.tmp"
         mv "$answers.tmp" "$answers"
