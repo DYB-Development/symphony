@@ -75,6 +75,12 @@ assert_equals "" "$(ask '[{"question": "Which database should the shop use?"}, {
   "leaves a window holding several questions to the one-question gate"
 drop_store
 
+new_store
+printf 'not json\n' > "$SYMPHONY_REPO_ANSWERS_DIR/shop.json"
+assert_equals "|0" "$(ask "$SETTLED" 2>/dev/null; printf '|%s' "$?")" \
+  "lets a question through when the search fails"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
