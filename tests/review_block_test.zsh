@@ -187,6 +187,12 @@ ran '~/.claude/bin/review-draft.sh --post acme/shop 12 /work/shop/.review-12.jso
 assert_equals "0" "$(marks)" "clears the review mark once the session posts the review"
 drop_state
 
+new_state
+start s1 >/dev/null
+ran '~/.claude/bin/review-draft.sh --render /work/shop/.review-12.json' >/dev/null
+assert_equals "1" "$(marks)" "keeps the review mark through any command that does not post the review"
+drop_state
+
 echo "the hooks in hooks.json:"
 
 assert_equals "\${CLAUDE_PLUGIN_ROOT}/bin/review-block.sh start" \
