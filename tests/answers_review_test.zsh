@@ -134,6 +134,10 @@ printf 'a\ndatabase\n' | "$REVIEW" > /dev/null
 assert_equals '["Postgres"]' "$(saved | jq -c 'map(.answer)')" "replaces the repo answer that already carries the name"
 drop_store
 
+new_store
+assert_equals "Nothing is waiting for review." "$("$REVIEW" < /dev/null 2>&1)" "says nothing is waiting when the repo has no review list"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

@@ -13,8 +13,6 @@ remove_first() {
   mv "$review.tmp" "$review"
 }
 
-[ -f "$answers" ] || printf '%s\n' '{"version": 1, "answers": []}' > "$answers"
-
 review_first() {
   local entry wording choice name
   entry=$(jq -c '.entries[0]' "$review")
@@ -52,7 +50,14 @@ review_first() {
   return 1
 }
 
-total=$(jq '.entries | length' "$review")
+total=0
+[ -f "$review" ] && total=$(jq '.entries | length' "$review")
+if [ "$total" -eq 0 ]; then
+  echo "Nothing is waiting for review."
+  exit 0
+fi
+
+[ -f "$answers" ] || printf '%s\n' '{"version": 1, "answers": []}' > "$answers"
 position=0
 while [ "$(jq '.entries | length' "$review")" -gt 0 ]; do
   position=$((position + 1))
