@@ -65,6 +65,11 @@ If this saved answer does not fit, rephrase the question to say why it differs."
   "quotes the saved question and answer, tells the session to use it, and says how to get past a wrong match"
 drop_store
 
+new_store
+assert_equals "|0" "$(ask '[{"question": "Which branch should the release go out from?"}]'; printf '|%s' "$?")" \
+  "lets a question through when no saved answer settles it"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

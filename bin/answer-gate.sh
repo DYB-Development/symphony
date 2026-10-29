@@ -18,7 +18,7 @@ payload=$(cat)
 cd "$(printf '%s' "$payload" | jq -r '.cwd // "."')"
 question=$(printf '%s' "$payload" | jq -r '.tool_input.questions[0].question')
 
-saved=$("$(dirname "$0")/saved-answers.sh" --settles "$question")
+saved=$("$(dirname "$0")/saved-answers.sh" --settles "$question") || exit 0
 
 jq -nc '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $text}}' \
   --arg text "The owner has already answered this question. Use the saved answer below instead of asking.
