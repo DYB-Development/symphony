@@ -5,7 +5,10 @@ reason="This turn ends by asking the owner something in plain text, and nothing 
 
 last_text() {
   jq -rs '
-    [.[] | select(.type == "assistant") | .message.content[]?]
+    def prompt: .type == "user" and (.isMeta | not)
+      and ((.message.content | type) == "string" or any(.message.content[]?; .type == "text"));
+    ([to_entries[] | select(.value | prompt) | .key] | last // -1) as $turn
+    | [.[$turn + 1:][] | select(.type == "assistant") | .message.content[]?]
     | ([to_entries[] | select(.value.type == "text") | .key] | last) as $at
     | if $at == null then empty
       elif any(.[$at + 1:][]; .type == "tool_use" and .name == "AskUserQuestion") then empty
