@@ -210,6 +210,20 @@ assert_equals "\${CLAUDE_PLUGIN_ROOT}/bin/review-block.sh start" \
   "$(jq -r '.hooks.PreToolUse[] | select(.matcher == "Agent") | .hooks[].command | select(test("review-block"))' "$SCRIPT_DIR/../hooks/hooks.json")" \
   "the hooks send each spawned agent to the review mark"
 
+matchers=("${(@f)$(jq -r '.hooks.PreToolUse[]
+  | select(any(.hooks[]; .command | contains("review-block.sh check"))) | .matcher' \
+  "$SCRIPT_DIR/../hooks/hooks.json")}")
+unrouted=()
+for tool in Bash Edit Write NotebookEdit; do
+  routed=0
+  for matcher in "${matchers[@]}"; do
+    [[ -n "$matcher" && "$tool" =~ "^($matcher)$" ]] && routed=1
+  done
+  (( routed )) || unrouted+=("$tool")
+done
+assert_equals "" "${unrouted[*]}" \
+  "the hooks send every edit and every shell command to the review block"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
