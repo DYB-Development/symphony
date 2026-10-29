@@ -99,6 +99,20 @@ says "The receipt should include it in the next release."
 assert_equals "" "$(stop)" "counts an asking phrase only as whole words"
 drop_transcript
 
+new_transcript
+prompt "Add a total to the shop's invoice page."
+says "Why did the total go missing?
+
+The invoice page summed nothing when an order had no lines.
+
+It now shows a total of zero for an empty order.
+
+The invoice tests cover both cases.
+
+All of them pass."
+assert_equals "" "$(stop)" "lets a turn stop when its question sits above the closing lines"
+drop_transcript
+
 echo ""
 echo "the Stop hooks in hooks.json:"
 
