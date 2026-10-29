@@ -141,6 +141,14 @@ says "Should I also add it to the receipt?"
 assert_equals "" "$(stop true)" "lets the turn stop when this hook already refused it once, so it never loops"
 drop_transcript
 
+new_transcript
+rm "$TRANSCRIPT"
+output=$(stop 2>&1)
+code=$?
+assert_equals "0 stop-check.sh: could not read the transcript, so the turn stopped unchecked" "$code $output" \
+  "lets the turn stop with a warning when the transcript cannot be read"
+drop_transcript
+
 echo ""
 echo "the Stop hooks in hooks.json:"
 

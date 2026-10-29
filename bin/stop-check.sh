@@ -27,5 +27,9 @@ asks() {
 hook=$(cat)
 [ "$(printf '%s' "$hook" | jq -r '.stop_hook_active // false')" = true ] && exit 0
 transcript=$(printf '%s' "$hook" | jq -r '.transcript_path // empty')
-last_text "$transcript" | closing_lines | asks || exit 0
+text=$(last_text "$transcript" 2>/dev/null) || {
+  echo "stop-check.sh: could not read the transcript, so the turn stopped unchecked" >&2
+  exit 0
+}
+printf '%s\n' "$text" | closing_lines | asks || exit 0
 jq -nc --arg reason "$reason" '{decision: "block", reason: $reason}'
