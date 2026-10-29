@@ -81,6 +81,13 @@ assert_equals "|0" "$(ask "$SETTLED" 2>/dev/null; printf '|%s' "$?")" \
   "lets a question through when the search fails"
 drop_store
 
+new_store
+printf 'not json\n' > "$SYMPHONY_REPO_ANSWERS_DIR/shop.json"
+assert_equals "answer-gate.sh: the saved answers search failed, so the question was asked unchecked" \
+  "$(ask "$SETTLED" 2>&1 >/dev/null)" \
+  "warns in one line when the search fails"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

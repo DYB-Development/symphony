@@ -19,7 +19,13 @@ payload=$(cat)
 cd "$(printf '%s' "$payload" | jq -r '.cwd // "."')"
 question=$(printf '%s' "$payload" | jq -r '.tool_input.questions[0].question')
 
-saved=$("$(dirname "$0")/saved-answers.sh" --settles "$question") || exit 0
+status=0
+saved=$("$(dirname "$0")/saved-answers.sh" --settles "$question" 2>/dev/null) || status=$?
+[ "$status" -eq 1 ] && exit 0
+if [ "$status" -ne 0 ]; then
+  echo "answer-gate.sh: the saved answers search failed, so the question was asked unchecked" >&2
+  exit 0
+fi
 
 jq -nc '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $text}}' \
   --arg text "The owner has already answered this question. Use the saved answer below instead of asking.
