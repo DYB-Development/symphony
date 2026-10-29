@@ -24,6 +24,7 @@ review_first() {
   while printf 'Approve (a), edit (e) or drop (d)? ' && read -r choice; do
     case "$choice" in
       a)
+        printf 'Name: '
         read -r name
         jq --arg name "$name" --arg answer "$wording" --argjson entry "$entry" \
           '.answers += [{name: $name, question: $entry.question, answer: $answer}]' "$answers" > "$answers.tmp"
@@ -32,6 +33,7 @@ review_first() {
         return 0
         ;;
       e)
+        printf 'New answer: '
         read -r wording
         ;;
       d)

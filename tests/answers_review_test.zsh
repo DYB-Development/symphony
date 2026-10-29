@@ -105,6 +105,16 @@ assert_equals "Postgres. Keep it on the same host as the app." "$(saved | jq -r 
   "saves the owner's notes after the chosen answer"
 drop_store
 
+new_store
+waiting "[$DATABASE]"
+assert_equals "1 of 1, answered on 2026-10-28
+Question: Which database should the shop use?
+Answer: Postgres
+Approve (a), edit (e) or drop (d)? New answer: Approve (a), edit (e) or drop (d)? Name: " \
+  "$(printf 'e\nPostgres 16\na\ndatabase\n' | "$REVIEW")" \
+  "asks for the new wording when editing and for a name when approving"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
