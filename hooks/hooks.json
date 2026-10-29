@@ -28,6 +28,10 @@
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/bin/decision-gate.sh arm"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/answer-capture.sh record"
           }
         ]
       },
