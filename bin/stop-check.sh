@@ -24,6 +24,8 @@ asks() {
     -e '(^|[^[:alnum:]])(do you want|should i|shall i|want me to|would you like|let me know|tell me if)([^[:alnum:]]|$)'
 }
 
-transcript=$(jq -r '.transcript_path // empty')
+hook=$(cat)
+[ "$(printf '%s' "$hook" | jq -r '.stop_hook_active // false')" = true ] && exit 0
+transcript=$(printf '%s' "$hook" | jq -r '.transcript_path // empty')
 last_text "$transcript" | closing_lines | asks || exit 0
 jq -nc --arg reason "$reason" '{decision: "block", reason: $reason}'

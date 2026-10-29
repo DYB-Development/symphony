@@ -135,6 +135,12 @@ jq -nc '{type: "assistant", message: {role: "assistant", content: [{type: "tool_
 assert_equals "" "$(stop)" "reads only the turn that is ending, not a question from an earlier turn"
 drop_transcript
 
+new_transcript
+prompt "Add a total to the shop's invoice page."
+says "Should I also add it to the receipt?"
+assert_equals "" "$(stop true)" "lets the turn stop when this hook already refused it once, so it never loops"
+drop_transcript
+
 echo ""
 echo "the Stop hooks in hooks.json:"
 
