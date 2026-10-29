@@ -88,6 +88,14 @@ assert_equals "answer-gate.sh: the saved answers search failed, so the question 
   "warns in one line when the search fails"
 drop_store
 
+new_store
+cp -R "$SCRIPT_DIR/../bin" "$WORK/bin"
+assert_equals "deny" "$(jq -nc --arg cwd "$WORK/shop" --argjson questions "$SETTLED" \
+    '{session_id: "s1", cwd: $cwd, tool_name: "AskUserQuestion", tool_input: {questions: $questions}}' \
+    | bin/answer-gate.sh check 2>&1 | jq -r '.hookSpecificOutput.permissionDecision')" \
+  "finds the search beside it when run by a relative path from another folder"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

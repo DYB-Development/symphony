@@ -14,13 +14,14 @@ USAGE
 
 [ "${1:-}" = check ] || usage
 
+here="$(cd "$(dirname "$0")" && pwd)"
 payload=$(cat)
 [ "$(printf '%s' "$payload" | jq '.tool_input.questions // [] | length')" -eq 1 ] || exit 0
 cd "$(printf '%s' "$payload" | jq -r '.cwd // "."')"
 question=$(printf '%s' "$payload" | jq -r '.tool_input.questions[0].question')
 
 status=0
-saved=$("$(dirname "$0")/saved-answers.sh" --settles "$question" 2>/dev/null) || status=$?
+saved=$("$here/saved-answers.sh" --settles "$question" 2>/dev/null) || status=$?
 [ "$status" -eq 1 ] && exit 0
 if [ "$status" -ne 0 ]; then
   echo "answer-gate.sh: the saved answers search failed, so the question was asked unchecked" >&2
