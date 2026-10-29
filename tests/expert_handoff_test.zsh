@@ -172,5 +172,13 @@ assert_equals "This repo uses widget_ui, and its expert agent is not installed, 
   "prints a notice when package.json names an owned gem whose expert is not installed"
 drop_state
 
+new_state
+install_expert widget_ui
+patterns default '{"widget_ui": ["app/views/**/*.erb"]}'
+printf 'gem "widget_ui"\n' > "$REPO/Gemfile"
+assert_equals "" "$(start_session "$REPO")" \
+  "prints nothing when the owned gem's expert is installed"
+drop_state
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ]
