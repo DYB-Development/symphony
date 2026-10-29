@@ -158,6 +158,10 @@
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/bin/owner-turn.sh stop"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/stop-check.sh check"
           }
         ]
       }
