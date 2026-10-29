@@ -37,7 +37,8 @@ or `how`. When nothing matches it prints nothing and exits 1.
 An answer it prints settles the question. Follow it rather than asking.
 
 `--settles` prints only the entries whose question shares at least half of the
-search's words, leaving out common words. The answer gate searches this way.
+search's words and at least half of its own words, leaving out common words.
+The answer gate searches this way.
 
 ## A repo answer overrides the default
 
@@ -91,5 +92,5 @@ approved answers and the defaults with the question's words, using `--settles`.
 
 The match is on words alone, so a saved answer can share words with a question
 it does not settle. The refusal says so: rephrase the question to say why it
-differs. The added words lower the share of the question's words the saved
-question holds, so the rephrased question gets through.
+differs. The added words lower the share of the asked question's words that the
+saved question holds, so the rephrased question gets through.
