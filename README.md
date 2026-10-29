@@ -150,6 +150,7 @@ settings that are not its own alone:
 | `PreToolUse` | `owner-turn.sh record` | Records a question prompt, and each item an agent marks with `owner-turn.sh`, as something the owner is waited on for |
 | `UserPromptSubmit` | `owner-turn.sh record` | Records when the owner last prompted, which ends that session's flag in the status line |
 | `Stop` | `owner-turn.sh stop` | Shows the session's flags as the last lines of the turn when the owner is waited on |
+| `Stop` | `stop-check.sh check` | Refuses a turn that ends by asking the owner something in plain text with no question window, once per turn, and lets the turn stop with a warning when the transcript cannot be read |
 | `PreToolUse` | `working-line.sh record` | Keeps the description of the session's most recent tool call as its working line |
 | `Stop` | `working-line.sh record` | Clears the working line when the session ends its turn |
 | `PreToolUse` | `session-worktrees.sh record` | Records which worktree each session and subagent transcript works in, so `usage.sh` finds work done from a session started in another repo |
