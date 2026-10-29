@@ -24,6 +24,10 @@ review_first() {
   while printf 'Approve (a), edit (e) or drop (d)? ' && read -r choice; do
     case "$choice" in
       a)
+        if [ -z "$wording" ]; then
+          echo "There is no answer to save. Edit one in first."
+          continue
+        fi
         printf 'Name: '
         read -r name
         jq --arg name "$name" --arg answer "$wording" --argjson entry "$entry" \

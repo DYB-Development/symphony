@@ -115,6 +115,12 @@ Approve (a), edit (e) or drop (d)? New answer: Approve (a), edit (e) or drop (d)
   "asks for the new wording when editing and for a name when approving"
 drop_store
 
+new_store
+waiting '[{"question": "Which database should the shop use?", "answer": "", "notes": "", "date": "2026-10-28", "status": "unanswered"}]'
+printf 'a\nd\n' | "$REVIEW" > /dev/null
+assert_equals '[]' "$(saved)" "refuses to approve an entry with no answer until the owner edits one in"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
