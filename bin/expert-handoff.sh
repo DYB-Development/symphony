@@ -3,11 +3,14 @@ set -euo pipefail
 
 usage() {
   cat >&2 <<'USAGE'
-usage: expert-handoff.sh check < hook.json
+usage: expert-handoff.sh check  < hook.json
+       expert-handoff.sh notice < hook.json
 
 Keeps a session from writing code that an installed expert agent owns. `check`
 refuses a file edit or write whose path matches a gem's patterns, when that
-gem's expert is installed in the repo.
+gem's expert is installed in the repo. `notice` prints, when a session starts,
+one line for each gem with patterns that the repo's Gemfile or package.json
+uses and whose expert is not installed.
 Patterns are read from ~/.config/symphony/experts/default.json, and a repo adds
 its own in ~/.config/symphony/experts/<repo>.json.
 See ~/.claude/rules/expert-handoff.md.
@@ -71,7 +74,23 @@ check() {
   done < <(owning_gem "$root" "$relative")
 }
 
+uses_gem() {
+  [ -f "$1/Gemfile" ] && grep -Eq "^[[:space:]]*gem[[:space:]]+[\"']$2[\"']" "$1/Gemfile"
+}
+
+notice() {
+  local root gem
+  root=$(jq -r '.cwd // ""')
+  root=$(git -C "${root:-.}" rev-parse --show-toplevel 2>/dev/null) || return 0
+  while IFS= read -r gem; do
+    uses_gem "$root" "$gem" || continue
+    is_installed "$root" "$gem" && continue
+    printf 'This repo uses %s, and its expert agent is not installed, so install it with bundle exec the_local install.\n' "$gem"
+  done < <(patterns_for "$root" | jq -r 'keys[]')
+}
+
 case "${1:-}" in
   check) check ;;
+  notice) notice ;;
   *) usage ;;
 esac

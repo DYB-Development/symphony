@@ -150,5 +150,19 @@ assert_contains '"permissionDecision":"deny"' "$(edit "$STATE/linked/app/views/q
   "matches a file reached through a symbolic link to the repo"
 drop_state
 
+start_session() {
+  jq -nc --arg cwd "$1" '{session_id: "s1", hook_event_name: "SessionStart", cwd: $cwd}' | "$HANDOFF" notice
+}
+
+echo "expert-handoff.sh notice:"
+
+new_state
+patterns default '{"widget_ui": ["app/views/**/*.erb"]}'
+printf 'source "https://rubygems.org"\ngem "widget_ui"\n' > "$REPO/Gemfile"
+assert_equals "This repo uses widget_ui, and its expert agent is not installed, so install it with bundle exec the_local install." \
+  "$(start_session "$REPO")" \
+  "prints a notice when the Gemfile names an owned gem whose expert is not installed"
+drop_state
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ]
