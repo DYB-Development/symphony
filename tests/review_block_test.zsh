@@ -1,5 +1,6 @@
 #!/usr/bin/env zsh
 setopt no_unset
+zmodload zsh/datetime
 
 SCRIPT_DIR="${0:A:h}"
 BLOCK="$SCRIPT_DIR/../bin/review-block.sh"
@@ -138,6 +139,13 @@ new_state
 start s1 >/dev/null
 assert_equals "0" "$(refused "echo 'done; git commit'" 'grep -n "x && npm test" README.md')" \
   "lets through a command that only names a git command or a test run in quoted text"
+drop_state
+
+new_state
+start s1 >/dev/null
+touch -t "$(strftime %Y%m%d%H%M.%S $(( EPOCHSECONDS - 90000 )))" "$CLAUDE_REVIEW_BLOCK_DIR"/*
+assert_equals "" "$(edit Edit "$REPO/app/models/quote.rb")" \
+  "ignores a review mark set more than a day ago"
 drop_state
 
 echo "the hooks in hooks.json:"

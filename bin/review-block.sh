@@ -22,6 +22,17 @@ mark_for() {
   printf '%s/%s' "$mark_dir" "$(printf '%s' "$1" | shasum | cut -c1-40)"
 }
 
+modified_at() {
+  stat -f %m "$1" 2>/dev/null || stat -c %Y "$1" 2>/dev/null || printf '0'
+}
+
+is_reviewing() {
+  local mark
+  mark=$(mark_for "$session")
+  [ -f "$mark" ] || return 1
+  [ $(( $(date +%s) - $(modified_at "$mark") )) -le 86400 ]
+}
+
 in_temporary_folder() {
   local root
   for root in "${TMPDIR:-/tmp}" /tmp /private/tmp /var/folders /private/var/folders; do
@@ -68,7 +79,7 @@ case "${1:-}" in
     : > "$(mark_for "$session")"
     ;;
   check)
-    [ -f "$(mark_for "$session")" ] || exit 0
+    is_reviewing || exit 0
     if [ -n "$command" ]; then
       changes_history "$command" || runs_tests "$command" || exit 0
       refuse
