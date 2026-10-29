@@ -113,5 +113,14 @@ assert_contains '"permissionDecision":"deny"' "$(edit "$REPO/app/views/index.htm
   "matches a double star pattern against a file with no folder in between"
 drop_state
 
+new_state
+install_expert widget_ui
+patterns default '{"widget_ui": ["app/views/**/*.erb"]}'
+patterns shop '{"widget_ui": ["app/components/**/*.rb"]}'
+mkdir -p "$REPO/app/components"
+assert_contains '"permissionDecision":"deny"' "$(edit "$REPO/app/components/card.rb")" \
+  "adds the patterns in the repo's own file to the shared ones"
+drop_state
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ]

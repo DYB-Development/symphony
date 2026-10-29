@@ -8,7 +8,8 @@ usage: expert-handoff.sh check < hook.json
 Keeps a session from writing code that an installed expert agent owns. `check`
 refuses a file edit or write whose path matches a gem's patterns, when that
 gem's expert is installed in the repo.
-Patterns are read from ~/.config/symphony/experts/default.json.
+Patterns are read from ~/.config/symphony/experts/default.json, and a repo adds
+its own in ~/.config/symphony/experts/<repo>.json.
 See ~/.claude/rules/expert-handoff.md.
 USAGE
   exit 64
@@ -16,13 +17,20 @@ USAGE
 
 experts_dir="${SYMPHONY_EXPERTS_DIR:-$HOME/.config/symphony/experts}"
 
-patterns_for_all() {
-  local file="$experts_dir/default.json"
-  [ -r "$file" ] && jq -c '.' "$file" 2>/dev/null || echo '{}'
+patterns_in() {
+  [ -r "$1" ] && jq -c '.' "$1" 2>/dev/null || echo '{}'
+}
+
+patterns_for() {
+  local repo
+  repo=$(basename "$(dirname "$(git -C "$1" rev-parse --path-format=absolute --git-common-dir)")")
+  jq -cn --argjson shared "$(patterns_in "$experts_dir/default.json")" \
+    --argjson own "$(patterns_in "$experts_dir/$repo.json")" '
+    reduce ($own | to_entries[]) as $entry ($shared; .[$entry.key] += $entry.value)'
 }
 
 owning_gem() {
-  jq -rn --arg path "$1" --argjson patterns "$(patterns_for_all)" '
+  jq -rn --arg path "$2" --argjson patterns "$(patterns_for "$1")" '
     def regex: gsub("\\."; "\\.") | gsub("\\*\\*/"; "\u0001") | gsub("\\*\\*"; "\u0002")
       | gsub("\\*"; "[^/]*") | gsub("\\?"; "[^/]") | gsub("\u0001"; "(.*/)?") | gsub("\u0002"; ".*")
       | "^" + . + "$";
@@ -51,7 +59,7 @@ check() {
     case "$agent" in "$gem-develop"|"$gem-install") return 0 ;; esac
     refuse "$relative" "$gem"
     return 0
-  done < <(owning_gem "$relative")
+  done < <(owning_gem "$root" "$relative")
 }
 
 case "${1:-}" in
