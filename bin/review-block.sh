@@ -72,7 +72,7 @@ runs_tests() {
 
 refuse() {
   jq -nc '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $text}}' \
-    --arg text "This session is reviewing a pull request, so it only reads code and writes the review. It edits no file outside its temporary folders, commits nothing and runs no tests. If the owner asked for a fix, post the review with ~/.claude/bin/review-draft.sh --post or drop it with ~/.claude/bin/review-block.sh drop first, then do the fix as its own task."
+    --arg text "This session is reviewing $(cat "$(mark_for "$session")"), so it only reads code and writes the review. It edits no file outside its temporary folders, commits nothing and runs no tests. If the owner asked for a fix, post the review with ~/.claude/bin/review-draft.sh --post or drop it with ~/.claude/bin/review-block.sh drop first, then do the fix as its own task."
 }
 
 payload=$(cat)

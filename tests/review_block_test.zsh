@@ -158,7 +158,7 @@ drop_state
 new_state
 start s1 >/dev/null
 reason=$(run 'git commit -m wip' | jq -r '.hookSpecificOutput.permissionDecisionReason')
-assert_contains "This session is reviewing a pull request, so it only reads code and writes the review." \
+assert_contains ", so it only reads code and writes the review." \
   "$reason" "the refusal says the session is reviewing and only reads code and writes the review"
 drop_state
 
@@ -166,6 +166,13 @@ new_state
 start s1 >/dev/null
 assert_equals "acme/shop#12" "$(cat "$CLAUDE_REVIEW_BLOCK_DIR"/*)" \
   "records which pull request the session is reviewing, read from what the scribe was asked"
+drop_state
+
+new_state
+start s1 >/dev/null
+reason=$(run 'bun test' | jq -r '.hookSpecificOutput.permissionDecisionReason')
+assert_contains "This session is reviewing acme/shop#12," "$reason" \
+  "the refusal names the pull request the session is reviewing"
 drop_state
 
 echo "the hooks in hooks.json:"
