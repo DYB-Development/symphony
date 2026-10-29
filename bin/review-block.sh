@@ -33,6 +33,17 @@ is_reviewing() {
   [ $(( $(date +%s) - $(modified_at "$mark") )) -le 86400 ]
 }
 
+pull_request_named() {
+  local repo number
+  repo=$(printf '%s' "$1" | grep -Eo '[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+' | head -1)
+  number=$(printf '%s' "$1" | grep -Eio '(#|PR +#?|pull request +#?)[0-9]+' | head -1 | grep -Eo '[0-9]+$')
+  if [ -n "$number" ]; then
+    printf '%s#%s' "$repo" "$number"
+  else
+    printf 'a pull request'
+  fi
+}
+
 in_temporary_folder() {
   local root
   for root in "${TMPDIR:-/tmp}" /tmp /private/tmp /var/folders /private/var/folders; do
@@ -65,10 +76,10 @@ refuse() {
 }
 
 payload=$(cat)
-session="" agent_type="" path="" command=""
+session="" agent_type="" path="" command="" prompt=""
 fields=$(printf '%s' "$payload" | jq -r '
   def text: (. // "") | tostring | sub("\n+\\z"; "");
-  @sh "session=\(.session_id | text) agent_type=\(.tool_input.subagent_type | text) path=\(.tool_input.file_path // .tool_input.notebook_path | text) command=\(.tool_input.command | text)"')
+  @sh "session=\(.session_id | text) agent_type=\(.tool_input.subagent_type | text) path=\(.tool_input.file_path // .tool_input.notebook_path | text) command=\(.tool_input.command | text) prompt=\(.tool_input.prompt | text)"')
 eval "$fields"
 [ -n "$session" ] || exit 0
 
@@ -76,7 +87,7 @@ case "${1:-}" in
   start)
     [ "$agent_type" = "review-scribe" ] || exit 0
     mkdir -p "$mark_dir"
-    : > "$(mark_for "$session")"
+    pull_request_named "$prompt" > "$(mark_for "$session")"
     ;;
   check)
     is_reviewing || exit 0
