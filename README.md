@@ -136,6 +136,7 @@ settings that are not its own alone:
 | Event | Runs | Why |
 |---|---|---|
 | `SessionStart` | `writing-style-hook.sh` | Carries the writing rules and the banned phrase list into the session |
+| `SessionStart` | `expert-handoff.sh notice` | Says which gems with patterns in your experts files the repo uses without their expert installed, so it gets installed with `the_local` |
 | `SubagentStart` | `writing-style-hook.sh` | A subagent receives no rules of its own, so it gets them here |
 | `PostToolUse` | `decision-gate.sh arm` | Answering a question settles a choice, which has to be recorded |
 | `PostToolUse` | `answer-capture.sh record` | Records each answered question in that repo's review list, where the owner approves it before it settles later questions |
@@ -144,6 +145,7 @@ settings that are not its own alone:
 | `PostToolUseFailure` | `answer-capture.sh record` | Records a question window the owner rejected as rejected in that repo's review list |
 | `PostToolUseFailure` | `agent-progress.sh record` | Logs each step a subagent marked in a command that then failed, from that command's output |
 | `PreToolUse` | `main-clone-gate.sh check` | Refuses an edit or a branch-changing git command aimed at a repo's main clone, which is kept for its owner |
+| `PreToolUse` | `expert-handoff.sh check` | Refuses an edit to a file an installed expert owns, by your experts files, unless that gem's own develop or install agent makes it, and names the agent to hand the work to |
 | `PreToolUse` | `decision-gate.sh check` | Refuses a commit while that choice is still unrecorded |
 | `PreToolUse` | `review-block.sh check` | Refuses, while the session is reviewing a pull request, an edit outside its temporary folders and the review draft, a git commit, push, merge, rebase or reset, and a run of the repo's tests |
 | `PreToolUse` | `agent-progress.sh record` | Logs each script a subagent is about to run |
@@ -327,6 +329,7 @@ overwrites them.
 | Variable | Changes |
 |---|---|
 | `SYMPHONY_OVERLAY_DIR` | Where your own rules files are read from, instead of `~/.config/symphony/rules` |
+| `SYMPHONY_EXPERTS_DIR` | Where the path patterns each gem's expert owns are read from, instead of `~/.config/symphony/experts` |
 | `SYMPHONY_AGENT_MODELS_FILE` | Where the model each agent runs on is read from, instead of `~/.config/symphony/agent-models.json` |
 | `CLAUDE_CONFIG_DIR` | Where the installer links to, instead of `~/.claude` |
 | `CLAUDE_WRITING_STYLE_FILE` | One writing rules file, ahead of the overlay and the shipped one |

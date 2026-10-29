@@ -6,6 +6,10 @@
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/bin/writing-style-hook.sh"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/expert-handoff.sh notice"
           }
         ]
       }
@@ -109,6 +113,10 @@
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/bin/review-block.sh check"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/expert-handoff.sh check"
           }
         ]
       },
