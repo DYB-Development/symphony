@@ -35,8 +35,7 @@ assert_contains() {
 new_state() {
   STATE="$(mktemp -d "${TMPDIR:-/tmp}/review_block_test.XXXXXX")"
   export CLAUDE_REVIEW_BLOCK_DIR="$STATE/marks"
-  REPO="$STATE/shop"
-  mkdir -p "$REPO"
+  REPO="/work/shop"
 }
 
 drop_state() {
@@ -81,6 +80,12 @@ new_state
 start s1 >/dev/null
 assert_equals "" "$(edit Edit "$REPO/app/models/quote.rb" s2)" \
   "lets another session edit while one session is reviewing"
+drop_state
+
+new_state
+start s1 >/dev/null
+assert_equals "" "$(edit Write "$STATE/scratchpad/notes.md")" \
+  "lets the reviewing session write in a temporary folder"
 drop_state
 
 echo "the hooks in hooks.json:"

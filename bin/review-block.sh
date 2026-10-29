@@ -20,16 +20,24 @@ mark_for() {
   printf '%s/%s' "$mark_dir" "$(printf '%s' "$1" | shasum | cut -c1-40)"
 }
 
+in_temporary_folder() {
+  local root
+  for root in "${TMPDIR:-/tmp}" /tmp /private/tmp /var/folders /private/var/folders; do
+    case "$1" in "${root%/}"/*) return 0 ;; esac
+  done
+  return 1
+}
+
 refuse() {
   jq -nc '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $text}}' \
     --arg text "This session is reviewing a pull request, so it only reads code and writes the review. It edits no file outside its temporary folders, commits nothing and runs no tests. If the owner asked for a fix, post the review with ~/.claude/bin/review-draft.sh --post or drop it with ~/.claude/bin/review-block.sh drop first, then do the fix as its own task."
 }
 
 payload=$(cat)
-session="" agent_type=""
+session="" agent_type="" path=""
 fields=$(printf '%s' "$payload" | jq -r '
   def text: (. // "") | tostring | sub("\n+\\z"; "");
-  @sh "session=\(.session_id | text) agent_type=\(.tool_input.subagent_type | text)"')
+  @sh "session=\(.session_id | text) agent_type=\(.tool_input.subagent_type | text) path=\(.tool_input.file_path // .tool_input.notebook_path | text)"')
 eval "$fields"
 [ -n "$session" ] || exit 0
 
@@ -41,6 +49,7 @@ case "${1:-}" in
     ;;
   check)
     [ -f "$(mark_for "$session")" ] || exit 0
+    in_temporary_folder "$path" && exit 0
     refuse
     ;;
   *) usage ;;
