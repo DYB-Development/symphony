@@ -199,6 +199,11 @@ ran '~/.claude/bin/review-block.sh drop' >/dev/null
 assert_equals "0" "$(marks)" "clears the review mark once the session drops the review"
 drop_state
 
+echo "review-block.sh drop:"
+
+assert_contains "dropped" "$("$BLOCK" drop </dev/null 2>&1)" \
+  "says the review is dropped, which the clear hook then reads to remove the mark"
+
 echo "the hooks in hooks.json:"
 
 assert_equals "\${CLAUDE_PLUGIN_ROOT}/bin/review-block.sh start" \

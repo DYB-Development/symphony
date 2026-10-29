@@ -6,6 +6,7 @@ usage() {
 usage: review-block.sh start  < hook.json
        review-block.sh check  < hook.json
        review-block.sh clear  < hook.json
+       review-block.sh drop
 
 Keeps a session that is reviewing a pull request from changing code. `start`
 marks the session as reviewing when it spawns the review scribe. `check`
@@ -85,6 +86,11 @@ refuse() {
   jq -nc '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $text}}' \
     --arg text "This session is reviewing $(cat "$(mark_for "$session")"), so it only reads code and writes the review. It edits no file outside its temporary folders, commits nothing and runs no tests. If the owner asked for a fix, post the review with ~/.claude/bin/review-draft.sh --post or drop it with ~/.claude/bin/review-block.sh drop first, then do the fix as its own task."
 }
+
+if [ "${1:-}" = "drop" ]; then
+  echo "The review is dropped, and nothing was posted."
+  exit 0
+fi
 
 payload=$(cat)
 session="" agent_type="" path="" command="" prompt=""
