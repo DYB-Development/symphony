@@ -120,6 +120,13 @@ assert_equals "0" "$(refused 'git status' 'git log --oneline -5' 'gh pr diff 12'
   "lets the reviewing session run commands that only read"
 drop_state
 
+new_state
+start s1 >/dev/null
+assert_equals "6" "$(refused 'git commit -m "Fix the loop"' 'git push origin HEAD' 'git merge main' \
+    'git rebase main' 'cd /work/shop && git reset --hard' 'git -C /work/shop commit -am wip')" \
+  "refuses each git command that commits, pushes, merges, rebases or resets"
+drop_state
+
 echo "the hooks in hooks.json:"
 
 assert_equals "\${CLAUDE_PLUGIN_ROOT}/bin/review-block.sh start" \

@@ -8,8 +8,9 @@ usage: review-block.sh start  < hook.json
 
 Keeps a session that is reviewing a pull request from changing code. `start`
 marks the session as reviewing when it spawns the review scribe. `check`
-refuses a file edit while the session is marked, apart from one in a
-temporary folder or to the review draft and the files beside it.
+refuses, while the session is marked, a file edit outside its temporary
+folders and the review draft, and a git command that commits, pushes,
+merges, rebases or resets.
 See ~/.claude/rules/pr-review.md.
 USAGE
   exit 64
@@ -33,6 +34,15 @@ is_review_draft() {
   printf '%s' "${1##*/}" | grep -Eq '^\.review-[0-9]+(\.[a-z]+)*\.json$'
 }
 
+without_quoted_text() {
+  printf '%s' "$1" | tr '\n' ';' | sed "s/\"[^\"]*\"/Q/g; s/'[^']*'/Q/g"
+}
+
+changes_history() {
+  without_quoted_text "$1" \
+    | grep -Eq '(^|[;&|(]) *([A-Za-z_]+=[^ ]* +)*git( +-[Cc] +[^ ;&|]+)* +(commit|push|merge|rebase|reset)([^A-Za-z-]|$)'
+}
+
 refuse() {
   jq -nc '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $text}}' \
     --arg text "This session is reviewing a pull request, so it only reads code and writes the review. It edits no file outside its temporary folders, commits nothing and runs no tests. If the owner asked for a fix, post the review with ~/.claude/bin/review-draft.sh --post or drop it with ~/.claude/bin/review-block.sh drop first, then do the fix as its own task."
@@ -54,7 +64,11 @@ case "${1:-}" in
     ;;
   check)
     [ -f "$(mark_for "$session")" ] || exit 0
-    [ -z "$command" ] || exit 0
+    if [ -n "$command" ]; then
+      changes_history "$command" || exit 0
+      refuse
+      exit 0
+    fi
     in_temporary_folder "$path" && exit 0
     is_review_draft "$path" && exit 0
     refuse
