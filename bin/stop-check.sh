@@ -35,5 +35,6 @@ text=$(last_text "$transcript" 2>/dev/null) || {
   echo "stop-check.sh: could not read the transcript, so the turn stopped unchecked" >&2
   exit 0
 }
-printf '%s\n' "$text" | closing_lines | asks || exit 0
+closing=$(printf '%s\n' "$text" | closing_lines || true)
+asks <<< "$closing" || exit 0
 jq -nc --arg reason "$reason" '{decision: "block", reason: $reason}'
