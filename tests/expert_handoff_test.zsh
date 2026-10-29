@@ -142,5 +142,13 @@ assert_contains '"permissionDecision":"deny"' "$(edit "$STATE/shop-feature-quote
   "counts an expert installed only in the main clone as installed in its linked worktrees"
 drop_state
 
+new_state
+install_expert widget_ui
+patterns default '{"widget_ui": ["app/views/**/*.erb"]}'
+ln -s "$REPO" "$STATE/linked"
+assert_contains '"permissionDecision":"deny"' "$(edit "$STATE/linked/app/views/quotes/show.html.erb")" \
+  "matches a file reached through a symbolic link to the repo"
+drop_state
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ]

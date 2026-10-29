@@ -60,7 +60,8 @@ check() {
   dir=$(dirname "$path")
   while [ ! -d "$dir" ]; do dir=$(dirname "$dir"); done
   root=$(git -C "$dir" rev-parse --show-toplevel 2>/dev/null) || return 0
-  relative="${path#"$root"/}"
+  relative="$(cd "$dir" && pwd -P)${path#"$dir"}"
+  relative="${relative#"$root"/}"
   while IFS= read -r gem; do
     [ -n "$gem" ] || continue
     is_installed "$root" "$gem" || continue
