@@ -39,10 +39,10 @@ refuse() {
 }
 
 payload=$(cat)
-session="" agent_type="" path=""
+session="" agent_type="" path="" command=""
 fields=$(printf '%s' "$payload" | jq -r '
   def text: (. // "") | tostring | sub("\n+\\z"; "");
-  @sh "session=\(.session_id | text) agent_type=\(.tool_input.subagent_type | text) path=\(.tool_input.file_path // .tool_input.notebook_path | text)"')
+  @sh "session=\(.session_id | text) agent_type=\(.tool_input.subagent_type | text) path=\(.tool_input.file_path // .tool_input.notebook_path | text) command=\(.tool_input.command | text)"')
 eval "$fields"
 [ -n "$session" ] || exit 0
 
@@ -54,6 +54,7 @@ case "${1:-}" in
     ;;
   check)
     [ -f "$(mark_for "$session")" ] || exit 0
+    [ -z "$command" ] || exit 0
     in_temporary_folder "$path" && exit 0
     is_review_draft "$path" && exit 0
     refuse

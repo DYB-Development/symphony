@@ -101,6 +101,25 @@ assert_equals "" \
   "reads a notebook edit's path, letting one in a temporary folder through"
 drop_state
 
+run() {
+  jq -nc --arg cmd "$1" --arg cwd "$REPO" '{session_id: "s1", tool_name: "Bash", cwd: $cwd, tool_input: {command: $cmd}}' \
+    | "$BLOCK" check
+}
+
+refused() {
+  local command count=0
+  for command in "$@"; do
+    [[ "$(run "$command")" == *'"permissionDecision":"deny"'* ]] && count=$((count+1))
+  done
+  printf '%s' "$count"
+}
+
+new_state
+start s1 >/dev/null
+assert_equals "0" "$(refused 'git status' 'git log --oneline -5' 'gh pr diff 12' 'cat app/models/quote.rb')" \
+  "lets the reviewing session run commands that only read"
+drop_state
+
 echo "the hooks in hooks.json:"
 
 assert_equals "\${CLAUDE_PLUGIN_ROOT}/bin/review-block.sh start" \
