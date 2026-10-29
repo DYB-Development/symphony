@@ -28,11 +28,14 @@ printf '%s' "$payload" | jq --arg date "$(date +%F)" --slurpfile list "$review" 
   (.tool_response.answers // {}) as $answers |
   (.tool_response.annotations // {}) as $annotations |
   .tool_input.questions as $questions |
+  (.hook_event_name // "") as $event |
   $list[0] | .entries += [$questions[] | {
     question,
     answer: ($answers[.question] // ""),
     notes: ($annotations[.question].notes // ""),
     date: $date,
-    status: (if ($answers[.question] // "") == "" then "unanswered" else "answered" end)
+    status: (if $event == "PostToolUseFailure" then "rejected"
+             elif ($answers[.question] // "") == "" then "unanswered"
+             else "answered" end)
   }]' > "$review.tmp"
 mv "$review.tmp" "$review"

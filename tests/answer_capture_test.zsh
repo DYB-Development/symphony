@@ -76,6 +76,12 @@ assert_equals "unanswered" "$(review_list | jq -r '.[0].status')" \
   "records a question the owner left unanswered as unanswered"
 drop_store
 
+new_store
+answered '{}' PostToolUseFailure
+assert_equals "rejected" "$(review_list | jq -r '.[0].status')" \
+  "records a question the owner rejected as rejected"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
