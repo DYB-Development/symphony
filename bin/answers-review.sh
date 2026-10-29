@@ -25,4 +25,7 @@ case "$choice" in
     mv "$answers.tmp" "$answers"
     remove_first
     ;;
+  d)
+    remove_first
+    ;;
 esac

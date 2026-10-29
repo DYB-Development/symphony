@@ -63,6 +63,12 @@ printf 'a\ndatabase\n' | "$REVIEW" > /dev/null
 assert_equals '[]' "$(pending)" "removes an approved entry from the review list"
 drop_store
 
+new_store
+waiting "[$DATABASE]"
+printf 'd\n' | "$REVIEW" > /dev/null
+assert_equals '[]|[]' "$(pending)|$(saved)" "removes a dropped entry from the review list without saving it"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
