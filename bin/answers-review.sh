@@ -15,24 +15,32 @@ remove_first() {
 
 [ -f "$answers" ] || printf '%s\n' '{"version": 1, "answers": []}' > "$answers"
 
-entry=$(jq -c '.entries[0]' "$review")
-wording=$(jq -r '.answer' <<< "$entry")
-while read -r choice; do
-  case "$choice" in
-    a)
-      read -r name
-      jq --arg name "$name" --arg answer "$wording" --argjson entry "$entry" \
-        '.answers += [{name: $name, question: $entry.question, answer: $answer}]' "$answers" > "$answers.tmp"
-      mv "$answers.tmp" "$answers"
-      remove_first
-      break
-      ;;
-    e)
-      read -r wording
-      ;;
-    d)
-      remove_first
-      break
-      ;;
-  esac
+review_first() {
+  local entry wording choice name
+  entry=$(jq -c '.entries[0]' "$review")
+  wording=$(jq -r '.answer' <<< "$entry")
+  while read -r choice; do
+    case "$choice" in
+      a)
+        read -r name
+        jq --arg name "$name" --arg answer "$wording" --argjson entry "$entry" \
+          '.answers += [{name: $name, question: $entry.question, answer: $answer}]' "$answers" > "$answers.tmp"
+        mv "$answers.tmp" "$answers"
+        remove_first
+        return 0
+        ;;
+      e)
+        read -r wording
+        ;;
+      d)
+        remove_first
+        return 0
+        ;;
+    esac
+  done
+  return 1
+}
+
+while [ "$(jq '.entries | length' "$review")" -gt 0 ]; do
+  review_first || break
 done

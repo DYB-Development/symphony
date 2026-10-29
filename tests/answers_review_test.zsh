@@ -76,6 +76,15 @@ assert_equals "Postgres, started with pgstart." "$(saved | jq -r '.[0].answer')"
   "saves the wording the owner typed when editing before approving"
 drop_store
 
+BRANCH='{"question": "Which branch does the shop release from?", "answer": "main", "notes": "", "date": "2026-10-28", "status": "answered"}'
+
+new_store
+waiting "[$DATABASE, $BRANCH]"
+printf 'd\na\nrelease-branch\n' | "$REVIEW" > /dev/null
+assert_equals '["release-branch"]|[]' "$(saved | jq -c 'map(.name)')|$(pending)" \
+  "takes each waiting entry in turn"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
