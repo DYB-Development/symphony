@@ -10,7 +10,7 @@ Keeps a session that is reviewing a pull request from changing code. `start`
 marks the session as reviewing when it spawns the review scribe. `check`
 refuses, while the session is marked, a file edit outside its temporary
 folders and the review draft, and a git command that commits, pushes,
-merges, rebases or resets.
+merges, rebases or resets, and a run of the repo's tests.
 See ~/.claude/rules/pr-review.md.
 USAGE
   exit 64
@@ -43,6 +43,11 @@ changes_history() {
     | grep -Eq '(^|[;&|(]) *([A-Za-z_]+=[^ ]* +)*git( +-[Cc] +[^ ;&|]+)* +(commit|push|merge|rebase|reset)([^A-Za-z-]|$)'
 }
 
+runs_tests() {
+  without_quoted_text "$1" \
+    | grep -Eq '(^|[;&|(]) *([A-Za-z_]+=[^ ]* +)*(bin/rails +test|bundle +exec +rspec|rspec|bun +test|npm +test|yarn +test|pnpm +test|\./run_tests\.sh)([^A-Za-z-]|$)'
+}
+
 refuse() {
   jq -nc '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $text}}' \
     --arg text "This session is reviewing a pull request, so it only reads code and writes the review. It edits no file outside its temporary folders, commits nothing and runs no tests. If the owner asked for a fix, post the review with ~/.claude/bin/review-draft.sh --post or drop it with ~/.claude/bin/review-block.sh drop first, then do the fix as its own task."
@@ -65,7 +70,7 @@ case "${1:-}" in
   check)
     [ -f "$(mark_for "$session")" ] || exit 0
     if [ -n "$command" ]; then
-      changes_history "$command" || exit 0
+      changes_history "$command" || runs_tests "$command" || exit 0
       refuse
       exit 0
     fi

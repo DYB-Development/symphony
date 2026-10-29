@@ -127,6 +127,13 @@ assert_equals "6" "$(refused 'git commit -m "Fix the loop"' 'git push origin HEA
   "refuses each git command that commits, pushes, merges, rebases or resets"
 drop_state
 
+new_state
+start s1 >/dev/null
+assert_equals "8" "$(refused 'bin/rails test test/models/quote_test.rb' 'bundle exec rspec spec/quote_spec.rb' \
+    'rspec' 'bun test' 'npm test' 'yarn test' 'pnpm test' 'cd /work/shop && ./run_tests.sh')" \
+  "refuses each run of the repo's tests"
+drop_state
+
 echo "the hooks in hooks.json:"
 
 assert_equals "\${CLAUDE_PLUGIN_ROOT}/bin/review-block.sh start" \
