@@ -86,5 +86,12 @@ assert_equals "" "$(edit "$REPO/config/initializers/widget_ui.rb" widget_ui-inst
   "lets the expert's own install agent edit the file"
 drop_state
 
+new_state
+install_expert widget_ui
+patterns default '{"widget_ui": ["app/views/**/*.erb"]}'
+assert_contains '"permissionDecision":"deny"' "$(edit "$REPO/app/views/quotes/show.html.erb" general-purpose)" \
+  "refuses a subagent of any other type an edit to a file the installed expert owns"
+drop_state
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ]
