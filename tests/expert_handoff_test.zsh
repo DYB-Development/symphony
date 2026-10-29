@@ -159,9 +159,17 @@ echo "expert-handoff.sh notice:"
 new_state
 patterns default '{"widget_ui": ["app/views/**/*.erb"]}'
 printf 'source "https://rubygems.org"\ngem "widget_ui"\n' > "$REPO/Gemfile"
-assert_equals "This repo uses widget_ui, and its expert agent is not installed, so install it with bundle exec the_local install." \
+assert_equals "This repo uses widget_ui, and its expert agent is not installed, so install it with the_local." \
   "$(start_session "$REPO")" \
   "prints a notice when the Gemfile names an owned gem whose expert is not installed"
+drop_state
+
+new_state
+patterns default '{"widget_ui": ["app/views/**/*.erb"]}'
+printf '{"dependencies": {"widget_ui": "^1.0.0"}}' > "$REPO/package.json"
+assert_equals "This repo uses widget_ui, and its expert agent is not installed, so install it with the_local." \
+  "$(start_session "$REPO")" \
+  "prints a notice when package.json names an owned gem whose expert is not installed"
 drop_state
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"

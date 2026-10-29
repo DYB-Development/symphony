@@ -75,7 +75,9 @@ check() {
 }
 
 uses_gem() {
-  [ -f "$1/Gemfile" ] && grep -Eq "^[[:space:]]*gem[[:space:]]+[\"']$2[\"']" "$1/Gemfile"
+  { [ -f "$1/Gemfile" ] && grep -Eq "^[[:space:]]*gem[[:space:]]+[\"']$2[\"']" "$1/Gemfile"; } ||
+    { [ -f "$1/package.json" ] && jq -e --arg gem "$2" \
+      '(.dependencies // {}) + (.devDependencies // {}) | has($gem)' "$1/package.json" >/dev/null 2>&1; }
 }
 
 notice() {
@@ -85,7 +87,7 @@ notice() {
   while IFS= read -r gem; do
     uses_gem "$root" "$gem" || continue
     is_installed "$root" "$gem" && continue
-    printf 'This repo uses %s, and its expert agent is not installed, so install it with bundle exec the_local install.\n' "$gem"
+    printf 'This repo uses %s, and its expert agent is not installed, so install it with the_local.\n' "$gem"
   done < <(patterns_for "$root" | jq -r 'keys[]')
 }
 
