@@ -155,6 +155,13 @@ assert_contains "post the review with ~/.claude/bin/review-draft.sh --post or dr
   "$reason" "the refusal says to post or drop the review before making a fix the owner asked for"
 drop_state
 
+new_state
+start s1 >/dev/null
+reason=$(run 'git commit -m wip' | jq -r '.hookSpecificOutput.permissionDecisionReason')
+assert_contains "This session is reviewing a pull request, so it only reads code and writes the review." \
+  "$reason" "the refusal says the session is reviewing and only reads code and writes the review"
+drop_state
+
 echo "the hooks in hooks.json:"
 
 assert_equals "\${CLAUDE_PLUGIN_ROOT}/bin/review-block.sh start" \
