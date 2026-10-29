@@ -93,5 +93,11 @@ assert_contains '"permissionDecision":"deny"' "$(edit "$REPO/app/views/quotes/sh
   "refuses a subagent of any other type an edit to a file the installed expert owns"
 drop_state
 
+new_state
+patterns default '{"widget_ui": ["app/views/**/*.erb"]}'
+assert_equals "" "$(edit "$REPO/app/views/quotes/show.html.erb")" \
+  "lets the main session edit the file when the gem's expert is not installed"
+drop_state
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [ "$FAIL" -eq 0 ]
