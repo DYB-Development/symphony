@@ -28,6 +28,7 @@ eval "$fields"
 
 case "${1:-}" in
   start)
+    [ "$agent_type" = "review-scribe" ] || exit 0
     mkdir -p "$mark_dir"
     : > "$(mark_for "$session")"
     ;;

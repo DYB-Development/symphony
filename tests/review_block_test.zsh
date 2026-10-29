@@ -59,6 +59,11 @@ start s1 >/dev/null
 assert_equals "1" "$(marks)" "marks the session as reviewing when it spawns the review scribe"
 drop_state
 
+new_state
+start s1 pr-scribe >/dev/null
+assert_equals "0" "$(marks)" "marks nothing when the session spawns any other agent"
+drop_state
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
