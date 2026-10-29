@@ -148,6 +148,13 @@ assert_equals "" "$(edit Edit "$REPO/app/models/quote.rb")" \
   "ignores a review mark set more than a day ago"
 drop_state
 
+new_state
+start s1 >/dev/null
+reason=$(edit Edit "$REPO/app/models/quote.rb" | jq -r '.hookSpecificOutput.permissionDecisionReason')
+assert_contains "post the review with ~/.claude/bin/review-draft.sh --post or drop it with ~/.claude/bin/review-block.sh drop first" \
+  "$reason" "the refusal says to post or drop the review before making a fix the owner asked for"
+drop_state
+
 echo "the hooks in hooks.json:"
 
 assert_equals "\${CLAUDE_PLUGIN_ROOT}/bin/review-block.sh start" \
