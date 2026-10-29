@@ -8,7 +8,8 @@ usage: review-block.sh start  < hook.json
 
 Keeps a session that is reviewing a pull request from changing code. `start`
 marks the session as reviewing when it spawns the review scribe. `check`
-refuses a file edit while the session is marked.
+refuses a file edit while the session is marked, apart from one in a
+temporary folder or to the review draft and the files beside it.
 See ~/.claude/rules/pr-review.md.
 USAGE
   exit 64
@@ -26,6 +27,10 @@ in_temporary_folder() {
     case "$1" in "${root%/}"/*) return 0 ;; esac
   done
   return 1
+}
+
+is_review_draft() {
+  printf '%s' "${1##*/}" | grep -Eq '^\.review-[0-9]+(\.[a-z]+)*\.json$'
 }
 
 refuse() {
@@ -50,6 +55,7 @@ case "${1:-}" in
   check)
     [ -f "$(mark_for "$session")" ] || exit 0
     in_temporary_folder "$path" && exit 0
+    is_review_draft "$path" && exit 0
     refuse
     ;;
   *) usage ;;

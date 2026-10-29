@@ -88,6 +88,12 @@ assert_equals "" "$(edit Write "$STATE/scratchpad/notes.md")" \
   "lets the reviewing session write in a temporary folder"
 drop_state
 
+new_state
+start s1 >/dev/null
+assert_equals "" "$(edit Write "$REPO/.review-12.claims.json")" \
+  "lets the reviewing session write the review draft and the files beside it"
+drop_state
+
 echo "the hooks in hooks.json:"
 
 assert_equals "\${CLAUDE_PLUGIN_ROOT}/bin/review-block.sh start" \
