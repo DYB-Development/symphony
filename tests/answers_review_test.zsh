@@ -53,6 +53,16 @@ assert_equals '[{"name":"database","question":"Which database should the shop us
   "adds an approved entry to the repo's answers under the name the owner types"
 drop_store
 
+pending() {
+  jq -c '.entries' "$SYMPHONY_REPO_ANSWERS_DIR/shop.review.json"
+}
+
+new_store
+waiting "[$DATABASE]"
+printf 'a\ndatabase\n' | "$REVIEW" > /dev/null
+assert_equals '[]' "$(pending)" "removes an approved entry from the review list"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
