@@ -134,6 +134,12 @@ assert_equals "8" "$(refused 'bin/rails test test/models/quote_test.rb' 'bundle 
   "refuses each run of the repo's tests"
 drop_state
 
+new_state
+start s1 >/dev/null
+assert_equals "0" "$(refused "echo 'done; git commit'" 'grep -n "x && npm test" README.md')" \
+  "lets through a command that only names a git command or a test run in quoted text"
+drop_state
+
 echo "the hooks in hooks.json:"
 
 assert_equals "\${CLAUDE_PLUGIN_ROOT}/bin/review-block.sh start" \
