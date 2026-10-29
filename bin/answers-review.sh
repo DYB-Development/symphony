@@ -19,7 +19,9 @@ review_first() {
   local entry wording choice name
   entry=$(jq -c '.entries[0]' "$review")
   wording=$(jq -r '.answer' <<< "$entry")
-  while read -r choice; do
+  jq -r --arg position "$1" --arg total "$total" \
+    '"\($position) of \($total), \(.status) on \(.date)", "Question: \(.question)", "Answer: \(.answer)"' <<< "$entry"
+  while printf 'Approve (a), edit (e) or drop (d)? ' && read -r choice; do
     case "$choice" in
       a)
         read -r name
@@ -41,6 +43,10 @@ review_first() {
   return 1
 }
 
+total=$(jq '.entries | length' "$review")
+position=0
 while [ "$(jq '.entries | length' "$review")" -gt 0 ]; do
-  review_first || break
+  position=$((position + 1))
+  [ "$position" -eq 1 ] || echo
+  review_first "$position" || break
 done

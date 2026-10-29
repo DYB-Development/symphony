@@ -85,6 +85,19 @@ assert_equals '["release-branch"]|[]' "$(saved | jq -c 'map(.name)')|$(pending)"
   "takes each waiting entry in turn"
 drop_store
 
+new_store
+waiting "[$DATABASE, $BRANCH]"
+assert_equals "1 of 2, answered on 2026-10-28
+Question: Which database should the shop use?
+Answer: Postgres
+Approve (a), edit (e) or drop (d)? 
+2 of 2, answered on 2026-10-28
+Question: Which branch does the shop release from?
+Answer: main
+Approve (a), edit (e) or drop (d)? " "$(printf 'd\n' | "$REVIEW")" \
+  "shows an entry's question and answer and asks what to do with it"
+drop_store
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
