@@ -54,6 +54,11 @@ Write a test only for behavior that is added or changed. Code that is moved or
 refactored with its behavior unchanged gets no new test, since the tests that
 already exist are what show nothing changed.
 
+Code that is removed or renamed gets no test checking it stays gone. A test
+that an old address returns not found, or that a removed constant, column,
+table or route is absent, checks no behavior a person can use, and it stays in
+the suite long after anyone would bring the old code back.
+
 ---
 
 ## Commits
