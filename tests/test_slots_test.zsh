@@ -136,6 +136,12 @@ drop_ledger
 new_ledger
 mkdir -p "$TEST_SLOTS_DIR/leases"
 printf 'not a lease\n' > "$TEST_SLOTS_DIR/leases/damaged"
+assert_equals "12" "$(workers_given)" "does not count a damaged lease against the total"
+drop_ledger
+
+new_ledger
+mkdir -p "$TEST_SLOTS_DIR/leases"
+printf 'not a lease\n' > "$TEST_SLOTS_DIR/leases/damaged"
 workers_given > /dev/null
 assert_equals "absent" "$([[ -e "$TEST_SLOTS_DIR/leases/damaged" ]] && echo present || echo absent)" \
   "removes a damaged lease when the next run starts"
@@ -263,4 +269,3 @@ assert_equals "allow" "$(hook_output 'bin/rails test' | jq -r '.hookSpecificOutp
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
-
