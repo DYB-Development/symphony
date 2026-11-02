@@ -12,8 +12,8 @@ USAGE
 }
 
 total="${TEST_SLOTS_TOTAL:-$(getconf _NPROCESSORS_ONLN)}"
-leases="${TEST_SLOTS_DIR:-$HOME/.claude/test-slots}/leases"
-lease="$leases/$$"
+ledger="${TEST_SLOTS_DIR:-$HOME/.claude/test-slots}"
+leases="$ledger/leases"
 
 started_at() {
   local started
@@ -32,22 +32,23 @@ held_slots() {
 }
 
 take_slots() {
-  local free
-  mkdir -p "$leases"
+  local holder=$1 free
   free=$((total - $(held_slots)))
   [ "$free" -ge 2 ] || free=2
-  printf '%s\n%s\n%s\n' "$$" "$(started_at $$)" "$free" > "$lease"
+  printf '%s\n%s\n%s\n' "$holder" "$(started_at "$holder")" "$free" > "$leases/$holder"
   echo "$free"
 }
 
 run() {
   local slots
-  slots=$(take_slots)
-  trap 'rm -f "$lease"' EXIT
+  mkdir -p "$leases"
+  slots=$(lockf -k "$ledger/lock" "$0" take $$)
+  trap 'rm -f "$leases/$$"' EXIT
   PARALLEL_WORKERS="$slots" "$@"
 }
 
 case "${1:-}" in
   run) shift; [ $# -ge 1 ] || usage; run "$@" ;;
+  take) [ $# -eq 2 ] || usage; take_slots "$2" ;;
   *) usage ;;
 esac

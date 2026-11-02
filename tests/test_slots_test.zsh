@@ -100,6 +100,19 @@ assert_equals "12" "$(workers_given)" "stops counting the slots of a run killed 
 touch "$WORK/release"
 drop_ledger
 
+new_ledger
+starters=()
+for i in {1..6}; do
+  "$SLOTS" run sh -c 'echo "$PARALLEL_WORKERS" > "$1/given.$$"; while [ ! -f "$1/release" ]; do sleep 0.05; done' _ "$WORK" > /dev/null &
+  starters+=($!)
+done
+given=("$WORK"/given.*(N))
+while (( $#given < 6 )); do sleep 0.05; given=("$WORK"/given.*(N)); done
+touch "$WORK/release"
+wait $starters
+assert_equals "1" "$(cat "$WORK"/given.* | grep -cx 12)" "gives every slot to only one of several runs started at the same moment"
+drop_ledger
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
