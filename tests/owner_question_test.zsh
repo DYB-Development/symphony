@@ -78,6 +78,9 @@ echo "owner-question.sh check:"
 reset_marks; prompt "are you ok?"
 assert_equals "deny" "$(decision Edit '{"file_path":"/a"}')" "refuses a file edit after the owner asks a question"
 
+reset_marks; prompt "are you ok?"
+assert_equals "" "$(decision Read '{"file_path":"/a"}')" "lets a file be read while the question is being answered"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]

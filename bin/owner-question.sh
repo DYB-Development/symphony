@@ -55,6 +55,9 @@ case "${1:-}" in
     payload=$(cat)
     session=$(jq -r '.session_id // empty' <<< "$payload")
     [ -f "$(mark_for "$session")" ] || exit 0
+    case "$(jq -r '.tool_name // empty' <<< "$payload")" in
+      Read|Grep|Glob|LSP|ToolSearch|WebFetch|WebSearch|AskUserQuestion) exit 0 ;;
+    esac
     refuse "The owner asked a question. Answer it and stop, changing nothing, until the owner's next prompt."
     ;;
   asked)
