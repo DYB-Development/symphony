@@ -59,7 +59,7 @@ cat > "$STUB_BIN/curl" <<'STUB'
 #!/usr/bin/env bash
 for arg in "$@"; do [ "$arg" = "@-" ] && cat > "$STUB_SENT"; done
 case "${@: -1}" in
-  */claim_work_item) printf '%s\n%s' "${STUB_CLAIM_BODY:-}" 200 ;;
+  */claim_work_item) printf '%s\n%s' "${STUB_CLAIM_BODY:-}" "${STUB_CLAIM_STATUS:-200}" ;;
   *) printf '%s\n%s' "$STUB_BODY" "${STUB_STATUS:-200}" ;;
 esac
 STUB
@@ -124,6 +124,11 @@ assert_equals "{\"work_item_id\":12,\"session\":\"$(whoami)@$(hostname -s)\"}" "
   "claims the named work item for this machine's session"
 
 assert_equals '{"title":"Export quotes","branch":"12-export-quotes"}' "$(take 2>&1)" "prints the claimed work item as production reads it"
+
+assert_equals "Export quotes waits on Import quotes." \
+  "$(cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_SENT="$WORK/sent" STUB_CLAIM_STATUS=422 \
+     STUB_CLAIM_BODY='{"error": "Export quotes waits on Import quotes."}' STUB_BODY='{"answer": {"title": "Export quotes"}}' "$SCRIPT" take 12 2>&1)" \
+  "reports a work item that waits on open work with the names of what it waits on"
 
 echo ""
 echo "$PASS passed, $FAIL failed"
