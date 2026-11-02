@@ -142,6 +142,18 @@ assert_equals $'Running tests with 2 workers, since the slot ledger at '"$TEST_S
 drop_ledger
 
 new_ledger
+mkdir -p "$TEST_SLOTS_DIR"
+lockf -k "$TEST_SLOTS_DIR/lock" sh -c 'touch "$1/locked"; while [ ! -f "$1/release" ]; do sleep 0.05; done' _ "$WORK" &
+LOCKER=$!
+while [[ ! -f "$WORK/locked" ]]; do sleep 0.05; done
+assert_equals "Running tests with 2 workers, since the slot ledger at $TEST_SLOTS_DIR stayed locked for 5 seconds" \
+  "$("$SLOTS" run true 2>&1)" \
+  "runs with 2 workers and says so when the ledger stays locked for 5 seconds"
+touch "$WORK/release"
+wait $LOCKER
+drop_ledger
+
+new_ledger
 hold_slots
 pkill -KILL -P $$ -f 'test-slots.sh run'
 assert_equals "2" "$(workers_given)" "keeps counting a run's slots while its tests run on after its slot command is killed"
