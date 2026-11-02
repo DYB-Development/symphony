@@ -181,6 +181,18 @@ stopping >/dev/null
 git -C "$ROOT/shop" worktree remove --force "$ROOT/shop-feature"
 assert_contains "#8" "$(reason)" "still names the next issue after the merged branch's worktree is removed"
 
+plan_after_merge() {
+  new_repo
+  commit_work
+  push_work
+  merged_pull_request
+  issue_body 7 "$PLAN_PART"
+  open_issues "$1"
+}
+
+plan_after_merge "[$(task 8 medium "$PLAN_PART" blocked), $(task 9 medium "$PLAN_PART")]"
+assert_contains "#9" "$(reason)" "skips an issue labelled blocked"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]

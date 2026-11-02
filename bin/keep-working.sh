@@ -78,6 +78,7 @@ next_in_plan() {
     def plan: .body // "" | (capture("## Part of\\s*\\n(?<part>[^\\n]*), stage [0-9]+ of [0-9]+").part // empty);
     ($source[0] | plan) as $plan
     | map(select(plan == $plan and .number != $current))
+    | map(select(any(.labels[]; .name == "blocked") | not))
     | sort_by(.number) | first | .number // empty
   ' <<< "$open")
   if [ -z "$next" ]; then
