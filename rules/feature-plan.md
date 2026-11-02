@@ -21,6 +21,13 @@ edited on its own.
 `~/.claude/bin/render-plan.sh` builds the artifact from the issue's title and
 body. Every plan uses the same layout, so no plan's page is designed by hand.
 
+A repo whose setting keeps its plans in dyb_web files the same body as a draft
+plan in dyb_web production instead, with no issue and no artifact. The owner
+reads it, chooses its decisions and approves it on its dyb_web page, and
+approving makes a work item for each unit, so no breakdown follows. The file
+table in section 04, the questions for someone outside the repo in section 08,
+the header and the stamp are not kept there.
+
 
 Never a committed `.md`. A plan describes a codebase that keeps moving, and a
 committed one is read as fact long after it stopped being true. The issue is
