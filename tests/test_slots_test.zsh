@@ -156,6 +156,12 @@ assert_equals $'Running tests with 2 workers, since the slot ledger at '"$TEST_S
 drop_ledger
 
 new_ledger
+touch "$TEST_SLOTS_DIR"
+"$SLOTS" run sh -c 'exit 7' > /dev/null 2>&1
+assert_equals "7" "$?" "exits with the test run's own status when the ledger cannot be used"
+drop_ledger
+
+new_ledger
 mkdir -p "$TEST_SLOTS_DIR"
 lockf -k "$TEST_SLOTS_DIR/lock" sh -c 'touch "$1/locked"; while [ ! -f "$1/release" ]; do sleep 0.05; done' _ "$WORK" &
 LOCKER=$!
