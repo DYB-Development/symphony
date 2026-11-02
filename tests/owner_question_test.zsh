@@ -111,6 +111,13 @@ reset_marks; prompt "are you ok?"
 touch -t 202001010000 "$OWNER_QUESTION_DIR"/*
 assert_equals "" "$(decision Edit '{"file_path":"/a"}')" "ignores a mark more than a day old"
 
+echo "the hooks in hooks.json:"
+
+HOOKS="$SCRIPT_DIR/../hooks/hooks.json"
+wired() { jq -r --arg event "$1" '.hooks[$event][].hooks[].command' "$HOOKS" | grep -cF "$2"; }
+
+assert_equals "1 1 1 1" "$(wired UserPromptSubmit 'owner-question.sh record') $(wired PreToolUse 'owner-question.sh check') $(wired Stop 'owner-question.sh stop') $(wired Stop 'keep-working.sh check')" "runs the question block and the stop check from the hook file"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]

@@ -164,6 +164,10 @@
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/bin/session-worktrees.sh record"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/owner-question.sh check"
           }
         ]
       }
@@ -203,6 +207,14 @@
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/bin/stop-check.sh check"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/owner-question.sh stop"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/keep-working.sh check"
           }
         ]
       }
@@ -225,6 +237,10 @@
           {
             "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/bin/owner-turn.sh record"
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/owner-question.sh record"
           }
         ]
       }
