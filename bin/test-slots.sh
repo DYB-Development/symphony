@@ -52,11 +52,14 @@ slots_command() {
   printf '%q' "$(cd "$(dirname "$0")" && pwd)/test-slots.sh"
 }
 
+plain_text='[^;&|<>`$()]*'
+test_command="^bin/rails test(:all)?( $plain_text)?\$"
+
 wrap() {
   local input command
   input=$(cat)
   command=$(printf '%s' "$input" | jq -r '.tool_input.command // ""')
-  [[ "$command" =~ ^bin/rails\ test(\ [^\;\&\|\<\>\`\$\(\)]*)?$ ]] || return 0
+  [[ "$command" =~ $test_command ]] || return 0
   printf '%s' "$input" | jq -c --arg command "$(slots_command) run $command" \
     '{hookSpecificOutput: {hookEventName: "PreToolUse", updatedInput: (.tool_input + {command: $command})}}'
 }
