@@ -123,6 +123,8 @@ take >/dev/null 2>&1
 assert_equals "{\"work_item_id\":12,\"session\":\"$(whoami)@$(hostname -s)\"}" "$(jq -c . "$WORK/sent" 2>&1)" \
   "claims the named work item for this machine's session"
 
+assert_equals '{"title":"Export quotes","branch":"12-export-quotes"}' "$(take 2>&1)" "prints the claimed work item as production reads it"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"

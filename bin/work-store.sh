@@ -14,7 +14,7 @@ check      Asks dyb_web production for its task choices and reports whether
 file-plan  Adds the plan to dyb_web production as a draft, linked as the
            repo's setting names, and prints its page's address.
 take       Claims the work item in dyb_web production for this machine's
-           session.
+           session, and prints it as production reads it.
 USAGE
   exit 64
 }
@@ -74,6 +74,7 @@ file_plan() {
 take() {
   jq -n --argjson id "$1" --arg session "$(whoami)@$(hostname -s)" '{work_item_id: $id, session: $session}' \
     | "$(dirname "$0")/dyb-hub.sh" post claim_work_item >/dev/null
+  "$(dirname "$0")/dyb-hub.sh" get work_item "work_item_id=$1"
 }
 
 case "${1:-}" in
