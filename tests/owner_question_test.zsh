@@ -81,6 +81,13 @@ assert_equals "deny" "$(decision Edit '{"file_path":"/a"}')" "refuses a file edi
 reset_marks; prompt "are you ok?"
 assert_equals "" "$(decision Read '{"file_path":"/a"}')" "lets a file be read while the question is being answered"
 
+stop_turn() {
+  jq -nc '{hook_event_name: "Stop", session_id: "s1"}' | "$GATE" stop
+}
+
+reset_marks; prompt "are you ok?"; stop_turn
+assert_equals "deny" "$(decision Read '{"file_path":"/a"}')" "refuses a read once the turn that answered the question has ended"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
