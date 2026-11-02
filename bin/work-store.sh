@@ -3,10 +3,12 @@ set -euo pipefail
 
 usage() {
   cat >&2 <<'USAGE'
-usage: work-store.sh show
+usage: work-store.sh show|check
 
-show  Prints where the current repo keeps its plans and work: github, or
-      dyb_web with the link and pipeline its setting names.
+show   Prints where the current repo keeps its plans and work: github, or
+       dyb_web with the link and pipeline its setting names.
+check  Asks dyb_web production for its task choices and reports whether it
+       answers.
 USAGE
   exit 64
 }
@@ -35,7 +37,13 @@ show() {
   setting | jq -r '.store, (del(.store) | to_entries[] | "\(.key)=\(.value)")'
 }
 
+check() {
+  "$(dirname "$0")/dyb-hub.sh" get task_choices >/dev/null
+  printf 'production answers\n'
+}
+
 case "${1:-}" in
   show) show ;;
+  check) check ;;
   *) usage ;;
 esac

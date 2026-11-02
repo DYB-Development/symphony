@@ -47,6 +47,30 @@ assert_equals "work-store.sh: $SETTINGS/shop.json names store \"jira\", which is
   "$(store show 2>&1)" "refuses a setting that names neither GitHub nor dyb_web with the value it held"
 
 echo ""
+echo "work-store.sh check:"
+
+STUB_BIN="$WORK/bin"
+CONNECTION="$WORK/dyb_web"
+mkdir -p "$STUB_BIN"
+printf 'url=https://dyb.example\ntoken=secret\n' > "$CONNECTION"
+
+# A curl that never leaves the machine: it answers task_choices with the body the test sets.
+cat > "$STUB_BIN/curl" <<'STUB'
+#!/usr/bin/env bash
+printf '%s\n%s' "$STUB_BODY" "${STUB_STATUS:-200}"
+STUB
+chmod +x "$STUB_BIN/curl"
+
+check() {
+  (cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$SETTINGS" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_BODY="$1" "$SCRIPT" check)
+}
+
+printf '{"store": "dyb_web", "repo": "acme/shop", "pipeline_id": 3, "own_project_id": 7}' > "$SETTINGS/shop.json"
+assert_equals "production answers" \
+  "$(check '{"answer": {"pipelines": [{"id": 3, "name": "Test-first change"}], "repos": ["acme/shop"], "jobs": [], "products": [], "own_projects": [{"id": 7, "name": "Shop"}], "tasks": []}}' 2>&1)" \
+  "reports that production answers when the connection's URL and token are right"
+
+echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"
 [[ $FAIL -eq 0 ]]
