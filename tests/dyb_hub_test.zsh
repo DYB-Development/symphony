@@ -56,6 +56,9 @@ assert_equals $'The hub holds no pipeline with id 9.\n1' "$(cat "$WORK/out")"$'\
 printf '{"title": "Convert quotes"}' | STUB_BODY='{"answer": 12}' STUB_STATUS=200 hub post add_plan >/dev/null 2>&1
 assert_equals '{"title": "Convert quotes"}' "$(cat "$WORK/sent" 2>&1)" "sends the params it reads for a post as the request body"
 
+assert_equals "https://dyb.example/console/pipelines/plans/12" "$(hub page /console/pipelines/plans/12 2>&1)" \
+  "prints the production address of a page"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"

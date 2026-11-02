@@ -5,10 +5,12 @@ usage() {
   cat >&2 <<'USAGE'
 usage: dyb-hub.sh get <method>
        dyb-hub.sh post <method> < params.json
+       dyb-hub.sh page <path>
 
 Calls one method of dyb_web's Pipelines hub over its JSON API and prints the
-answer. A post sends the JSON object it reads as the method's params. Reads
-url= and token= from ~/.config/symphony/dyb_web.
+answer. A post sends the JSON object it reads as the method's params. page
+prints the production address of a path. Reads url= and token= from
+~/.config/symphony/dyb_web.
 USAGE
   exit 64
 }
@@ -35,5 +37,6 @@ call() {
 case "${1:-}" in
   get) [ $# -eq 2 ] || usage; call GET "$2" ;;
   post) [ $# -eq 2 ] || usage; call POST "$2" -H "Content-Type: application/json" --data-binary @- ;;
+  page) [ $# -eq 2 ] || usage; printf '%s%s\n' "$(value url)" "$2" ;;
   *) usage ;;
 esac
