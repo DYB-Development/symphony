@@ -193,6 +193,8 @@ assert_equals "rails test with 12 workers" "$(run_as_agent 'RAILS_ENV=test bin/r
   "runs an agent's test command that sets an environment variable first inside the slots"
 drop_ledger
 
+assert_equals "" "$(hook_output 'git status')" "leaves a command that runs no Rails tests as the agent wrote it"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
