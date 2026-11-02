@@ -23,5 +23,6 @@ jq -R -s '
 
   sections as $sections
   | ($sections["01"] | paragraphs) as $plan
-  | {summary: ($plan | map(select(test("^\\*\\*[^\n]*\\*\\*$") | not)) | join("\n\n"))}
+  | {summary: ($plan | map(select(test("^\\*\\*[^\n]*\\*\\*$") | not)) | join("\n\n")),
+     rule: ($plan | map(select(test("^\\*\\*[^\n]*\\*\\*$")) | ltrimstr("**") | rtrimstr("**")) | first)}
 ' "$1"

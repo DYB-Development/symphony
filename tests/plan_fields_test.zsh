@@ -169,6 +169,8 @@ echo "plan-fields.sh:"
 
 assert_equals $'Quotes become orders.\n\nNothing else changes.' "$(fields | jq -r .summary)" "reads section 01's paragraphs as the summary"
 
+assert_equals "A quote is a source and the order is the product." "$(fields | jq -r .rule)" "reads section 01's bold line as the rule"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"
