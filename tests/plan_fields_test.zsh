@@ -196,6 +196,8 @@ assert_equals '[{"question":"Where does the convert button sit?","options":["on 
 assert_equals '{"number":"1.1","stage":1,"title":"Convert a quote","user_story":"**As a** rep,\n**I want** to convert a quote,\n**so that** the order needs no retyping.","part_of":"Quote-to-order conversion, stage 1 of 4 — End to end.","how_it_fits":"flowchart LR\n  Quote[\"Quote · built\"] -- \"becomes\" --> Order[\"Order · new\"]","acceptance_criteria":["A rep can convert a quote from its page.","The order carries the quote'"'"'s lines."],"out_of_scope":["Partial conversion, which is a later request."],"waits_on":[]}' \
   "$(fields | jq -c '.units[0]')" "reads a section 09 unit's number, stage, title, story, part, diagram, criteria and out of scope"
 
+assert_equals '["1.1"]' "$(fields | jq -c '.units[1].waits_on')" "reads the units a unit is blocked by as the units it waits on"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"

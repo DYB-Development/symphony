@@ -40,7 +40,7 @@ jq -R -s '
        how_it_fits: (($body | part("How it fits") | diagram) // ""),
        acceptance_criteria: ($body | part("Acceptance criteria") | listed),
        out_of_scope: ($body | part("Out of scope") | listed),
-       waits_on: []};
+       waits_on: [$body | part("Dependencies") | scan("Unit ([0-9]+\\.[0-9]+)")[0]]};
   def units: [splits("(?m)^#### ") | select(startswith("Unit ")) | sub("(?m)\n### Stage[\\s\\S]*$"; "") | unit];
   def sections:
     sub("\n---\n## Generation Metadata[\\s\\S]*$"; "")
