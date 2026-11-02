@@ -92,6 +92,14 @@ wait $HOLDER
 assert_equals "12" "$(workers_given)" "frees a run's slots when its tests are stopped"
 drop_ledger
 
+new_ledger
+hold_slots
+kill -KILL $HOLDER
+wait $HOLDER 2>/dev/null
+assert_equals "12" "$(workers_given)" "stops counting the slots of a run killed before it could give them back"
+touch "$WORK/release"
+drop_ledger
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
