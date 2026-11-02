@@ -26,6 +26,7 @@ is_machine_sent() {
 is_question() {
   jq -e '
     (.prompt // "") | ascii_downcase
+    | [splits("(?<=[.!?])\\s+|\\n+")] | map(select(test("\\S"))) | (last // "")
     | test("\\?[\\s\")*_]*$")
       or test("^((so|and|but|ok|okay|well|again|then|right|also|wait|hmm)[, ]+)*(what|whats|why|how|when|where|who|which|is|are|does|did)\\b")
   ' <<< "$1" >/dev/null

@@ -52,6 +52,9 @@ reset_marks; prompt "are you ok?"; prompt "<task-notification>
 </task-notification>"
 assert_equals "yes" "$(asked)" "keeps the mark when a background task notification arrives"
 
+reset_marks; prompt "This keeps failing. How do we solve this."
+assert_equals "yes" "$(asked)" "reads the last sentence of a prompt to tell whether it is a question"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
