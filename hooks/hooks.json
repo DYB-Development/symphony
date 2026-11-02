@@ -133,10 +133,6 @@
           },
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/bin/question-check.sh check"
-          },
-          {
-            "type": "command",
             "command": "${CLAUDE_PLUGIN_ROOT}/bin/answer-gate.sh check"
           },
           {
