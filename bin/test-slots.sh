@@ -28,7 +28,11 @@ held_slots() {
   for file in "$leases"/*; do
     [ -f "$file" ] || continue
     { read -r pid; read -r started; read -r slots; } < "$file"
-    [ "$(started_at "$pid")" = "$started" ] && held=$((held + slots))
+    if [ "$(started_at "$pid")" = "$started" ]; then
+      held=$((held + slots))
+    else
+      rm -f "$file"
+    fi
   done
   echo "$held"
 }
@@ -45,9 +49,8 @@ run() {
   local slots
   mkdir -p "$leases"
   slots=$(lockf -k "$ledger/lock" "$0" take $$)
-  trap 'rm -f "$leases/$$"' EXIT
   echo "Running tests with $slots workers"
-  PARALLEL_WORKERS="$slots" "$@"
+  PARALLEL_WORKERS="$slots" exec "$@"
 }
 
 slots_command() {
