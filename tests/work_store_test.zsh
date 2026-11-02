@@ -70,6 +70,10 @@ assert_equals "production answers" \
   "$(check '{"answer": {"pipelines": [{"id": 3, "name": "Test-first change"}], "repos": ["acme/shop"], "jobs": [], "products": [], "own_projects": [{"id": 7, "name": "Shop"}], "tasks": []}}' 2>&1)" \
   "reports that production answers when the connection's URL and token are right"
 
+assert_equals $'production answers\nproduction holds no published pipeline with id 3' \
+  "$(check '{"answer": {"pipelines": [], "repos": ["acme/shop"], "jobs": [], "products": [], "own_projects": [{"id": 7, "name": "Shop"}], "tasks": []}}' 2>&1)" \
+  "names the pipeline production does not hold"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"

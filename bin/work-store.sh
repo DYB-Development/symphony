@@ -38,8 +38,15 @@ show() {
 }
 
 check() {
-  "$(dirname "$0")/dyb-hub.sh" get task_choices >/dev/null
+  local choices missing
+  choices="$("$(dirname "$0")/dyb-hub.sh" get task_choices)"
   printf 'production answers\n'
+
+  missing="$(setting | jq -r --argjson choices "$choices" '
+    .pipeline_id as $pipeline
+    | if [$choices.pipelines[].id] | index($pipeline) then empty
+      else "production holds no published pipeline with id \($pipeline)" end')"
+  [ -z "$missing" ] || { printf '%s\n' "$missing"; return 1; }
 }
 
 case "${1:-}" in
