@@ -208,6 +208,9 @@ assert_equals '{"timeout":600000,"run_in_background":true}' \
   "$(hook_output 'bin/rails test' | jq -c '.hookSpecificOutput.updatedInput | del(.command)')" \
   "keeps the agent's timeout and background setting on a rewritten test command"
 
+assert_equals "allow" "$(hook_output 'bin/rails test' | jq -r '.hookSpecificOutput.permissionDecision')" \
+  "approves a test command it rewrote, since the agent's allow rules no longer match it"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

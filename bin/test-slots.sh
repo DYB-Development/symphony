@@ -63,7 +63,7 @@ wrap() {
   command=$(printf '%s' "$input" | jq -r '.tool_input.command // ""')
   [[ "$command" =~ $test_command ]] || return 0
   printf '%s' "$input" | jq -c --arg command "${BASH_REMATCH[1]}$(slots_command) run ${BASH_REMATCH[4]}" \
-    '{hookSpecificOutput: {hookEventName: "PreToolUse", updatedInput: (.tool_input + {command: $command})}}'
+    '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "allow", updatedInput: (.tool_input + {command: $command})}}'
 }
 
 case "${1:-}" in
