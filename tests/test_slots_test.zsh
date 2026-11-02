@@ -132,6 +132,38 @@ wait $starters
 assert_equals "1" "$(cat "$WORK"/given.* | grep -cx 12)" "gives every slot to only one of several runs started at the same moment"
 drop_ledger
 
+# A Rails app whose bin/rails and bin/ci say what they ran and with how many
+# workers, in place of running tests.
+new_app() {
+  new_ledger
+  APP="$WORK/app"
+  mkdir -p "$APP/bin"
+  printf '#!/bin/sh\necho "rails $* with ${PARALLEL_WORKERS:-unset} workers"\n' > "$APP/bin/rails"
+  printf '#!/bin/sh\necho "ci with ${PARALLEL_WORKERS:-unset} workers"\n' > "$APP/bin/ci"
+  chmod +x "$APP/bin/rails" "$APP/bin/ci"
+}
+
+hook_output() {
+  jq -nc --arg command "$1" \
+    '{hook_event_name: "PreToolUse", tool_name: "Bash", tool_input: {command: $command, timeout: 600000, run_in_background: true}}' \
+    | "$SLOTS" wrap
+}
+
+# Runs a command the way the Bash tool would once the hook has seen it.
+run_as_agent() {
+  local command
+  command=$(hook_output "$1" | jq -r '.hookSpecificOutput.updatedInput.command // empty')
+  (cd "$APP" && bash -c "${command:-$1}")
+}
+
+echo ""
+echo "test-slots.sh wrap:"
+
+new_app
+assert_equals $'Running tests with 12 workers\nrails test with 12 workers' "$(run_as_agent 'bin/rails test')" \
+  "runs an agent's bin/rails test inside the slots"
+drop_ledger
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

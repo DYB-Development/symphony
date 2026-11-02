@@ -48,8 +48,22 @@ run() {
   PARALLEL_WORKERS="$slots" "$@"
 }
 
+slots_command() {
+  printf '%q' "$(cd "$(dirname "$0")" && pwd)/test-slots.sh"
+}
+
+wrap() {
+  local input command
+  input=$(cat)
+  command=$(printf '%s' "$input" | jq -r '.tool_input.command // ""')
+  [[ "$command" =~ ^bin/rails\ test$ ]] || return 0
+  printf '%s' "$input" | jq -c --arg command "$(slots_command) run $command" \
+    '{hookSpecificOutput: {hookEventName: "PreToolUse", updatedInput: (.tool_input + {command: $command})}}'
+}
+
 case "${1:-}" in
   run) shift; [ $# -ge 1 ] || usage; run "$@" ;;
+  wrap) wrap ;;
   take) [ $# -eq 2 ] || usage; take_slots "$2" ;;
   *) usage ;;
 esac
