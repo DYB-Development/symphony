@@ -106,7 +106,7 @@ drop_ledger
 
 new_ledger
 hold_slots
-pkill -TERM -P $HOLDER
+kill -TERM $HOLDER
 wait $HOLDER
 assert_equals "12" "$(workers_given)" "frees a run's slots when its tests are stopped"
 drop_ledger
@@ -117,6 +117,13 @@ kill -KILL $HOLDER
 wait $HOLDER 2>/dev/null
 assert_equals "12" "$(workers_given)" "stops counting the slots of a run killed before it could give them back"
 touch "$WORK/release"
+drop_ledger
+
+new_ledger
+hold_slots
+pkill -KILL -P $$ -f 'test-slots.sh run'
+assert_equals "2" "$(workers_given)" "keeps counting a run's slots while its tests run on after its slot command is killed"
+release_slots
 drop_ledger
 
 new_ledger

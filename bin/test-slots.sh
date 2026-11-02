@@ -45,9 +45,8 @@ run() {
   local slots
   mkdir -p "$leases"
   slots=$(lockf -k "$ledger/lock" "$0" take $$)
-  trap 'rm -f "$leases/$$"' EXIT
   echo "Running tests with $slots workers"
-  PARALLEL_WORKERS="$slots" "$@"
+  PARALLEL_WORKERS="$slots" exec "$@"
 }
 
 slots_command() {
