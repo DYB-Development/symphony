@@ -72,6 +72,14 @@ assert_equals "2" "$(workers_given)" "gives a run 2 slots when other runs hold e
 release_slots
 drop_ledger
 
+new_ledger
+hold_slots
+workers_given > /dev/null
+kill -0 $HOLDER 2>/dev/null
+assert_equals "0" "$?" "starts a run's tests while other runs still hold every slot"
+release_slots
+drop_ledger
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
