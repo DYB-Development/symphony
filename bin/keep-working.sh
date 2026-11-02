@@ -27,7 +27,7 @@ session_worktree() {
       printf '%s\n' "$root"
       return 0
     fi
-  done < <(awk -F '\t' -v t="$1" '$2 == t { print $1 }' "$index" | tail -r)
+  done < <(awk -F '\t' -v t="$1" '$2 == t { print $1 }' "$index" | sed -n '1!G;h;$p')
 }
 
 commits_ahead() {
