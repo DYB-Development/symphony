@@ -29,6 +29,7 @@ is_question() {
     | gsub("(?s)<pasted_content[^>]*>.*?</pasted_content[^>]*>"; "")
     | [splits("(?<=[.!?])\\s+|\\n+")] | map(select(test("\\S"))) | (last // "")
     | test("\\?[\\s\")*_]*$")
+      or test("^\\s*(stop|wait|pause|hold on)\\b")
       or test("^((so|and|but|ok|okay|well|again|then|right|also|wait|hmm)[, ]+)*(what|whats|why|how|when|where|who|which|is|are|does|did)\\b")
   ' <<< "$1" >/dev/null
 }

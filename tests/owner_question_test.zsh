@@ -61,6 +61,9 @@ ran the suite.
 </pasted_content id=\"a1\">"
 assert_equals "yes" "$(asked)" "leaves pasted text out when reading the prompt"
 
+reset_marks; prompt "stop"
+assert_equals "yes" "$(asked)" "marks a prompt telling the session to stop"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
