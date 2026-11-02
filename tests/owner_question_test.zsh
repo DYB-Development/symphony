@@ -46,6 +46,12 @@ assert_equals "yes" "$(asked)" "marks a prompt opening with a question word and 
 reset_marks; prompt "are you ok?"; prompt "go ahead with the plan"
 assert_equals "no" "$(asked)" "removes the mark when the owner's next prompt is an instruction"
 
+reset_marks; prompt "are you ok?"; prompt "<task-notification>
+<task-id>b1</task-id>
+<status>completed</status>
+</task-notification>"
+assert_equals "yes" "$(asked)" "keeps the mark when a background task notification arrives"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]

@@ -19,6 +19,10 @@ mark_for() {
   printf '%s/%s' "$mark_dir" "$(printf '%s' "$1" | shasum | cut -c1-40)"
 }
 
+is_machine_sent() {
+  jq -e '(.prompt // "") | test("^\\s*<(task-notification|agent-message|cross-session-message|local-command-)")' <<< "$1" >/dev/null
+}
+
 is_question() {
   jq -e '
     (.prompt // "") | ascii_downcase
@@ -32,6 +36,7 @@ case "${1:-}" in
     payload=$(cat)
     session=$(jq -r '.session_id // empty' <<< "$payload")
     [ -n "$session" ] || exit 0
+    is_machine_sent "$payload" && exit 0
     if ! is_question "$payload"; then
       rm -f "$(mark_for "$session")"
       exit 0
