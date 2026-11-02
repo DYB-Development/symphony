@@ -127,6 +127,10 @@ touch "$ROOT/shop-feature/new.txt"
 jq -nc '{session_id: "s1", prompt: "are you ok?"}' | "$GATE" record
 assert_equals "" "$(stopping)" "lets a session stop after the owner asked a question"
 
+new_repo
+touch "$ROOT/shop-feature/new.txt"
+assert_equals "" "$(stopping '[{"id":"b1","type":"shell","status":"running"}]')" "lets a session stop while a background task is running"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]

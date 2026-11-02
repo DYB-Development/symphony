@@ -41,6 +41,7 @@ commits_ahead() {
 hook=$(cat)
 session=$(jq -r '.session_id // empty' <<< "$hook")
 "$(dirname "$0")/owner-question.sh" asked "$session" && exit 0
+[ "$(jq '.background_tasks // [] | map(select(.status == "running")) | length' <<< "$hook")" -eq 0 ] || exit 0
 transcript=$(jq -r '.transcript_path // empty' <<< "$hook")
 worktree=$(session_worktree "$transcript")
 [ -n "$worktree" ] || exit 0
