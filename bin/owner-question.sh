@@ -20,7 +20,11 @@ mark_for() {
 }
 
 is_question() {
-  jq -e '(.prompt // "") | test("\\?[\\s\")*_]*$")' <<< "$1" >/dev/null
+  jq -e '
+    (.prompt // "") | ascii_downcase
+    | test("\\?[\\s\")*_]*$")
+      or test("^((so|and|but|ok|okay|well|again|then|right|also|wait|hmm)[, ]+)*(what|whats|why|how|when|where|who|which|is|are|does|did)\\b")
+  ' <<< "$1" >/dev/null
 }
 
 case "${1:-}" in

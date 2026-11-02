@@ -40,6 +40,9 @@ echo "owner-question.sh record:"
 reset_marks; prompt "are you following the rules?"
 assert_equals "yes" "$(asked)" "marks a prompt ending in a question mark as a question"
 
+reset_marks; prompt "so again what is the plan"
+assert_equals "yes" "$(asked)" "marks a prompt opening with a question word and no question mark as a question"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
