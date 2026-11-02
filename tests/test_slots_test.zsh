@@ -298,6 +298,16 @@ wait $RUN
 assert_equals "interrupted" "$(recorded_runs | cut -f4)" "records a full-suite run stopped by a signal as interrupted"
 drop_ledger
 
+# A run record that cannot be written, since its folder is a file.
+new_app
+git init -q -b feature/quotes "$APP"
+printf '#!/bin/sh\nexit 7\n' > "$APP/bin/rails"
+touch "$WORK/runs"
+export TEST_RUNS_FILE="$WORK/runs/test-runs.tsv"
+run_as_agent 'bin/rails test' > /dev/null 2>&1
+assert_equals "7" "$?" "exits with the test run's own status when the run record cannot be written"
+drop_ledger
+
 assert_equals "" "$(hook_output 'git status')" "leaves a command that runs no Rails tests as the agent wrote it"
 
 assert_equals "" "$(hook_output 'bin/rails test && git push')" \

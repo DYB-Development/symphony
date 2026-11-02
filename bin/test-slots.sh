@@ -106,7 +106,7 @@ record_run() {
   branch=$(git symbolic-ref --short -q HEAD 2>/dev/null || echo detached)
   worktree=$(git rev-parse --show-toplevel 2>/dev/null || pwd -P)
   printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$branch" "$worktree" "$workers" \
-    "$(date -u -r "$began" +%Y-%m-%dT%H:%M:%SZ)" "$(($(date +%s) - began))" "$status" >> "$runs"
+    "$(date -u -r "$began" +%Y-%m-%dT%H:%M:%SZ)" "$(($(date +%s) - began))" "$status" 2>/dev/null >> "$runs" || true
 }
 
 slots_command() {
