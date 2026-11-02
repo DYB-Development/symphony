@@ -61,5 +61,5 @@ jq -R -s '
      trades: ($sections["07"] | named_pairs),
      decisions: ($sections["08"] | decisions),
      units: ($sections["09"] | units),
-     risks: ($sections["10"] | named_pairs)}
+     risks: [$sections["10"] | scan("(?m)^- \\*\\*(.+?)\\*\\* (.+)$") | {name: .[0], body: .[1]}]}
 ' "$1"

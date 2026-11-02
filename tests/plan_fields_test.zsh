@@ -155,7 +155,7 @@ Blocked by Unit 1.1
 
 ## 10 Risks
 
-- **Orders may need approval** — A client could require it. That is a redesign.
+- **Orders may need approval.** A client could require it, which is a redesign.
 
 ---
 ## Generation Metadata
@@ -174,8 +174,8 @@ assert_equals "A quote is a source and the order is the product." "$(fields | jq
 assert_equals '[{"name":"Quote record","body":"A quote holds its lines."},{"name":"Order record","body":"An order holds its lines."}]' \
   "$(fields | jq -c .already_built)" "reads section 02's named pairs as what is already built"
 
-assert_equals '[[{"name":"Convert action","body":"Turns a quote into an order."}],[{"name":"One more page","body":"The order page is new. Permanent."}],[{"name":"Orders may need approval","body":"A client could require it. That is a redesign."}]]' \
-  "$(fields | jq -c '[.to_be_added, .trades, .risks]')" "reads the named pairs of sections 03, 07 and 10 as what is added, traded and risked"
+assert_equals '[[{"name":"Convert action","body":"Turns a quote into an order."}],[{"name":"One more page","body":"The order page is new. Permanent."}]]' \
+  "$(fields | jq -c '[.to_be_added, .trades]')" "reads the named pairs of sections 03 and 07 as what is added and traded"
 
 assert_equals $'flowchart LR\n  Quote --> Order' "$(fields | jq -r .model_diagram)" "reads section 04's mermaid block as the model diagram"
 
@@ -197,6 +197,9 @@ assert_equals '{"number":"1.1","stage":1,"title":"Convert a quote","user_story":
   "$(fields | jq -c '.units[0]')" "reads a section 09 unit's number, stage, title, story, part, diagram, criteria and out of scope"
 
 assert_equals '["1.1"]' "$(fields | jq -c '.units[1].waits_on')" "reads the units a unit is blocked by as the units it waits on"
+
+assert_equals '[{"name":"Orders may need approval.","body":"A client could require it, which is a redesign."}]' "$(fields | jq -c .risks)" \
+  "reads section 10's bold claims and what follows them as the risks"
 
 echo ""
 echo "$PASS passed, $FAIL failed"
