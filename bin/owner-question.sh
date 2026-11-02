@@ -100,6 +100,10 @@ case "${1:-}" in
     esac
     refuse "The owner asked a question. Answer it and stop, changing nothing, until the owner's next prompt."
     ;;
+  path)
+    [ $# -eq 2 ] || usage
+    mark_for "$2"
+    ;;
   asked)
     [ $# -eq 2 ] || usage
     is_marked "$2"

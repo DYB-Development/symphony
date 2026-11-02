@@ -131,6 +131,11 @@ new_repo
 touch "$ROOT/shop-feature/new.txt"
 assert_equals "" "$(stopping '[{"id":"b1","type":"shell","status":"running"}]')" "lets a session stop while a background task is running"
 
+new_repo
+commit_work
+stopping >/dev/null; stopping >/dev/null; stopping >/dev/null
+assert_equals "" "$(reason)" "lets a session stop after three refusals with nothing changed"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]

@@ -62,4 +62,17 @@ if [ -n "$issue" ] && (cd "$worktree" && gh issue view "$issue" --json body) | j
 fi
 
 [ ${#unfinished[@]} -gt 0 ] || exit 0
-jq -nc --arg reason "This branch has $(IFS=,; printf '%s' "${unfinished[*]}"). Keep working." '{decision: "block", reason: $reason}'
+list=$(IFS=,; printf '%s' "${unfinished[*]}")
+refusals="$("$(dirname "$0")/owner-question.sh" path "$session").refusals"
+fingerprint="$(git -C "$worktree" rev-parse HEAD) $list"
+count=0
+if [ -f "$refusals" ] && [ "$(sed -n 2p "$refusals")" = "$fingerprint" ]; then
+  count=$(sed -n 1p "$refusals")
+fi
+if [ "$count" -ge 3 ]; then
+  jq -nc --arg text "Stopped with unfinished work on this branch: $list." '{systemMessage: $text}'
+  exit 0
+fi
+mkdir -p "$(dirname "$refusals")"
+printf '%s\n%s\n' "$((count + 1))" "$fingerprint" > "$refusals"
+jq -nc --arg reason "This branch has $list. Keep working. If you cannot get past a problem, say what is blocking it." '{decision: "block", reason: $reason}'
