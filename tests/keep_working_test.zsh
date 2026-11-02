@@ -200,6 +200,15 @@ assert_contains "#9" "$(reason)" "skips an issue blocked by one still open"
 plan_after_merge "[$(task 8 low "$PLAN_PART"), $(task 9 high "$PLAN_PART")]"
 assert_contains "#9" "$(reason)" "takes the highest-priority issue first"
 
+plan_after_merge "[]"
+assert_equals "" "$(stopping)" "lets a session stop when the plan has no issues left"
+
+plan_after_merge "[$(task 8 medium "## Part of
+standalone")]"
+issue_body 7 '## Part of
+standalone'
+assert_equals "" "$(stopping)" "lets a session stop after a standalone issue merges"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
