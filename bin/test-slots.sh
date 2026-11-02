@@ -35,6 +35,7 @@ take_slots() {
   local free
   mkdir -p "$leases"
   free=$((total - $(held_slots)))
+  [ "$free" -ge 2 ] || free=2
   printf '%s\n%s\n%s\n' "$$" "$(started_at $$)" "$free" > "$lease"
   echo "$free"
 }

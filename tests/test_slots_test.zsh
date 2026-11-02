@@ -66,6 +66,12 @@ assert_equals "4" "$(TEST_SLOTS_TOTAL=16 workers_given)" "gives a run only the s
 release_slots
 drop_ledger
 
+new_ledger
+hold_slots
+assert_equals "2" "$(workers_given)" "gives a run 2 slots when other runs hold every slot"
+release_slots
+drop_ledger
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
