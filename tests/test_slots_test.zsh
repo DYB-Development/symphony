@@ -195,6 +195,9 @@ drop_ledger
 
 assert_equals "" "$(hook_output 'git status')" "leaves a command that runs no Rails tests as the agent wrote it"
 
+assert_equals "" "$(hook_output 'bin/rails test && git push')" \
+  "leaves a test command with more after the tests as the agent wrote it"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
