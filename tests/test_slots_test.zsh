@@ -119,6 +119,12 @@ assert_equals "12" "$(workers_given)" "stops counting the slots of a run killed 
 touch "$WORK/release"
 drop_ledger
 
+new_ledger
+"$SLOTS" run true > /dev/null
+assert_equals "1" "$("$SLOTS" run sh -c 'ls "$TEST_SLOTS_DIR/leases" | wc -l' | tail -1 | tr -d ' ')" \
+  "removes a finished run's lease when the next run starts"
+drop_ledger
+
 # A lease left by a run whose process number now belongs to this shell, which
 # started at another time.
 new_ledger
