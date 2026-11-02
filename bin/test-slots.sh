@@ -16,6 +16,7 @@ USAGE
 total="${TEST_SLOTS_TOTAL:-$(getconf _NPROCESSORS_ONLN)}"
 ledger="${TEST_SLOTS_DIR:-$HOME/.claude/test-slots}"
 leases="$ledger/leases"
+runs="${TEST_RUNS_FILE:-${CLAUDE_CONFIG_DIR:-$HOME/.claude}/test-runs.tsv}"
 
 started_at() {
   local started
@@ -33,7 +34,7 @@ held_slots() {
     [ -f "$file" ] || continue
     pid="" started="" slots=""
     { read -r pid; read -r started; read -r slots; } < "$file" || true
-    if is_number "$pid" && is_number "$slots" && [ "$(started_at "$pid")" = "$started" ]; then
+    if is_number "$pid" && is_number "$slots" && [ -n "$started" ] && [ "$(started_at "$pid")" = "$started" ]; then
       held=$((held + slots))
     else
       rm -f "$file"
@@ -59,7 +60,53 @@ run() {
     75) slots=2; echo "Running tests with $slots workers, since the slot ledger at $ledger stayed locked for 5 seconds" ;;
     *) slots=2; echo "Running tests with $slots workers, since the slot ledger at $ledger could not be used" ;;
   esac
-  PARALLEL_WORKERS="$slots" exec "$@"
+  local began child
+  began=$(date +%s)
+  PARALLEL_WORKERS="$slots" "$@" <&0 &
+  child=$!
+  trap 'stopped=1; kill -TERM "$child" 2>/dev/null' TERM INT HUP
+  [ "$status" != 0 ] || hand_lease_to "$child" "$slots"
+  status=0
+  wait "$child" || status=$?
+  if [ -n "${stopped:-}" ]; then
+    status=0
+    wait "$child" || status=$?
+  fi
+  rm -f "$leases/$child" "$leases/$$" 2>/dev/null || true
+  local outcome=$status
+  [ -z "${stopped:-}" ] || outcome=interrupted
+  ! is_full_suite "$@" || record_run "$slots" "$began" "$outcome"
+  exit "$status"
+}
+
+hand_lease_to() {
+  local child=$1 slots=$2 started
+  started=$(started_at "$child")
+  [ -n "$started" ] || return 0
+  printf '%s\n%s\n%s\n' "$child" "$started" "$slots" > "$leases/$child"
+  rm -f "$leases/$$"
+}
+
+is_full_suite() {
+  case "$1" in
+    bin/ci) return 0 ;;
+    bin/rails) ;;
+    *) return 1 ;;
+  esac
+  case "${2:-}" in test|test:all|test:system) ;; *) return 1 ;; esac
+  shift 2
+  local argument
+  for argument in "$@"; do
+    case "$argument" in -*) ;; *) return 1 ;; esac
+  done
+}
+
+record_run() {
+  local workers=$1 began=$2 status=$3 branch worktree
+  branch=$(git symbolic-ref --short -q HEAD 2>/dev/null || echo detached)
+  worktree=$(git rev-parse --show-toplevel 2>/dev/null || pwd -P)
+  printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$branch" "$worktree" "$workers" \
+    "$(date -u -r "$began" +%Y-%m-%dT%H:%M:%SZ)" "$(($(date +%s) - began))" "$status" 2>/dev/null >> "$runs" || true
 }
 
 slots_command() {

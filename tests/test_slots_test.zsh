@@ -29,11 +29,13 @@ new_ledger() {
   WORK="$(mktemp -d "${TMPDIR:-/tmp}/test_slots_test.XXXXXX")"
   export TEST_SLOTS_DIR="$WORK/slots"
   export TEST_SLOTS_TOTAL=12
+  export TEST_RUNS_FILE="$WORK/test-runs.tsv"
 }
 
 drop_ledger() {
+  pkill -f "$WORK" 2>/dev/null
   rm -rf "$WORK"
-  unset TEST_SLOTS_DIR TEST_SLOTS_TOTAL
+  unset TEST_SLOTS_DIR TEST_SLOTS_TOTAL TEST_RUNS_FILE
 }
 
 workers_given() {
@@ -113,6 +115,7 @@ drop_ledger
 
 new_ledger
 hold_slots
+pkill -KILL -P $HOLDER
 kill -KILL $HOLDER
 wait $HOLDER 2>/dev/null
 assert_equals "12" "$(workers_given)" "stops counting the slots of a run killed before it could give them back"
@@ -120,8 +123,12 @@ touch "$WORK/release"
 drop_ledger
 
 new_ledger
+hold_slots
+pkill -KILL -P $HOLDER
+kill -KILL $HOLDER
+wait $HOLDER 2>/dev/null
 "$SLOTS" run true > /dev/null
-assert_equals "1" "$("$SLOTS" run sh -c 'ls "$TEST_SLOTS_DIR/leases" | wc -l' | tail -1 | tr -d ' ')" \
+assert_equals "0" "$(ls "$TEST_SLOTS_DIR/leases" | wc -l | tr -d ' ')" \
   "removes a finished run's lease when the next run starts"
 drop_ledger
 
@@ -252,6 +259,53 @@ drop_ledger
 new_app
 assert_equals "rails test with 12 workers" "$(run_as_agent 'RAILS_ENV=test bin/rails test' | tail -1)" \
   "runs an agent's test command that sets an environment variable first inside the slots"
+drop_ledger
+
+# The branch, worktree, workers and exit status a run record line holds,
+# leaving out its start time and duration.
+recorded_runs() {
+  [[ -f "$TEST_RUNS_FILE" ]] && cut -f1,2,3,6 "$TEST_RUNS_FILE"
+}
+
+new_app
+git init -q -b feature/quotes "$APP"
+run_as_agent 'bin/rails test' > /dev/null
+assert_equals "feature/quotes	$(cd "$APP" && pwd -P)	12	0" "$(recorded_runs)" \
+  "records a full-suite run's branch, worktree, workers and exit status"
+drop_ledger
+
+new_app
+git init -q -b feature/quotes "$APP"
+(cd "$WORK" && bash -c "$(hook_output "cd $APP && bin/rails test" | jq -r '.hookSpecificOutput.updatedInput.command')") > /dev/null
+assert_equals "feature/quotes	$(cd "$APP" && pwd -P)" "$(recorded_runs | cut -f1,2)" \
+  "records the branch and worktree the tests ran in when the command changed folder first"
+drop_ledger
+
+new_app
+git init -q -b feature/quotes "$APP"
+run_as_agent 'bin/rails test test/models/quote_test.rb' > /dev/null
+assert_equals "" "$(recorded_runs)" "records nothing for a run of one named test file"
+drop_ledger
+
+new_app
+git init -q -b feature/quotes "$APP"
+printf '#!/bin/sh\ntouch "%s/started"\nwhile true; do sleep 0.05; done\n' "$WORK" > "$APP/bin/rails"
+(cd "$APP" && exec "$SLOTS" run bin/rails test) > /dev/null &
+RUN=$!
+while [[ ! -f "$WORK/started" ]]; do sleep 0.05; done
+kill -TERM $RUN
+wait $RUN
+assert_equals "interrupted" "$(recorded_runs | cut -f4)" "records a full-suite run stopped by a signal as interrupted"
+drop_ledger
+
+# A run record that cannot be written, since its folder is a file.
+new_app
+git init -q -b feature/quotes "$APP"
+printf '#!/bin/sh\nexit 7\n' > "$APP/bin/rails"
+touch "$WORK/runs"
+export TEST_RUNS_FILE="$WORK/runs/test-runs.tsv"
+run_as_agent 'bin/rails test' > /dev/null 2>&1
+assert_equals "7" "$?" "exits with the test run's own status when the run record cannot be written"
 drop_ledger
 
 assert_equals "" "$(hook_output 'git status')" "leaves a command that runs no Rails tests as the agent wrote it"
