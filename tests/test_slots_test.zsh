@@ -80,6 +80,12 @@ assert_equals "0" "$?" "starts a run's tests while other runs still hold every s
 release_slots
 drop_ledger
 
+new_ledger
+"$SLOTS" run sh -c 'exit 3' > /dev/null
+assert_equals "12" "$(workers_given)" "frees a run's slots when its tests fail"
+drop_ledger
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
+
