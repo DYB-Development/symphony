@@ -164,6 +164,11 @@ assert_equals $'Running tests with 12 workers\nrails test with 12 workers' "$(ru
   "runs an agent's bin/rails test inside the slots"
 drop_ledger
 
+new_app
+assert_equals "rails test test/models/quote_test.rb with 12 workers" "$(run_as_agent 'bin/rails test test/models/quote_test.rb' | tail -1)" \
+  "runs an agent's bin/rails test of one file inside the slots"
+drop_ledger
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

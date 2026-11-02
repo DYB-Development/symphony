@@ -56,7 +56,7 @@ wrap() {
   local input command
   input=$(cat)
   command=$(printf '%s' "$input" | jq -r '.tool_input.command // ""')
-  [[ "$command" =~ ^bin/rails\ test$ ]] || return 0
+  [[ "$command" =~ ^bin/rails\ test(\ [^\;\&\|\<\>\`\$\(\)]*)?$ ]] || return 0
   printf '%s' "$input" | jq -c --arg command "$(slots_command) run $command" \
     '{hookSpecificOutput: {hookEventName: "PreToolUse", updatedInput: (.tool_input + {command: $command})}}'
 }
