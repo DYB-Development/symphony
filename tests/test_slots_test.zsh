@@ -65,6 +65,11 @@ assert_equals "5" "$(TEST_SLOTS_TOTAL=5 workers_given)" "takes the slot total fr
 drop_ledger
 
 new_ledger
+unset TEST_SLOTS_TOTAL
+assert_equals "$(getconf _NPROCESSORS_ONLN)" "$(workers_given)" "takes the machine's processor count as the slot total when it is not set"
+drop_ledger
+
+new_ledger
 hold_slots
 assert_equals "4" "$(TEST_SLOTS_TOTAL=16 workers_given)" "gives a run only the slots other runs do not hold"
 release_slots
@@ -130,4 +135,3 @@ drop_ledger
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
-
