@@ -201,6 +201,10 @@ assert_equals '["1.1"]' "$(fields | jq -c '.units[1].waits_on')" "reads the unit
 assert_equals '[{"name":"Orders may need approval.","body":"A client could require it, which is a redesign."}]' "$(fields | jq -c .risks)" \
   "reads section 10's bold claims and what follows them as the risks"
 
+sed '/^## 07 What we trade/,/^## 08 Settle first/{/^## 08/!d;}' "$BODY" > "$WORK/no-trades.md"
+assert_equals "plan-fields.sh: the plan has no section 07 What we trade" "$("$SCRIPT" "$WORK/no-trades.md" 2>&1)" \
+  "refuses a body missing a section and names the section"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"
