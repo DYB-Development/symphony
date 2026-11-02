@@ -4,11 +4,14 @@ set -euo pipefail
 usage() {
   cat >&2 <<'USAGE'
 usage: work-store.sh show|check
+       work-store.sh file-plan <title> <plan-body-file>
 
-show   Prints where the current repo keeps its plans and work: github, or
-       dyb_web with the link and pipeline its setting names.
-check  Asks dyb_web production for its task choices and reports whether it
-       answers.
+show       Prints where the current repo keeps its plans and work: github, or
+           dyb_web with the link and pipeline its setting names.
+check      Asks dyb_web production for its task choices and reports whether
+           it answers.
+file-plan  Adds the plan to dyb_web production as a draft, linked as the
+           repo's setting names.
 USAGE
   exit 64
 }
@@ -56,8 +59,17 @@ check() {
   [ -z "$missing" ] || { printf '%s\n' "$missing"; return 1; }
 }
 
+file_plan() {
+  local fields
+  fields="$("$(dirname "$0")/plan-fields.sh" "$2")"
+  setting | jq --arg title "$1" --argjson fields "$fields" \
+    '{title: $title, priority: "medium"} + (with_entries(select(.key | IN("own_project_id", "job_id", "product_id")))) + $fields' \
+    | "$(dirname "$0")/dyb-hub.sh" post add_plan
+}
+
 case "${1:-}" in
   show) show ;;
   check) check ;;
+  file-plan) [ $# -eq 3 ] || usage; file_plan "$2" "$3" ;;
   *) usage ;;
 esac
