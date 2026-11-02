@@ -122,6 +122,11 @@ issue_body 7 '## Acceptance criteria
 - [ ] Two'
 assert_contains "unticked acceptance criteria" "$(reason)" "refuses a stop while the issue has unticked acceptance criteria"
 
+new_repo
+touch "$ROOT/shop-feature/new.txt"
+jq -nc '{session_id: "s1", prompt: "are you ok?"}' | "$GATE" record
+assert_equals "" "$(stopping)" "lets a session stop after the owner asked a question"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
