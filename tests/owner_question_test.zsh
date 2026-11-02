@@ -98,6 +98,12 @@ bash_decision() {
 reset_marks; prompt "are you ok?"
 assert_equals "" "$(bash_decision 'git -C /a status --short | head -3')" "lets a read-only shell command run while the question is being answered"
 
+reset_marks; prompt "are you ok?"
+assert_equals "deny" "$(bash_decision 'git status && git commit -m done')" "refuses a shell command that changes something after a read-only one"
+
+reset_marks; prompt "are you ok?"
+assert_equals "deny" "$(bash_decision 'cat a > b')" "refuses a shell command that writes a file through a redirect"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
