@@ -337,6 +337,8 @@ overwrites them.
 | `AUDIT_RUBRIC_FILE` | The cost bands and horizons an audit is scored against |
 | `ISSUE_BOOTSTRAP_OWNERS` | The accounts `issue-bootstrap.sh --all-repos` syncs labels across |
 | `SYMPHONY_IDENTIFIERS` | A file of terms no shipped file may name, checked by the suite |
+| `TEST_SLOTS_TOTAL` | How many test workers `test-slots.sh run` shares out across the machine, instead of its processor count |
+| `TEST_SLOTS_DIR` | Where `test-slots.sh` keeps the slots each running test run holds, instead of `~/.claude/test-slots` |
 | `READ_DRAFT_SMOKE` | Set to `1` and the suite runs one real read through `claude` |
 | `RENDER_PLAN_SMOKE` | Set to a plan issue as `owner/repo#N` and the suite renders it through GitHub |
 
