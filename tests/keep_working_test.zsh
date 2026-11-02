@@ -100,6 +100,11 @@ new_repo
 commit_work
 assert_contains "unpushed commits" "$(reason)" "refuses a stop while the branch has unpushed commits"
 
+new_repo
+commit_work
+push_work
+assert_contains "no open pull request" "$(reason)" "refuses a stop while the branch has no open pull request"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]

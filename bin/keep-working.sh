@@ -43,9 +43,16 @@ transcript=$(jq -r '.transcript_path // empty' <<< "$hook")
 worktree=$(session_worktree "$transcript")
 [ -n "$worktree" ] || exit 0
 
+branch=$(git -C "$worktree" branch --show-current)
+started=$(commits_ahead "$worktree" origin/HEAD origin/main)
+pull_requests=$(cd "$worktree" && gh pr list --head "$branch" --state all --limit 1 --json number,state,closingIssuesReferences)
+
 unfinished=()
 [ -z "$(git -C "$worktree" status --porcelain)" ] || unfinished+=("uncommitted changes")
 [ "$(commits_ahead "$worktree" '@{upstream}' origin/HEAD origin/main)" -eq 0 ] || unfinished+=("unpushed commits")
+if [ "$started" -gt 0 ] && [ "$(jq -r '.[0].state // "NONE"' <<< "$pull_requests")" = NONE ]; then
+  unfinished+=("no open pull request")
+fi
 
 [ ${#unfinished[@]} -gt 0 ] || exit 0
 jq -nc --arg reason "This branch has $(IFS=,; printf '%s' "${unfinished[*]}"). Keep working." '{decision: "block", reason: $reason}'
