@@ -33,12 +33,13 @@ printf 'url=https://dyb.example\ntoken=secret\n' > "$CONNECTION"
 # A curl that never leaves the machine: it prints the body and status the test sets.
 cat > "$STUB_BIN/curl" <<'STUB'
 #!/usr/bin/env bash
+for arg in "$@"; do [ "$arg" = "@-" ] && cat > "$STUB_SENT"; done
 printf '%s\n%s' "$STUB_BODY" "$STUB_STATUS"
 STUB
 chmod +x "$STUB_BIN/curl"
 
 hub() {
-  PATH="$STUB_BIN:$PATH" SYMPHONY_DYB_WEB_FILE="$CONNECTION" "$SCRIPT" "$@"
+  PATH="$STUB_BIN:$PATH" STUB_SENT="$WORK/sent" SYMPHONY_DYB_WEB_FILE="$CONNECTION" "$SCRIPT" "$@"
 }
 
 echo "dyb-hub.sh:"
@@ -47,10 +48,13 @@ assert_equals '{"repos":["acme/shop"]}' \
   "$(STUB_BODY='{"answer": {"repos": ["acme/shop"]}}' STUB_STATUS=200 hub get task_choices 2>&1)" \
   "prints the answer of a hub method"
 
-STUB_BODY='{"error": "The hub holds no pipeline with id 9."}' STUB_STATUS=422 hub post add_work_item >"$WORK/out" 2>&1
+printf '{}' | STUB_BODY='{"error": "The hub holds no pipeline with id 9."}' STUB_STATUS=422 hub post add_work_item >"$WORK/out" 2>&1
 exit_status=$?
 assert_equals $'The hub holds no pipeline with id 9.\n1' "$(cat "$WORK/out")"$'\n'"$exit_status" \
   "prints the hub's own message for a refusal and fails"
+
+printf '{"title": "Convert quotes"}' | STUB_BODY='{"answer": 12}' STUB_STATUS=200 hub post add_plan >/dev/null 2>&1
+assert_equals '{"title": "Convert quotes"}' "$(cat "$WORK/sent" 2>&1)" "sends the params it reads for a post as the request body"
 
 echo ""
 echo "$PASS passed, $FAIL failed"
