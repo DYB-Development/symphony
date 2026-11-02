@@ -204,6 +204,10 @@ assert_equals "" "$(hook_output 'cd app;make && bin/rails test')" \
 assert_equals "" "$(hook_output "$SLOTS run bin/rails test")" \
   "leaves a test command already run inside the slots as the agent wrote it"
 
+assert_equals '{"timeout":600000,"run_in_background":true}' \
+  "$(hook_output 'bin/rails test' | jq -c '.hookSpecificOutput.updatedInput | del(.command)')" \
+  "keeps the agent's timeout and background setting on a rewritten test command"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
