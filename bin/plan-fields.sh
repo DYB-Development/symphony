@@ -27,6 +27,21 @@ jq -R -s '
            options: [scan("(?m)^\\s*- Option [a-z]+: (.+)$")[0]],
            recommendation: line_after("Recommendation"),
            choice: line_after("Decided")});
+  def part($heading): capture("(?m)^## " + $heading + "\n(?<text>[\\s\\S]*?)(?=\n## |\\z)").text | trimmed;
+  def listed: [scan("(?m)^- (?:\\[[ x]\\] )?(.+)$")[0]];
+  def unit:
+    capture("^Unit (?<number>[0-9]+\\.[0-9]+) — (?<title>.+?)(?: \\([^)]+\\))?\n(?<body>[\\s\\S]*)$") as $unit
+    | $unit.body as $body
+    | {number: $unit.number,
+       stage: ($unit.number | split(".")[0] | tonumber),
+       title: $unit.title,
+       user_story: ($body | split("\n## ")[0] | trimmed),
+       part_of: ($body | part("Part of")),
+       how_it_fits: (($body | part("How it fits") | diagram) // ""),
+       acceptance_criteria: ($body | part("Acceptance criteria") | listed),
+       out_of_scope: ($body | part("Out of scope") | listed),
+       waits_on: []};
+  def units: [splits("(?m)^#### ") | select(startswith("Unit ")) | sub("(?m)\n### Stage[\\s\\S]*$"; "") | unit];
   def sections:
     sub("\n---\n## Generation Metadata[\\s\\S]*$"; "")
     | [splits("\n(?=## [0-9]{2} )")]
@@ -45,5 +60,6 @@ jq -R -s '
      gains: ($sections["06"] | named_pairs | map({role: .name, body})),
      trades: ($sections["07"] | named_pairs),
      decisions: ($sections["08"] | decisions),
+     units: ($sections["09"] | units),
      risks: ($sections["10"] | named_pairs)}
 ' "$1"
