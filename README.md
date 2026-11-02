@@ -331,6 +331,8 @@ overwrites them.
 | `SYMPHONY_OVERLAY_DIR` | Where your own rules files are read from, instead of `~/.config/symphony/rules` |
 | `SYMPHONY_EXPERTS_DIR` | Where the path patterns each gem's expert owns are read from, instead of `~/.config/symphony/experts` |
 | `SYMPHONY_AGENT_MODELS_FILE` | Where the model each agent runs on is read from, instead of `~/.config/symphony/agent-models.json` |
+| `SYMPHONY_WORK_DIR` | Where each repo's work store setting is read from, instead of `~/.config/symphony/work` |
+| `SYMPHONY_DYB_WEB_FILE` | Where the dyb_web production address and token are read from, instead of `~/.config/symphony/dyb_web` |
 | `CLAUDE_CONFIG_DIR` | Where the installer links to, instead of `~/.claude` |
 | `CLAUDE_WRITING_STYLE_FILE` | One writing rules file, ahead of the overlay and the shipped one |
 | `CLAUDE_BANNED_PHRASES_FILE` | One phrase list, on the same terms |
@@ -390,6 +392,39 @@ expects to find goes missing.
 
 Set `SYMPHONY_OVERLAY_DIR` to keep the overlay somewhere else, such as a
 directory your team shares.
+
+### Keeping a repo's work in dyb_web
+
+A repo keeps its plans and work in GitHub issues unless its setting says
+otherwise. To keep them in dyb_web production instead, put a file at
+`~/.config/symphony/work/<repo>.json`, where `<repo>` is the folder name of the
+repo's main clone:
+
+```json
+{
+  "store": "dyb_web",
+  "repo": "acme/shop",
+  "pipeline_id": 3,
+  "own_project_id": 7
+}
+```
+
+`repo` is the name of the repo's Repo record in production, and `pipeline_id`
+is the pipeline its work runs on. The link is one of `own_project_id`, `job_id`
+or `product_id`. A `store` other than `github` or `dyb_web` is refused.
+
+Put the production address and your API token in `~/.config/symphony/dyb_web`:
+
+```
+url=https://dyb.example
+token=<your token>
+```
+
+`work-store.sh show` prints where the current repo keeps its work.
+`work-store.sh check` asks production for its task choices, and names the
+pipeline, repo or link the setting names that production does not hold. It
+cannot tell a pipeline with no published version from one production does not
+hold, so it names both as no published pipeline.
 
 ### Choosing each agent's model
 
