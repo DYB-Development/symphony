@@ -76,13 +76,14 @@ next_in_plan() {
   open=$(gh issue list --repo "$repo" --state open --limit 200 --json number,labels,body) || github_failed
   next=$(jq -r --argjson current "$issue" --slurpfile source <(printf '%s' "$body") '
     def plan: .body // "" | (capture("## Part of\\s*\\n(?<part>[^\\n]*), stage [0-9]+ of [0-9]+").part // empty);
+    def priority: [.labels[].name] | if any(. == "priority:high") then 0 elif any(. == "priority:medium") then 1 else 2 end;
     def blockers: .body // "" | [scan("Blocked by ([A-Za-z0-9_./-]*)#([0-9]+)")];
     ($source[0] | plan) as $plan
     | (map(.number | tostring)) as $open_numbers
     | map(select(plan == $plan and .number != $current))
     | map(select(any(blockers[]; .[0] != "" or (.[1] | IN($open_numbers[]))) | not))
     | map(select(any(.labels[]; .name == "blocked") | not))
-    | sort_by(.number) | first | .number // empty
+    | sort_by(priority, .number) | first | .number // empty
   ' <<< "$open")
   if [ -z "$next" ]; then
     rm -f "$mark.issue"

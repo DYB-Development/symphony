@@ -197,6 +197,9 @@ plan_after_merge "[$(task 8 medium "$PLAN_PART
 Blocked by #10"), $(task 9 medium "$PLAN_PART"), $(task 10 low "other")]"
 assert_contains "#9" "$(reason)" "skips an issue blocked by one still open"
 
+plan_after_merge "[$(task 8 low "$PLAN_PART"), $(task 9 high "$PLAN_PART")]"
+assert_contains "#9" "$(reason)" "takes the highest-priority issue first"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
