@@ -85,6 +85,10 @@ assert_equals "PreToolUse:Bash" \
   "$(jq -r '[.hooks | to_entries[] | .key as $event | .value[] | select(any(.hooks[]; .command | endswith("/bin/description-gate.sh check"))) | "\($event):\(.matcher)"] | sort | join(" ")' "$CONFIG/settings.json")" \
   "refuses every shell command that carries no description"
 
+assert_equals "PreToolUse:Bash" \
+  "$(jq -r '[.hooks | to_entries[] | .key as $event | .value[] | select(any(.hooks[]; .command | endswith("/bin/test-slots.sh wrap"))) | "\($event):\(.matcher)"] | sort | join(" ")' "$CONFIG/settings.json")" \
+  "runs every agent's plain Rails test command inside the shared test slots"
+
 assert_equals "PreToolUse:AskUserQuestion PreToolUse:Bash UserPromptSubmit:null" \
   "$(jq -r '[.hooks | to_entries[] | .key as $event | .value[] | select(any(.hooks[]; .command | endswith("/bin/owner-turn.sh record"))) | "\($event):\(.matcher)"] | sort | join(" ")' "$CONFIG/settings.json")" \
   "records the owner's turn on every question prompt, every Bash call and every prompt the owner sends"
