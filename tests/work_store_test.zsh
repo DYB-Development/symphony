@@ -78,6 +78,10 @@ assert_equals $'production answers\nproduction holds no repo named acme/shop' \
   "$(check '{"answer": {"pipelines": [{"id": 3, "name": "Test-first change"}], "repos": [], "jobs": [], "products": [], "own_projects": [{"id": 7, "name": "Shop"}], "tasks": []}}' 2>&1)" \
   "names the repo production does not hold"
 
+assert_equals $'production answers\nproduction holds no own project with id 7' \
+  "$(check '{"answer": {"pipelines": [{"id": 3, "name": "Test-first change"}], "repos": ["acme/shop"], "jobs": [{"id": 7, "name": "Shop"}], "products": [], "own_projects": [], "tasks": []}}' 2>&1)" \
+  "names the link production does not hold"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"

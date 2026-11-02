@@ -48,7 +48,11 @@ check() {
     | (if [$choices.pipelines[].id] | index($pipeline) then empty
        else "production holds no published pipeline with id \($pipeline)" end),
       (if $choices.repos | index($repo) then empty
-       else "production holds no repo named \($repo)" end)')"
+       else "production holds no repo named \($repo)" end),
+      ({own_project_id: "own_projects", job_id: "jobs", product_id: "products"} as $lists
+       | to_entries[] | select($lists[.key]) | .key as $key | .value as $id
+       | if [$choices[$lists[$key]][].id] | index($id) then empty
+         else "production holds no \($key | rtrimstr("_id") | gsub("_"; " ")) with id \($id)" end)')"
   [ -z "$missing" ] || { printf '%s\n' "$missing"; return 1; }
 }
 
