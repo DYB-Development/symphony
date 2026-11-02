@@ -32,6 +32,7 @@ jq -R -s '
      to_be_added: ($sections["03"] | named_pairs),
      model_diagram: ($sections["04"] | diagram),
      how_it_fits: ($sections["04"] | prose | map({body: .})),
+     flow_diagram: ($sections["05"] | diagram),
      trades: ($sections["07"] | named_pairs),
      risks: ($sections["10"] | named_pairs)}
 ' "$1"
