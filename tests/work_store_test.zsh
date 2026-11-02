@@ -97,6 +97,11 @@ assert_equals '{"title":"Quote-to-order conversion","priority":"medium","own_pro
 
 assert_equals "https://dyb.example/console/pipelines/plans/12" "$(file_plan '{"answer": 12}' 2>&1)" "prints the address of the plan's production page"
 
+assert_equals "The plan has no Risks section" \
+  "$(cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$SETTINGS" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_SENT="$WORK/sent" STUB_STATUS=422 STUB_BODY='{"error": "The plan has no Risks section"}' \
+     "$SCRIPT" file-plan "Quote-to-order conversion" "$SCRIPT_DIR/fixtures/plan-body.md" 2>&1)" \
+  "reports a plan the hub refuses with the hub's message"
+
 rm -f "$WORK/sent"
 sed '/^## 07 What we trade/,/^## 08 Settle first/{/^## 08/!d;}' "$SCRIPT_DIR/fixtures/plan-body.md" > "$WORK/no-trades.md"
 (cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$SETTINGS" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_SENT="$WORK/sent" STUB_BODY='{"answer": 12}' \
