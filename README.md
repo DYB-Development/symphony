@@ -150,7 +150,6 @@ settings that are not its own alone:
 | `PreToolUse` | `review-block.sh check` | Refuses, while the session is reviewing a pull request, an edit outside its temporary folders and the review draft, a git commit, push, merge, rebase or reset, and a run of the repo's tests |
 | `PreToolUse` | `agent-progress.sh record` | Logs each script a subagent is about to run |
 | `PreToolUse` | `one-question-gate.sh check` | Refuses a question prompt that asks more than one question |
-| `PreToolUse` | `question-check.sh check` | Refuses a question the draft reader could not follow on one read, and lets it through with a warning when the reader fails |
 | `PreToolUse` | `answer-gate.sh check` | Refuses a question an approved repo answer or a default already settles, quoting that answer, and lets it through with a warning when the search fails |
 | `PreToolUse` | `description-gate.sh check` | Refuses a shell command that carries no description of what it does |
 | `PreToolUse` | `agent-model.sh set` | Gives a spawned agent the model your agent models file names for it |
