@@ -190,6 +190,9 @@ assert_equals '[{"name":"Converting","body":"A rep converts a quote from its pag
 assert_equals '[{"role":"Rep","body":"Can convert a quote to an order. (Unit 1.1)"}]' "$(fields | jq -c .gains)" \
   "reads section 06's pairs as gains led by the role"
 
+assert_equals '[{"question":"Where does the convert button sit?","options":["on the quote page.","on the quotes list."],"recommendation":"on the quote page.","choice":"on the quote page."}]' \
+  "$(fields | jq -c .decisions)" "reads section 08's open decisions with their options, recommendation and choice"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"

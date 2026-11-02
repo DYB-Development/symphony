@@ -19,6 +19,14 @@ jq -R -s '
   def named_pairs: [scan("(?m)^- \\*\\*(.+?)\\*\\* — (.+)$") | {name: .[0], body: .[1]}];
   def diagram: capture("```mermaid\n(?<code>[\\s\\S]*?)\n```").code;
   def prose: gsub("```[\\s\\S]*?```"; "") | paragraphs | map(select(startswith("|") | not));
+  def line_after($label): [scan("(?m)^\\s*- (?:\\*\\*)?" + $label + ":(?:\\*\\*)? (.+)$")[0]] | first;
+  def decisions:
+    split("**Answers that change the design**")[0]
+    | [splits("(?m)^[0-9]+\\. ") | select(startswith("**"))]
+    | map({question: capture("^\\*\\*(?<q>.+?)\\*\\*").q,
+           options: [scan("(?m)^\\s*- Option [a-z]+: (.+)$")[0]],
+           recommendation: line_after("Recommendation"),
+           choice: line_after("Decided")});
   def sections:
     sub("\n---\n## Generation Metadata[\\s\\S]*$"; "")
     | [splits("\n(?=## [0-9]{2} )")]
@@ -36,5 +44,6 @@ jq -R -s '
      how_it_runs: [$sections["05"] | prose[] | capture("^\\*\\*(?<name>.+?)\\.\\*\\* (?<body>[\\s\\S]+)$")],
      gains: ($sections["06"] | named_pairs | map({role: .name, body})),
      trades: ($sections["07"] | named_pairs),
+     decisions: ($sections["08"] | decisions),
      risks: ($sections["10"] | named_pairs)}
 ' "$1"
