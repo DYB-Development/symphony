@@ -182,6 +182,8 @@ assert_equals $'flowchart LR\n  Quote --> Order' "$(fields | jq -r .model_diagra
 assert_equals '[{"body":"There is one join, at the convert action."}]' "$(fields | jq -c .how_it_fits)" \
   "reads section 04's paragraphs, leaving out its diagram and file table, as how it fits"
 
+assert_equals $'flowchart TD\n  Rep --> Convert' "$(fields | jq -r .flow_diagram)" "reads section 05's mermaid block as the flow diagram"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"
