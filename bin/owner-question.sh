@@ -34,6 +34,23 @@ is_question() {
   ' <<< "$1" >/dev/null
 }
 
+reads_only_pattern='^ *(ls|cat|head|tail|wc|pwd|grep|rg|which|stat|file|date|echo|printf|jq|basename|dirname|sort|uniq|cut|tr|diff|cd)( |$)|^ *sed +-n |^ *find ([^-]|-[^def])*$|^ *git( +-C +[^ ]+)? +(status|log|diff|show|blame|ls-files|rev-parse|merge-base|describe|grep|shortlog|worktree +list|branch +--show-current|branch +--list|branch +-a|remote +-v|remote +get-url)( |$)|^ *gh +(issue|pr|run|repo|release) +(view|list|diff|checks|status)( |$)|^ *[^ ]*saved-answers\.sh( |$)'
+
+without_quoted_text() {
+  printf '%s' "$1" | sed "s/\"[^\"]*\"/Q/g; s/'[^']*'/Q/g"
+}
+
+only_reads() {
+  local plain segment
+  case "$1" in *'$('*|*'`'*) return 1 ;; esac
+  plain=$(without_quoted_text "$1")
+  case "$plain" in *'>'*|*'<('*) return 1 ;; esac
+  while IFS= read -r segment; do
+    [ -n "${segment// /}" ] || continue
+    printf '%s\n' "$segment" | grep -Eq "$reads_only_pattern" || return 1
+  done < <(printf '%s\n' "$plain" | tr ';|&' '\n')
+}
+
 refuse() {
   jq -nc --arg text "$1" '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $text}}'
 }
@@ -67,6 +84,7 @@ case "${1:-}" in
     fi
     case "$(jq -r '.tool_name // empty' <<< "$payload")" in
       Read|Grep|Glob|LSP|ToolSearch|WebFetch|WebSearch|AskUserQuestion) exit 0 ;;
+      Bash) only_reads "$(jq -r '.tool_input.command // empty' <<< "$payload")" && exit 0 ;;
     esac
     refuse "The owner asked a question. Answer it and stop, changing nothing, until the owner's next prompt."
     ;;

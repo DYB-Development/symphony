@@ -91,6 +91,13 @@ assert_equals "deny" "$(decision Read '{"file_path":"/a"}')" "refuses a read onc
 reset_marks; prompt "are you ok?"
 assert_equals "" "$(decision Edit '{"file_path":"/a"}' agent-1)" "lets a running subagent carry on"
 
+bash_decision() {
+  decision Bash "$(jq -nc --arg c "$1" '{command: $c}')"
+}
+
+reset_marks; prompt "are you ok?"
+assert_equals "" "$(bash_decision 'git -C /a status --short | head -3')" "lets a read-only shell command run while the question is being answered"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
