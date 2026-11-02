@@ -340,6 +340,7 @@ overwrites them.
 | `SYMPHONY_IDENTIFIERS` | A file of terms no shipped file may name, checked by the suite |
 | `TEST_SLOTS_TOTAL` | How many test workers `test-slots.sh run` shares out across the machine, instead of its processor count |
 | `TEST_SLOTS_DIR` | Where `test-slots.sh` keeps the slots each running test run holds, instead of `~/.claude/test-slots` |
+| `TEST_RUNS_FILE` | Where `test-slots.sh` records each full-suite run, instead of `~/.claude/test-runs.tsv` |
 | `READ_DRAFT_SMOKE` | Set to `1` and the suite runs one real read through `claude` |
 | `RENDER_PLAN_SMOKE` | Set to a plan issue as `owner/repo#N` and the suite renders it through GitHub |
 
