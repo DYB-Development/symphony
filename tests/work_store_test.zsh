@@ -57,6 +57,7 @@ printf 'url=https://dyb.example\ntoken=secret\n' > "$CONNECTION"
 # A curl that never leaves the machine: it answers task_choices with the body the test sets.
 cat > "$STUB_BIN/curl" <<'STUB'
 #!/usr/bin/env bash
+for arg in "$@"; do [ "$arg" = "@-" ] && cat > "$STUB_SENT"; done
 printf '%s\n%s' "$STUB_BODY" "${STUB_STATUS:-200}"
 STUB
 chmod +x "$STUB_BIN/curl"
@@ -81,6 +82,31 @@ assert_equals $'production answers\nproduction holds no repo named acme/shop' \
 assert_equals $'production answers\nproduction holds no own project with id 7' \
   "$(check '{"answer": {"pipelines": [{"id": 3, "name": "Test-first change"}], "repos": ["acme/shop"], "jobs": [{"id": 7, "name": "Shop"}], "products": [], "own_projects": [], "tasks": []}}' 2>&1)" \
   "names the link production does not hold"
+
+echo ""
+echo "work-store.sh file-plan:"
+
+file_plan() {
+  (cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$SETTINGS" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_SENT="$WORK/sent" STUB_BODY="$1" "$SCRIPT" file-plan "Quote-to-order conversion" "$SCRIPT_DIR/fixtures/plan-body.md")
+}
+
+file_plan '{"answer": 12}' >/dev/null 2>&1
+assert_equals '{"title":"Quote-to-order conversion","priority":"medium","own_project_id":7,"rule":"A quote is a source and the order is the product."}' \
+  "$(jq -c '{title, priority, own_project_id, rule}' "$WORK/sent" 2>&1)" \
+  "sends a dyb_web repo's plan to production as a draft linked as its setting names"
+
+assert_equals "https://dyb.example/console/pipelines/plans/12" "$(file_plan '{"answer": 12}' 2>&1)" "prints the address of the plan's production page"
+
+assert_equals "The plan has no Risks section" \
+  "$(cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$SETTINGS" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_SENT="$WORK/sent" STUB_STATUS=422 STUB_BODY='{"error": "The plan has no Risks section"}' \
+     "$SCRIPT" file-plan "Quote-to-order conversion" "$SCRIPT_DIR/fixtures/plan-body.md" 2>&1)" \
+  "reports a plan the hub refuses with the hub's message"
+
+rm -f "$WORK/sent"
+sed '/^## 07 What we trade/,/^## 08 Settle first/{/^## 08/!d;}' "$SCRIPT_DIR/fixtures/plan-body.md" > "$WORK/no-trades.md"
+(cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$SETTINGS" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_SENT="$WORK/sent" STUB_BODY='{"answer": 12}' \
+  "$SCRIPT" file-plan "Quote-to-order conversion" "$WORK/no-trades.md" >/dev/null 2>&1)
+assert_equals "nothing sent" "$([ -e "$WORK/sent" ] && echo sent || echo nothing sent)" "sends nothing to production when the plan body is refused"
 
 echo ""
 echo "$PASS passed, $FAIL failed"

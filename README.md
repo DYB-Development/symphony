@@ -430,6 +430,13 @@ pipeline, repo or link the setting names that production does not hold. It
 cannot tell a pipeline with no published version from one production does not
 hold, so it names both as no published pipeline.
 
+In such a repo `/feature-plan` files its plan as a draft in dyb_web production
+rather than as a GitHub issue. `work-store.sh file-plan "<title>" <body-file>`
+does the filing: `plan-fields.sh` turns the body into the plan's fields, the
+plan is linked as the setting names, and the plan page's address is printed.
+You choose its decisions and approve it on that page, and approving makes the
+work items.
+
 ### Choosing each agent's model
 
 Put a file at `~/.config/symphony/agent-models.json`, next to the rules
