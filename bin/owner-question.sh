@@ -32,7 +32,10 @@ case "${1:-}" in
     payload=$(cat)
     session=$(jq -r '.session_id // empty' <<< "$payload")
     [ -n "$session" ] || exit 0
-    is_question "$payload" || exit 0
+    if ! is_question "$payload"; then
+      rm -f "$(mark_for "$session")"
+      exit 0
+    fi
     mkdir -p "$mark_dir"
     printf 'asked\n' > "$(mark_for "$session")"
     ;;

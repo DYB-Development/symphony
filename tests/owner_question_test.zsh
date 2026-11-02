@@ -43,6 +43,9 @@ assert_equals "yes" "$(asked)" "marks a prompt ending in a question mark as a qu
 reset_marks; prompt "so again what is the plan"
 assert_equals "yes" "$(asked)" "marks a prompt opening with a question word and no question mark as a question"
 
+reset_marks; prompt "are you ok?"; prompt "go ahead with the plan"
+assert_equals "no" "$(asked)" "removes the mark when the owner's next prompt is an instruction"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
