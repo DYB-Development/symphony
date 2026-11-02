@@ -205,6 +205,10 @@ sed '/^## 07 What we trade/,/^## 08 Settle first/{/^## 08/!d;}' "$BODY" > "$WORK
 assert_equals "plan-fields.sh: the plan has no section 07 What we trade" "$("$SCRIPT" "$WORK/no-trades.md" 2>&1)" \
   "refuses a body missing a section and names the section"
 
+awk '/^#### Unit 2.1/{unit=1} unit && /^## Acceptance criteria$/{next} {print}' "$BODY" > "$WORK/no-criteria.md"
+assert_equals "plan-fields.sh: unit 2.1 has no Acceptance criteria part" "$("$SCRIPT" "$WORK/no-criteria.md" 2>&1)" \
+  "refuses a body whose unit is missing a part and names the unit and the part"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"

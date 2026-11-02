@@ -14,6 +14,7 @@ USAGE
 [ $# -eq 1 ] || usage
 
 jq -R -s '
+  def refuse($why): "plan-fields.sh: \($why)\n" | halt_error(1);
   def trimmed: sub("^\\s+"; "") | sub("\\s+$"; "");
   def paragraphs: [split("\n\n")[] | trimmed | select(length > 0)];
   def named_pairs: [scan("(?m)^- \\*\\*(.+?)\\*\\* — (.+)$") | {name: .[0], body: .[1]}];
@@ -32,6 +33,9 @@ jq -R -s '
   def unit:
     capture("^Unit (?<number>[0-9]+\\.[0-9]+) — (?<title>.+?)(?: \\([^)]+\\))?\n(?<body>[\\s\\S]*)$") as $unit
     | $unit.body as $body
+    | (first(("Part of", "How it fits", "Acceptance criteria", "Out of scope", "Dependencies")
+             | select(. as $heading | $body | test("(?m)^## " + $heading + "$") | not)) // null) as $missing
+    | if $missing then refuse("unit \($unit.number) has no \($missing) part") else . end
     | {number: $unit.number,
        stage: ($unit.number | split(".")[0] | tonumber),
        title: $unit.title,
@@ -49,7 +53,6 @@ jq -R -s '
 
   def names: {"01": "The plan", "02": "Already built", "03": "To be added", "04": "How it fits", "05": "How it runs",
                "06": "What we gain", "07": "What we trade", "08": "Settle first", "09": "The work", "10": "Risks"};
-  def refuse($why): "plan-fields.sh: \($why)\n" | halt_error(1);
 
   sections as $sections
   | (first(names | to_entries[] | select($sections[.key] == null)) // null) as $missing
