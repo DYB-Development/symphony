@@ -40,10 +40,30 @@ workers_given() {
   "$SLOTS" run sh -c 'echo "$PARALLEL_WORKERS"' | tail -1
 }
 
+# Starts a run that holds its slots until release_slots, and waits until its
+# command has started.
+hold_slots() {
+  rm -f "$WORK/held" "$WORK/release"
+  "$SLOTS" run sh -c 'touch "$1/held"; while [ ! -f "$1/release" ]; do sleep 0.05; done' _ "$WORK" > /dev/null &
+  HOLDER=$!
+  while [[ ! -f "$WORK/held" ]]; do sleep 0.05; done
+}
+
+release_slots() {
+  touch "$WORK/release"
+  wait $HOLDER
+}
+
 echo "test-slots.sh run:"
 
 new_ledger
 assert_equals "12" "$(workers_given)" "gives a run every slot when no other run holds any"
+drop_ledger
+
+new_ledger
+hold_slots
+assert_equals "4" "$(TEST_SLOTS_TOTAL=16 workers_given)" "gives a run only the slots other runs do not hold"
+release_slots
 drop_ledger
 
 echo ""
