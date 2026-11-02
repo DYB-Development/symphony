@@ -55,6 +55,12 @@ assert_equals "yes" "$(asked)" "keeps the mark when a background task notificati
 reset_marks; prompt "This keeps failing. How do we solve this."
 assert_equals "yes" "$(asked)" "reads the last sentence of a prompt to tell whether it is a question"
 
+reset_marks; prompt "Why is this broken?
+<pasted_content id=\"a1\">
+ran the suite.
+</pasted_content id=\"a1\">"
+assert_equals "yes" "$(asked)" "leaves pasted text out when reading the prompt"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
