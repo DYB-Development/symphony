@@ -38,6 +38,10 @@ echo "work-store.sh show:"
 
 assert_equals "github" "$(store show 2>&1)" "reports a repo with no setting as using GitHub"
 
+printf '{"store": "dyb_web", "repo": "acme/shop", "pipeline_id": 3, "own_project_id": 7}' > "$SETTINGS/shop.json"
+assert_equals $'dyb_web\nrepo=acme/shop\npipeline_id=3\nown_project_id=7' "$(store show 2>&1)" \
+  "reports a repo set to dyb_web with the repo, pipeline and link its setting names"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"
