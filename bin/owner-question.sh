@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat >&2 <<'USAGE'
+usage: owner-question.sh record < hook.json
+       owner-question.sh asked <session>
+
+Marks a session whose owner has asked a question. `record` reads each prompt.
+`asked` exits 0 while the session is marked.
+See ~/.claude/rules/develop_process_rules.md.
+USAGE
+  exit 64
+}
+
+mark_dir="${OWNER_QUESTION_DIR:-$HOME/.claude/owner-question}"
+
+mark_for() {
+  printf '%s/%s' "$mark_dir" "$(printf '%s' "$1" | shasum | cut -c1-40)"
+}
+
+modified_at() {
+  stat -f %m "$1" 2>/dev/null || stat -c %Y "$1" 2>/dev/null || printf '0'
+}
+
+is_marked() {
+  local mark
+  mark=$(mark_for "$1")
+  [ -f "$mark" ] || return 1
+  [ $(( $(date +%s) - $(modified_at "$mark") )) -le 86400 ]
+}
+
+is_machine_sent() {
+  jq -e '(.prompt // "") | test("^\\s*<(task-notification|agent-message|cross-session-message|local-command-)")' <<< "$1" >/dev/null
+}
+
+is_question() {
+  jq -e '
+    (.prompt // "") | ascii_downcase
+    | gsub("(?s)<pasted_content[^>]*>.*?</pasted_content[^>]*>"; "")
+    | [splits("(?<=[.!?])\\s+|\\n+")] | map(select(test("\\S"))) | (last // "")
+    | test("\\?[\\s\")*_]*$")
+      or test("^\\s*(stop|wait|pause|hold on)\\b")
+      or test("^((so|and|but|ok|okay|well|again|then|right|also|wait|hmm)[, ]+)*(what|whats|why|how|when|where|who|which|is|are|does|did)\\b")
+  ' <<< "$1" >/dev/null
+}
+
+reads_only_pattern='^ *(ls|cat|head|tail|wc|pwd|grep|rg|which|stat|file|date|echo|printf|jq|basename|dirname|sort|uniq|cut|tr|diff|cd)( |$)|^ *sed +-n |^ *find ([^-]|-[^def])*$|^ *git( +-C +[^ ]+)? +(status|log|diff|show|blame|ls-files|rev-parse|merge-base|describe|grep|shortlog|worktree +list|branch +--show-current|branch +--list|branch +-a|remote +-v|remote +get-url)( |$)|^ *gh +(issue|pr|run|repo|release) +(view|list|diff|checks|status)( |$)|^ *[^ ]*saved-answers\.sh( |$)'
+
+without_quoted_text() {
+  printf '%s' "$1" | sed "s/\"[^\"]*\"/Q/g; s/'[^']*'/Q/g"
+}
+
+only_reads() {
+  local plain segment
+  case "$1" in *'$('*|*'`'*) return 1 ;; esac
+  plain=$(without_quoted_text "$1")
+  case "$plain" in *'>'*|*'<('*) return 1 ;; esac
+  while IFS= read -r segment; do
+    [ -n "${segment// /}" ] || continue
+    printf '%s\n' "$segment" | grep -Eq "$reads_only_pattern" || return 1
+  done < <(printf '%s\n' "$plain" | tr ';|&' '\n')
+}
+
+refuse() {
+  jq -nc --arg text "$1" '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $text}}'
+}
+
+case "${1:-}" in
+  record)
+    payload=$(cat)
+    session=$(jq -r '.session_id // empty' <<< "$payload")
+    [ -n "$session" ] || exit 0
+    is_machine_sent "$payload" && exit 0
+    rm -f "$(mark_for "$session").refusals"
+    if ! is_question "$payload"; then
+      rm -f "$(mark_for "$session")"
+      exit 0
+    fi
+    mkdir -p "$mark_dir"
+    printf 'asked\n' > "$(mark_for "$session")"
+    ;;
+  stop)
+    session=$(jq -r '.session_id // empty')
+    [ -f "$(mark_for "$session")" ] || exit 0
+    printf 'answered\n' > "$(mark_for "$session")"
+    ;;
+  check)
+    payload=$(cat)
+    session=$(jq -r '.session_id // empty' <<< "$payload")
+    is_marked "$session" || exit 0
+    [ -z "$(jq -r '.agent_id // empty' <<< "$payload")" ] || exit 0
+    if [ "$(cat "$(mark_for "$session")")" = answered ]; then
+      refuse "The owner asked a question and it has been answered. A background task finishing is not permission to continue. Run nothing and end this turn with no message until the owner's next prompt."
+      exit 0
+    fi
+    case "$(jq -r '.tool_name // empty' <<< "$payload")" in
+      Read|Grep|Glob|LSP|ToolSearch|WebFetch|WebSearch|AskUserQuestion) exit 0 ;;
+      Bash) only_reads "$(jq -r '.tool_input.command // empty' <<< "$payload")" && exit 0 ;;
+      Agent) case "$(jq -r '.tool_input.subagent_type // empty' <<< "$payload")" in Explore|claude-code-guide) exit 0 ;; esac ;;
+    esac
+    refuse "The owner asked a question. Answer it and stop, changing nothing, until the owner's next prompt."
+    ;;
+  path)
+    [ $# -eq 2 ] || usage
+    mark_for "$2"
+    ;;
+  asked)
+    [ $# -eq 2 ] || usage
+    is_marked "$2"
+    ;;
+  *) usage ;;
+esac

@@ -30,6 +30,7 @@ asks() {
 
 hook=$(cat)
 [ "$(printf '%s' "$hook" | jq -r '.stop_hook_active // false')" = true ] && exit 0
+"$(dirname "$0")/owner-question.sh" asked "$(printf '%s' "$hook" | jq -r '.session_id // empty')" && exit 0
 transcript=$(printf '%s' "$hook" | jq -r '.transcript_path // empty')
 text=$(last_text "$transcript" 2>/dev/null) || {
   echo "stop-check.sh: could not read the transcript, so the turn stopped unchecked" >&2

@@ -25,6 +25,26 @@ exception as a standing change to the process.
   stopped until the owner happens to read it. A question window puts the choice
   in front of them with the options ready to pick.
 
+## When to Stop
+
+- **An owner's question gets an answer and a stop.** Answer it, change nothing,
+  and wait for the owner's next prompt. Reading files to answer it is allowed.
+- **A background task finishing is not permission to continue.** After a question
+  has been answered, a task notification starts no work and runs no tool.
+- **A plan stated in an answer is not approved** until the owner says so.
+- **After an instruction, keep working until the work is done.** Do not stop at
+  the end of a commit or a unit of work. Stopping is right while the open pull
+  request is being watched, while a question window waits for the owner, and
+  after saying what is blocking the work.
+- **When a pull request merges and its plan has more open, unblocked issues,**
+  start the next one, and go on until the plan is finished or the owner says
+  otherwise. A plan's issues are those whose `Part of` line names the same
+  feature group.
+- A request worded as a question, such as "can you fix this?", counts as a
+  question, so the session answers it and waits for the owner to say to go ahead.
+
+`owner-question.sh` and `keep-working.sh` hold this in place.
+
 ---
 
 ## Test-Driven Development
