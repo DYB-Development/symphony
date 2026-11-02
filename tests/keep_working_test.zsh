@@ -79,11 +79,26 @@ reason() {
   stopping "$@" | jq -r '.reason // empty'
 }
 
+commit_work() {
+  git -C "$ROOT/shop-feature" commit -q --allow-empty -m work
+}
+
+push_work() {
+  git -C "$ROOT/shop-feature" push -q -u origin feature 2>/dev/null
+}
+
 echo "keep-working.sh check:"
 
 new_repo
 touch "$ROOT/shop-feature/new.txt"
 assert_contains "uncommitted changes" "$(reason)" "refuses a stop while the session's worktree has uncommitted changes"
+
+new_repo
+assert_equals "" "$(stopping)" "lets a session stop in a worktree where nothing has been started"
+
+new_repo
+commit_work
+assert_contains "unpushed commits" "$(reason)" "refuses a stop while the branch has unpushed commits"
 
 echo ""
 echo "$PASS passed, $FAIL failed"
