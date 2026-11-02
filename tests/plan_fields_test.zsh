@@ -187,6 +187,9 @@ assert_equals $'flowchart TD\n  Rep --> Convert' "$(fields | jq -r .flow_diagram
 assert_equals '[{"name":"Converting","body":"A rep converts a quote from its page."},{"name":"Reading","body":"An order page reads its own lines."}]' \
   "$(fields | jq -c .how_it_runs)" "reads section 05's named paragraphs as how it runs"
 
+assert_equals '[{"role":"Rep","body":"Can convert a quote to an order. (Unit 1.1)"}]' "$(fields | jq -c .gains)" \
+  "reads section 06's pairs as gains led by the role"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"

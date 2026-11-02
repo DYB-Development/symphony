@@ -34,6 +34,7 @@ jq -R -s '
      how_it_fits: ($sections["04"] | prose | map({body: .})),
      flow_diagram: ($sections["05"] | diagram),
      how_it_runs: [$sections["05"] | prose[] | capture("^\\*\\*(?<name>.+?)\\.\\*\\* (?<body>[\\s\\S]+)$")],
+     gains: ($sections["06"] | named_pairs | map({role: .name, body})),
      trades: ($sections["07"] | named_pairs),
      risks: ($sections["10"] | named_pairs)}
 ' "$1"
