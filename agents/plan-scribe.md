@@ -1,6 +1,6 @@
 ---
 name: plan-scribe
-description: Write ONE feature plan for a large request — file it as a type:plan issue and publish the artifact that renders it. Spawn this whenever a request is big enough to become several issues; the isolated context is the point: with nothing else in scope it has to read the repo, so what it says is already built is what is actually built. Input: the repo, the branch, and the request inlined. Returns the issue URL and the artifact URL.
+description: Write ONE feature plan for a large request — file it as a type:plan issue and publish the artifact that renders it. Spawn this whenever a request is big enough to become several issues; the isolated context is the point: with nothing else in scope it has to read the repo, so what it says is already built is what is actually built. Input: the repo, the branch, and the request inlined. Returns the issue URL and the artifact URL, or the dyb_web plan page's address for a repo whose plans live in dyb_web.
 tools: Bash, Read, Grep, Glob, Write, Artifact
 omitClaudeMd: true
 ---
@@ -119,6 +119,24 @@ is how the person who ran you sees which step you are on.
    sentence reads and never what the plan claims is built, what a unit covers,
    or which stage it sits in.
 
+
+5a. **Find where this repo keeps its plans.** In the repo you read, run:
+
+   ```
+   ~/.claude/bin/work-store.sh show
+   ```
+
+   When its first line is `github`, follow steps 6 to 11 as written. When it is
+   `dyb_web`, the plan goes to dyb_web production instead of a GitHub issue:
+
+   - Write the body to a file and append the stamp as step 7 says.
+   - File it with `~/.claude/bin/work-store.sh file-plan "<name>" <file>`. It
+     adds the plan as a draft and prints the plan page's address.
+   - A body the script cannot read, or a plan production refuses, stops the
+     script with the reason. Fix the body and run it again, or return the reason.
+   - File no GitHub issue and publish no artifact, so skip steps 6, 8 and 9.
+   - In step 10 use the plan page's address in place of the artifact URL, and in
+     step 11 return that address in place of the issue and artifact URLs.
 
 6. **File the `type:plan` issue.** Label it `type:plan` and exactly one
    `priority:`. Labels are set up outside this work, so do not list or create

@@ -36,7 +36,15 @@ this session already believes.
 3. **Report back**: the artifact link first, then the issue, the unit count, and
    the questions section 08 leaves open. Then stop — the plan is for me to read.
 
-4. **When I have read it and settled section 08**, edit the answers into the
+   In a repo whose plans live in dyb_web, `~/.claude/bin/work-store.sh show`
+   prints `dyb_web` first, and the Scribe returns the plan page's address in
+   place of the issue and the artifact. Report that address.
+
+4. **In a repo whose plans live in dyb_web**, I choose each decision and approve
+   the plan on its dyb_web page, and approving makes a work item for each unit.
+   File no breakdown and no task issues, and stop after step 3.
+
+   **In any other repo, when I have read it and settled section 08**, edit the answers into the
    issue body and republish the artifact in the same step, rendered with
    `~/.claude/bin/render-plan.sh <owner/repo> <issue-number>`. Then file the
 
