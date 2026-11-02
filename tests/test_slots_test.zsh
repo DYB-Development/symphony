@@ -85,7 +85,13 @@ new_ledger
 assert_equals "12" "$(workers_given)" "frees a run's slots when its tests fail"
 drop_ledger
 
+new_ledger
+hold_slots
+pkill -TERM -P $HOLDER
+wait $HOLDER
+assert_equals "12" "$(workers_given)" "frees a run's slots when its tests are stopped"
+drop_ledger
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
-
