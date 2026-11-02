@@ -179,6 +179,9 @@ assert_equals '[[{"name":"Convert action","body":"Turns a quote into an order."}
 
 assert_equals $'flowchart LR\n  Quote --> Order' "$(fields | jq -r .model_diagram)" "reads section 04's mermaid block as the model diagram"
 
+assert_equals '[{"body":"There is one join, at the convert action."}]' "$(fields | jq -c .how_it_fits)" \
+  "reads section 04's paragraphs, leaving out its diagram and file table, as how it fits"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"
