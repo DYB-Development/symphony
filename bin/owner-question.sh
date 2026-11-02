@@ -20,7 +20,7 @@ mark_for() {
 }
 
 is_question() {
-  jq -e '(.prompt // "") | test("\\?[\\s\"')*_]*$")' <<< "$1" >/dev/null
+  jq -e '(.prompt // "") | test("\\?[\\s\")*_]*$")' <<< "$1" >/dev/null
 }
 
 case "${1:-}" in
