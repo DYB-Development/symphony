@@ -81,6 +81,11 @@ release_slots
 drop_ledger
 
 new_ledger
+assert_equals $'Running tests with 12 workers\nthe tests' "$("$SLOTS" run echo "the tests")" \
+  "prints the workers it gave on one line before the test output"
+drop_ledger
+
+new_ledger
 "$SLOTS" run sh -c 'exit 3' > /dev/null
 assert_equals "12" "$(workers_given)" "frees a run's slots when its tests fail"
 drop_ledger
