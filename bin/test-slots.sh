@@ -23,12 +23,17 @@ started_at() {
   echo $started
 }
 
+is_number() {
+  case "$1" in ''|*[!0-9]*) return 1 ;; *) return 0 ;; esac
+}
+
 held_slots() {
   local file pid started slots held=0
   for file in "$leases"/*; do
     [ -f "$file" ] || continue
-    { read -r pid; read -r started; read -r slots; } < "$file"
-    if [ "$(started_at "$pid")" = "$started" ]; then
+    pid="" started="" slots=""
+    { read -r pid; read -r started; read -r slots; } < "$file" || true
+    if is_number "$pid" && is_number "$slots" && [ "$(started_at "$pid")" = "$started" ]; then
       held=$((held + slots))
     else
       rm -f "$file"
@@ -47,9 +52,13 @@ take_slots() {
 
 run() {
   local slots
-  mkdir -p "$leases"
-  slots=$(lockf -k "$ledger/lock" "$0" take $$)
-  echo "Running tests with $slots workers"
+  local status=0
+  mkdir -p "$leases" 2>/dev/null && slots=$(lockf -k -t 5 "$ledger/lock" "$0" take $$ 2>/dev/null) || status=$?
+  case "$status" in
+    0) echo "Running tests with $slots workers" ;;
+    75) slots=2; echo "Running tests with $slots workers, since the slot ledger at $ledger stayed locked for 5 seconds" ;;
+    *) slots=2; echo "Running tests with $slots workers, since the slot ledger at $ledger could not be used" ;;
+  esac
   PARALLEL_WORKERS="$slots" exec "$@"
 }
 

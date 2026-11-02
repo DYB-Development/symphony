@@ -134,6 +134,46 @@ assert_equals "12" "$(workers_given)" "stops counting a finished run's slots onc
 drop_ledger
 
 new_ledger
+mkdir -p "$TEST_SLOTS_DIR/leases"
+printf 'not a lease\n' > "$TEST_SLOTS_DIR/leases/damaged"
+assert_equals "12" "$(workers_given)" "does not count a damaged lease against the total"
+drop_ledger
+
+new_ledger
+mkdir -p "$TEST_SLOTS_DIR/leases"
+printf 'not a lease\n' > "$TEST_SLOTS_DIR/leases/damaged"
+workers_given > /dev/null
+assert_equals "absent" "$([[ -e "$TEST_SLOTS_DIR/leases/damaged" ]] && echo present || echo absent)" \
+  "removes a damaged lease when the next run starts"
+drop_ledger
+
+# A ledger folder that cannot be made, since a file sits where it would go.
+new_ledger
+touch "$TEST_SLOTS_DIR"
+assert_equals $'Running tests with 2 workers, since the slot ledger at '"$TEST_SLOTS_DIR"$' could not be used\nthe tests' \
+  "$("$SLOTS" run echo "the tests" 2>&1)" \
+  "runs with 2 workers and says so when the ledger cannot be used"
+drop_ledger
+
+new_ledger
+touch "$TEST_SLOTS_DIR"
+"$SLOTS" run sh -c 'exit 7' > /dev/null 2>&1
+assert_equals "7" "$?" "exits with the test run's own status when the ledger cannot be used"
+drop_ledger
+
+new_ledger
+mkdir -p "$TEST_SLOTS_DIR"
+lockf -k "$TEST_SLOTS_DIR/lock" sh -c 'touch "$1/locked"; while [ ! -f "$1/release" ]; do sleep 0.05; done' _ "$WORK" &
+LOCKER=$!
+while [[ ! -f "$WORK/locked" ]]; do sleep 0.05; done
+assert_equals "Running tests with 2 workers, since the slot ledger at $TEST_SLOTS_DIR stayed locked for 5 seconds" \
+  "$("$SLOTS" run true 2>&1)" \
+  "runs with 2 workers and says so when the ledger stays locked for 5 seconds"
+touch "$WORK/release"
+wait $LOCKER
+drop_ledger
+
+new_ledger
 hold_slots
 pkill -KILL -P $$ -f 'test-slots.sh run'
 assert_equals "2" "$(workers_given)" "keeps counting a run's slots while its tests run on after its slot command is killed"
