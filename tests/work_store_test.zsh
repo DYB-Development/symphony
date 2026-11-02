@@ -42,6 +42,10 @@ printf '{"store": "dyb_web", "repo": "acme/shop", "pipeline_id": 3, "own_project
 assert_equals $'dyb_web\nrepo=acme/shop\npipeline_id=3\nown_project_id=7' "$(store show 2>&1)" \
   "reports a repo set to dyb_web with the repo, pipeline and link its setting names"
 
+printf '{"store": "jira"}' > "$SETTINGS/shop.json"
+assert_equals "work-store.sh: $SETTINGS/shop.json names store \"jira\", which is neither github nor dyb_web" \
+  "$(store show 2>&1)" "refuses a setting that names neither GitHub nor dyb_web with the value it held"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"

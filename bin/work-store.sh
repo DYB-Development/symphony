@@ -20,9 +20,15 @@ repo_name() {
 }
 
 setting() {
-  local file
+  local file store
   file="$settings_dir/$(repo_name).json"
-  [ -r "$file" ] && cat "$file" || printf '{"store": "github"}'
+  [ -r "$file" ] || { printf '{"store": "github"}'; return 0; }
+
+  store="$(jq -r '.store' "$file")"
+  case "$store" in
+    github | dyb_web) cat "$file" ;;
+    *) printf 'work-store.sh: %s names store "%s", which is neither github nor dyb_web\n' "$file" "$store" >&2; exit 1 ;;
+  esac
 }
 
 show() {
