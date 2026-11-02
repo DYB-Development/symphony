@@ -174,6 +174,9 @@ assert_equals "A quote is a source and the order is the product." "$(fields | jq
 assert_equals '[{"name":"Quote record","body":"A quote holds its lines."},{"name":"Order record","body":"An order holds its lines."}]' \
   "$(fields | jq -c .already_built)" "reads section 02's named pairs as what is already built"
 
+assert_equals '[[{"name":"Convert action","body":"Turns a quote into an order."}],[{"name":"One more page","body":"The order page is new. Permanent."}],[{"name":"Orders may need approval","body":"A client could require it. That is a redesign."}]]' \
+  "$(fields | jq -c '[.to_be_added, .trades, .risks]')" "reads the named pairs of sections 03, 07 and 10 as what is added, traded and risked"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"

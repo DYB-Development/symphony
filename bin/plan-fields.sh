@@ -26,5 +26,8 @@ jq -R -s '
   | ($sections["01"] | paragraphs) as $plan
   | {summary: ($plan | map(select(test("^\\*\\*[^\n]*\\*\\*$") | not)) | join("\n\n")),
      rule: ($plan | map(select(test("^\\*\\*[^\n]*\\*\\*$")) | ltrimstr("**") | rtrimstr("**")) | first),
-     already_built: ($sections["02"] | named_pairs)}
+     already_built: ($sections["02"] | named_pairs),
+     to_be_added: ($sections["03"] | named_pairs),
+     trades: ($sections["07"] | named_pairs),
+     risks: ($sections["10"] | named_pairs)}
 ' "$1"
