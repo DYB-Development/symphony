@@ -201,6 +201,9 @@ assert_equals "" "$(hook_output 'bin/rails test && git push')" \
 assert_equals "" "$(hook_output 'cd app;make && bin/rails test')" \
   "leaves a test command whose cd hides another command as the agent wrote it"
 
+assert_equals "" "$(hook_output "$SLOTS run bin/rails test")" \
+  "leaves a test command already run inside the slots as the agent wrote it"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
