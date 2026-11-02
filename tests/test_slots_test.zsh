@@ -198,7 +198,7 @@ assert_equals "" "$(hook_output 'git status')" "leaves a command that runs no Ra
 assert_equals "" "$(hook_output 'bin/rails test && git push')" \
   "leaves a test command with more after the tests as the agent wrote it"
 
-assert_equals "" "$(hook_output 'cd app;touch\ hidden && bin/rails test')" \
+assert_equals "" "$(hook_output 'cd app;make && bin/rails test')" \
   "leaves a test command whose cd hides another command as the agent wrote it"
 
 echo ""
