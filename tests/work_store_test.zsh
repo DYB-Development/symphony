@@ -58,7 +58,10 @@ printf 'url=https://dyb.example\ntoken=secret\n' > "$CONNECTION"
 cat > "$STUB_BIN/curl" <<'STUB'
 #!/usr/bin/env bash
 for arg in "$@"; do [ "$arg" = "@-" ] && cat > "$STUB_SENT"; done
-printf '%s\n%s' "$STUB_BODY" "${STUB_STATUS:-200}"
+case "${@: -1}" in
+  */claim_work_item) printf '%s\n%s' "${STUB_CLAIM_BODY:-}" "${STUB_CLAIM_STATUS:-200}" ;;
+  *) printf '%s\n%s' "$STUB_BODY" "${STUB_STATUS:-200}" ;;
+esac
 STUB
 chmod +x "$STUB_BIN/curl"
 
@@ -107,6 +110,25 @@ sed '/^## 07 What we trade/,/^## 08 Settle first/{/^## 08/!d;}' "$SCRIPT_DIR/fix
 (cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$SETTINGS" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_SENT="$WORK/sent" STUB_BODY='{"answer": 12}' \
   "$SCRIPT" file-plan "Quote-to-order conversion" "$WORK/no-trades.md" >/dev/null 2>&1)
 assert_equals "nothing sent" "$([ -e "$WORK/sent" ] && echo sent || echo nothing sent)" "sends nothing to production when the plan body is refused"
+
+echo ""
+echo "work-store.sh take:"
+
+take() {
+  (cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$SETTINGS" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_SENT="$WORK/sent" \
+    STUB_CLAIM_BODY='{"answer": 12}' STUB_BODY='{"answer": {"title": "Export quotes", "branch": "12-export-quotes"}}' "$SCRIPT" take 12)
+}
+
+take >/dev/null 2>&1
+assert_equals "{\"work_item_id\":12,\"session\":\"$(whoami)@$(hostname -s)\"}" "$(jq -c . "$WORK/sent" 2>&1)" \
+  "claims the named work item for this machine's session"
+
+assert_equals '{"title":"Export quotes","branch":"12-export-quotes"}' "$(take 2>&1)" "prints the claimed work item as production reads it"
+
+assert_equals "Export quotes waits on Import quotes." \
+  "$(cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_SENT="$WORK/sent" STUB_CLAIM_STATUS=422 \
+     STUB_CLAIM_BODY='{"error": "Export quotes waits on Import quotes."}' STUB_BODY='{"answer": {"title": "Export quotes"}}' "$SCRIPT" take 12 2>&1)" \
+  "reports a work item that waits on open work with the names of what it waits on"
 
 echo ""
 echo "$PASS passed, $FAIL failed"

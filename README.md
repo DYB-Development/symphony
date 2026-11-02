@@ -437,6 +437,11 @@ plan is linked as the setting names, and the plan page's address is printed.
 You choose its decisions and approve it on that page, and approving makes the
 work items.
 
+`work-store.sh take <id>` claims a work item for this machine's session, named
+`<user>@<host>`, and prints it as production reads it: title, request,
+criteria, repo, branch, status and plan progress. A work item that waits on open
+work is refused with the names of what it waits on.
+
 ### Choosing each agent's model
 
 Put a file at `~/.config/symphony/agent-models.json`, next to the rules
