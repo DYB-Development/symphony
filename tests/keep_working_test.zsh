@@ -193,6 +193,10 @@ plan_after_merge() {
 plan_after_merge "[$(task 8 medium "$PLAN_PART" blocked), $(task 9 medium "$PLAN_PART")]"
 assert_contains "#9" "$(reason)" "skips an issue labelled blocked"
 
+plan_after_merge "[$(task 8 medium "$PLAN_PART
+Blocked by #10"), $(task 9 medium "$PLAN_PART"), $(task 10 low "other")]"
+assert_contains "#9" "$(reason)" "skips an issue blocked by one still open"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
