@@ -23,7 +23,10 @@ call() {
     -H "Authorization: token $(value token)" \
     "$(value url)/api/v1/hubs/pipelines/$method")"
   body="${reply%$'\n'*}"
-  printf '%s' "$body" | jq -c '.answer'
+  case "${reply##*$'\n'}" in
+    2??) printf '%s' "$body" | jq -c '.answer' ;;
+    *) printf '%s' "$body" | jq -r '.error' >&2; exit 1 ;;
+  esac
 }
 
 case "${1:-}" in

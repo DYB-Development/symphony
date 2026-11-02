@@ -47,6 +47,11 @@ assert_equals '{"repos":["acme/shop"]}' \
   "$(STUB_BODY='{"answer": {"repos": ["acme/shop"]}}' STUB_STATUS=200 hub get task_choices 2>&1)" \
   "prints the answer of a hub method"
 
+STUB_BODY='{"error": "The hub holds no pipeline with id 9."}' STUB_STATUS=422 hub post add_work_item >"$WORK/out" 2>&1
+exit_status=$?
+assert_equals $'The hub holds no pipeline with id 9.\n1' "$(cat "$WORK/out")"$'\n'"$exit_status" \
+  "prints the hub's own message for a refusal and fails"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"
