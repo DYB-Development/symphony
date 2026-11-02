@@ -72,6 +72,7 @@ case "${1:-}" in
     session=$(jq -r '.session_id // empty' <<< "$payload")
     [ -n "$session" ] || exit 0
     is_machine_sent "$payload" && exit 0
+    rm -f "$(mark_for "$session").refusals"
     if ! is_question "$payload"; then
       rm -f "$(mark_for "$session")"
       exit 0

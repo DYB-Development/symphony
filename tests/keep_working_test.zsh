@@ -136,6 +136,12 @@ commit_work
 stopping >/dev/null; stopping >/dev/null; stopping >/dev/null
 assert_equals "" "$(reason)" "lets a session stop after three refusals with nothing changed"
 
+new_repo
+commit_work
+stopping >/dev/null; stopping >/dev/null; stopping >/dev/null
+jq -nc '{session_id: "s1", prompt: "keep going"}' | "$GATE" record
+assert_contains "unpushed commits" "$(reason)" "counts refusals again after the owner's next instruction"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
