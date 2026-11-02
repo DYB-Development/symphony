@@ -73,7 +73,9 @@ run() {
     wait "$child" || status=$?
   fi
   rm -f "$leases/$child" "$leases/$$" 2>/dev/null || true
-  ! is_full_suite "$@" || record_run "$slots" "$began" "$status"
+  local outcome=$status
+  [ -z "${stopped:-}" ] || outcome=interrupted
+  ! is_full_suite "$@" || record_run "$slots" "$began" "$outcome"
   exit "$status"
 }
 

@@ -287,6 +287,17 @@ run_as_agent 'bin/rails test test/models/quote_test.rb' > /dev/null
 assert_equals "" "$(recorded_runs)" "records nothing for a run of one named test file"
 drop_ledger
 
+new_app
+git init -q -b feature/quotes "$APP"
+printf '#!/bin/sh\ntouch "%s/started"\nwhile true; do sleep 0.05; done\n' "$WORK" > "$APP/bin/rails"
+(cd "$APP" && exec "$SLOTS" run bin/rails test) > /dev/null &
+RUN=$!
+while [[ ! -f "$WORK/started" ]]; do sleep 0.05; done
+kill -TERM $RUN
+wait $RUN
+assert_equals "interrupted" "$(recorded_runs | cut -f4)" "records a full-suite run stopped by a signal as interrupted"
+drop_ledger
+
 assert_equals "" "$(hook_output 'git status')" "leaves a command that runs no Rails tests as the agent wrote it"
 
 assert_equals "" "$(hook_output 'bin/rails test && git push')" \
