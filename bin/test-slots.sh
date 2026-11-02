@@ -23,12 +23,17 @@ started_at() {
   echo $started
 }
 
+is_number() {
+  case "$1" in ''|*[!0-9]*) return 1 ;; *) return 0 ;; esac
+}
+
 held_slots() {
   local file pid started slots held=0
   for file in "$leases"/*; do
     [ -f "$file" ] || continue
-    { read -r pid; read -r started; read -r slots; } < "$file"
-    if [ "$(started_at "$pid")" = "$started" ]; then
+    pid="" started="" slots=""
+    { read -r pid; read -r started; read -r slots; } < "$file" || true
+    if is_number "$pid" && is_number "$slots" && [ "$(started_at "$pid")" = "$started" ]; then
       held=$((held + slots))
     else
       rm -f "$file"

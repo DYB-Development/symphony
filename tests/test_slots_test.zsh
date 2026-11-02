@@ -133,6 +133,14 @@ printf '%s\n%s\n%s\n' $$ "Thu Jan 1 00:00:00 2026" 12 > "$TEST_SLOTS_DIR/leases/
 assert_equals "12" "$(workers_given)" "stops counting a finished run's slots once its process number is given to a new process"
 drop_ledger
 
+new_ledger
+mkdir -p "$TEST_SLOTS_DIR/leases"
+printf 'not a lease\n' > "$TEST_SLOTS_DIR/leases/damaged"
+workers_given > /dev/null
+assert_equals "absent" "$([[ -e "$TEST_SLOTS_DIR/leases/damaged" ]] && echo present || echo absent)" \
+  "removes a damaged lease when the next run starts"
+drop_ledger
+
 # A ledger folder that cannot be made, since a file sits where it would go.
 new_ledger
 touch "$TEST_SLOTS_DIR"
@@ -255,3 +263,4 @@ assert_equals "allow" "$(hook_output 'bin/rails test' | jq -r '.hookSpecificOutp
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
+
