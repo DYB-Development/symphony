@@ -23,7 +23,10 @@ session_worktree() {
   local root
   [ -f "$index" ] || return 0
   while IFS= read -r root; do
-    is_linked_worktree "$root" && { printf '%s\n' "$root"; return 0; }
+    if [ ! -d "$root" ] || is_linked_worktree "$root"; then
+      printf '%s\n' "$root"
+      return 0
+    fi
   done < <(awk -F '\t' -v t="$1" '$2 == t { print $1 }' "$index" | tail -r)
 }
 
