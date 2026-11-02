@@ -105,6 +105,23 @@ commit_work
 push_work
 assert_contains "no open pull request" "$(reason)" "refuses a stop while the branch has no open pull request"
 
+open_pull_request() {
+  jq -nc '[{number: 9, state: "OPEN", closingIssuesReferences: [{number: 7, url: "https://github.com/acme/shop/issues/7"}]}]' > "$GH_DATA/prs.json"
+}
+
+issue_body() {
+  jq -nc --arg body "$2" '{body: $body}' > "$GH_DATA/issue-$1.json"
+}
+
+new_repo
+commit_work
+push_work
+open_pull_request
+issue_body 7 '## Acceptance criteria
+- [x] One
+- [ ] Two'
+assert_contains "unticked acceptance criteria" "$(reason)" "refuses a stop while the issue has unticked acceptance criteria"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]

@@ -53,6 +53,10 @@ unfinished=()
 if [ "$started" -gt 0 ] && [ "$(jq -r '.[0].state // "NONE"' <<< "$pull_requests")" = NONE ]; then
   unfinished+=("no open pull request")
 fi
+issue=$(jq -r '.[0].closingIssuesReferences[0].number // empty' <<< "$pull_requests")
+if [ -n "$issue" ] && (cd "$worktree" && gh issue view "$issue" --json body) | jq -e '.body | test("(?m)^\\s*- \\[ \\]")' >/dev/null; then
+  unfinished+=("unticked acceptance criteria on issue #$issue")
+fi
 
 [ ${#unfinished[@]} -gt 0 ] || exit 0
 jq -nc --arg reason "This branch has $(IFS=,; printf '%s' "${unfinished[*]}"). Keep working." '{decision: "block", reason: $reason}'
