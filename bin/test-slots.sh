@@ -4,9 +4,11 @@ set -euo pipefail
 usage() {
   cat >&2 <<'USAGE'
 usage: test-slots.sh run <command> [<argument>...]
+       test-slots.sh wrap
 
-Runs a test command with PARALLEL_WORKERS set to the slots it takes from the
-machine's shared total.
+run runs a test command with PARALLEL_WORKERS set to the slots it takes from
+the machine's shared total. wrap is the hook that rewrites an agent's Rails
+test command to run that way.
 USAGE
   exit 64
 }
