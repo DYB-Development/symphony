@@ -171,6 +171,9 @@ assert_equals $'Quotes become orders.\n\nNothing else changes.' "$(fields | jq -
 
 assert_equals "A quote is a source and the order is the product." "$(fields | jq -r .rule)" "reads section 01's bold line as the rule"
 
+assert_equals '[{"name":"Quote record","body":"A quote holds its lines."},{"name":"Order record","body":"An order holds its lines."}]' \
+  "$(fields | jq -c .already_built)" "reads section 02's named pairs as what is already built"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"

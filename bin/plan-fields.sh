@@ -16,6 +16,7 @@ USAGE
 jq -R -s '
   def trimmed: sub("^\\s+"; "") | sub("\\s+$"; "");
   def paragraphs: [split("\n\n")[] | trimmed | select(length > 0)];
+  def named_pairs: [scan("(?m)^- \\*\\*(.+?)\\*\\* — (.+)$") | {name: .[0], body: .[1]}];
   def sections:
     sub("\n---\n## Generation Metadata[\\s\\S]*$"; "")
     | [splits("\n(?=## [0-9]{2} )")]
@@ -24,5 +25,6 @@ jq -R -s '
   sections as $sections
   | ($sections["01"] | paragraphs) as $plan
   | {summary: ($plan | map(select(test("^\\*\\*[^\n]*\\*\\*$") | not)) | join("\n\n")),
-     rule: ($plan | map(select(test("^\\*\\*[^\n]*\\*\\*$")) | ltrimstr("**") | rtrimstr("**")) | first)}
+     rule: ($plan | map(select(test("^\\*\\*[^\n]*\\*\\*$")) | ltrimstr("**") | rtrimstr("**")) | first),
+     already_built: ($sections["02"] | named_pairs)}
 ' "$1"
