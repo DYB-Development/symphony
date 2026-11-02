@@ -34,6 +34,7 @@ printf 'url=https://dyb.example\ntoken=secret\n' > "$CONNECTION"
 cat > "$STUB_BIN/curl" <<'STUB'
 #!/usr/bin/env bash
 for arg in "$@"; do [ "$arg" = "@-" ] && cat > "$STUB_SENT"; done
+printf '%s\n' "$@" > "$STUB_SENT.args"
 printf '%s\n%s' "$STUB_BODY" "$STUB_STATUS"
 STUB
 chmod +x "$STUB_BIN/curl"
@@ -55,6 +56,9 @@ assert_equals $'The hub holds no pipeline with id 9.\n1' "$(cat "$WORK/out")"$'\
 
 printf '{"title": "Convert quotes"}' | STUB_BODY='{"answer": 12}' STUB_STATUS=200 hub post add_plan >/dev/null 2>&1
 assert_equals '{"title": "Convert quotes"}' "$(cat "$WORK/sent" 2>&1)" "sends the params it reads for a post as the request body"
+
+STUB_BODY='{"answer": {"title": "Export quotes"}}' STUB_STATUS=200 hub get work_item work_item_id=12 >/dev/null 2>&1
+assert_equals "work_item_id=12" "$(grep -A1 -x -- --data-urlencode "$WORK/sent.args" | tail -1)" "sends the values it is given for a get as the query"
 
 assert_equals "https://dyb.example/console/pipelines/plans/12" "$(hub page /console/pipelines/plans/12 2>&1)" \
   "prints the production address of a page"
