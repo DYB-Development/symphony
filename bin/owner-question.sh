@@ -19,6 +19,17 @@ mark_for() {
   printf '%s/%s' "$mark_dir" "$(printf '%s' "$1" | shasum | cut -c1-40)"
 }
 
+modified_at() {
+  stat -f %m "$1" 2>/dev/null || stat -c %Y "$1" 2>/dev/null || printf '0'
+}
+
+is_marked() {
+  local mark
+  mark=$(mark_for "$1")
+  [ -f "$mark" ] || return 1
+  [ $(( $(date +%s) - $(modified_at "$mark") )) -le 86400 ]
+}
+
 is_machine_sent() {
   jq -e '(.prompt // "") | test("^\\s*<(task-notification|agent-message|cross-session-message|local-command-)")' <<< "$1" >/dev/null
 }
@@ -76,7 +87,7 @@ case "${1:-}" in
   check)
     payload=$(cat)
     session=$(jq -r '.session_id // empty' <<< "$payload")
-    [ -f "$(mark_for "$session")" ] || exit 0
+    is_marked "$session" || exit 0
     [ -z "$(jq -r '.agent_id // empty' <<< "$payload")" ] || exit 0
     if [ "$(cat "$(mark_for "$session")")" = answered ]; then
       refuse "The owner asked a question and it has been answered. A background task finishing is not permission to continue. Run nothing and end this turn with no message until the owner's next prompt."
@@ -91,7 +102,7 @@ case "${1:-}" in
     ;;
   asked)
     [ $# -eq 2 ] || usage
-    [ -f "$(mark_for "$2")" ]
+    is_marked "$2"
     ;;
   *) usage ;;
 esac

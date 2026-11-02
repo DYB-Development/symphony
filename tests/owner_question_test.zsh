@@ -107,6 +107,10 @@ assert_equals "deny" "$(bash_decision 'cat a > b')" "refuses a shell command tha
 reset_marks; prompt "are you ok?"
 assert_equals "" "$(decision Agent '{"subagent_type":"Explore"}')" "lets a search agent be started while the question is being answered"
 
+reset_marks; prompt "are you ok?"
+touch -t 202001010000 "$OWNER_QUESTION_DIR"/*
+assert_equals "" "$(decision Edit '{"file_path":"/a"}')" "ignores a mark more than a day old"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
