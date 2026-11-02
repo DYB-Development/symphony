@@ -17,6 +17,7 @@ jq -R -s '
   def trimmed: sub("^\\s+"; "") | sub("\\s+$"; "");
   def paragraphs: [split("\n\n")[] | trimmed | select(length > 0)];
   def named_pairs: [scan("(?m)^- \\*\\*(.+?)\\*\\* — (.+)$") | {name: .[0], body: .[1]}];
+  def diagram: capture("```mermaid\n(?<code>[\\s\\S]*?)\n```").code;
   def sections:
     sub("\n---\n## Generation Metadata[\\s\\S]*$"; "")
     | [splits("\n(?=## [0-9]{2} )")]
@@ -28,6 +29,7 @@ jq -R -s '
      rule: ($plan | map(select(test("^\\*\\*[^\n]*\\*\\*$")) | ltrimstr("**") | rtrimstr("**")) | first),
      already_built: ($sections["02"] | named_pairs),
      to_be_added: ($sections["03"] | named_pairs),
+     model_diagram: ($sections["04"] | diagram),
      trades: ($sections["07"] | named_pairs),
      risks: ($sections["10"] | named_pairs)}
 ' "$1"

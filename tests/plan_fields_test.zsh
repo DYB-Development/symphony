@@ -177,6 +177,8 @@ assert_equals '[{"name":"Quote record","body":"A quote holds its lines."},{"name
 assert_equals '[[{"name":"Convert action","body":"Turns a quote into an order."}],[{"name":"One more page","body":"The order page is new. Permanent."}],[{"name":"Orders may need approval","body":"A client could require it. That is a redesign."}]]' \
   "$(fields | jq -c '[.to_be_added, .trades, .risks]')" "reads the named pairs of sections 03, 07 and 10 as what is added, traded and risked"
 
+assert_equals $'flowchart LR\n  Quote --> Order' "$(fields | jq -r .model_diagram)" "reads section 04's mermaid block as the model diagram"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"
