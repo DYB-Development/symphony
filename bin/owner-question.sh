@@ -60,6 +60,7 @@ case "${1:-}" in
     payload=$(cat)
     session=$(jq -r '.session_id // empty' <<< "$payload")
     [ -f "$(mark_for "$session")" ] || exit 0
+    [ -z "$(jq -r '.agent_id // empty' <<< "$payload")" ] || exit 0
     if [ "$(cat "$(mark_for "$session")")" = answered ]; then
       refuse "The owner asked a question and it has been answered. A background task finishing is not permission to continue. Run nothing and end this turn with no message until the owner's next prompt."
       exit 0

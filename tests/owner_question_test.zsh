@@ -88,6 +88,9 @@ stop_turn() {
 reset_marks; prompt "are you ok?"; stop_turn
 assert_equals "deny" "$(decision Read '{"file_path":"/a"}')" "refuses a read once the turn that answered the question has ended"
 
+reset_marks; prompt "are you ok?"
+assert_equals "" "$(decision Edit '{"file_path":"/a"}' agent-1)" "lets a running subagent carry on"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
