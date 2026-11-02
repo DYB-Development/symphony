@@ -281,6 +281,12 @@ assert_equals "feature/quotes	$(cd "$APP" && pwd -P)" "$(recorded_runs | cut -f1
   "records the branch and worktree the tests ran in when the command changed folder first"
 drop_ledger
 
+new_app
+git init -q -b feature/quotes "$APP"
+run_as_agent 'bin/rails test test/models/quote_test.rb' > /dev/null
+assert_equals "" "$(recorded_runs)" "records nothing for a run of one named test file"
+drop_ledger
+
 assert_equals "" "$(hook_output 'git status')" "leaves a command that runs no Rails tests as the agent wrote it"
 
 assert_equals "" "$(hook_output 'bin/rails test && git push')" \
