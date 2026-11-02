@@ -1,0 +1,88 @@
+#!/usr/bin/env zsh
+# Tests for bin/work-store.sh.
+#
+# Usage: zsh tests/work_store_test.zsh
+setopt no_unset
+
+SCRIPT_DIR="${0:A:h}"
+SCRIPT="$SCRIPT_DIR/../bin/work-store.sh"
+
+PASS=0
+FAIL=0
+
+ok()   { printf '  \033[32m✓\033[0m %s\n' "$1"; PASS=$((PASS+1)); }
+fail() { printf '  \033[31m✗\033[0m %s\n' "$1"; FAIL=$((FAIL+1)); }
+
+assert_equals() {
+  local expected="$1" actual="$2" label="$3"
+  if [[ "$expected" == "$actual" ]]; then
+    ok "$label"
+  else
+    fail "$label"
+    printf '      expected: %s\n' "${(qqq)expected}"
+    printf '      actual:   %s\n' "${(qqq)actual}"
+  fi
+}
+
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/work_store_test.XXXXXX")"
+SETTINGS="$WORK/settings"
+REPO="$WORK/shop"
+mkdir -p "$SETTINGS"
+git init -q "$REPO"
+
+store() {
+  (cd "$REPO" && SYMPHONY_WORK_DIR="$SETTINGS" "$SCRIPT" "$@")
+}
+
+echo "work-store.sh show:"
+
+assert_equals "github" "$(store show 2>&1)" "reports a repo with no setting as using GitHub"
+
+printf '{"store": "dyb_web", "repo": "acme/shop", "pipeline_id": 3, "own_project_id": 7}' > "$SETTINGS/shop.json"
+assert_equals $'dyb_web\nrepo=acme/shop\npipeline_id=3\nown_project_id=7' "$(store show 2>&1)" \
+  "reports a repo set to dyb_web with the repo, pipeline and link its setting names"
+
+printf '{"store": "jira"}' > "$SETTINGS/shop.json"
+assert_equals "work-store.sh: $SETTINGS/shop.json names store \"jira\", which is neither github nor dyb_web" \
+  "$(store show 2>&1)" "refuses a setting that names neither GitHub nor dyb_web with the value it held"
+
+echo ""
+echo "work-store.sh check:"
+
+STUB_BIN="$WORK/bin"
+CONNECTION="$WORK/dyb_web"
+mkdir -p "$STUB_BIN"
+printf 'url=https://dyb.example\ntoken=secret\n' > "$CONNECTION"
+
+# A curl that never leaves the machine: it answers task_choices with the body the test sets.
+cat > "$STUB_BIN/curl" <<'STUB'
+#!/usr/bin/env bash
+printf '%s\n%s' "$STUB_BODY" "${STUB_STATUS:-200}"
+STUB
+chmod +x "$STUB_BIN/curl"
+
+check() {
+  (cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$SETTINGS" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_BODY="$1" "$SCRIPT" check)
+}
+
+printf '{"store": "dyb_web", "repo": "acme/shop", "pipeline_id": 3, "own_project_id": 7}' > "$SETTINGS/shop.json"
+assert_equals "production answers" \
+  "$(check '{"answer": {"pipelines": [{"id": 3, "name": "Test-first change"}], "repos": ["acme/shop"], "jobs": [], "products": [], "own_projects": [{"id": 7, "name": "Shop"}], "tasks": []}}' 2>&1)" \
+  "reports that production answers when the connection's URL and token are right"
+
+assert_equals $'production answers\nproduction holds no published pipeline with id 3' \
+  "$(check '{"answer": {"pipelines": [], "repos": ["acme/shop"], "jobs": [], "products": [], "own_projects": [{"id": 7, "name": "Shop"}], "tasks": []}}' 2>&1)" \
+  "names the pipeline production does not hold"
+
+assert_equals $'production answers\nproduction holds no repo named acme/shop' \
+  "$(check '{"answer": {"pipelines": [{"id": 3, "name": "Test-first change"}], "repos": [], "jobs": [], "products": [], "own_projects": [{"id": 7, "name": "Shop"}], "tasks": []}}' 2>&1)" \
+  "names the repo production does not hold"
+
+assert_equals $'production answers\nproduction holds no own project with id 7' \
+  "$(check '{"answer": {"pipelines": [{"id": 3, "name": "Test-first change"}], "repos": ["acme/shop"], "jobs": [{"id": 7, "name": "Shop"}], "products": [], "own_projects": [], "tasks": []}}' 2>&1)" \
+  "names the link production does not hold"
+
+echo ""
+echo "$PASS passed, $FAIL failed"
+rm -rf "$WORK"
+[[ $FAIL -eq 0 ]]
