@@ -54,14 +54,15 @@ slots_command() {
 
 plain_text='[^;&|<>`$()]*'
 folder='[^;&|<>`$() ]+'
-test_command="^((cd $folder && )*)((bin/rails test(:all|:system)?|bin/ci)( $plain_text)?)\$"
+setting='[A-Za-z_][A-Za-z0-9_]*=[^;&|<>`$() ]*'
+test_command="^((cd $folder && )*($setting )*)((bin/rails test(:all|:system)?|bin/ci)( $plain_text)?)\$"
 
 wrap() {
   local input command
   input=$(cat)
   command=$(printf '%s' "$input" | jq -r '.tool_input.command // ""')
   [[ "$command" =~ $test_command ]] || return 0
-  printf '%s' "$input" | jq -c --arg command "${BASH_REMATCH[1]}$(slots_command) run ${BASH_REMATCH[3]}" \
+  printf '%s' "$input" | jq -c --arg command "${BASH_REMATCH[1]}$(slots_command) run ${BASH_REMATCH[4]}" \
     '{hookSpecificOutput: {hookEventName: "PreToolUse", updatedInput: (.tool_input + {command: $command})}}'
 }
 

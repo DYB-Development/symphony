@@ -188,6 +188,11 @@ assert_equals "rails test with 12 workers" "$(run_as_agent "cd $APP && bin/rails
   "runs an agent's test command that follows a cd inside the slots"
 drop_ledger
 
+new_app
+assert_equals "rails test with 12 workers" "$(run_as_agent 'RAILS_ENV=test bin/rails test' | tail -1)" \
+  "runs an agent's test command that sets an environment variable first inside the slots"
+drop_ledger
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
