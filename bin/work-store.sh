@@ -44,8 +44,11 @@ check() {
 
   missing="$(setting | jq -r --argjson choices "$choices" '
     .pipeline_id as $pipeline
-    | if [$choices.pipelines[].id] | index($pipeline) then empty
-      else "production holds no published pipeline with id \($pipeline)" end')"
+    | .repo as $repo
+    | (if [$choices.pipelines[].id] | index($pipeline) then empty
+       else "production holds no published pipeline with id \($pipeline)" end),
+      (if $choices.repos | index($repo) then empty
+       else "production holds no repo named \($repo)" end)')"
   [ -z "$missing" ] || { printf '%s\n' "$missing"; return 1; }
 }
 

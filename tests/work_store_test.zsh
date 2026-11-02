@@ -74,6 +74,10 @@ assert_equals $'production answers\nproduction holds no published pipeline with 
   "$(check '{"answer": {"pipelines": [], "repos": ["acme/shop"], "jobs": [], "products": [], "own_projects": [{"id": 7, "name": "Shop"}], "tasks": []}}' 2>&1)" \
   "names the pipeline production does not hold"
 
+assert_equals $'production answers\nproduction holds no repo named acme/shop' \
+  "$(check '{"answer": {"pipelines": [{"id": 3, "name": "Test-first change"}], "repos": [], "jobs": [], "products": [], "own_projects": [{"id": 7, "name": "Shop"}], "tasks": []}}' 2>&1)" \
+  "names the repo production does not hold"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"
