@@ -104,6 +104,9 @@ assert_equals "deny" "$(bash_decision 'git status && git commit -m done')" "refu
 reset_marks; prompt "are you ok?"
 assert_equals "deny" "$(bash_decision 'cat a > b')" "refuses a shell command that writes a file through a redirect"
 
+reset_marks; prompt "are you ok?"
+assert_equals "" "$(decision Agent '{"subagent_type":"Explore"}')" "lets a search agent be started while the question is being answered"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]

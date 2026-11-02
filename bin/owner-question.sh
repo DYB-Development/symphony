@@ -85,6 +85,7 @@ case "${1:-}" in
     case "$(jq -r '.tool_name // empty' <<< "$payload")" in
       Read|Grep|Glob|LSP|ToolSearch|WebFetch|WebSearch|AskUserQuestion) exit 0 ;;
       Bash) only_reads "$(jq -r '.tool_input.command // empty' <<< "$payload")" && exit 0 ;;
+      Agent) case "$(jq -r '.tool_input.subagent_type // empty' <<< "$payload")" in Explore|claude-code-guide) exit 0 ;; esac ;;
     esac
     refuse "The owner asked a question. Answer it and stop, changing nothing, until the owner's next prompt."
     ;;
