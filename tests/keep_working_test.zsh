@@ -142,6 +142,35 @@ stopping >/dev/null; stopping >/dev/null; stopping >/dev/null
 jq -nc '{session_id: "s1", prompt: "keep going"}' | "$GATE" record
 assert_contains "unpushed commits" "$(reason)" "counts refusals again after the owner's next instruction"
 
+new_repo
+commit_work
+assert_equals "" "$(GH_FAILS=1 stopping)" "lets a session stop when GitHub cannot be read"
+
+PLAN_PART='## Part of
+Quote conversion, stage 1 of 4 — End to end.'
+
+merged_pull_request() {
+  jq -nc '[{number: 9, state: "MERGED", closingIssuesReferences: [{number: 7}]}]' > "$GH_DATA/prs.json"
+}
+
+open_issues() {
+  print -r -- "$1" > "$GH_DATA/open.json"
+}
+
+task() {
+  jq -nc --argjson number "$1" --arg priority "$2" --arg body "$3" --arg label "${4:-none}" \
+    '{number: $number, labels: [{name: "priority:\($priority)"}, {name: $label}], body: $body}'
+}
+
+new_repo
+commit_work
+push_work
+merged_pull_request
+issue_body 7 "$PLAN_PART"
+open_issues "[$(task 8 medium "$PLAN_PART")]"
+assert_contains "#8" "$(reason)" "names the plan's next issue once the pull request has merged"
+
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]

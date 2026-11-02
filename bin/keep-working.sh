@@ -39,40 +39,86 @@ commits_ahead() {
 }
 
 hook=$(cat)
+mark="$("$(dirname "$0")/owner-question.sh" path "$(jq -r '.session_id // empty' <<< "$hook")")"
+
+github_failed() {
+  echo "keep-working.sh: GitHub could not be read, so the session stopped unchecked" >&2
+  exit 0
+}
+
+refuse() {
+  local fingerprint=$1 reason=$2 message=$3 count=0
+  if [ -f "$mark.refusals" ] && [ "$(sed -n 2p "$mark.refusals")" = "$fingerprint" ]; then
+    count=$(sed -n 1p "$mark.refusals")
+  fi
+  if [ "$count" -ge 3 ]; then
+    jq -nc --arg text "$message" '{systemMessage: $text}'
+    exit 0
+  fi
+  mkdir -p "$(dirname "$mark")"
+  printf '%s\n%s\n' "$((count + 1))" "$fingerprint" > "$mark.refusals"
+  jq -nc --arg reason "$reason" '{decision: "block", reason: $reason}'
+}
+
+remember_issue() {
+  mkdir -p "$(dirname "$mark")"
+  printf '%s %s\n' "$(git -C "$1" remote get-url origin | sed -E 's#^.*github\.com[:/]##; s#\.git$##')" "$2" > "$mark.issue"
+}
+
+next_in_plan() {
+  local repo issue body open next
+  [ -f "$mark.issue" ] || return 0
+  read -r repo issue < "$mark.issue"
+  body=$(gh issue view "$issue" --repo "$repo" --json body) || github_failed
+  open=$(gh issue list --repo "$repo" --state open --limit 200 --json number,labels,body) || github_failed
+  next=$(jq -r --argjson current "$issue" --slurpfile source <(printf '%s' "$body") '
+    def plan: .body // "" | (capture("## Part of\\s*\\n(?<part>[^\\n]*), stage [0-9]+ of [0-9]+").part // empty);
+    ($source[0] | plan) as $plan
+    | map(select(plan == $plan and .number != $current))
+    | sort_by(.number) | first | .number // empty
+  ' <<< "$open")
+  if [ -z "$next" ]; then
+    rm -f "$mark.issue"
+    return 0
+  fi
+  refuse "next $next" \
+    "The pull request merged and issue #$next is next in this plan. Clean up the merged branch, then start issue #$next with the next-task process. Stop only if the owner says so." \
+    "Stopped before starting issue #$next, the next in this plan."
+}
+
 session=$(jq -r '.session_id // empty' <<< "$hook")
 "$(dirname "$0")/owner-question.sh" asked "$session" && exit 0
 [ "$(jq '.background_tasks // [] | map(select(.status == "running")) | length' <<< "$hook")" -eq 0 ] || exit 0
 transcript=$(jq -r '.transcript_path // empty' <<< "$hook")
 worktree=$(session_worktree "$transcript")
 [ -n "$worktree" ] || exit 0
+[ -d "$worktree" ] || { next_in_plan; exit 0; }
 
 branch=$(git -C "$worktree" branch --show-current)
 started=$(commits_ahead "$worktree" origin/HEAD origin/main)
-pull_requests=$(cd "$worktree" && gh pr list --head "$branch" --state all --limit 1 --json number,state,closingIssuesReferences)
+pull_requests=$(cd "$worktree" && gh pr list --head "$branch" --state all --limit 1 --json number,state,closingIssuesReferences) || github_failed
+state=$(jq -r '.[0].state // "NONE"' <<< "$pull_requests")
+issue=$(jq -r '.[0].closingIssuesReferences[0].number // empty' <<< "$pull_requests")
+[ -z "$issue" ] || remember_issue "$worktree" "$issue"
+
+case "$state" in
+  CLOSED) exit 0 ;;
+  MERGED) next_in_plan; exit 0 ;;
+esac
 
 unfinished=()
 [ -z "$(git -C "$worktree" status --porcelain)" ] || unfinished+=("uncommitted changes")
 [ "$(commits_ahead "$worktree" '@{upstream}' origin/HEAD origin/main)" -eq 0 ] || unfinished+=("unpushed commits")
-if [ "$started" -gt 0 ] && [ "$(jq -r '.[0].state // "NONE"' <<< "$pull_requests")" = NONE ]; then
+if [ "$started" -gt 0 ] && [ "$state" = NONE ]; then
   unfinished+=("no open pull request")
 fi
-issue=$(jq -r '.[0].closingIssuesReferences[0].number // empty' <<< "$pull_requests")
 if [ -n "$issue" ] && (cd "$worktree" && gh issue view "$issue" --json body) | jq -e '.body | test("(?m)^\\s*- \\[ \\]")' >/dev/null; then
   unfinished+=("unticked acceptance criteria on issue #$issue")
 fi
 
 [ ${#unfinished[@]} -gt 0 ] || exit 0
-list=$(IFS=,; printf '%s' "${unfinished[*]}")
-refusals="$("$(dirname "$0")/owner-question.sh" path "$session").refusals"
-fingerprint="$(git -C "$worktree" rev-parse HEAD) $list"
-count=0
-if [ -f "$refusals" ] && [ "$(sed -n 2p "$refusals")" = "$fingerprint" ]; then
-  count=$(sed -n 1p "$refusals")
-fi
-if [ "$count" -ge 3 ]; then
-  jq -nc --arg text "Stopped with unfinished work on this branch: $list." '{systemMessage: $text}'
-  exit 0
-fi
-mkdir -p "$(dirname "$refusals")"
-printf '%s\n%s\n' "$((count + 1))" "$fingerprint" > "$refusals"
-jq -nc --arg reason "This branch has $list. Keep working. If you cannot get past a problem, say what is blocking it." '{decision: "block", reason: $reason}'
+list=$(printf '%s, ' "${unfinished[@]}")
+list=${list%, }
+refuse "$(git -C "$worktree" rev-parse HEAD) $list" \
+  "This branch has $list. Keep working. If you cannot get past a problem, say what is blocking it." \
+  "Stopped with unfinished work on this branch: $list."
