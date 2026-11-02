@@ -274,6 +274,13 @@ assert_equals "feature/quotes	$(cd "$APP" && pwd -P)	12	0" "$(recorded_runs)" \
   "records a full-suite run's branch, worktree, workers and exit status"
 drop_ledger
 
+new_app
+git init -q -b feature/quotes "$APP"
+(cd "$WORK" && bash -c "$(hook_output "cd $APP && bin/rails test" | jq -r '.hookSpecificOutput.updatedInput.command')") > /dev/null
+assert_equals "feature/quotes	$(cd "$APP" && pwd -P)" "$(recorded_runs | cut -f1,2)" \
+  "records the branch and worktree the tests ran in when the command changed folder first"
+drop_ledger
+
 assert_equals "" "$(hook_output 'git status')" "leaves a command that runs no Rails tests as the agent wrote it"
 
 assert_equals "" "$(hook_output 'bin/rails test && git push')" \
