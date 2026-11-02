@@ -47,9 +47,12 @@ take_slots() {
 
 run() {
   local slots
-  mkdir -p "$leases"
-  slots=$(lockf -k "$ledger/lock" "$0" take $$)
-  echo "Running tests with $slots workers"
+  if mkdir -p "$leases" 2>/dev/null && slots=$(lockf -k "$ledger/lock" "$0" take $$ 2>/dev/null); then
+    echo "Running tests with $slots workers"
+  else
+    slots=2
+    echo "Running tests with $slots workers, since the slot ledger at $ledger could not be used"
+  fi
   PARALLEL_WORKERS="$slots" exec "$@"
 }
 

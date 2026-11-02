@@ -133,6 +133,14 @@ printf '%s\n%s\n%s\n' $$ "Thu Jan 1 00:00:00 2026" 12 > "$TEST_SLOTS_DIR/leases/
 assert_equals "12" "$(workers_given)" "stops counting a finished run's slots once its process number is given to a new process"
 drop_ledger
 
+# A ledger folder that cannot be made, since a file sits where it would go.
+new_ledger
+touch "$TEST_SLOTS_DIR"
+assert_equals $'Running tests with 2 workers, since the slot ledger at '"$TEST_SLOTS_DIR"$' could not be used\nthe tests' \
+  "$("$SLOTS" run echo "the tests" 2>&1)" \
+  "runs with 2 workers and says so when the ledger cannot be used"
+drop_ledger
+
 new_ledger
 hold_slots
 pkill -KILL -P $$ -f 'test-slots.sh run'
