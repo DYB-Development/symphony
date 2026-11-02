@@ -34,6 +34,10 @@ is_question() {
   ' <<< "$1" >/dev/null
 }
 
+refuse() {
+  jq -nc --arg text "$1" '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $text}}'
+}
+
 case "${1:-}" in
   record)
     payload=$(cat)
@@ -46,6 +50,12 @@ case "${1:-}" in
     fi
     mkdir -p "$mark_dir"
     printf 'asked\n' > "$(mark_for "$session")"
+    ;;
+  check)
+    payload=$(cat)
+    session=$(jq -r '.session_id // empty' <<< "$payload")
+    [ -f "$(mark_for "$session")" ] || exit 0
+    refuse "The owner asked a question. Answer it and stop, changing nothing, until the owner's next prompt."
     ;;
   asked)
     [ $# -eq 2 ] || usage

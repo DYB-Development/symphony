@@ -64,6 +64,20 @@ assert_equals "yes" "$(asked)" "leaves pasted text out when reading the prompt"
 reset_marks; prompt "stop"
 assert_equals "yes" "$(asked)" "marks a prompt telling the session to stop"
 
+tool_call() {
+  jq -nc --arg tool "$1" --argjson input "${2:-{\}}" --arg agent "${3:-}" \
+    '{hook_event_name: "PreToolUse", session_id: "s1", tool_name: $tool, tool_input: $input, agent_id: $agent}' | "$GATE" check
+}
+
+decision() {
+  tool_call "$@" | jq -r '.hookSpecificOutput.permissionDecision // empty'
+}
+
+echo "owner-question.sh check:"
+
+reset_marks; prompt "are you ok?"
+assert_equals "deny" "$(decision Edit '{"file_path":"/a"}')" "refuses a file edit after the owner asks a question"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]
