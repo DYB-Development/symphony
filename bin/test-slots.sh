@@ -53,7 +53,7 @@ slots_command() {
 }
 
 plain_text='[^;&|<>`$()]*'
-test_command="^bin/rails test(:all|:system)?( $plain_text)?\$"
+test_command="^(bin/rails test(:all|:system)?|bin/ci)( $plain_text)?\$"
 
 wrap() {
   local input command

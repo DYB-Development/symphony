@@ -179,6 +179,10 @@ assert_equals "rails test:system with 12 workers" "$(run_as_agent 'bin/rails tes
   "runs an agent's bin/rails test:system inside the slots"
 drop_ledger
 
+new_app
+assert_equals "ci with 12 workers" "$(run_as_agent 'bin/ci' | tail -1)" "runs an agent's bin/ci inside the slots"
+drop_ledger
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
