@@ -11,7 +11,7 @@ show       Prints where the current repo keeps its plans and work: github, or
 check      Asks dyb_web production for its task choices and reports whether
            it answers.
 file-plan  Adds the plan to dyb_web production as a draft, linked as the
-           repo's setting names.
+           repo's setting names, and prints its page's address.
 USAGE
   exit 64
 }
@@ -60,11 +60,12 @@ check() {
 }
 
 file_plan() {
-  local fields
+  local fields id
   fields="$("$(dirname "$0")/plan-fields.sh" "$2")"
-  setting | jq --arg title "$1" --argjson fields "$fields" \
+  id="$(setting | jq --arg title "$1" --argjson fields "$fields" \
     '{title: $title, priority: "medium"} + (with_entries(select(.key | IN("own_project_id", "job_id", "product_id")))) + $fields' \
-    | "$(dirname "$0")/dyb-hub.sh" post add_plan
+    | "$(dirname "$0")/dyb-hub.sh" post add_plan)"
+  "$(dirname "$0")/dyb-hub.sh" page "/console/pipelines/plans/$id"
 }
 
 case "${1:-}" in

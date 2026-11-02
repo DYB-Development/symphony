@@ -95,6 +95,8 @@ assert_equals '{"title":"Quote-to-order conversion","priority":"medium","own_pro
   "$(jq -c '{title, priority, own_project_id, rule}' "$WORK/sent" 2>&1)" \
   "sends a dyb_web repo's plan to production as a draft linked as its setting names"
 
+assert_equals "https://dyb.example/console/pipelines/plans/12" "$(file_plan '{"answer": 12}' 2>&1)" "prints the address of the plan's production page"
+
 rm -f "$WORK/sent"
 sed '/^## 07 What we trade/,/^## 08 Settle first/{/^## 08/!d;}' "$SCRIPT_DIR/fixtures/plan-body.md" > "$WORK/no-trades.md"
 (cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$SETTINGS" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_SENT="$WORK/sent" STUB_BODY='{"answer": 12}' \
