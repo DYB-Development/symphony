@@ -33,6 +33,7 @@ jq -R -s '
      model_diagram: ($sections["04"] | diagram),
      how_it_fits: ($sections["04"] | prose | map({body: .})),
      flow_diagram: ($sections["05"] | diagram),
+     how_it_runs: [$sections["05"] | prose[] | capture("^\\*\\*(?<name>.+?)\\.\\*\\* (?<body>[\\s\\S]+)$")],
      trades: ($sections["07"] | named_pairs),
      risks: ($sections["10"] | named_pairs)}
 ' "$1"

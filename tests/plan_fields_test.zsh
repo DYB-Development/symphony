@@ -184,6 +184,9 @@ assert_equals '[{"body":"There is one join, at the convert action."}]' "$(fields
 
 assert_equals $'flowchart TD\n  Rep --> Convert' "$(fields | jq -r .flow_diagram)" "reads section 05's mermaid block as the flow diagram"
 
+assert_equals '[{"name":"Converting","body":"A rep converts a quote from its page."},{"name":"Reading","body":"An order page reads its own lines."}]' \
+  "$(fields | jq -c .how_it_runs)" "reads section 05's named paragraphs as how it runs"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"
