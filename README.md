@@ -156,6 +156,7 @@ settings that are not its own alone:
 | `PreToolUse` | `agent-model.sh set` | Gives a spawned agent the model your agent models file names for it |
 | `PreToolUse` | `review-block.sh start` | Marks the session as reviewing a pull request when it spawns the review scribe, and a mark more than a day old is ignored |
 | `PreToolUse` | `owner-turn.sh record` | Records a question prompt, and each item an agent marks with `owner-turn.sh`, as something the owner is waited on for |
+| `PreToolUse` | `test-slots.sh wrap` | Runs an agent's Rails test command inside the shared test slots and approves it, when the tests are the last thing the command runs, so suites running at once split the machine's workers |
 | `UserPromptSubmit` | `owner-turn.sh record` | Records when the owner last prompted, which ends that session's flag in the status line |
 | `Stop` | `owner-turn.sh stop` | Shows the session's flags as the last lines of the turn when the owner is waited on |
 | `Stop` | `stop-check.sh check` | Refuses a turn that ends by asking the owner something in plain text with no question window, once per turn, and lets the turn stop with a warning when the transcript cannot be read |

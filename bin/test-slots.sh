@@ -4,9 +4,11 @@ set -euo pipefail
 usage() {
   cat >&2 <<'USAGE'
 usage: test-slots.sh run <command> [<argument>...]
+       test-slots.sh wrap
 
-Runs a test command with PARALLEL_WORKERS set to the slots it takes from the
-machine's shared total.
+run runs a test command with PARALLEL_WORKERS set to the slots it takes from
+the machine's shared total. wrap is the hook that rewrites an agent's Rails
+test command to run that way.
 USAGE
   exit 64
 }
@@ -48,8 +50,27 @@ run() {
   PARALLEL_WORKERS="$slots" "$@"
 }
 
+slots_command() {
+  printf '%q' "$(cd "$(dirname "$0")" && pwd)/test-slots.sh"
+}
+
+plain_text='[^;&|<>`$()]*'
+folder='[^;&|<>`$() ]+'
+setting='[A-Za-z_][A-Za-z0-9_]*=[^;&|<>`$() ]*'
+test_command="^((cd $folder && )*($setting )*)((bin/rails test(:all|:system)?|bin/ci)( $plain_text)?)\$"
+
+wrap() {
+  local input command
+  input=$(cat)
+  command=$(printf '%s' "$input" | jq -r '.tool_input.command // ""')
+  [[ "$command" =~ $test_command ]] || return 0
+  printf '%s' "$input" | jq -c --arg command "${BASH_REMATCH[1]}$(slots_command) run ${BASH_REMATCH[4]}" \
+    '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "allow", updatedInput: (.tool_input + {command: $command})}}'
+}
+
 case "${1:-}" in
   run) shift; [ $# -ge 1 ] || usage; run "$@" ;;
+  wrap) wrap ;;
   take) [ $# -eq 2 ] || usage; take_slots "$2" ;;
   *) usage ;;
 esac
