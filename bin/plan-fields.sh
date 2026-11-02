@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat >&2 <<'USAGE'
+usage: plan-fields.sh <plan-body-file>
+
+Turns a plan body written to ~/.claude/rules/feature-plan.md into the fields
+dyb_web's add_plan takes, as one JSON object.
+USAGE
+  exit 64
+}
+
+[ $# -eq 1 ] || usage
+
+jq -R -s '
+  def trimmed: sub("^\\s+"; "") | sub("\\s+$"; "");
+  def paragraphs: [split("\n\n")[] | trimmed | select(length > 0)];
+  def sections:
+    sub("\n---\n## Generation Metadata[\\s\\S]*$"; "")
+    | [splits("\n(?=## [0-9]{2} )")]
+    | map(capture("^## (?<number>[0-9]{2}) [^\n]*\n(?<body>[\\s\\S]*)$")) | map({(.number): .body}) | add;
+
+  sections as $sections
+  | ($sections["01"] | paragraphs) as $plan
+  | {summary: ($plan | map(select(test("^\\*\\*[^\n]*\\*\\*$") | not)) | join("\n\n"))}
+' "$1"
