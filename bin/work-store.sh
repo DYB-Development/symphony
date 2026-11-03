@@ -85,7 +85,8 @@ file_item() {
     | with_entries(select(.key | IN("repo", "pipeline_id", "own_project_id", "job_id", "product_id")))
     + {title: $title,
        request: ($body | sub("## Acceptance criteria\n[\\s\\S]*?\n(?=## )"; "")),
-       acceptance_criteria: ([$criteria | scan("(?m)^- (?:\\[[ x]\\] )?(.+)$")[0]] | join("\n"))}' \
+       acceptance_criteria: ([$criteria | scan("(?m)^- (?:\\[[ x]\\] )?(.+)$")[0]] | join("\n")),
+       waits_on_ids: ($ARGS.positional | map(tonumber))}' --args "${@:3}" \
     | "$(dirname "$0")/dyb-hub.sh" post add_work_item >/dev/null
 }
 

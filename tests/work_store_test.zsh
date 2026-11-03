@@ -130,6 +130,9 @@ assert_equals "$(sed '/^## Acceptance criteria/,/^## Out of scope/{/^## Out of s
 assert_equals '{"repo":"acme/shop","pipeline_id":3,"own_project_id":7}' "$(jq -c '{repo, pipeline_id, own_project_id}' "$WORK/sent" 2>&1)" \
   "sends the work item for the repo, pipeline and link the repo's setting names"
 
+file_item 14 15 >/dev/null 2>&1
+assert_equals '[14,15]' "$(jq -c .waits_on_ids "$WORK/sent" 2>&1)" "files the work item waiting on the work item ids named after the body"
+
 echo ""
 echo "work-store.sh take:"
 
