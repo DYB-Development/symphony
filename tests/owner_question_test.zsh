@@ -171,6 +171,17 @@ reset_marks; prompt "are you ok?"
 assert_equals "" "$(bash_decision 'git ls-tree -r HEAD; git cat-file -p HEAD; git for-each-ref')" "lets git read trees, objects and refs while the question is being answered"
 
 reset_marks; prompt "are you ok?"
+assert_equals "" "$(bash_decision 'gh api repos/a/b/pulls/1')" "lets a GitHub API read run with no method named"
+
+reset_marks; prompt "are you ok?"
+assert_equals "" "$(bash_decision 'gh api -X GET search/issues -f q=a')" "lets a GitHub API read run with GET named and fields as its query"
+
+for write in '-X POST' '-XPOST' '--method PATCH' '--method=DELETE' '-f a=b' '-F a=b' '--field a=b' '--raw-field a=b' '--input a.json' '-X GET -X POST'; do
+  reset_marks; prompt "are you ok?"
+  assert_equals "deny" "$(bash_decision "gh api repos/a/b $write")" "refuses a GitHub API call with $write"
+done
+
+reset_marks; prompt "are you ok?"
 assert_equals "" "$(decision Agent '{"subagent_type":"Explore"}')" "lets a search agent be started while the question is being answered"
 
 reset_marks; prompt "are you ok?"

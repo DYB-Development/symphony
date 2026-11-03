@@ -45,7 +45,7 @@ is_question() {
   ' <<< "$1" >/dev/null
 }
 
-reads_only_pattern='^ *(\[|test|true|read|ls|cat|head|tail|wc|pwd|grep|rg|which|stat|file|date|echo|printf|jq|basename|dirname|sort|uniq|cut|tr|diff|cd)( |$)|^ *sed +-n |^ *find ([^-]|-[^def])*$|^ *git( +-C +[^ ]+)? +(fetch|rev-list|ls-tree|cat-file|for-each-ref|status|log|diff|show|blame|ls-files|rev-parse|merge-base|describe|grep|shortlog|worktree +list|branch +--show-current|branch +--list|branch +-a|remote +-v|remote +get-url)( |$)|^ *gh +(issue|pr|run|repo|release) +(view|list|diff|checks|status)( |$)|^ *[^ ]*saved-answers\.sh( |$)'
+reads_only_pattern='^ *(\[|test|true|read|ls|cat|head|tail|wc|pwd|grep|rg|which|stat|file|date|echo|printf|jq|basename|dirname|sort|uniq|cut|tr|diff|cd)( |$)|^ *sed +-n |^ *find ([^-]|-[^def])*$|^ *git( +-C +[^ ]+)? +(fetch|rev-list|ls-tree|cat-file|for-each-ref|status|log|diff|show|blame|ls-files|rev-parse|merge-base|describe|grep|shortlog|worktree +list|branch +--show-current|branch +--list|branch +-a|remote +-v|remote +get-url)( |$)|^ *gh +api( |$)|^ *gh +(issue|pr|run|repo|release) +(view|list|diff|checks|status)( |$)|^ *[^ ]*saved-answers\.sh( |$)'
 
 without_quoted_text() {
   printf '%s' "$1" | sed "s/\"[^\"]*\"/Q/g; s/'[^']*'/Q/g"
@@ -57,6 +57,15 @@ without_output_discards() {
 
 without_command_prefixes() {
   printf '%s' "$1" | sed -E -e 's/^ *for +[^ ]+ +in( .*)?$//' -e ':again' -e 's/^ *(do|done|if|then|elif|else|fi|while|xargs( +-[0-9A-Za-z]+( +[0-9{}%]+)?)*|g?timeout +[0-9]+[smhd]?|[A-Za-z_][A-Za-z0-9_]*=[^ ]*)( +|$)//' -e 't again'
+}
+
+gh_api_call_reads() {
+  local without_get
+  grep -Eq '^ *gh +api( |$)' <<< "$1" || return 0
+  without_get=$(sed -E 's/ (-X|--method)[ =]?GET( |$)/ /g' <<< "$1")
+  grep -Eq ' (-[A-Za-z]*X|--method)' <<< "$without_get" && return 1
+  [ "$without_get" = "$1" ] || return 0
+  ! grep -Eq ' (-[A-Za-z]*[fF]|--field|--raw-field|--input)' <<< "$1"
 }
 
 without_read_substitutions() {
@@ -80,6 +89,7 @@ only_reads() {
     segment=$(without_command_prefixes "$segment")
     [ -n "${segment// /}" ] || continue
     printf '%s\n' "$segment" | grep -Eq "$reads_only_pattern" || return 1
+    gh_api_call_reads "$segment" || return 1
   done < <(printf '%s\n' "$plain" | tr ';|&' '\n')
 }
 
