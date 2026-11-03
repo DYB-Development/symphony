@@ -442,6 +442,11 @@ work items.
 criteria, repo, branch, status and plan progress. A work item that waits on open
 work is refused with the names of what it waits on.
 
+`work-store.sh take-next` claims the next ready work item for the repo the
+setting names, and prints it the same way with its id added. Production never
+hands out a work item that still waits on open work, and when nothing is ready
+it stops with production's message.
+
 `work-store.sh item <id>` prints a work item the same way, with the address of
 its page in production, and does not claim it. `pr-scribe` reads the work item
 this way when it is handed one, writes its criteria as the body's ACs Covered,
