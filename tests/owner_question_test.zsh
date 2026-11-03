@@ -141,6 +141,18 @@ reset_marks; prompt "are you ok?"
 assert_equals "deny" "$(bash_decision 'echo `rm a`')" "refuses a shell command run through backticks"
 
 reset_marks; prompt "are you ok?"
+assert_equals "" "$(bash_decision 'for n in 1 2; do gh pr view $n; done')" "lets a loop of read-only shell commands run"
+
+reset_marks; prompt "are you ok?"
+assert_equals "" "$(bash_decision 'if [ -f a ]; then cat a; fi')" "lets a condition around a read-only shell command run"
+
+reset_marks; prompt "are you ok?"
+assert_equals "" "$(bash_decision 'git diff --name-only | while read f; do cat $f; done')" "lets a read-only shell command read the lines of another in a loop"
+
+reset_marks; prompt "are you ok?"
+assert_equals "deny" "$(bash_decision 'for n in 1; do rm $n; done')" "refuses a loop of changing shell commands"
+
+reset_marks; prompt "are you ok?"
 assert_equals "" "$(decision Agent '{"subagent_type":"Explore"}')" "lets a search agent be started while the question is being answered"
 
 reset_marks; prompt "are you ok?"
