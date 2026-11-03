@@ -165,6 +165,12 @@ reset_marks; prompt "are you ok?"
 assert_equals "deny" "$(bash_decision 'ls | xargs -n 1 rm')" "refuses a changing shell command run through xargs with its options"
 
 reset_marks; prompt "are you ok?"
+assert_equals "" "$(bash_decision 'git -C /a fetch -q origin && git rev-list --count HEAD')" "lets git fetch and read commits while the question is being answered"
+
+reset_marks; prompt "are you ok?"
+assert_equals "" "$(bash_decision 'git ls-tree -r HEAD; git cat-file -p HEAD; git for-each-ref')" "lets git read trees, objects and refs while the question is being answered"
+
+reset_marks; prompt "are you ok?"
 assert_equals "" "$(decision Agent '{"subagent_type":"Explore"}')" "lets a search agent be started while the question is being answered"
 
 reset_marks; prompt "are you ok?"
