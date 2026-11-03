@@ -51,10 +51,14 @@ without_quoted_text() {
   printf '%s' "$1" | sed "s/\"[^\"]*\"/Q/g; s/'[^']*'/Q/g"
 }
 
+without_output_discards() {
+  printf '%s' "$1" | sed -E 's/[0-9]*>&[0-9]+([ ;|&]|$)/ \1/g; s/(&|[0-9]*)>+ *\/dev\/null([ ;|&]|$)/ \2/g'
+}
+
 only_reads() {
   local plain segment
   case "$1" in *'$('*|*'`'*) return 1 ;; esac
-  plain=$(without_quoted_text "$1")
+  plain=$(without_output_discards "$(without_quoted_text "$1")")
   case "$plain" in *'>'*|*'<('*) return 1 ;; esac
   while IFS= read -r segment; do
     [ -n "${segment// /}" ] || continue

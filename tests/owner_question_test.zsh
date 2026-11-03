@@ -105,6 +105,15 @@ reset_marks; prompt "are you ok?"
 assert_equals "deny" "$(bash_decision 'cat a > b')" "refuses a shell command that writes a file through a redirect"
 
 reset_marks; prompt "are you ok?"
+assert_equals "" "$(bash_decision 'gh pr view 199 2>&1')" "lets a read-only shell command send its errors to its output"
+
+reset_marks; prompt "are you ok?"
+assert_equals "" "$(bash_decision 'git status >/dev/null 2>/dev/null')" "lets a read-only shell command discard its output"
+
+reset_marks; prompt "are you ok?"
+assert_equals "deny" "$(bash_decision 'cat a >/dev/nullx')" "refuses a redirect to a file whose name only starts with the discard path"
+
+reset_marks; prompt "are you ok?"
 assert_equals "" "$(decision Agent '{"subagent_type":"Explore"}')" "lets a search agent be started while the question is being answered"
 
 reset_marks; prompt "are you ok?"
