@@ -5,6 +5,7 @@ usage() {
   cat >&2 <<'USAGE'
 usage: work-store.sh show|check
        work-store.sh file-plan <title> <plan-body-file>
+       work-store.sh file-item <title> <task-body-file> [<work-item-id> ...]
        work-store.sh take <work-item-id>
        work-store.sh take-next
        work-store.sh item <work-item-id>
@@ -15,6 +16,9 @@ check      Asks dyb_web production for its task choices and reports whether
            it answers.
 file-plan  Adds the plan to dyb_web production as a draft, linked as the
            repo's setting names, and prints its page's address.
+file-item  Adds the task to dyb_web production as a work item on the
+           pipeline and link the setting names, waiting on the work item ids
+           named after the body, and prints its page's address.
 take       Takes the work item by hand in dyb_web production for this
            machine's session, starting no pipeline run, and prints it as
            production reads it.
