@@ -133,6 +133,8 @@ assert_equals '{"repo":"acme/shop","pipeline_id":3,"own_project_id":7}' "$(jq -c
 file_item 14 15 >/dev/null 2>&1
 assert_equals '[14,15]' "$(jq -c .waits_on_ids "$WORK/sent" 2>&1)" "files the work item waiting on the work item ids named after the body"
 
+assert_equals "https://dyb.example/console/pipelines/work_items/21" "$(file_item 2>&1)" "prints the address of the work item's production page"
+
 echo ""
 echo "work-store.sh take:"
 

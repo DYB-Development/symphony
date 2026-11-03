@@ -80,14 +80,16 @@ file_plan() {
 }
 
 file_item() {
-  setting | jq --arg title "$1" --rawfile body "$2" '
+  local id
+  id="$(setting | jq --arg title "$1" --rawfile body "$2" '
     ($body | capture("(?m)^## Acceptance criteria\n(?<text>[\\s\\S]*?)(?=\n## |\\z)").text) as $criteria
     | with_entries(select(.key | IN("repo", "pipeline_id", "own_project_id", "job_id", "product_id")))
     + {title: $title,
        request: ($body | sub("## Acceptance criteria\n[\\s\\S]*?\n(?=## )"; "")),
        acceptance_criteria: ([$criteria | scan("(?m)^- (?:\\[[ x]\\] )?(.+)$")[0]] | join("\n")),
        waits_on_ids: ($ARGS.positional | map(tonumber))}' --args "${@:3}" \
-    | "$(dirname "$0")/dyb-hub.sh" post add_work_item >/dev/null
+    | "$(dirname "$0")/dyb-hub.sh" post add_work_item)"
+  "$(dirname "$0")/dyb-hub.sh" page "/console/pipelines/work_items/$id"
 }
 
 take() {
