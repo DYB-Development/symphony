@@ -59,7 +59,7 @@ cat > "$STUB_BIN/curl" <<'STUB'
 #!/usr/bin/env bash
 for arg in "$@"; do [ "$arg" = "@-" ] && cat > "$STUB_SENT"; done
 case "${@: -1}" in
-  */claim_work_item) printf '%s\n%s' "${STUB_CLAIM_BODY:-}" "${STUB_CLAIM_STATUS:-200}" ;;
+  */claim_work_item | */claim_next_work_item) printf '%s\n%s' "${STUB_CLAIM_BODY:-}" "${STUB_CLAIM_STATUS:-200}" ;;
   *) printf '%s\n%s' "$STUB_BODY" "${STUB_STATUS:-200}" ;;
 esac
 STUB
@@ -142,6 +142,26 @@ assert_equals $'No work item 99.\nexit 1' \
   "$(cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_STATUS=422 \
      STUB_BODY='{"error": "No work item 99."}' "$SCRIPT" item 99 2>&1; echo "exit $?")" \
   "reports a work item production cannot find with production's message"
+
+echo ""
+echo "work-store.sh take-next:"
+
+printf '{"store": "dyb_web", "repo": "acme/shop", "pipeline_id": 3}' > "$SETTINGS/shop.json"
+rm -f "$WORK/sent"
+(cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$SETTINGS" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_SENT="$WORK/sent" \
+  STUB_CLAIM_BODY='{"answer": 12}' STUB_BODY='{"answer": {"title": "Export quotes"}}' "$SCRIPT" take-next >/dev/null 2>&1)
+assert_equals "{\"session\":\"$(whoami)@$(hostname -s)\",\"repo\":\"acme/shop\"}" "$(jq -c . "$WORK/sent" 2>&1)" \
+  "claims the next ready work item for the repo its setting names, for this machine's session"
+
+assert_equals '{"title":"Export quotes","id":12}' \
+  "$(cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$SETTINGS" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_SENT="$WORK/sent" \
+     STUB_CLAIM_BODY='{"answer": 12}' STUB_BODY='{"answer": {"title": "Export quotes"}}' "$SCRIPT" take-next 2>&1)" \
+  "prints the claimed work item with its id as production reads it"
+
+assert_equals $'No work is ready to claim.\nexit 1' \
+  "$(cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$SETTINGS" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_SENT="$WORK/sent" STUB_CLAIM_STATUS=422 \
+     STUB_CLAIM_BODY='{"error": "No work is ready to claim."}' STUB_BODY='{"answer": {"title": "Export quotes"}}' "$SCRIPT" take-next 2>&1; echo "exit $?")" \
+  "reports that no work is ready with production's message"
 
 echo ""
 echo "$PASS passed, $FAIL failed"
