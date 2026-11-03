@@ -130,7 +130,7 @@ case "${1:-}" in
       Bash) only_reads "$(jq -r '.tool_input.command // empty' <<< "$payload")" && exit 0 ;;
       Agent) case "$(jq -r '.tool_input.subagent_type // empty' <<< "$payload")" in Explore|claude-code-guide) exit 0 ;; esac ;;
     esac
-    refuse "The owner asked a question. Answer it and stop, changing nothing, until the owner's next prompt."
+    refuse "The owner asked a question, and this call was not recognised as read-only. Reads are still allowed, so look up what the answer needs with Read, Grep or a plain read command, then answer and stop, changing nothing, until the owner's next prompt."
     ;;
   path)
     [ $# -eq 2 ] || usage
