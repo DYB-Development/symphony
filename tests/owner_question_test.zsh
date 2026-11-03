@@ -129,6 +129,18 @@ reset_marks; prompt "are you ok?"
 assert_equals "deny" "$(bash_decision 'F=/a rm b')" "refuses a variable set for a changing shell command"
 
 reset_marks; prompt "are you ok?"
+assert_equals "" "$(bash_decision 'git show $(git rev-parse HEAD)')" "lets a read-only shell command use the output of another"
+
+reset_marks; prompt "are you ok?"
+assert_equals "deny" "$(bash_decision 'echo $(rm a)')" "refuses a changing shell command run inside a read-only one"
+
+reset_marks; prompt "are you ok?"
+assert_equals "deny" "$(bash_decision 'echo "$(rm a)"')" "refuses a changing shell command run inside quoted text"
+
+reset_marks; prompt "are you ok?"
+assert_equals "deny" "$(bash_decision 'echo `rm a`')" "refuses a shell command run through backticks"
+
+reset_marks; prompt "are you ok?"
 assert_equals "" "$(decision Agent '{"subagent_type":"Explore"}')" "lets a search agent be started while the question is being answered"
 
 reset_marks; prompt "are you ok?"

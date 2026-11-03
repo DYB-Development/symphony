@@ -59,10 +59,22 @@ without_command_prefixes() {
   printf '%s' "$1" | sed -E -e ':again' -e 's/^ *(g?timeout +[0-9]+[smhd]?|[A-Za-z_][A-Za-z0-9_]*=[^ ]*)( +|$)//' -e 't again'
 }
 
+without_read_substitutions() {
+  local command=$1 pattern='\$\(([^()]*)\)' substitution inner
+  while [[ "$command" =~ $pattern ]]; do
+    substitution=${BASH_REMATCH[0]}
+    inner=${BASH_REMATCH[1]}
+    only_reads "$inner" || return 1
+    command=${command/"$substitution"/Q}
+  done
+  printf '%s' "$command"
+}
+
 only_reads() {
-  local plain segment
-  case "$1" in *'$('*|*'`'*) return 1 ;; esac
-  plain=$(without_output_discards "$(without_quoted_text "$1")")
+  local command plain segment
+  command=$(without_read_substitutions "$1") || return 1
+  case "$command" in *'$('*|*'`'*) return 1 ;; esac
+  plain=$(without_output_discards "$(without_quoted_text "$command")")
   case "$plain" in *'>'*|*'<('*) return 1 ;; esac
   while IFS= read -r segment; do
     segment=$(without_command_prefixes "$segment")
