@@ -56,7 +56,7 @@ without_output_discards() {
 }
 
 without_command_prefixes() {
-  printf '%s' "$1" | sed -E 's/^ *g?timeout +[0-9]+[smhd]?( +|$)//'
+  printf '%s' "$1" | sed -E -e ':again' -e 's/^ *(g?timeout +[0-9]+[smhd]?|[A-Za-z_][A-Za-z0-9_]*=[^ ]*)( +|$)//' -e 't again'
 }
 
 only_reads() {
