@@ -153,6 +153,11 @@ rm -f "$WORK/sent"
 assert_equals "{\"session\":\"$(whoami)@$(hostname -s)\",\"repo\":\"acme/shop\"}" "$(jq -c . "$WORK/sent" 2>&1)" \
   "claims the next ready work item for the repo its setting names, for this machine's session"
 
+assert_equals '{"title":"Export quotes","id":12}' \
+  "$(cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$SETTINGS" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_SENT="$WORK/sent" \
+     STUB_CLAIM_BODY='{"answer": 12}' STUB_BODY='{"answer": {"title": "Export quotes"}}' "$SCRIPT" take-next 2>&1)" \
+  "prints the claimed work item with its id as production reads it"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"

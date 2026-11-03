@@ -84,8 +84,10 @@ take() {
 }
 
 take_next() {
-  setting | jq --arg session "$(whoami)@$(hostname -s)" '{session: $session, repo: .repo}' \
-    | "$(dirname "$0")/dyb-hub.sh" post claim_next_work_item >/dev/null
+  local id
+  id="$(setting | jq --arg session "$(whoami)@$(hostname -s)" '{session: $session, repo: .repo}' \
+    | "$(dirname "$0")/dyb-hub.sh" post claim_next_work_item)"
+  "$(dirname "$0")/dyb-hub.sh" get work_item "work_item_id=$id" | jq -c --argjson id "$id" '. + {id: $id}'
 }
 
 item() {
