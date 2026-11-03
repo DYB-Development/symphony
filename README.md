@@ -442,6 +442,12 @@ work items.
 criteria, repo, branch, status and plan progress. A work item that waits on open
 work is refused with the names of what it waits on.
 
+`work-store.sh item <id>` prints a work item the same way, with the address of
+its page in production, and does not claim it. `pr-scribe` reads the work item
+this way when it is handed one, writes its criteria as the body's ACs Covered,
+and ends the body with `Work item: <address>` in place of `Closes #<n>`. A work
+item production cannot find stops the scribe with production's message.
+
 ### Choosing each agent's model
 
 Put a file at `~/.config/symphony/agent-models.json`, next to the rules
