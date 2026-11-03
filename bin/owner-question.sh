@@ -56,7 +56,7 @@ without_output_discards() {
 }
 
 without_command_prefixes() {
-  printf '%s' "$1" | sed -E -e 's/^ *for +[^ ]+ +in( .*)?$//' -e ':again' -e 's/^ *(do|done|if|then|elif|else|fi|while|g?timeout +[0-9]+[smhd]?|[A-Za-z_][A-Za-z0-9_]*=[^ ]*)( +|$)//' -e 't again'
+  printf '%s' "$1" | sed -E -e 's/^ *for +[^ ]+ +in( .*)?$//' -e ':again' -e 's/^ *(do|done|if|then|elif|else|fi|while|xargs( +-[0-9A-Za-z]+( +[0-9{}%]+)?)*|g?timeout +[0-9]+[smhd]?|[A-Za-z_][A-Za-z0-9_]*=[^ ]*)( +|$)//' -e 't again'
 }
 
 without_read_substitutions() {
