@@ -79,6 +79,13 @@ file_plan() {
   "$(dirname "$0")/dyb-hub.sh" page "/console/pipelines/plans/$id"
 }
 
+file_item() {
+  setting | jq --arg title "$1" --rawfile body "$2" '
+    ($body | capture("(?m)^## Acceptance criteria\n(?<text>[\\s\\S]*?)(?=\n## |\\z)").text) as $criteria
+    | {title: $title, acceptance_criteria: ([$criteria | scan("(?m)^- (?:\\[[ x]\\] )?(.+)$")[0]] | join("\n"))}' \
+    | "$(dirname "$0")/dyb-hub.sh" post add_work_item >/dev/null
+}
+
 take() {
   jq -n --argjson id "$1" --arg session "$(whoami)@$(hostname -s)" '{work_item_id: $id, session: $session}' \
     | "$(dirname "$0")/dyb-hub.sh" post take_work_item >/dev/null
@@ -101,6 +108,7 @@ case "${1:-}" in
   show) show ;;
   check) check ;;
   file-plan) [ $# -eq 3 ] || usage; file_plan "$2" "$3" ;;
+  file-item) [ $# -ge 3 ] || usage; shift; file_item "$@" ;;
   take) [ $# -eq 2 ] || usage; take "$2" ;;
   take-next) [ $# -eq 1 ] || usage; take_next ;;
   item) [ $# -eq 2 ] || usage; item "$2" ;;

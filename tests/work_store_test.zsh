@@ -113,6 +113,18 @@ sed '/^## 07 What we trade/,/^## 08 Settle first/{/^## 08/!d;}' "$SCRIPT_DIR/fix
 assert_equals "nothing sent" "$([ -e "$WORK/sent" ] && echo sent || echo nothing sent)" "sends nothing to production when the plan body is refused"
 
 echo ""
+echo "work-store.sh file-item:"
+
+file_item() {
+  (cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$SETTINGS" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_SENT="$WORK/sent" STUB_BODY='{"answer": 21}' \
+    "$SCRIPT" file-item "Export quotes" "$SCRIPT_DIR/fixtures/task-body.md" "$@")
+}
+
+file_item >/dev/null 2>&1
+assert_equals $'A rep downloads a CSV of their quotes.\nThe CSV holds each quote\'s total.' "$(jq -r .acceptance_criteria "$WORK/sent" 2>&1)" \
+  "sends the task's acceptance criteria to production one to a line"
+
+echo ""
 echo "work-store.sh take:"
 
 take() {
