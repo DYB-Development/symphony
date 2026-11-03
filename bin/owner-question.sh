@@ -45,20 +45,51 @@ is_question() {
   ' <<< "$1" >/dev/null
 }
 
-reads_only_pattern='^ *(ls|cat|head|tail|wc|pwd|grep|rg|which|stat|file|date|echo|printf|jq|basename|dirname|sort|uniq|cut|tr|diff|cd)( |$)|^ *sed +-n |^ *find ([^-]|-[^def])*$|^ *git( +-C +[^ ]+)? +(status|log|diff|show|blame|ls-files|rev-parse|merge-base|describe|grep|shortlog|worktree +list|branch +--show-current|branch +--list|branch +-a|remote +-v|remote +get-url)( |$)|^ *gh +(issue|pr|run|repo|release) +(view|list|diff|checks|status)( |$)|^ *[^ ]*saved-answers\.sh( |$)'
+reads_only_pattern='^ *(\[|test|true|read|ls|cat|head|tail|wc|pwd|grep|rg|which|stat|file|date|echo|printf|jq|basename|dirname|sort|uniq|cut|tr|diff|cd)( |$)|^ *sed +-n |^ *find ([^-]|-[^def])*$|^ *git( +-C +[^ ]+)? +(fetch|rev-list|ls-tree|cat-file|for-each-ref|status|log|diff|show|blame|ls-files|rev-parse|merge-base|describe|grep|shortlog|worktree +list|branch +--show-current|branch +--list|branch +-a|remote +-v|remote +get-url)( |$)|^ *gh +api( |$)|^ *gh +(issue|pr|run|repo|release) +(view|list|diff|checks|status)( |$)|^ *[^ ]*saved-answers\.sh( |$)'
 
 without_quoted_text() {
   printf '%s' "$1" | sed "s/\"[^\"]*\"/Q/g; s/'[^']*'/Q/g"
 }
 
+without_output_discards() {
+  printf '%s' "$1" | sed -E 's/[0-9]*>&[0-9]+([ ;|&]|$)/ \1/g; s/(&|[0-9]*)>+ *\/dev\/null([ ;|&]|$)/ \2/g'
+}
+
+without_command_prefixes() {
+  printf '%s' "$1" | sed -E -e 's/^ *for +[^ ]+ +in( .*)?$//' -e ':again' -e 's/^ *(do|done|if|then|elif|else|fi|while|xargs( +-[0-9A-Za-z]+( +[0-9{}%]+)?)*|g?timeout +[0-9]+[smhd]?|[A-Za-z_][A-Za-z0-9_]*=[^ ]*)( +|$)//' -e 't again'
+}
+
+gh_api_call_reads() {
+  local without_get
+  grep -Eq '^ *gh +api( |$)' <<< "$1" || return 0
+  without_get=$(sed -E 's/ (-X|--method)[ =]?GET( |$)/ /g' <<< "$1")
+  grep -Eq ' (-[A-Za-z]*X|--method)' <<< "$without_get" && return 1
+  [ "$without_get" = "$1" ] || return 0
+  ! grep -Eq ' (-[A-Za-z]*[fF]|--field|--raw-field|--input)' <<< "$1"
+}
+
+without_read_substitutions() {
+  local command=$1 pattern='\$\(([^()]*)\)' substitution inner
+  while [[ "$command" =~ $pattern ]]; do
+    substitution=${BASH_REMATCH[0]}
+    inner=${BASH_REMATCH[1]}
+    only_reads "$inner" || return 1
+    command=${command/"$substitution"/Q}
+  done
+  printf '%s' "$command"
+}
+
 only_reads() {
-  local plain segment
-  case "$1" in *'$('*|*'`'*) return 1 ;; esac
-  plain=$(without_quoted_text "$1")
+  local command plain segment
+  command=$(without_read_substitutions "$1") || return 1
+  case "$command" in *'$('*|*'`'*) return 1 ;; esac
+  plain=$(without_output_discards "$(without_quoted_text "$command")")
   case "$plain" in *'>'*|*'<('*) return 1 ;; esac
   while IFS= read -r segment; do
+    segment=$(without_command_prefixes "$segment")
     [ -n "${segment// /}" ] || continue
     printf '%s\n' "$segment" | grep -Eq "$reads_only_pattern" || return 1
+    gh_api_call_reads "$segment" || return 1
   done < <(printf '%s\n' "$plain" | tr ';|&' '\n')
 }
 
@@ -99,7 +130,7 @@ case "${1:-}" in
       Bash) only_reads "$(jq -r '.tool_input.command // empty' <<< "$payload")" && exit 0 ;;
       Agent) case "$(jq -r '.tool_input.subagent_type // empty' <<< "$payload")" in Explore|claude-code-guide) exit 0 ;; esac ;;
     esac
-    refuse "The owner asked a question. Answer it and stop, changing nothing, until the owner's next prompt."
+    refuse "The owner asked a question, and this call was not recognised as read-only. Reads are still allowed, so look up what the answer needs with Read, Grep or a plain read command, then answer and stop, changing nothing, until the owner's next prompt."
     ;;
   path)
     [ $# -eq 2 ] || usage

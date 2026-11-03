@@ -105,7 +105,87 @@ reset_marks; prompt "are you ok?"
 assert_equals "deny" "$(bash_decision 'cat a > b')" "refuses a shell command that writes a file through a redirect"
 
 reset_marks; prompt "are you ok?"
+assert_equals "" "$(bash_decision 'gh pr view 199 2>&1')" "lets a read-only shell command send its errors to its output"
+
+reset_marks; prompt "are you ok?"
+assert_equals "" "$(bash_decision 'git status >/dev/null 2>/dev/null')" "lets a read-only shell command discard its output"
+
+reset_marks; prompt "are you ok?"
+assert_equals "deny" "$(bash_decision 'cat a >/dev/nullx')" "refuses a redirect to a file whose name only starts with the discard path"
+
+reset_marks; prompt "are you ok?"
+assert_equals "" "$(bash_decision 'timeout 60 gh pr view 199 -R a/b')" "lets a read-only shell command run under a time limit"
+
+reset_marks; prompt "are you ok?"
+assert_equals "deny" "$(bash_decision 'timeout 60 rm a')" "refuses a changing shell command run under a time limit"
+
+reset_marks; prompt "are you ok?"
+assert_equals "" "$(bash_decision 'F=/a; jq . $F')" "lets a variable be set before a read-only shell command"
+
+reset_marks; prompt "are you ok?"
+assert_equals "" "$(bash_decision 'F=/a jq . $F')" "lets a variable be set for a read-only shell command"
+
+reset_marks; prompt "are you ok?"
+assert_equals "deny" "$(bash_decision 'F=/a rm b')" "refuses a variable set for a changing shell command"
+
+reset_marks; prompt "are you ok?"
+assert_equals "" "$(bash_decision 'git show $(git rev-parse HEAD)')" "lets a read-only shell command use the output of another"
+
+reset_marks; prompt "are you ok?"
+assert_equals "deny" "$(bash_decision 'echo $(rm a)')" "refuses a changing shell command run inside a read-only one"
+
+reset_marks; prompt "are you ok?"
+assert_equals "deny" "$(bash_decision 'echo "$(rm a)"')" "refuses a changing shell command run inside quoted text"
+
+reset_marks; prompt "are you ok?"
+assert_equals "deny" "$(bash_decision 'echo `rm a`')" "refuses a shell command run through backticks"
+
+reset_marks; prompt "are you ok?"
+assert_equals "" "$(bash_decision 'for n in 1 2; do gh pr view $n; done')" "lets a loop of read-only shell commands run"
+
+reset_marks; prompt "are you ok?"
+assert_equals "" "$(bash_decision 'if [ -f a ]; then cat a; fi')" "lets a condition around a read-only shell command run"
+
+reset_marks; prompt "are you ok?"
+assert_equals "" "$(bash_decision 'git diff --name-only | while read f; do cat $f; done')" "lets a read-only shell command read the lines of another in a loop"
+
+reset_marks; prompt "are you ok?"
+assert_equals "deny" "$(bash_decision 'for n in 1; do rm $n; done')" "refuses a loop of changing shell commands"
+
+reset_marks; prompt "are you ok?"
+assert_equals "" "$(bash_decision 'git diff --name-only | xargs grep a')" "lets a read-only shell command run through xargs"
+
+reset_marks; prompt "are you ok?"
+assert_equals "" "$(bash_decision 'ls | xargs -n 1 -I {} cat {}')" "lets a read-only shell command run through xargs with its options"
+
+reset_marks; prompt "are you ok?"
+assert_equals "deny" "$(bash_decision 'ls | xargs rm')" "refuses a changing shell command run through xargs"
+
+reset_marks; prompt "are you ok?"
+assert_equals "deny" "$(bash_decision 'ls | xargs -n 1 rm')" "refuses a changing shell command run through xargs with its options"
+
+reset_marks; prompt "are you ok?"
+assert_equals "" "$(bash_decision 'git -C /a fetch -q origin && git rev-list --count HEAD')" "lets git fetch and read commits while the question is being answered"
+
+reset_marks; prompt "are you ok?"
+assert_equals "" "$(bash_decision 'git ls-tree -r HEAD; git cat-file -p HEAD; git for-each-ref')" "lets git read trees, objects and refs while the question is being answered"
+
+reset_marks; prompt "are you ok?"
+assert_equals "" "$(bash_decision 'gh api repos/a/b/pulls/1')" "lets a GitHub API read run with no method named"
+
+reset_marks; prompt "are you ok?"
+assert_equals "" "$(bash_decision 'gh api -X GET search/issues -f q=a')" "lets a GitHub API read run with GET named and fields as its query"
+
+for write in '-X POST' '-XPOST' '--method PATCH' '--method=DELETE' '-f a=b' '-F a=b' '--field a=b' '--raw-field a=b' '--input a.json' '-X GET -X POST'; do
+  reset_marks; prompt "are you ok?"
+  assert_equals "deny" "$(bash_decision "gh api repos/a/b $write")" "refuses a GitHub API call with $write"
+done
+
+reset_marks; prompt "are you ok?"
 assert_equals "" "$(decision Agent '{"subagent_type":"Explore"}')" "lets a search agent be started while the question is being answered"
+
+reset_marks; prompt "are you ok?"
+assert_equals "yes" "$(tool_call Edit '{"file_path":"/a"}' | jq -r '.hookSpecificOutput.permissionDecisionReason | test("not recognised as read-only.*Reads are still allowed") | if . then "yes" else "no" end')" "says in a refusal that reads are still allowed"
 
 reset_marks; prompt "are you ok?"
 touch -t 202001010000 "$OWNER_QUESTION_DIR"/*
