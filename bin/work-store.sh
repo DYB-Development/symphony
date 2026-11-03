@@ -5,6 +5,7 @@ usage() {
   cat >&2 <<'USAGE'
 usage: work-store.sh show|check
        work-store.sh file-plan <title> <plan-body-file>
+       work-store.sh file-item <title> <task-body-file> [<work-item-id> ...]
        work-store.sh take <work-item-id>
        work-store.sh take-next
        work-store.sh item <work-item-id>
@@ -15,6 +16,9 @@ check      Asks dyb_web production for its task choices and reports whether
            it answers.
 file-plan  Adds the plan to dyb_web production as a draft, linked as the
            repo's setting names, and prints its page's address.
+file-item  Adds the task to dyb_web production as a work item on the
+           pipeline and link the setting names, waiting on the work item ids
+           named after the body, and prints its page's address.
 take       Takes the work item by hand in dyb_web production for this
            machine's session, starting no pipeline run, and prints it as
            production reads it.
@@ -79,6 +83,19 @@ file_plan() {
   "$(dirname "$0")/dyb-hub.sh" page "/console/pipelines/plans/$id"
 }
 
+file_item() {
+  local id
+  id="$(setting | jq --arg title "$1" --rawfile body "$2" '
+    ($body | capture("(?m)^## Acceptance criteria\n(?<text>[\\s\\S]*?)(?=\n## |\\z)").text) as $criteria
+    | with_entries(select(.key | IN("repo", "pipeline_id", "own_project_id", "job_id", "product_id")))
+    + {title: $title,
+       request: ($body | sub("## Acceptance criteria\n[\\s\\S]*?\n(?=## )"; "")),
+       acceptance_criteria: ([$criteria | scan("(?m)^- (?:\\[[ x]\\] )?(.+)$")[0]] | join("\n")),
+       waits_on_ids: ($ARGS.positional | map(tonumber))}' --args "${@:3}" \
+    | "$(dirname "$0")/dyb-hub.sh" post add_work_item)"
+  "$(dirname "$0")/dyb-hub.sh" page "/console/pipelines/work_items/$id"
+}
+
 take() {
   jq -n --argjson id "$1" --arg session "$(whoami)@$(hostname -s)" '{work_item_id: $id, session: $session}' \
     | "$(dirname "$0")/dyb-hub.sh" post take_work_item >/dev/null
@@ -101,6 +118,7 @@ case "${1:-}" in
   show) show ;;
   check) check ;;
   file-plan) [ $# -eq 3 ] || usage; file_plan "$2" "$3" ;;
+  file-item) [ $# -ge 3 ] || usage; shift; file_item "$@" ;;
   take) [ $# -eq 2 ] || usage; take "$2" ;;
   take-next) [ $# -eq 1 ] || usage; take_next ;;
   item) [ $# -eq 2 ] || usage; item "$2" ;;
