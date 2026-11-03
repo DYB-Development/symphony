@@ -55,12 +55,17 @@ without_output_discards() {
   printf '%s' "$1" | sed -E 's/[0-9]*>&[0-9]+([ ;|&]|$)/ \1/g; s/(&|[0-9]*)>+ *\/dev\/null([ ;|&]|$)/ \2/g'
 }
 
+without_command_prefixes() {
+  printf '%s' "$1" | sed -E 's/^ *g?timeout +[0-9]+[smhd]?( +|$)//'
+}
+
 only_reads() {
   local plain segment
   case "$1" in *'$('*|*'`'*) return 1 ;; esac
   plain=$(without_output_discards "$(without_quoted_text "$1")")
   case "$plain" in *'>'*|*'<('*) return 1 ;; esac
   while IFS= read -r segment; do
+    segment=$(without_command_prefixes "$segment")
     [ -n "${segment// /}" ] || continue
     printf '%s\n' "$segment" | grep -Eq "$reads_only_pattern" || return 1
   done < <(printf '%s\n' "$plain" | tr ';|&' '\n')

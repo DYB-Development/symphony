@@ -114,6 +114,12 @@ reset_marks; prompt "are you ok?"
 assert_equals "deny" "$(bash_decision 'cat a >/dev/nullx')" "refuses a redirect to a file whose name only starts with the discard path"
 
 reset_marks; prompt "are you ok?"
+assert_equals "" "$(bash_decision 'timeout 60 gh pr view 199 -R a/b')" "lets a read-only shell command run under a time limit"
+
+reset_marks; prompt "are you ok?"
+assert_equals "deny" "$(bash_decision 'timeout 60 rm a')" "refuses a changing shell command run under a time limit"
+
+reset_marks; prompt "are you ok?"
 assert_equals "" "$(decision Agent '{"subagent_type":"Explore"}')" "lets a search agent be started while the question is being answered"
 
 reset_marks; prompt "are you ok?"
