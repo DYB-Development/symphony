@@ -127,6 +127,9 @@ assert_equals $'A rep downloads a CSV of their quotes.\nThe CSV holds each quote
 assert_equals "$(sed '/^## Acceptance criteria/,/^## Out of scope/{/^## Out of scope/!d;}' "$SCRIPT_DIR/fixtures/task-body.md")" "$(jq -r .request "$WORK/sent" 2>&1)" \
   "sends the rest of the task body to production as the work item's request"
 
+assert_equals '{"repo":"acme/shop","pipeline_id":3,"own_project_id":7}' "$(jq -c '{repo, pipeline_id, own_project_id}' "$WORK/sent" 2>&1)" \
+  "sends the work item for the repo, pipeline and link the repo's setting names"
+
 echo ""
 echo "work-store.sh take:"
 
