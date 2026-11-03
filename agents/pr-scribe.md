@@ -24,7 +24,9 @@ with nothing real in it.
 ## Your input
 
 The repo, the branch, and the issue number — or, if there is no issue, the
-acceptance criteria inlined. The caller may also tell you a PR already exists.
+acceptance criteria inlined. In a repo that keeps its work in dyb_web the
+caller hands you a work item number in place of the issue number, and says it
+is a work item. The caller may also tell you a PR already exists.
 The input may be messy or thin; the diff is what you actually work from.
 
 ## What you do
@@ -55,6 +57,15 @@ is how the person who ran you sees which step you are on.
    `~/.claude/rules/decision-log.md`. It is the one thing you cannot read out
    of the repo, so read it when it exists and expect it not to. `.ticket` is
    the same shape for the ticket the branch is billed against.
+
+   For a work item, read it from production in place of `gh issue view`:
+   ```
+   ~/.claude/bin/work-store.sh item <n>
+   ```
+   It prints the work item's title, request and acceptance criteria, and the
+   address of its page in production, and it does not claim the item. Its
+   acceptance criteria are the ticket's criteria for every step below. When it
+   exits non-zero, stop, write nothing, and return the message it printed.
 
    If the branch is not pushed yet, push it (`git push -u origin <branch>`).
    Never rewrite commits — no amend, no rebase, no force-push.
@@ -155,7 +166,10 @@ is how the person who ran you sees which step you are on.
    paste unchanged.
 
 8. **Add the `Closes #<n>` trailer** on its own line at the end when there is an
-   issue. That trailer is machine-readable wiring, not a tenth section.
+   issue. That trailer is machine-readable wiring, not a tenth section. For a
+   work item there is no `Closes #<n>` line, and the trailer is
+   `Work item: <its address>` instead, with the address `work-store.sh item`
+   printed.
 
 9. **Append the version stamp; do not write it.** Below `Closes #<n>`, under a
    `---` rule, run:

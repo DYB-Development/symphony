@@ -125,6 +125,10 @@ A PR that resolves an issue ends with `Closes #<n>` on its own line after the
 last section. That trailer is machine-readable wiring, not a tenth section — it
 is one of the two things allowed outside the nine.
 
+A PR for a dyb_web work item carries no `Closes #<n>` line, since the work item
+is not a GitHub issue. Its trailer is `Work item: <address>` in the same place,
+naming the work item's page in production.
+
 ## The version stamp
 
 The other. Every body ends with a stamp naming the versions that wrote it,

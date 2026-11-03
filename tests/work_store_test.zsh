@@ -131,6 +131,19 @@ assert_equals "Export quotes waits on Import quotes." \
   "reports a work item that waits on open work with the names of what it waits on"
 
 echo ""
+echo "work-store.sh item:"
+
+assert_equals '{"title":"Export quotes","acceptance_criteria":["A rep can export quotes"],"address":"https://dyb.example/console/pipelines/work_items/12"}' \
+  "$(cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_DYB_WEB_FILE="$CONNECTION" \
+     STUB_BODY='{"answer": {"title": "Export quotes", "acceptance_criteria": ["A rep can export quotes"]}}' "$SCRIPT" item 12 2>&1)" \
+  "prints the work item with the address of its page in production"
+
+assert_equals $'No work item 99.\nexit 1' \
+  "$(cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_STATUS=422 \
+     STUB_BODY='{"error": "No work item 99."}' "$SCRIPT" item 99 2>&1; echo "exit $?")" \
+  "reports a work item production cannot find with production's message"
+
+echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"
 [[ $FAIL -eq 0 ]]
