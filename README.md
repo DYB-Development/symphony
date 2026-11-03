@@ -441,13 +441,15 @@ plan is linked as the setting names, and the plan page's address is printed.
 You choose its decisions and approve it on that page, and approving makes the
 work items.
 
-`work-store.sh take <id>` claims a work item for this machine's session, named
-`<user>@<host>`, and prints it as production reads it: title, request,
-criteria, repo, branch, status and plan progress. A work item that waits on open
-work is refused with the names of what it waits on.
+`work-store.sh take <id>` takes a work item by hand for this machine's session,
+named `<user>@<host>`, and prints it as production reads it: title, request,
+criteria, repo, branch, status and plan progress. Taking it by hand starts no
+pipeline run, conductor never claims it afterwards, and merging its pull request
+marks it done. A work item that waits on open work is refused with the names of
+what it waits on.
 
-`work-store.sh take-next` claims the next ready work item for the repo the
-setting names, and prints it the same way with its id added. Production never
+`work-store.sh take-next` takes the next ready work item by hand for the repo
+the setting names, and prints it the same way with its id added. Production never
 hands out a work item that still waits on open work, and when nothing is ready
 it stops with production's message.
 

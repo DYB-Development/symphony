@@ -9,8 +9,8 @@ You are starting a fresh task cycle. Do these in order, no shortcuts:
 3. **Confirm `main` is clean and current**: `git checkout main && git pull`. If a previous PR is still open and unmerged, STOP and tell me — do not start a second PR.
 4. **Find where this repo keeps its work**: `~/.claude/bin/work-store.sh show`. When its first line is `github`, go on with this step as written. When it is `dyb_web`, the work is a dyb_web work item, and the number I named, if any, is that work item's:
 
-   - With a number named, take it with `~/.claude/bin/work-store.sh take <n>`. It claims the work item in production for this machine's session and prints it as production reads it.
-   - With no number named, take the next one with `~/.claude/bin/work-store.sh take-next`. Production claims the next ready work item for this repo and prints it with its `id`, which is the work item's number from then on. Production never hands out a work item that still waits on open work, so never rank, filter or pick one yourself.
+   - With a number named, take it with `~/.claude/bin/work-store.sh take <n>`. It takes the work item by hand in production for this machine's session, which starts no pipeline run, and prints it as production reads it.
+   - With no number named, take the next one with `~/.claude/bin/work-store.sh take-next`. Production takes the next ready work item for this repo by hand, starting no pipeline run, and prints it with its `id`, which is the work item's number from then on. Production never hands out a work item that still waits on open work, so never rank, filter or pick one yourself.
    - When no work is ready, `take-next` stops with production's message. Tell me that message and STOP.
    - A refusal stops you. A work item that waits on open work is refused with the names of what it waits on, and one held by another session says so. Tell me the message and let me decide.
    - Restate the work item's title and acceptance criteria back to me before starting, from what `take` or `take-next` printed.

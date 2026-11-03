@@ -15,10 +15,12 @@ check      Asks dyb_web production for its task choices and reports whether
            it answers.
 file-plan  Adds the plan to dyb_web production as a draft, linked as the
            repo's setting names, and prints its page's address.
-take       Claims the work item in dyb_web production for this machine's
-           session, and prints it as production reads it.
-take-next  Claims the next ready work item for the repo the setting names,
-           and prints it with its id as production reads it.
+take       Takes the work item by hand in dyb_web production for this
+           machine's session, starting no pipeline run, and prints it as
+           production reads it.
+take-next  Takes the next ready work item by hand for the repo the setting
+           names, starting no pipeline run, and prints it with its id as
+           production reads it.
 item       Prints the work item as production reads it, with the address of
            its page, without claiming it.
 USAGE
@@ -79,14 +81,14 @@ file_plan() {
 
 take() {
   jq -n --argjson id "$1" --arg session "$(whoami)@$(hostname -s)" '{work_item_id: $id, session: $session}' \
-    | "$(dirname "$0")/dyb-hub.sh" post claim_work_item >/dev/null
+    | "$(dirname "$0")/dyb-hub.sh" post take_work_item >/dev/null
   "$(dirname "$0")/dyb-hub.sh" get work_item "work_item_id=$1"
 }
 
 take_next() {
   local id
   id="$(setting | jq --arg session "$(whoami)@$(hostname -s)" '{session: $session, repo: .repo}' \
-    | "$(dirname "$0")/dyb-hub.sh" post claim_next_work_item)"
+    | "$(dirname "$0")/dyb-hub.sh" post take_next_work_item)"
   "$(dirname "$0")/dyb-hub.sh" get work_item "work_item_id=$id" | jq -c --argjson id "$id" '. + {id: $id}'
 }
 

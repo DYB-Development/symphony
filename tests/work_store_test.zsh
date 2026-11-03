@@ -58,8 +58,9 @@ printf 'url=https://dyb.example\ntoken=secret\n' > "$CONNECTION"
 cat > "$STUB_BIN/curl" <<'STUB'
 #!/usr/bin/env bash
 for arg in "$@"; do [ "$arg" = "@-" ] && cat > "$STUB_SENT"; done
+[ -n "${STUB_CALLS:-}" ] && echo "${@: -1}" >> "$STUB_CALLS"
 case "${@: -1}" in
-  */claim_work_item | */claim_next_work_item) printf '%s\n%s' "${STUB_CLAIM_BODY:-}" "${STUB_CLAIM_STATUS:-200}" ;;
+  */take_work_item | */take_next_work_item) printf '%s\n%s' "${STUB_CLAIM_BODY:-}" "${STUB_CLAIM_STATUS:-200}" ;;
   *) printf '%s\n%s' "$STUB_BODY" "${STUB_STATUS:-200}" ;;
 esac
 STUB
@@ -119,6 +120,11 @@ take() {
     STUB_CLAIM_BODY='{"answer": 12}' STUB_BODY='{"answer": {"title": "Export quotes", "branch": "12-export-quotes"}}' "$SCRIPT" take 12)
 }
 
+rm -f "$WORK/calls"
+STUB_CALLS="$WORK/calls" take >/dev/null 2>&1
+assert_equals "https://dyb.example/api/v1/hubs/pipelines/take_work_item" "$(head -1 "$WORK/calls" 2>&1)" \
+  "takes the named work item by hand, which starts no pipeline run"
+
 take >/dev/null 2>&1
 assert_equals "{\"work_item_id\":12,\"session\":\"$(whoami)@$(hostname -s)\"}" "$(jq -c . "$WORK/sent" 2>&1)" \
   "claims the named work item for this machine's session"
@@ -147,9 +153,12 @@ echo ""
 echo "work-store.sh take-next:"
 
 printf '{"store": "dyb_web", "repo": "acme/shop", "pipeline_id": 3}' > "$SETTINGS/shop.json"
-rm -f "$WORK/sent"
-(cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$SETTINGS" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_SENT="$WORK/sent" \
+rm -f "$WORK/sent" "$WORK/calls"
+(cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$SETTINGS" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_SENT="$WORK/sent" STUB_CALLS="$WORK/calls" \
   STUB_CLAIM_BODY='{"answer": 12}' STUB_BODY='{"answer": {"title": "Export quotes"}}' "$SCRIPT" take-next >/dev/null 2>&1)
+assert_equals "https://dyb.example/api/v1/hubs/pipelines/take_next_work_item" "$(head -1 "$WORK/calls" 2>&1)" \
+  "takes the next ready work item by hand, which starts no pipeline run"
+
 assert_equals "{\"session\":\"$(whoami)@$(hostname -s)\",\"repo\":\"acme/shop\"}" "$(jq -c . "$WORK/sent" 2>&1)" \
   "claims the next ready work item for the repo its setting names, for this machine's session"
 
@@ -158,9 +167,9 @@ assert_equals '{"title":"Export quotes","id":12}' \
      STUB_CLAIM_BODY='{"answer": 12}' STUB_BODY='{"answer": {"title": "Export quotes"}}' "$SCRIPT" take-next 2>&1)" \
   "prints the claimed work item with its id as production reads it"
 
-assert_equals $'No work is ready to claim.\nexit 1' \
+assert_equals $'No work is ready to take.\nexit 1' \
   "$(cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$SETTINGS" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_SENT="$WORK/sent" STUB_CLAIM_STATUS=422 \
-     STUB_CLAIM_BODY='{"error": "No work is ready to claim."}' STUB_BODY='{"answer": {"title": "Export quotes"}}' "$SCRIPT" take-next 2>&1; echo "exit $?")" \
+     STUB_CLAIM_BODY='{"error": "No work is ready to take."}' STUB_BODY='{"answer": {"title": "Export quotes"}}' "$SCRIPT" take-next 2>&1; echo "exit $?")" \
   "reports that no work is ready with production's message"
 
 echo ""
