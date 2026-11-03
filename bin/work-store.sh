@@ -82,7 +82,9 @@ file_plan() {
 file_item() {
   setting | jq --arg title "$1" --rawfile body "$2" '
     ($body | capture("(?m)^## Acceptance criteria\n(?<text>[\\s\\S]*?)(?=\n## |\\z)").text) as $criteria
-    | {title: $title, acceptance_criteria: ([$criteria | scan("(?m)^- (?:\\[[ x]\\] )?(.+)$")[0]] | join("\n"))}' \
+    | {title: $title,
+       request: ($body | sub("## Acceptance criteria\n[\\s\\S]*?\n(?=## )"; "")),
+       acceptance_criteria: ([$criteria | scan("(?m)^- (?:\\[[ x]\\] )?(.+)$")[0]] | join("\n"))}' \
     | "$(dirname "$0")/dyb-hub.sh" post add_work_item >/dev/null
 }
 

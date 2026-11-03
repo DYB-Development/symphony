@@ -124,6 +124,9 @@ file_item >/dev/null 2>&1
 assert_equals $'A rep downloads a CSV of their quotes.\nThe CSV holds each quote\'s total.' "$(jq -r .acceptance_criteria "$WORK/sent" 2>&1)" \
   "sends the task's acceptance criteria to production one to a line"
 
+assert_equals "$(sed '/^## Acceptance criteria/,/^## Out of scope/{/^## Out of scope/!d;}' "$SCRIPT_DIR/fixtures/task-body.md")" "$(jq -r .request "$WORK/sent" 2>&1)" \
+  "sends the rest of the task body to production as the work item's request"
+
 echo ""
 echo "work-store.sh take:"
 
