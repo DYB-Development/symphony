@@ -37,7 +37,8 @@ A plan's page is built by `bin/render-plan.sh` from the plan issue. Every plan
 gets the same layout, from `templates/plan-page.css`, so no page is designed by
 hand.
 
-Three commands drive them: `/feature-plan`, `/review` and `/audit`.
+Six commands drive them: `/feature-plan`, `/review`, `/audit`, `/issue-strategist`,
+`/issue-portfolio` and `/next-task`.
 
 ## Setting it up
 
@@ -218,14 +219,17 @@ Then, once per repo you use the issue schema in, create its labels:
 
 ## Using it
 
-Three commands start the work. Each one spawns exactly one scribe, and the
-scribe reads the repo rather than the conversation.
+Six commands start the work. The first three each spawn exactly one scribe, and
+the scribe reads the repo rather than the conversation.
 
 | Run | What happens |
 |---|---|
 | `/feature-plan` | A request too big for one issue becomes a plan in four stages, filed as an issue with its units already written as issue bodies |
 | `/review <n>` | A pull request is reviewed against every check, drafted for you to read, and posted only when you say so |
 | `/audit` | One named section of a repo is measured and scored, and nothing is posted or filed |
+| `/issue-strategist` | One repo's issues are surveyed, and an issue-scribe files each issue that should exist |
+| `/issue-portfolio` | The open issues across every repo are ranked by which to work first |
+| `/next-task` | The highest-ranked open issue, or a dyb_web work item, is taken and worked to a pull request |
 
 A review starts with a pattern scan, which matches every line the pull request
 adds against the pattern packs in `rules/patterns/`. The core pack applies to
