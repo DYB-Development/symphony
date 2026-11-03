@@ -6,6 +6,7 @@ usage() {
 usage: work-store.sh show|check
        work-store.sh file-plan <title> <plan-body-file>
        work-store.sh take <work-item-id>
+       work-store.sh item <work-item-id>
 
 show       Prints where the current repo keeps its plans and work: github, or
            dyb_web with the link and pipeline its setting names.
@@ -15,6 +16,8 @@ file-plan  Adds the plan to dyb_web production as a draft, linked as the
            repo's setting names, and prints its page's address.
 take       Claims the work item in dyb_web production for this machine's
            session, and prints it as production reads it.
+item       Prints the work item as production reads it, with the address of
+           its page, without claiming it.
 USAGE
   exit 64
 }
@@ -77,10 +80,16 @@ take() {
   "$(dirname "$0")/dyb-hub.sh" get work_item "work_item_id=$1"
 }
 
+item() {
+  "$(dirname "$0")/dyb-hub.sh" get work_item "work_item_id=$1" \
+    | jq -c --arg address "$("$(dirname "$0")/dyb-hub.sh" page "/console/pipelines/work_items/$1")" '. + {address: $address}'
+}
+
 case "${1:-}" in
   show) show ;;
   check) check ;;
   file-plan) [ $# -eq 3 ] || usage; file_plan "$2" "$3" ;;
   take) [ $# -eq 2 ] || usage; take "$2" ;;
+  item) [ $# -eq 2 ] || usage; item "$2" ;;
   *) usage ;;
 esac
