@@ -79,7 +79,7 @@ file_plan() {
 
 take() {
   jq -n --argjson id "$1" --arg session "$(whoami)@$(hostname -s)" '{work_item_id: $id, session: $session}' \
-    | "$(dirname "$0")/dyb-hub.sh" post claim_work_item >/dev/null
+    | "$(dirname "$0")/dyb-hub.sh" post take_work_item >/dev/null
   "$(dirname "$0")/dyb-hub.sh" get work_item "work_item_id=$1"
 }
 

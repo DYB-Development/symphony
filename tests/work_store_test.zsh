@@ -58,8 +58,9 @@ printf 'url=https://dyb.example\ntoken=secret\n' > "$CONNECTION"
 cat > "$STUB_BIN/curl" <<'STUB'
 #!/usr/bin/env bash
 for arg in "$@"; do [ "$arg" = "@-" ] && cat > "$STUB_SENT"; done
+[ -n "${STUB_CALLS:-}" ] && echo "${@: -1}" >> "$STUB_CALLS"
 case "${@: -1}" in
-  */claim_work_item | */claim_next_work_item) printf '%s\n%s' "${STUB_CLAIM_BODY:-}" "${STUB_CLAIM_STATUS:-200}" ;;
+  */take_work_item | */claim_next_work_item) printf '%s\n%s' "${STUB_CLAIM_BODY:-}" "${STUB_CLAIM_STATUS:-200}" ;;
   *) printf '%s\n%s' "$STUB_BODY" "${STUB_STATUS:-200}" ;;
 esac
 STUB
@@ -118,6 +119,11 @@ take() {
   (cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$SETTINGS" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_SENT="$WORK/sent" \
     STUB_CLAIM_BODY='{"answer": 12}' STUB_BODY='{"answer": {"title": "Export quotes", "branch": "12-export-quotes"}}' "$SCRIPT" take 12)
 }
+
+rm -f "$WORK/calls"
+STUB_CALLS="$WORK/calls" take >/dev/null 2>&1
+assert_equals "https://dyb.example/api/v1/hubs/pipelines/take_work_item" "$(head -1 "$WORK/calls" 2>&1)" \
+  "takes the named work item by hand, which starts no pipeline run"
 
 take >/dev/null 2>&1
 assert_equals "{\"work_item_id\":12,\"session\":\"$(whoami)@$(hostname -s)\"}" "$(jq -c . "$WORK/sent" 2>&1)" \
