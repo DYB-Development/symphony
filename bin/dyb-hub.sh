@@ -31,6 +31,7 @@ call() {
   body="${reply%$'\n'*}"
   case "${reply##*$'\n'}" in
     2??) printf '%s' "$body" | jq -c '.answer' ;;
+    404) printf '%s' "$body" | jq -r '.error' >&2; exit 3 ;;
     *) printf '%s' "$body" | jq -r '.error' >&2; exit 1 ;;
   esac
 }
