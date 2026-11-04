@@ -14,6 +14,7 @@ USAGE
 
 [ $# -eq 0 ] || usage
 
+bin="$(cd "$(dirname "$0")" && pwd)"
 cache_dir="${STATUS_LINE_DIR:-$HOME/.claude/status-line}"
 now="${STATUS_LINE_NOW:-$(date +%s)}"
 
@@ -37,7 +38,7 @@ read_progress() {
     return
   fi
   [ -f "$cache" ] && previous=$(sed -n 2p "$cache")
-  progress=$(within_seconds "${STATUS_LINE_LIMIT:-1.5}" "$(dirname "$0")/plan-progress.sh" "$repo" "$task" 2>/dev/null) || code=$?
+  progress=$(cd "$dir" && within_seconds "${STATUS_LINE_LIMIT:-1.5}" "$bin/plan-progress.sh" "$repo" "$task" "$branch" 2>/dev/null) || code=$?
   local state=fresh
   if [ "$code" -eq 69 ]; then
     progress=$previous
