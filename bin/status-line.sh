@@ -7,13 +7,15 @@ usage: status-line.sh < status.json
 
 The Claude Code status line. On a branch whose name starts with a task issue's
 number, it shows the progress of the plan that issue is listed under, exactly as
-plan-progress.sh prints it.
+plan-progress.sh prints it. In a repo whose setting keeps its work in dyb_web,
+it shows the plan of the work item the branch names.
 USAGE
   exit 64
 }
 
 [ $# -eq 0 ] || usage
 
+bin="$(cd "$(dirname "$0")" && pwd)"
 cache_dir="${STATUS_LINE_DIR:-$HOME/.claude/status-line}"
 now="${STATUS_LINE_NOW:-$(date +%s)}"
 
@@ -37,7 +39,7 @@ read_progress() {
     return
   fi
   [ -f "$cache" ] && previous=$(sed -n 2p "$cache")
-  progress=$(within_seconds "${STATUS_LINE_LIMIT:-1.5}" "$(dirname "$0")/plan-progress.sh" "$repo" "$task" 2>/dev/null) || code=$?
+  progress=$(cd "$dir" && within_seconds "${STATUS_LINE_LIMIT:-1.5}" "$bin/plan-progress.sh" "$repo" "$task" "$branch" 2>/dev/null) || code=$?
   local state=fresh
   if [ "$code" -eq 69 ]; then
     progress=$previous
@@ -60,6 +62,10 @@ stage_square() {
   fi
 }
 
+source_name() {
+  [ "$(cd "$dir" && "$bin/work-store.sh" show | sed -n 1p)" = dyb_web ] && printf dyb_web || printf GitHub
+}
+
 plan_part() {
   [ -n "$task" ] || return 0
   repo=$(git -C "$dir" remote get-url origin | sed -E 's#^.*github\.com[:/]##; s#\.git$##')
@@ -69,7 +75,7 @@ plan_part() {
   progress=$(printf '%s\n' "$read" | sed -n 1p)
   state=$(printf '%s\n' "$read" | sed -n 2p)
   if [ -z "$progress" ]; then
-    [ "$state" != stale ] || printf 'Plan progress unavailable: GitHub cannot be read\n'
+    [ "$state" != stale ] || printf 'Plan progress unavailable: %s cannot be read\n' "$(source_name)"
     return 0
   fi
   IFS=$'\t' read -r title closed total stage stages criteria <<< "$progress"

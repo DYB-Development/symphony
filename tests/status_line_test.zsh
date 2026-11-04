@@ -7,6 +7,7 @@ setopt no_unset
 
 SCRIPT_DIR="${0:A:h}"
 STATUS_LINE="$SCRIPT_DIR/../bin/status-line.sh"
+export SYMPHONY_WORK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/status_line_settings.XXXXXX")"
 
 PASS=0
 FAIL=0
@@ -253,6 +254,46 @@ new_repo 12-quote-lines
 printf '3\t8\tacme/plans' > "$COUNTS"
 assert_equals $'Quote builder · stage 2 of 4 — Enrich\n\e[32m■\e[0m\e[33m■\e[0m\e[90m■\e[0m\e[90m■\e[0m 3/8' "$(status_line)" \
   "shows the plan's progress on the branch of a task whose plan lives in another repo"
+drop_repo
+
+in_dyb_web() {
+  printf '{"store": "dyb_web", "repo": "acme/widget", "pipeline_id": 3}' > "$SYMPHONY_WORK_DIR/widget.json"
+  printf 'url=https://dyb.example\ntoken=secret\n' > "$WORK/connection"
+  export SYMPHONY_DYB_WEB_FILE="$WORK/connection"
+  cat > "$WORK/bin/curl" <<SH
+#!/usr/bin/env bash
+printf '%s\n%s' "\$(cat "$WORK/reply")" "\$(cat "$WORK/reply-status")"
+SH
+  chmod +x "$WORK/bin/curl"
+  printf 200 > "$WORK/reply-status"
+  printf '{"answer": {"branch": "12-export-quotes", "plan": {"title": "Quote export", "stage": 2, "stages": [{"stage": 1, "done": 2, "total": 2}, {"stage": 2, "done": 1, "total": 3}]}}}' > "$WORK/reply"
+}
+
+left_dyb_web() {
+  rm -f "$SYMPHONY_WORK_DIR/widget.json"
+  unset SYMPHONY_DYB_WEB_FILE
+}
+
+new_repo 12-export-quotes
+in_dyb_web
+assert_equals $'Quote export · stage 2 of 4 — Enrich\n'"$GREEN$YELLOW 3/5" "$(status_line)" \
+  "shows the plan of the work item a dyb_web repo's branch names"
+left_dyb_web
+drop_repo
+
+new_repo 12-export-quotes
+in_dyb_web
+status_line >/dev/null
+assert_equals "" "$(cat "$GH_LOG")" "never asks GitHub for a plan on a dyb_web repo's branch"
+left_dyb_web
+drop_repo
+
+new_repo 12-export-quotes
+in_dyb_web
+printf 500 > "$WORK/reply-status"
+printf '{"error": "Something went wrong."}' > "$WORK/reply"
+assert_equals "Plan progress unavailable: dyb_web cannot be read" "$(status_line)" "says dyb_web cannot be read when production fails on a dyb_web repo's branch"
+left_dyb_web
 drop_repo
 
 rm -rf "$GH_STUB_DIR"
