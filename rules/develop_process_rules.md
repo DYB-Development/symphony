@@ -62,6 +62,8 @@ TDD is the default for everything. Work one tiny cycle at a time:
    ```
    ~/.claude/bin/tick-criterion.sh <owner/repo> <issue> <position>
    ```
+   A work item in dyb_web has no boxes to tick, so in a repo that keeps its work
+   there the script changes nothing and says so.
 7. Repeat with the next test.
 
 One assertion per test. One test per commit cycle. No batching multiple behaviors

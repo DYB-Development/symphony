@@ -7,7 +7,8 @@ usage: status-line.sh < status.json
 
 The Claude Code status line. On a branch whose name starts with a task issue's
 number, it shows the progress of the plan that issue is listed under, exactly as
-plan-progress.sh prints it.
+plan-progress.sh prints it. In a repo whose setting keeps its work in dyb_web,
+it shows the plan of the work item the branch names.
 USAGE
   exit 64
 }

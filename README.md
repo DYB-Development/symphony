@@ -92,6 +92,12 @@ asks GitHub at most once a minute for each repo and branch, and gives up on a
 read after a second and a half. When GitHub cannot be read, it keeps showing the
 last count, marked out of date, or says progress is unavailable when it never
 had one.
+
+In a repo whose setting keeps its work in dyb_web, the status line shows the plan
+of the work item the branch names, read from production, with the same title,
+stage and squares and no criteria bar, and it never asks GitHub for a plan.
+`tick-criterion.sh` changes nothing there and says why, since a work item has no
+boxes to tick.
 Above the plan's progress it shows a flag for each item this session has waited
 on the owner for since the owner's last prompt, one to a line, such as a question or a pull
 request to review. An agent marks a pull request or plan with

@@ -9,6 +9,8 @@ Ticks one acceptance criterion on a task issue, counting from 1 down the boxes
 under its "## Acceptance criteria" heading. Every other line of the body is
 left as it is. Run it for each criterion a commit covers, once that commit
 lands.
+In a repo whose setting keeps its work in dyb_web it changes nothing and says
+why, since a work item has no boxes to tick.
 USAGE
   exit 64
 }
