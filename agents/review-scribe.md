@@ -162,10 +162,10 @@ is how the person who ran you sees which step you are on.
    gh issue view <n> --repo <owner/repo>
    ```
 
-   When `~/.claude/bin/work-store.sh show` prints `dyb_web` first, the ticket is
-   the work item the pull request's branch names rather than a GitHub issue, and
-   `conformance.sh` below finds it and reads its criteria. It reports
-   `No ticket referenced.` for a branch that names no work item.
+   In a repo that keeps its work in dyb_web, the ticket is the work item the pull
+   request's branch names, and `conformance.sh` below finds it and reads its
+   criteria. It reports `No ticket referenced.` for a branch that names no work
+   item.
 
    When the ticket is a GitHub issue the pull request closes, or a work item, a
    valid test the pull request adds has to cover a criterion before it is ticked:

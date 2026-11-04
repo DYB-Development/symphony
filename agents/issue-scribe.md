@@ -88,31 +88,20 @@ is how the person who ran you sees which step you are on.
    not mean, in that file, then read it again. A rewrite changes how a sentence
    reads and never what the issue asks for.
 
-9. **Find where this repo keeps its work.** In the repo the issue is for, run:
-
+9. **File it.** A `type:task` goes through the work store, which files it where
+   this repo keeps its work and prints its address. In the repo the issue is for,
+   run:
    ```
-   ~/.claude/bin/work-store.sh show
+   ~/.claude/bin/work-store.sh file-task <owner/repo> "<imperative title>" <body file> "type:<t>,priority:<p>,area:<a>[,size:<s>][,blocked]" [<work item id> ...]
    ```
+   Name after the labels the id of each open work item the spec says this one
+   waits on. A work item production refuses stops the script with the reason. Fix
+   the body and run it again, or return the reason.
 
-   When its first line is `github`, or the issue is not a `type:task`, file it
-   as step 10 says. When it is `dyb_web` and the issue is a `type:task`, it goes
-   to dyb_web production as a work item instead of a GitHub issue:
-
-   - File it with `~/.claude/bin/work-store.sh file-item "<imperative title>"
-     <body file> [<work item id> ...]`, naming after the body file the id of
-     each open work item the spec says this one waits on. It adds the work item
-     on the pipeline and link the repo's setting names, and prints the work
-     item page's address.
-   - A work item production refuses stops the script with the reason. Fix the
-     body and run it again, or return the reason.
-   - Set no labels and file no GitHub issue, so skip step 10.
-   - Return the work item page's address in place of the issue URL.
-
-10. **Create it:**
+   Every other type is a GitHub issue:
    ```
    gh issue create --repo <owner/repo> --title "<imperative title>" \
-     --label "type:<t>" --label "priority:<p>" --label "area:<a>" [--label "size:<s>"] [--label blocked] \
-     --body-file <body file>
+     --label "type:<t>" --label "priority:<p>" --body-file <body file>
    ```
 
 ## Return

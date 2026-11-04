@@ -113,14 +113,14 @@ sed '/^## 07 What we trade/,/^## 08 Settle first/{/^## 08/!d;}' "$SCRIPT_DIR/fix
 assert_equals "nothing sent" "$([ -e "$WORK/sent" ] && echo sent || echo nothing sent)" "sends nothing to production when the plan body is refused"
 
 echo ""
-echo "work-store.sh file-item:"
+echo "work-store.sh file-task:"
 
-file_item() {
+file_task() {
   (cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$SETTINGS" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_SENT="$WORK/sent" STUB_BODY='{"answer": 21}' \
-    "$SCRIPT" file-item "Export quotes" "$SCRIPT_DIR/fixtures/task-body.md" "$@")
+    "$SCRIPT" file-task acme/shop "Export quotes" "$SCRIPT_DIR/fixtures/task-body.md" "type:task,priority:high" "$@")
 }
 
-file_item >/dev/null 2>&1
+file_task >/dev/null 2>&1
 assert_equals $'A rep downloads a CSV of their quotes.\nThe CSV holds each quote\'s total.' "$(jq -r .acceptance_criteria "$WORK/sent" 2>&1)" \
   "sends the task's acceptance criteria to production one to a line"
 
@@ -130,10 +130,28 @@ assert_equals "$(sed '/^## Acceptance criteria/,/^## Out of scope/{/^## Out of s
 assert_equals '{"repo":"acme/shop","pipeline_id":3,"own_project_id":7}' "$(jq -c '{repo, pipeline_id, own_project_id}' "$WORK/sent" 2>&1)" \
   "sends the work item for the repo, pipeline and link the repo's setting names"
 
-file_item 14 15 >/dev/null 2>&1
+file_task 14 15 >/dev/null 2>&1
 assert_equals '[14,15]' "$(jq -c .waits_on_ids "$WORK/sent" 2>&1)" "files the work item waiting on the work item ids named after the body"
 
-assert_equals "https://dyb.example/console/pipelines/work_items/21" "$(file_item 2>&1)" "prints the address of the work item's production page"
+assert_equals "https://dyb.example/console/pipelines/work_items/21" "$(file_task 2>&1)" "prints the address of the work item's production page"
+
+cat > "$STUB_BIN/gh" <<'STUB'
+#!/usr/bin/env bash
+printf '%s\n' "$@" > "$STUB_GH_ARGS"
+echo "https://github.com/acme/shop/issues/30"
+STUB
+chmod +x "$STUB_BIN/gh"
+
+mkdir -p "$WORK/no-settings"
+github_task() {
+  (cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$WORK/no-settings" STUB_GH_ARGS="$WORK/gh-args" \
+    "$SCRIPT" file-task acme/shop "Export quotes" "$SCRIPT_DIR/fixtures/task-body.md" "type:task,priority:high")
+}
+
+assert_equals "https://github.com/acme/shop/issues/30" "$(github_task 2>&1)" "prints the created issue's address in a repo with no setting"
+
+assert_equals "issue create --repo acme/shop --title Export quotes --body-file $SCRIPT_DIR/fixtures/task-body.md --label type:task --label priority:high" "$(tr '\n' ' ' < "$WORK/gh-args" | sed 's/ $//')" \
+  "files a GitHub issue with the task's title, body and labels in a repo with no setting"
 
 echo ""
 echo "work-store.sh take:"
@@ -192,6 +210,27 @@ assert_equals $'\nexit 0' "$(cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_DYB_W
 
 assert_equals $'Something went wrong.\nexit 1' "$(cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_STATUS=500 STUB_BODY='{"error": "Something went wrong."}' "$SCRIPT" branch-item 12-export-quotes 2>&1; echo "exit $?")" \
   "stops with production's message when production fails, rather than reporting no work item"
+
+echo ""
+echo "work-store.sh plan-progress:"
+
+plan_progress() {
+  (cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$SETTINGS" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_STATUS="${2:-200}" STUB_BODY="$1" "$SCRIPT" plan-progress acme/shop 12 "${3:-12-export-quotes}")
+}
+
+PLANNED='{"answer": {"branch": "12-export-quotes", "plan": {"title": "Quote export", "stage": 2, "stages": [{"stage": 1, "done": 2, "total": 2}, {"stage": 2, "done": 1, "total": 3}]}}}'
+
+assert_equals $'Quote export\t3\t5\tstage 2 of 4 — Enrich\t1:2/2 2:1/3\t0/0' "$(plan_progress "$PLANNED" 2>&1)" \
+  "prints the plan progress of the work item a dyb_web repo's branch names"
+
+output=$(plan_progress '{"answer": {"branch": "12-export-quotes", "plan": null}}' 2>/dev/null)
+assert_equals "1 " "$? $output" "prints nothing and fails for a work item that belongs to no plan"
+
+output=$(plan_progress "$PLANNED" 200 add-exports 2>/dev/null)
+assert_equals "1 " "$? $output" "prints nothing and fails for a branch that names no work item"
+
+output=$(plan_progress '{"error": "Something went wrong."}' 500 2>/dev/null)
+assert_equals "69 " "$? $output" "prints nothing and exits 69 when production cannot be read"
 
 echo ""
 echo "work-store.sh take-next:"
