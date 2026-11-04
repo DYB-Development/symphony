@@ -9,6 +9,7 @@ usage: work-store.sh show|check
        work-store.sh take <work-item-id>
        work-store.sh take-next
        work-store.sh item <work-item-id>
+       work-store.sh branch-item <branch>
 
 show       Prints where the current repo keeps its plans and work: github, or
            dyb_web with the link and pipeline its setting names.
@@ -27,6 +28,9 @@ take-next  Takes the next ready work item by hand for the repo the setting
            production reads it.
 item       Prints the work item as production reads it, with the address of
            its page, without claiming it.
+branch-item
+           Prints the work item a branch names, or nothing when the branch
+           names none.
 USAGE
   exit 64
 }

@@ -42,6 +42,10 @@ each whether the diff covers it. A criterion the diff does not cover is a
 finding in the summary, never an inline comment, because it is about what is
 missing rather than about a line that is there.
 
+In a repo whose setting keeps its work in dyb_web, the ticket is the work item
+the pull request's branch names. Its branch starts with the work item's number,
+and a branch that does not match a work item's own branch names none.
+
 With no ticket to read, the conformance section says `No ticket referenced.`
 Never invent criteria from the PR body and check the diff against those.
 
