@@ -3,39 +3,20 @@ set -euo pipefail
 
 usage() {
   cat >&2 <<'USAGE'
-usage: plan-progress.sh <owner/repo> <task-issue> [<branch>]
+usage: plan-progress.sh <owner/repo> <task-issue>
 
 Prints one tab-separated line for the plan a task issue is listed under: the
 plan's title, its closed units, its total units, the task's stage from its
 `Part of` line, and each stage's closed units out of its units, in stage order,
-as `<stage>:<closed>/<total>` separated by spaces. GitHub sub-issues are the
-source, except in a repo whose setting keeps its work in dyb_web, where the
-source is the plan of the work item <branch> names.
+as `<stage>:<closed>/<total>` separated by spaces, read from GitHub sub-issues.
+`work-store.sh plan-progress` prints the same line for either store.
 USAGE
   exit 64
 }
 
-[ $# -eq 2 ] || [ $# -eq 3 ] || usage
+[ $# -eq 2 ] || usage
 
-repo=$1 task=$2 branch=${3:-}
-
-dyb_web_progress() {
-  local item
-  item=$("$(dirname "$0")/work-store.sh" branch-item "$branch") || exit 69
-  printf '%s' "$item" | jq -e '.plan' >/dev/null || exit 1
-  printf '%s' "$item" | jq -r '
-    .plan | [.title,
-             ([.stages[].done] | add),
-             ([.stages[].total] | add),
-             "stage \(.stage) of 4 — \(["End to end", "Enrich", "Simplify", "Harden"][.stage - 1])",
-             ([.stages[] | "\(.stage):\(.done)/\(.total)"] | join(" ")),
-             "0/0"] | @tsv'
-}
-
-if [ "$("$(dirname "$0")/work-store.sh" show | sed -n 1p)" = dyb_web ]; then
-  dyb_web_progress
-  exit 0
-fi
+repo=$1 task=$2
 
 if ! parent=$(gh api "repos/$repo/issues/$task/parent" \
   --jq '[.number, .title, .sub_issues_summary.completed, .sub_issues_summary.total, (.repository_url // "" | sub(".*/repos/"; ""))] | @tsv' 2>&1); then

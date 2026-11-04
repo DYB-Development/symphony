@@ -10,6 +10,7 @@ usage: work-store.sh show|check
        work-store.sh take-next
        work-store.sh item <work-item-id>
        work-store.sh branch-item <branch>
+       work-store.sh plan-progress <owner/repo> <task> <branch>
 
 show       Prints where the current repo keeps its plans and work: github, or
            dyb_web with the link and pipeline its setting names.
@@ -31,6 +32,9 @@ item       Prints the work item as production reads it, with the address of
 branch-item
            Prints the work item a branch names, or nothing when the branch
            names none.
+plan-progress
+           Prints the line plan-progress.sh prints, from the plan of the work
+           item the branch names in a dyb_web repo, and from GitHub otherwise.
 USAGE
   exit 64
 }
@@ -127,6 +131,23 @@ branch_item() {
   printf '%s' "$found" | jq -c --arg branch "$1" 'select(.branch == $branch)'
 }
 
+store_name() { setting | jq -r '.store'; }
+
+plan_progress() {
+  [ "$(store_name)" = dyb_web ] || exec "$(dirname "$0")/plan-progress.sh" "$1" "$2"
+
+  local item
+  item=$(branch_item "$3") || exit 69
+  printf '%s' "$item" | jq -e '.plan' >/dev/null || exit 1
+  printf '%s' "$item" | jq -r '
+    .plan | [.title,
+             ([.stages[].done] | add),
+             ([.stages[].total] | add),
+             "stage \(.stage) of 4 — \(["End to end", "Enrich", "Simplify", "Harden"][.stage - 1])",
+             ([.stages[] | "\(.stage):\(.done)/\(.total)"] | join(" ")),
+             "0/0"] | @tsv'
+}
+
 case "${1:-}" in
   show) show ;;
   check) check ;;
@@ -136,5 +157,6 @@ case "${1:-}" in
   take-next) [ $# -eq 1 ] || usage; take_next ;;
   item) [ $# -eq 2 ] || usage; item "$2" ;;
   branch-item) [ $# -eq 2 ] || usage; branch_item "$2" ;;
+  plan-progress) [ $# -eq 4 ] || usage; plan_progress "$2" "$3" "$4" ;;
   *) usage ;;
 esac

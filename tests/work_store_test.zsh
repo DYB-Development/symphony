@@ -194,6 +194,27 @@ assert_equals $'Something went wrong.\nexit 1' "$(cd "$REPO" && PATH="$STUB_BIN:
   "stops with production's message when production fails, rather than reporting no work item"
 
 echo ""
+echo "work-store.sh plan-progress:"
+
+plan_progress() {
+  (cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$SETTINGS" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_STATUS="${2:-200}" STUB_BODY="$1" "$SCRIPT" plan-progress acme/shop 12 "${3:-12-export-quotes}")
+}
+
+PLANNED='{"answer": {"branch": "12-export-quotes", "plan": {"title": "Quote export", "stage": 2, "stages": [{"stage": 1, "done": 2, "total": 2}, {"stage": 2, "done": 1, "total": 3}]}}}'
+
+assert_equals $'Quote export\t3\t5\tstage 2 of 4 — Enrich\t1:2/2 2:1/3\t0/0' "$(plan_progress "$PLANNED" 2>&1)" \
+  "prints the plan progress of the work item a dyb_web repo's branch names"
+
+output=$(plan_progress '{"answer": {"branch": "12-export-quotes", "plan": null}}' 2>/dev/null)
+assert_equals "1 " "$? $output" "prints nothing and fails for a work item that belongs to no plan"
+
+output=$(plan_progress "$PLANNED" 200 add-exports 2>/dev/null)
+assert_equals "1 " "$? $output" "prints nothing and fails for a branch that names no work item"
+
+output=$(plan_progress '{"error": "Something went wrong."}' 500 2>/dev/null)
+assert_equals "69 " "$? $output" "prints nothing and exits 69 when production cannot be read"
+
+echo ""
 echo "work-store.sh take-next:"
 
 printf '{"store": "dyb_web", "repo": "acme/shop", "pipeline_id": 3}' > "$SETTINGS/shop.json"
