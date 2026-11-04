@@ -151,6 +151,10 @@ PLANNED='{"answer": {"branch": "12-export-quotes", "plan": {"title": "Quote expo
 assert_equals $'Quote export\t3\t5\tstage 2 of 4 — Enrich\t1:2/2 2:1/3\t0/0' "$(STUB_REPLY="$PLANNED" in_dyb_web_repo 12-export-quotes 2>&1)" \
   "prints the plan progress of the work item a dyb_web repo's branch names"
 
+output=$(STUB_REPLY='{"answer": {"branch": "12-export-quotes", "plan": null}}' in_dyb_web_repo 12-export-quotes 2>/dev/null)
+code=$?
+assert_equals "1 " "$code $output" "prints nothing and fails for a work item that belongs to no plan"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 rm -rf "$SHARED_STUBS"

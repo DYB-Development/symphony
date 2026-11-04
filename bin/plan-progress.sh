@@ -20,7 +20,10 @@ USAGE
 repo=$1 task=$2 branch=${3:-}
 
 dyb_web_progress() {
-  "$(dirname "$0")/work-store.sh" branch-item "$branch" | jq -r '
+  local item
+  item=$("$(dirname "$0")/work-store.sh" branch-item "$branch")
+  printf '%s' "$item" | jq -e '.plan' >/dev/null || exit 1
+  printf '%s' "$item" | jq -r '
     .plan | [.title,
              ([.stages[].done] | add),
              ([.stages[].total] | add),
