@@ -160,6 +160,37 @@ assert_equals '- [x] A rep sees the quote total on the quote page. Covered by "s
   "reads the ticket from a Closes trailer in the body when GitHub reports no closing issue"
 drop_case
 
+in_a_dyb_web_repo() {
+  git init -q "$WORK/repo"
+  mkdir -p "$WORK/settings"
+  printf '{"store": "dyb_web", "repo": "acme/quotes", "pipeline_id": 3}' > "$WORK/settings/repo.json"
+  printf 'url=https://dyb.example\ntoken=secret\n' > "$WORK/dyb_web"
+  printf '%s' "$1" > "$WORK/head"
+  cat > "$WORK/bin/gh" <<SH
+#!/usr/bin/env bash
+cat "$WORK/head"
+SH
+  chmod +x "$WORK/bin/gh"
+  cat > "$WORK/bin/curl" <<SH
+#!/usr/bin/env bash
+printf '%s\n%s' "\$(cat "$WORK/reply")" "200"
+SH
+  chmod +x "$WORK/bin/curl"
+  printf '{"answer": {"branch": "12-quote-total", "acceptance_criteria": ["A rep sees the quote total on the quote page."]}}' > "$WORK/reply"
+}
+
+conformance_in_repo() {
+  (cd "$WORK/repo" && PATH="$WORK/bin:$PATH" SYMPHONY_AGENT_MODELS_FILE="$WORK/no-models.json" SYMPHONY_WORK_DIR="$WORK/settings" SYMPHONY_DYB_WEB_FILE="$WORK/dyb_web" "$CONFORMANCE" acme/quotes 7 "$DRAFT_FILE")
+}
+
+new_case
+in_a_dyb_web_repo 12-quote-total
+valid_test "shows the total on the quote page"
+CLAUDE_REPLY="1: 1" conformance_in_repo >/dev/null 2>&1
+assert_equals '- [x] A rep sees the quote total on the quote page. Covered by "shows the total on the quote page".' "$(render 2>&1)" \
+  "checks a dyb_web repo's pull request against the criteria of the work item its branch names"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
