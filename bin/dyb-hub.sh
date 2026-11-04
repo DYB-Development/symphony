@@ -33,7 +33,12 @@ call() {
   case "${reply##*$'\n'}" in
     2??) printf '%s' "$body" | jq -c '.answer' ;;
     401) printf 'dyb-hub.sh: production refused the token in %s\n' "$connection" >&2; exit 1 ;;
-    404) printf '%s' "$body" | jq -r '.error' >&2; exit 3 ;;
+    404)
+      [ "$(printf '%s' "$body" | jq -r '.error')" != "Not found" ] ||
+        { printf 'dyb-hub.sh: production has no method %s this token may call\n' "$method" >&2; exit 1; }
+      printf '%s' "$body" | jq -r '.error' >&2
+      exit 3
+      ;;
     *) printf '%s' "$body" | jq -r '.error' >&2; exit 1 ;;
   esac
 }

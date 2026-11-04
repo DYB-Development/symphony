@@ -79,6 +79,11 @@ exit_status=$?
 assert_equals $'dyb-hub.sh: production refused the token in '"$CONNECTION"$'\n1' "$(cat "$WORK/out")"$'\n'"$exit_status" \
   "stops saying the token was refused when production answers that it is expired or wrong"
 
+STUB_BODY='{"error": "Not found"}' STUB_STATUS=404 hub get work_item work_item_id=12 >"$WORK/out" 2>&1
+exit_status=$?
+assert_equals $'dyb-hub.sh: production has no method work_item this token may call\n1' "$(cat "$WORK/out")"$'\n'"$exit_status" \
+  "fails rather than reporting a missing record when production hides the method from this token"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"
