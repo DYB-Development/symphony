@@ -54,6 +54,11 @@ exit_status=$?
 assert_equals $'The hub holds no pipeline with id 9.\n1' "$(cat "$WORK/out")"$'\n'"$exit_status" \
   "prints the hub's own message for a refusal and fails"
 
+STUB_BODY='{"error": "No work item 99."}' STUB_STATUS=404 hub get work_item work_item_id=99 >"$WORK/out" 2>&1
+exit_status=$?
+assert_equals $'No work item 99.\n3' "$(cat "$WORK/out")"$'\n'"$exit_status" \
+  "exits 3 with the hub's message when the record is not found, so a caller can tell it from a failure"
+
 printf '{"title": "Convert quotes"}' | STUB_BODY='{"answer": 12}' STUB_STATUS=200 hub post add_plan >/dev/null 2>&1
 assert_equals '{"title": "Convert quotes"}' "$(cat "$WORK/sent" 2>&1)" "sends the params it reads for a post as the request body"
 

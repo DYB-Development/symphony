@@ -456,6 +456,10 @@ pipeline run, conductor never claims it afterwards, and merging its pull request
 marks it done. A work item that waits on open work is refused with the names of
 what it waits on.
 
+`work-store.sh branch-item <branch>` prints the work item a branch names, or
+nothing when it names none. A review in a dyb_web repo checks a pull request
+against the criteria of the work item its branch names, this way.
+
 `work-store.sh take-next` takes the next ready work item by hand for the repo
 the setting names, and prints it the same way with its id added. Production never
 hands out a work item that still waits on open work, and when nothing is ready

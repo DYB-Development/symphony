@@ -9,6 +9,7 @@ usage: work-store.sh show|check
        work-store.sh take <work-item-id>
        work-store.sh take-next
        work-store.sh item <work-item-id>
+       work-store.sh branch-item <branch>
 
 show       Prints where the current repo keeps its plans and work: github, or
            dyb_web with the link and pipeline its setting names.
@@ -27,6 +28,9 @@ take-next  Takes the next ready work item by hand for the repo the setting
            production reads it.
 item       Prints the work item as production reads it, with the address of
            its page, without claiming it.
+branch-item
+           Prints the work item a branch names, or nothing when the branch
+           names none.
 USAGE
   exit 64
 }
@@ -114,6 +118,15 @@ item() {
     | jq -c --arg address "$("$(dirname "$0")/dyb-hub.sh" page "/console/pipelines/work_items/$1")" '. + {address: $address}'
 }
 
+branch_item() {
+  [[ "${1%%-*}" =~ ^[0-9]+$ ]] || return 0
+  local found status=0
+  found="$("$(dirname "$0")/dyb-hub.sh" get work_item "work_item_id=${1%%-*}" 2>&1)" || status=$?
+  [ "$status" -ne 3 ] || return 0
+  [ "$status" -eq 0 ] || { printf '%s\n' "$found" >&2; exit "$status"; }
+  printf '%s' "$found" | jq -c --arg branch "$1" 'select(.branch == $branch)'
+}
+
 case "${1:-}" in
   show) show ;;
   check) check ;;
@@ -122,5 +135,6 @@ case "${1:-}" in
   take) [ $# -eq 2 ] || usage; take "$2" ;;
   take-next) [ $# -eq 1 ] || usage; take_next ;;
   item) [ $# -eq 2 ] || usage; item "$2" ;;
+  branch-item) [ $# -eq 2 ] || usage; branch_item "$2" ;;
   *) usage ;;
 esac

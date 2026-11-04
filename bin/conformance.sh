@@ -36,11 +36,20 @@ rm -f "$result"
 
 inventory="${draft%.json}.tests.json"
 
-ticket=$(gh pr view "$pr" --repo "$repo" --json closingIssuesReferences --jq '.closingIssuesReferences[0].number // empty')
+root="$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+store=$("$root/bin/work-store.sh" show | sed -n 1p)
 
-if [ -z "$ticket" ]; then
-  ticket=$(gh pr view "$pr" --repo "$repo" --json body --jq '.body' |
-    grep -ioE '^(close[sd]?|fix(e[sd])?|resolve[sd]?) +#[0-9]+' | head -n 1 | grep -oE '[0-9]+$' || true)
+if [ "$store" = dyb_web ]; then
+  branch=$(gh pr view "$pr" --repo "$repo" --json headRefName --jq '.headRefName')
+  item=$("$root/bin/work-store.sh" branch-item "$branch") || exit 70
+  ticket=${item:+${branch%%-*}}
+else
+  ticket=$(gh pr view "$pr" --repo "$repo" --json closingIssuesReferences --jq '.closingIssuesReferences[0].number // empty')
+
+  if [ -z "$ticket" ]; then
+    ticket=$(gh pr view "$pr" --repo "$repo" --json body --jq '.body' |
+      grep -ioE '^(close[sd]?|fix(e[sd])?|resolve[sd]?) +#[0-9]+' | head -n 1 | grep -oE '[0-9]+$' || true)
+  fi
 fi
 
 if [ -z "$ticket" ]; then
@@ -51,15 +60,17 @@ fi
 jq -e '.tests | type == "array"' "$inventory" >/dev/null 2>&1 ||
   { echo "conformance.sh: the test judgement did not finish, so no criterion was ticked" >&2; exit 70; }
 
-criteria=$(gh issue view "$ticket" --repo "$repo" --json body --jq '.body' | awk '
-  /^## Acceptance criteria/ { on = 1; next }
-  /^## / { on = 0 }
-  on && /^- \[[ xX]\] / { sub(/^- \[[ xX]\] /, ""); print }
-')
+if [ "$store" = dyb_web ]; then
+  criteria=$(printf '%s' "$item" | jq -r '.acceptance_criteria[]')
+else
+  criteria=$(gh issue view "$ticket" --repo "$repo" --json body --jq '.body' | awk '
+    /^## Acceptance criteria/ { on = 1; next }
+    /^## / { on = 0 }
+    on && /^- \[[ xX]\] / { sub(/^- \[[ xX]\] /, ""); print }
+  ')
+fi
 titles=$(jq -r '.hits as $hits | .tests[]
   | select(. as $t | any($hits[]; .path == $t.path and .line == $t.line) | not) | .title' "$inventory")
-
-root="$(cd -P "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 question='You are shown the acceptance criteria of a ticket and the titles of the tests a pull request adds. Decide which titles cover which criterion. A title covers a criterion when the behaviour it names is the behaviour the criterion asks for.
 
