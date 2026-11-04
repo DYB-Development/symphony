@@ -281,6 +281,13 @@ assert_equals $'Quote export · stage 2 of 4 — Enrich\n'"$GREEN$YELLOW 3/5" "$
 left_dyb_web
 drop_repo
 
+new_repo 12-export-quotes
+in_dyb_web
+status_line >/dev/null
+assert_equals "" "$(cat "$GH_LOG")" "never asks GitHub for a plan on a dyb_web repo's branch"
+left_dyb_web
+drop_repo
+
 rm -rf "$GH_STUB_DIR"
 
 echo ""
