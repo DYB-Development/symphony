@@ -296,6 +296,20 @@ assert_equals "Plan progress unavailable: dyb_web cannot be read" "$(status_line
 left_dyb_web
 drop_repo
 
+new_repo 12-export-quotes
+in_dyb_web
+cat > "$WORK/bin/curl" <<SH
+#!/usr/bin/env bash
+/bin/sleep 10
+SH
+export STATUS_LINE_LIMIT=0.5
+started=$SECONDS
+shown=$(status_line)
+assert_equals $'Plan progress unavailable: dyb_web cannot be read\nwithin the limit' "$shown"$'\n'"$( (( SECONDS - started < 5 )) && echo within the limit || echo too slow)" \
+  "says progress is unavailable, within its time limit, when production does not answer"
+left_dyb_web
+drop_repo
+
 rm -rf "$GH_STUB_DIR"
 
 echo ""

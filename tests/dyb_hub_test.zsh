@@ -35,6 +35,7 @@ cat > "$STUB_BIN/curl" <<'STUB'
 #!/usr/bin/env bash
 for arg in "$@"; do [ "$arg" = "@-" ] && cat > "$STUB_SENT"; done
 printf '%s\n' "$@" > "$STUB_SENT.args"
+[ -z "${STUB_CURL_EXIT:-}" ] || exit "$STUB_CURL_EXIT"
 printf '%s\n%s' "$STUB_BODY" "$STUB_STATUS"
 STUB
 chmod +x "$STUB_BIN/curl"
@@ -67,6 +68,38 @@ assert_equals "work_item_id=12" "$(grep -A1 -x -- --data-urlencode "$WORK/sent.a
 
 assert_equals "https://dyb.example/console/pipelines/plans/12" "$(hub page /console/pipelines/plans/12 2>&1)" \
   "prints the production address of a page"
+
+STUB_CURL_EXIT=7 STUB_BODY= STUB_STATUS= hub get task_choices >"$WORK/out" 2>&1
+exit_status=$?
+assert_equals $'dyb-hub.sh: cannot reach https://dyb.example\n69' "$(cat "$WORK/out")"$'\n'"$exit_status" \
+  "stops with the address it tried when production cannot be reached"
+
+STUB_BODY='<html>You need to sign in</html>' STUB_STATUS=401 hub get task_choices >"$WORK/out" 2>&1
+exit_status=$?
+assert_equals $'dyb-hub.sh: production refused the token in '"$CONNECTION"$'\n1' "$(cat "$WORK/out")"$'\n'"$exit_status" \
+  "stops saying the token was refused when production answers that it is expired or wrong"
+
+STUB_BODY='{"error": "Not found"}' STUB_STATUS=404 hub get work_item work_item_id=12 >"$WORK/out" 2>&1
+exit_status=$?
+assert_equals $'dyb-hub.sh: production has no method work_item this token may call\n1' "$(cat "$WORK/out")"$'\n'"$exit_status" \
+  "fails rather than reporting a missing record when production hides the method from this token"
+
+STUB_BODY='{"answer": 1}' STUB_STATUS=200 hub get task_choices >/dev/null 2>&1
+assert_equals "Accept-Version: 2" "$(grep -x 'Accept-Version: 2' "$WORK/sent.args")" "names the major version it expects on every call"
+
+STUB_BODY='{"answer": 1}' STUB_STATUS='3.0.0 200' hub get task_choices >"$WORK/out" 2>&1
+exit_status=$?
+assert_equals $'dyb-hub.sh: production answered at version 3.0.0, and this script expects major 2\n1' "$(cat "$WORK/out")"$'\n'"$exit_status" \
+  "refuses an answer at another major version"
+
+assert_equals '1' "$(STUB_BODY='{"answer": 1}' STUB_STATUS='2.13.0 200' hub get task_choices 2>&1)" "takes an answer at the major version it expects"
+
+assert_equals 'Not allowed here.' "$(STUB_BODY='{"error": "Not allowed here."}' STUB_STATUS=' 422' hub get task_choices 2>&1)" "reads the status when production sends no version"
+
+PATH="$STUB_BIN:$PATH" SYMPHONY_DYB_WEB_FILE="$WORK/no-such-file" "$SCRIPT" get task_choices >"$WORK/out" 2>&1
+exit_status=$?
+assert_equals $'dyb-hub.sh: no connection file at '"$WORK/no-such-file"$'\n78' "$(cat "$WORK/out")"$'\n'"$exit_status" \
+  "stops with the path it looked for when the connection file is missing"
 
 echo ""
 echo "$PASS passed, $FAIL failed"

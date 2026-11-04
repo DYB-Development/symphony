@@ -455,6 +455,12 @@ the rest of the body becomes its request, and the ids after the labels name the
 open work items it waits on. Anywhere else it becomes a GitHub issue with the
 comma-separated labels. `issue-scribe` files every `type:task` this way.
 
+A call to production that fails stops the agent and says why, and nothing is
+filed on GitHub instead. It names the address it tried when production cannot be
+reached, says when the token was refused, names the path it looked for when the
+connection file is missing, and refuses an answer at a major version other than
+the one it names on every call.
+
 `work-store.sh take <id>` takes a work item by hand for this machine's session,
 named `<user>@<host>`, and prints it as production reads it: title, request,
 criteria, repo, branch, status and plan progress. Taking it by hand starts no

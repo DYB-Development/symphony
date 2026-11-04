@@ -11,30 +11,53 @@ Calls one method of dyb_web's Pipelines hub over its JSON API and prints the
 answer. A get sends each name=value as a query value, and a post sends the
 JSON object it reads as the method's params. page
 prints the production address of a path. Reads url= and token= from
-~/.config/symphony/dyb_web.
+~/.config/symphony/dyb_web. Every call names the major version it expects, and
+an answer at another major is refused.
+
+Exits 69 when production cannot be reached, 78 when the connection file is
+missing, 3 when production holds no such record, and 1 for anything else
+production refuses, each with a message saying why.
 USAGE
   exit 64
 }
 
 connection="${SYMPHONY_DYB_WEB_FILE:-$HOME/.config/symphony/dyb_web}"
+major=2
 
 value() {
   sed -n "s/^$1=//p" "$connection" | head -1
 }
 
 call() {
-  local verb="$1" method="$2" reply body
+  local verb="$1" method="$2" reply body last version
   shift 2
-  reply="$(curl -sS -w '\n%{http_code}' -X "$verb" "$@" \
+  reply="$(curl -sS -w '\n%header{api-version} %{http_code}' -X "$verb" "$@" \
     -H "Authorization: token $(value token)" \
-    "$(value url)/api/v1/hubs/pipelines/$method")"
+    -H "Accept-Version: $major" \
+    "$(value url)/api/v1/hubs/pipelines/$method")" ||
+    { printf 'dyb-hub.sh: cannot reach %s\n' "$(value url)" >&2; exit 69; }
   body="${reply%$'\n'*}"
-  case "${reply##*$'\n'}" in
-    2??) printf '%s' "$body" | jq -c '.answer' ;;
-    404) printf '%s' "$body" | jq -r '.error' >&2; exit 3 ;;
+  last="${reply##*$'\n'}"
+  version="${last% *}"
+  [ "$version" != "$last" ] || version=""
+  case "${last##* }" in
+    2??)
+      [ -z "$version" ] || [ "${version%%.*}" = "$major" ] ||
+        { printf 'dyb-hub.sh: production answered at version %s, and this script expects major %s\n' "$version" "$major" >&2; exit 1; }
+      printf '%s' "$body" | jq -c '.answer'
+      ;;
+    401) printf 'dyb-hub.sh: production refused the token in %s\n' "$connection" >&2; exit 1 ;;
+    404)
+      [ "$(printf '%s' "$body" | jq -r '.error')" != "Not found" ] ||
+        { printf 'dyb-hub.sh: production has no method %s this token may call\n' "$method" >&2; exit 1; }
+      printf '%s' "$body" | jq -r '.error' >&2
+      exit 3
+      ;;
     *) printf '%s' "$body" | jq -r '.error' >&2; exit 1 ;;
   esac
 }
+
+[ $# -eq 0 ] || [ -r "$connection" ] || { printf 'dyb-hub.sh: no connection file at %s\n' "$connection" >&2; exit 78; }
 
 case "${1:-}" in
   get)
