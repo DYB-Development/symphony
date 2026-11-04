@@ -197,6 +197,16 @@ conformance_in_repo >/dev/null 2>&1
 assert_equals "No ticket referenced." "$(render 2>&1)" "reports no ticket for a dyb_web repo's pull request whose branch names no work item"
 drop_case
 
+new_case
+in_a_dyb_web_repo 12-quote-total
+cat > "$WORK/bin/curl" <<SH
+#!/usr/bin/env bash
+printf '%s\n%s' '{"error": "Something went wrong."}' "500"
+SH
+conformance_in_repo >/dev/null 2>&1
+assert_equals $'70\nno result' "$?"$'\n'"$([ -e "$RESULT" ] && echo result || echo no result)" "stops with no result when production fails, rather than reporting no ticket"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
