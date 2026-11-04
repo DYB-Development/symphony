@@ -183,6 +183,8 @@ branch_item() {
 assert_equals '{"title":"Export quotes","branch":"12-export-quotes","acceptance_criteria":["A rep can export quotes"]}' "$(branch_item 12-export-quotes 2>&1)" \
   "prints the work item a branch names"
 
+assert_equals $'\nexit 0' "$(branch_item add-exports 2>&1; echo "\nexit $?")" "prints nothing for a branch that starts with no number"
+
 echo ""
 echo "work-store.sh take-next:"
 
