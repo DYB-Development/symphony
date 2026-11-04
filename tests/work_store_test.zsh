@@ -153,6 +153,13 @@ assert_equals "https://github.com/acme/shop/issues/30" "$(github_task 2>&1)" "pr
 assert_equals "issue create --repo acme/shop --title Export quotes --body-file $SCRIPT_DIR/fixtures/task-body.md --label type:task --label priority:high" "$(tr '\n' ' ' < "$WORK/gh-args" | sed 's/ $//')" \
   "files a GitHub issue with the task's title, body and labels in a repo with no setting"
 
+rm -f "$WORK/gh-args"
+printf '{"store": "dyb_web", "repo": "acme/shop", "pipeline_id": 3, "own_project_id": 7}' > "$SETTINGS/shop.json"
+output=$(cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$SETTINGS" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_SENT="$WORK/sent" STUB_GH_ARGS="$WORK/gh-args" STUB_STATUS=500 STUB_BODY='{"error": "Something went wrong."}' \
+  "$SCRIPT" file-task acme/shop "Export quotes" "$SCRIPT_DIR/fixtures/task-body.md" "type:task" 2>&1)
+assert_equals $'1 Something went wrong.\nGitHub not called' "$? $output"$'\n'"$([ -e "$WORK/gh-args" ] && echo GitHub called || echo GitHub not called)" \
+  "stops with production's message and files nothing on GitHub when production fails in a dyb_web repo"
+
 echo ""
 echo "work-store.sh take:"
 
