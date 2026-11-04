@@ -21,7 +21,7 @@ repo=$1 task=$2 branch=${3:-}
 
 dyb_web_progress() {
   local item
-  item=$("$(dirname "$0")/work-store.sh" branch-item "$branch")
+  item=$("$(dirname "$0")/work-store.sh" branch-item "$branch") || exit 69
   printf '%s' "$item" | jq -e '.plan' >/dev/null || exit 1
   printf '%s' "$item" | jq -r '
     .plan | [.title,

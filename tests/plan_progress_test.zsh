@@ -159,6 +159,10 @@ output=$(STUB_REPLY="$PLANNED" in_dyb_web_repo add-exports 2>/dev/null)
 code=$?
 assert_equals "1 " "$code $output" "prints nothing and fails for a branch that names no work item"
 
+output=$(STUB_STATUS=500 STUB_REPLY='{"error": "Something went wrong."}' in_dyb_web_repo 12-export-quotes 2>/dev/null)
+code=$?
+assert_equals "69 " "$code $output" "prints nothing and exits 69 when production cannot be read"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 rm -rf "$SHARED_STUBS"
