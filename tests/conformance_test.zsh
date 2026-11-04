@@ -191,6 +191,12 @@ assert_equals '- [x] A rep sees the quote total on the quote page. Covered by "s
   "checks a dyb_web repo's pull request against the criteria of the work item its branch names"
 drop_case
 
+new_case
+in_a_dyb_web_repo add-quote-totals
+conformance_in_repo >/dev/null 2>&1
+assert_equals "No ticket referenced." "$(render 2>&1)" "reports no ticket for a dyb_web repo's pull request whose branch names no work item"
+drop_case
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
