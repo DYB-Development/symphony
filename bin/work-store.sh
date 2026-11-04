@@ -116,7 +116,7 @@ item() {
 
 branch_item() {
   [[ "${1%%-*}" =~ ^[0-9]+$ ]] || return 0
-  "$(dirname "$0")/dyb-hub.sh" get work_item "work_item_id=${1%%-*}"
+  "$(dirname "$0")/dyb-hub.sh" get work_item "work_item_id=${1%%-*}" | jq -c --arg branch "$1" 'select(.branch == $branch)'
 }
 
 case "${1:-}" in
