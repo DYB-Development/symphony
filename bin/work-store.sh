@@ -114,6 +114,10 @@ item() {
     | jq -c --arg address "$("$(dirname "$0")/dyb-hub.sh" page "/console/pipelines/work_items/$1")" '. + {address: $address}'
 }
 
+branch_item() {
+  "$(dirname "$0")/dyb-hub.sh" get work_item "work_item_id=${1%%-*}"
+}
+
 case "${1:-}" in
   show) show ;;
   check) check ;;
@@ -122,5 +126,6 @@ case "${1:-}" in
   take) [ $# -eq 2 ] || usage; take "$2" ;;
   take-next) [ $# -eq 1 ] || usage; take_next ;;
   item) [ $# -eq 2 ] || usage; item "$2" ;;
+  branch-item) [ $# -eq 2 ] || usage; branch_item "$2" ;;
   *) usage ;;
 esac

@@ -173,6 +173,17 @@ assert_equals $'No work item 99.\nexit 1' \
   "reports a work item production cannot find with production's message"
 
 echo ""
+echo "work-store.sh branch-item:"
+
+branch_item() {
+  (cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_DYB_WEB_FILE="$CONNECTION" \
+    STUB_BODY='{"answer": {"title": "Export quotes", "branch": "12-export-quotes", "acceptance_criteria": ["A rep can export quotes"]}}' "$SCRIPT" branch-item "$1")
+}
+
+assert_equals '{"title":"Export quotes","branch":"12-export-quotes","acceptance_criteria":["A rep can export quotes"]}' "$(branch_item 12-export-quotes 2>&1)" \
+  "prints the work item a branch names"
+
+echo ""
 echo "work-store.sh take-next:"
 
 printf '{"store": "dyb_web", "repo": "acme/shop", "pipeline_id": 3}' > "$SETTINGS/shop.json"
