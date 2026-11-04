@@ -11,6 +11,8 @@ usage: work-store.sh show|check
        work-store.sh item <work-item-id>
        work-store.sh branch-item <branch>
        work-store.sh plan-progress <owner/repo> <task> <branch>
+       work-store.sh name
+       work-store.sh tick-refusal <owner/repo>
 
 show       Prints where the current repo keeps its plans and work: github, or
            dyb_web with the link and pipeline its setting names.
@@ -35,6 +37,10 @@ branch-item
 plan-progress
            Prints the line plan-progress.sh prints, from the plan of the work
            item the branch names in a dyb_web repo, and from GitHub otherwise.
+name       Prints the store's name as a person reads it: GitHub or dyb_web.
+tick-refusal
+           Prints why a criterion cannot be ticked on the named repo, or nothing
+           when it can.
 USAGE
   exit 64
 }
@@ -133,6 +139,13 @@ branch_item() {
 
 store_name() { setting | jq -r '.store'; }
 
+name() { [ "$(store_name)" = dyb_web ] && printf 'dyb_web\n' || printf 'GitHub\n'; }
+
+tick_refusal() {
+  [ "$(setting | jq -r 'select(.store == "dyb_web") | .repo')" = "$1" ] || return 0
+  printf '%s keeps its work in dyb_web, whose work items have no boxes to tick, so nothing changed.\n' "$1"
+}
+
 plan_progress() {
   [ "$(store_name)" = dyb_web ] || exec "$(dirname "$0")/plan-progress.sh" "$1" "$2"
 
@@ -158,5 +171,7 @@ case "${1:-}" in
   item) [ $# -eq 2 ] || usage; item "$2" ;;
   branch-item) [ $# -eq 2 ] || usage; branch_item "$2" ;;
   plan-progress) [ $# -eq 4 ] || usage; plan_progress "$2" "$3" "$4" ;;
+  name) name ;;
+  tick-refusal) [ $# -eq 2 ] || usage; tick_refusal "$2" ;;
   *) usage ;;
 esac
