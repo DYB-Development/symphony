@@ -74,6 +74,11 @@ exit_status=$?
 assert_equals $'dyb-hub.sh: cannot reach https://dyb.example\n69' "$(cat "$WORK/out")"$'\n'"$exit_status" \
   "stops with the address it tried when production cannot be reached"
 
+STUB_BODY='<html>You need to sign in</html>' STUB_STATUS=401 hub get task_choices >"$WORK/out" 2>&1
+exit_status=$?
+assert_equals $'dyb-hub.sh: production refused the token in '"$CONNECTION"$'\n1' "$(cat "$WORK/out")"$'\n'"$exit_status" \
+  "stops saying the token was refused when production answers that it is expired or wrong"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"
