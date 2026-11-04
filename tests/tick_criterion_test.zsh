@@ -76,6 +76,19 @@ assert_equals "1 tick-criterion.sh: #12 has 3 acceptance criteria, so there is n
   "fails naming the position and how many criteria the issue has when the position is past the last"
 drop_stub
 
+in_dyb_web_repo() {
+  git init -q "$WORK/shop"
+  mkdir -p "$WORK/settings"
+  printf '{"store": "dyb_web", "repo": "%s", "pipeline_id": 3}' "$1" > "$WORK/settings/shop.json"
+}
+
+stub_gh
+in_dyb_web_repo acme/widget
+output=$(cd "$WORK/shop" && SYMPHONY_WORK_DIR="$WORK/settings" "$TICK" acme/widget 12 3 2>&1)
+assert_equals $'acme/widget keeps its work in dyb_web, whose work items have no boxes to tick, so nothing changed.\nnothing saved' "$output"$'\n'"$([ -e "$WORK/saved" ] && echo saved || echo nothing saved)" \
+  "changes nothing in a dyb_web repo and says why"
+drop_stub
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 rm -rf "$SHARED_STUBS"

@@ -17,6 +17,12 @@ USAGE
 
 repo=$1 issue=$2 position=$3
 
+setting=$("$(dirname "$0")/work-store.sh" show)
+if [ "${setting%%$'\n'*}" = dyb_web ]; then
+  printf '%s keeps its work in dyb_web, whose work items have no boxes to tick, so nothing changed.\n' "$repo"
+  exit 0
+fi
+
 body=$(gh api "repos/$repo/issues/$issue" --jq .body)
 
 count=$(printf '%s\n' "$body" | awk '
