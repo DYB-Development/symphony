@@ -89,6 +89,13 @@ assert_equals $'acme/widget keeps its work in dyb_web, whose work items have no 
   "changes nothing in a dyb_web repo and says why"
 drop_stub
 
+stub_gh
+in_dyb_web_repo acme/shop
+(cd "$WORK/shop" && SYMPHONY_WORK_DIR="$WORK/settings" "$TICK" acme/widget 12 3 >/dev/null 2>&1)
+assert_equals "- [x] A rep can send." "$(grep 'A rep can send' "$WORK/saved" 2>&1)" \
+  "still ticks an issue in another repo when run from a dyb_web repo"
+drop_stub
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 rm -rf "$SHARED_STUBS"
