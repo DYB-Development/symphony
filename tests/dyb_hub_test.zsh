@@ -84,6 +84,9 @@ exit_status=$?
 assert_equals $'dyb-hub.sh: production has no method work_item this token may call\n1' "$(cat "$WORK/out")"$'\n'"$exit_status" \
   "fails rather than reporting a missing record when production hides the method from this token"
 
+STUB_BODY='{"answer": 1}' STUB_STATUS=200 hub get task_choices >/dev/null 2>&1
+assert_equals "Accept-Version: 2" "$(grep -x 'Accept-Version: 2' "$WORK/sent.args")" "names the major version it expects on every call"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"

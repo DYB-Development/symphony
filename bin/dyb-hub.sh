@@ -17,6 +17,7 @@ USAGE
 }
 
 connection="${SYMPHONY_DYB_WEB_FILE:-$HOME/.config/symphony/dyb_web}"
+major=2
 
 value() {
   sed -n "s/^$1=//p" "$connection" | head -1
@@ -27,6 +28,7 @@ call() {
   shift 2
   reply="$(curl -sS -w '\n%{http_code}' -X "$verb" "$@" \
     -H "Authorization: token $(value token)" \
+    -H "Accept-Version: $major" \
     "$(value url)/api/v1/hubs/pipelines/$method")" ||
     { printf 'dyb-hub.sh: cannot reach %s\n' "$(value url)" >&2; exit 69; }
   body="${reply%$'\n'*}"
