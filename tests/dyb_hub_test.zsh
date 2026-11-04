@@ -96,6 +96,11 @@ assert_equals '1' "$(STUB_BODY='{"answer": 1}' STUB_STATUS='2.13.0 200' hub get 
 
 assert_equals 'Not allowed here.' "$(STUB_BODY='{"error": "Not allowed here."}' STUB_STATUS=' 422' hub get task_choices 2>&1)" "reads the status when production sends no version"
 
+PATH="$STUB_BIN:$PATH" SYMPHONY_DYB_WEB_FILE="$WORK/no-such-file" "$SCRIPT" get task_choices >"$WORK/out" 2>&1
+exit_status=$?
+assert_equals $'dyb-hub.sh: no connection file at '"$WORK/no-such-file"$'\n78' "$(cat "$WORK/out")"$'\n'"$exit_status" \
+  "stops with the path it looked for when the connection file is missing"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"

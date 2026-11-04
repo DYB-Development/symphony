@@ -52,6 +52,8 @@ call() {
   esac
 }
 
+[ $# -eq 0 ] || [ -r "$connection" ] || { printf 'dyb-hub.sh: no connection file at %s\n' "$connection" >&2; exit 78; }
+
 case "${1:-}" in
   get)
     [ $# -ge 2 ] || usage
