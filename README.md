@@ -447,13 +447,13 @@ plan is linked as the setting names, and the plan page's address is printed.
 You choose its decisions and approve it on that page, and approving makes the
 work items.
 
-`work-store.sh file-item "<title>" <body-file> [<work-item-id> ...]` adds a
-task to dyb_web production as a work item on the pipeline and link the setting
-names. The items of the body's Acceptance criteria section become the work
-item's criteria, the rest of the body becomes its request, and the ids after the
-body file name the open work items it waits on. It prints the work item page's
-address. `issue-scribe` files a `type:task` for a dyb_web repo this way, and
-files every other issue on GitHub as before.
+`work-store.sh file-task <owner/repo> "<title>" <body-file> <labels>
+[<work-item-id> ...]` files a task where the repo keeps its work and prints its
+address. In dyb_web it becomes a work item on the pipeline and link the setting
+names: the items of the body's Acceptance criteria section become its criteria,
+the rest of the body becomes its request, and the ids after the labels name the
+open work items it waits on. Anywhere else it becomes a GitHub issue with the
+comma-separated labels. `issue-scribe` files every `type:task` this way.
 
 `work-store.sh take <id>` takes a work item by hand for this machine's session,
 named `<user>@<host>`, and prints it as production reads it: title, request,

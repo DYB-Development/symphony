@@ -113,14 +113,14 @@ sed '/^## 07 What we trade/,/^## 08 Settle first/{/^## 08/!d;}' "$SCRIPT_DIR/fix
 assert_equals "nothing sent" "$([ -e "$WORK/sent" ] && echo sent || echo nothing sent)" "sends nothing to production when the plan body is refused"
 
 echo ""
-echo "work-store.sh file-item:"
+echo "work-store.sh file-task:"
 
-file_item() {
+file_task() {
   (cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$SETTINGS" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_SENT="$WORK/sent" STUB_BODY='{"answer": 21}' \
-    "$SCRIPT" file-item "Export quotes" "$SCRIPT_DIR/fixtures/task-body.md" "$@")
+    "$SCRIPT" file-task acme/shop "Export quotes" "$SCRIPT_DIR/fixtures/task-body.md" "type:task,priority:high" "$@")
 }
 
-file_item >/dev/null 2>&1
+file_task >/dev/null 2>&1
 assert_equals $'A rep downloads a CSV of their quotes.\nThe CSV holds each quote\'s total.' "$(jq -r .acceptance_criteria "$WORK/sent" 2>&1)" \
   "sends the task's acceptance criteria to production one to a line"
 
@@ -130,10 +130,28 @@ assert_equals "$(sed '/^## Acceptance criteria/,/^## Out of scope/{/^## Out of s
 assert_equals '{"repo":"acme/shop","pipeline_id":3,"own_project_id":7}' "$(jq -c '{repo, pipeline_id, own_project_id}' "$WORK/sent" 2>&1)" \
   "sends the work item for the repo, pipeline and link the repo's setting names"
 
-file_item 14 15 >/dev/null 2>&1
+file_task 14 15 >/dev/null 2>&1
 assert_equals '[14,15]' "$(jq -c .waits_on_ids "$WORK/sent" 2>&1)" "files the work item waiting on the work item ids named after the body"
 
-assert_equals "https://dyb.example/console/pipelines/work_items/21" "$(file_item 2>&1)" "prints the address of the work item's production page"
+assert_equals "https://dyb.example/console/pipelines/work_items/21" "$(file_task 2>&1)" "prints the address of the work item's production page"
+
+cat > "$STUB_BIN/gh" <<'STUB'
+#!/usr/bin/env bash
+printf '%s\n' "$@" > "$STUB_GH_ARGS"
+echo "https://github.com/acme/shop/issues/30"
+STUB
+chmod +x "$STUB_BIN/gh"
+
+mkdir -p "$WORK/no-settings"
+github_task() {
+  (cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$WORK/no-settings" STUB_GH_ARGS="$WORK/gh-args" \
+    "$SCRIPT" file-task acme/shop "Export quotes" "$SCRIPT_DIR/fixtures/task-body.md" "type:task,priority:high")
+}
+
+assert_equals "https://github.com/acme/shop/issues/30" "$(github_task 2>&1)" "prints the created issue's address in a repo with no setting"
+
+assert_equals "issue create --repo acme/shop --title Export quotes --body-file $SCRIPT_DIR/fixtures/task-body.md --label type:task --label priority:high" "$(tr '\n' ' ' < "$WORK/gh-args" | sed 's/ $//')" \
+  "files a GitHub issue with the task's title, body and labels in a repo with no setting"
 
 echo ""
 echo "work-store.sh take:"
