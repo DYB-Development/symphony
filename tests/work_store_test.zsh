@@ -187,6 +187,9 @@ assert_equals $'\nexit 0' "$(branch_item add-exports 2>&1; echo "\nexit $?")" "p
 
 assert_equals $'\nexit 0' "$(branch_item 12-another-title 2>&1; echo "\nexit $?")" "prints nothing for a branch whose number belongs to a work item on another branch"
 
+assert_equals $'\nexit 0' "$(cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_STATUS=404 STUB_BODY='{"error": "No work item 99."}' "$SCRIPT" branch-item 99-gone 2>/dev/null; echo "\nexit $?")" \
+  "prints nothing for a branch whose number production holds no work item for"
+
 echo ""
 echo "work-store.sh take-next:"
 
