@@ -190,6 +190,9 @@ assert_equals $'\nexit 0' "$(branch_item 12-another-title 2>&1; echo "\nexit $?"
 assert_equals $'\nexit 0' "$(cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_STATUS=404 STUB_BODY='{"error": "No work item 99."}' "$SCRIPT" branch-item 99-gone 2>/dev/null; echo "\nexit $?")" \
   "prints nothing for a branch whose number production holds no work item for"
 
+assert_equals $'Something went wrong.\nexit 1' "$(cd "$REPO" && PATH="$STUB_BIN:$PATH" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_STATUS=500 STUB_BODY='{"error": "Something went wrong."}' "$SCRIPT" branch-item 12-export-quotes 2>&1; echo "exit $?")" \
+  "stops with production's message when production fails, rather than reporting no work item"
+
 echo ""
 echo "work-store.sh take-next:"
 
