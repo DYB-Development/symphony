@@ -13,6 +13,7 @@ usage: work-store.sh show|check
        work-store.sh plan-progress <owner/repo> <task> <branch>
        work-store.sh name
        work-store.sh tick-refusal <owner/repo>
+       work-store.sh ticket-criteria <owner/repo> <pr-number>
 
 show       Prints where the current repo keeps its plans and work: github, or
            dyb_web with the link and pipeline its setting names.
@@ -41,6 +42,11 @@ name       Prints the store's name as a person reads it: GitHub or dyb_web.
 tick-refusal
            Prints why a criterion cannot be ticked on the named repo, or nothing
            when it can.
+ticket-criteria
+           Prints the ticket a pull request belongs to and its acceptance
+           criteria as JSON, or nothing when it names no ticket: the work item
+           its branch names in a dyb_web repo, the GitHub issue it closes
+           otherwise.
 USAGE
   exit 64
 }
@@ -146,6 +152,32 @@ tick_refusal() {
   printf '%s keeps its work in dyb_web, whose work items have no boxes to tick, so nothing changed.\n' "$1"
 }
 
+ticket_criteria() {
+  local repo="$1" pr="$2"
+  if [ "$(store_name)" = dyb_web ]; then
+    local head item
+    head=$(gh pr view "$pr" --repo "$repo" --json headRefName --jq '.headRefName')
+    item=$(branch_item "$head") || exit 70
+    [ -n "$item" ] || return 0
+    printf '%s' "$item" | jq -c --argjson ticket "${head%%-*}" '{ticket: $ticket, criteria: .acceptance_criteria}'
+    return 0
+  fi
+
+  local ticket
+  ticket=$(gh pr view "$pr" --repo "$repo" --json closingIssuesReferences --jq '.closingIssuesReferences[0].number // empty')
+  if [ -z "$ticket" ]; then
+    ticket=$(gh pr view "$pr" --repo "$repo" --json body --jq '.body' |
+      grep -ioE '^(close[sd]?|fix(e[sd])?|resolve[sd]?) +#[0-9]+' | head -n 1 | grep -oE '[0-9]+$' || true)
+  fi
+  [ -n "$ticket" ] || return 0
+
+  gh issue view "$ticket" --repo "$repo" --json body --jq '.body' | awk '
+    /^## Acceptance criteria/ { on = 1; next }
+    /^## / { on = 0 }
+    on && /^- \[[ xX]\] / { sub(/^- \[[ xX]\] /, ""); print }
+  ' | jq -Rsc --argjson ticket "$ticket" '{ticket: $ticket, criteria: (split("\n") | map(select(length > 0)))}'
+}
+
 plan_progress() {
   [ "$(store_name)" = dyb_web ] || exec "$(dirname "$0")/plan-progress.sh" "$1" "$2"
 
@@ -171,6 +203,7 @@ case "${1:-}" in
   item) [ $# -eq 2 ] || usage; item "$2" ;;
   branch-item) [ $# -eq 2 ] || usage; branch_item "$2" ;;
   plan-progress) [ $# -eq 4 ] || usage; plan_progress "$2" "$3" "$4" ;;
+  ticket-criteria) [ $# -eq 3 ] || usage; ticket_criteria "$2" "$3" ;;
   name) name ;;
   tick-refusal) [ $# -eq 2 ] || usage; tick_refusal "$2" ;;
   *) usage ;;
