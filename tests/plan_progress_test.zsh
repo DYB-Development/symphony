@@ -7,6 +7,7 @@ setopt no_unset
 
 SCRIPT_DIR="${0:A:h}"
 READER="$SCRIPT_DIR/../bin/plan-progress.sh"
+export SYMPHONY_WORK_DIR="$(mktemp -d "${TMPDIR:-/tmp}/plan_progress_settings.XXXXXX")"
 
 PASS=0
 FAIL=0
@@ -129,6 +130,26 @@ stub_gh
 assert_equals $'Quote plans\t1\t2\tstage 1 of 4 — End to end\t1:1/1 2:0/1' "$("$READER" acme/widget 17 2>&1 | cut -f1-5)" \
   "counts a plan's units from the plan's own repo when the task lives in another"
 drop_stub
+
+DYB_WORK="$(mktemp -d "${TMPDIR:-/tmp}/plan_progress_dyb.XXXXXX")"
+git init -q "$DYB_WORK/shop"
+printf '{"store": "dyb_web", "repo": "acme/shop", "pipeline_id": 3}' > "$SYMPHONY_WORK_DIR/shop.json"
+printf 'url=https://dyb.example\ntoken=secret\n' > "$DYB_WORK/connection"
+mkdir "$DYB_WORK/bin"
+cat > "$DYB_WORK/bin/curl" <<'STUB'
+#!/usr/bin/env bash
+printf '%s\n%s' "$STUB_REPLY" "${STUB_STATUS:-200}"
+STUB
+chmod +x "$DYB_WORK/bin/curl"
+
+in_dyb_web_repo() {
+  (cd "$DYB_WORK/shop" && PATH="$DYB_WORK/bin:$PATH" SYMPHONY_DYB_WEB_FILE="$DYB_WORK/connection" "$READER" acme/shop 12 "$1")
+}
+
+PLANNED='{"answer": {"branch": "12-export-quotes", "plan": {"title": "Quote export", "stage": 2, "stages": [{"stage": 1, "done": 2, "total": 2}, {"stage": 2, "done": 1, "total": 3}]}}}'
+
+assert_equals $'Quote export\t3\t5\tstage 2 of 4 — Enrich\t1:2/2 2:1/3\t0/0' "$(STUB_REPLY="$PLANNED" in_dyb_web_repo 12-export-quotes 2>&1)" \
+  "prints the plan progress of the work item a dyb_web repo's branch names"
 
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
