@@ -24,16 +24,23 @@ value() {
 }
 
 call() {
-  local verb="$1" method="$2" reply body
+  local verb="$1" method="$2" reply body last version
   shift 2
-  reply="$(curl -sS -w '\n%{http_code}' -X "$verb" "$@" \
+  reply="$(curl -sS -w '\n%header{api-version} %{http_code}' -X "$verb" "$@" \
     -H "Authorization: token $(value token)" \
     -H "Accept-Version: $major" \
     "$(value url)/api/v1/hubs/pipelines/$method")" ||
     { printf 'dyb-hub.sh: cannot reach %s\n' "$(value url)" >&2; exit 69; }
   body="${reply%$'\n'*}"
-  case "${reply##*$'\n'}" in
-    2??) printf '%s' "$body" | jq -c '.answer' ;;
+  last="${reply##*$'\n'}"
+  version="${last% *}"
+  [ "$version" != "$last" ] || version=""
+  case "${last##* }" in
+    2??)
+      [ -z "$version" ] || [ "${version%%.*}" = "$major" ] ||
+        { printf 'dyb-hub.sh: production answered at version %s, and this script expects major %s\n' "$version" "$major" >&2; exit 1; }
+      printf '%s' "$body" | jq -c '.answer'
+      ;;
     401) printf 'dyb-hub.sh: production refused the token in %s\n' "$connection" >&2; exit 1 ;;
     404)
       [ "$(printf '%s' "$body" | jq -r '.error')" != "Not found" ] ||

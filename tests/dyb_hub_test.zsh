@@ -87,6 +87,15 @@ assert_equals $'dyb-hub.sh: production has no method work_item this token may ca
 STUB_BODY='{"answer": 1}' STUB_STATUS=200 hub get task_choices >/dev/null 2>&1
 assert_equals "Accept-Version: 2" "$(grep -x 'Accept-Version: 2' "$WORK/sent.args")" "names the major version it expects on every call"
 
+STUB_BODY='{"answer": 1}' STUB_STATUS='3.0.0 200' hub get task_choices >"$WORK/out" 2>&1
+exit_status=$?
+assert_equals $'dyb-hub.sh: production answered at version 3.0.0, and this script expects major 2\n1' "$(cat "$WORK/out")"$'\n'"$exit_status" \
+  "refuses an answer at another major version"
+
+assert_equals '1' "$(STUB_BODY='{"answer": 1}' STUB_STATUS='2.13.0 200' hub get task_choices 2>&1)" "takes an answer at the major version it expects"
+
+assert_equals 'Not allowed here.' "$(STUB_BODY='{"error": "Not allowed here."}' STUB_STATUS=' 422' hub get task_choices 2>&1)" "reads the status when production sends no version"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"
