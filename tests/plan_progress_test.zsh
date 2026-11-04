@@ -155,6 +155,10 @@ output=$(STUB_REPLY='{"answer": {"branch": "12-export-quotes", "plan": null}}' i
 code=$?
 assert_equals "1 " "$code $output" "prints nothing and fails for a work item that belongs to no plan"
 
+output=$(STUB_REPLY="$PLANNED" in_dyb_web_repo add-exports 2>/dev/null)
+code=$?
+assert_equals "1 " "$code $output" "prints nothing and fails for a branch that names no work item"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 rm -rf "$SHARED_STUBS"
