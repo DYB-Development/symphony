@@ -288,6 +288,14 @@ assert_equals "" "$(cat "$GH_LOG")" "never asks GitHub for a plan on a dyb_web r
 left_dyb_web
 drop_repo
 
+new_repo 12-export-quotes
+in_dyb_web
+printf 500 > "$WORK/reply-status"
+printf '{"error": "Something went wrong."}' > "$WORK/reply"
+assert_equals "Plan progress unavailable: dyb_web cannot be read" "$(status_line)" "says dyb_web cannot be read when production fails on a dyb_web repo's branch"
+left_dyb_web
+drop_repo
+
 rm -rf "$GH_STUB_DIR"
 
 echo ""

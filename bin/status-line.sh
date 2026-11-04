@@ -61,6 +61,10 @@ stage_square() {
   fi
 }
 
+source_name() {
+  [ "$(cd "$dir" && "$bin/work-store.sh" show | sed -n 1p)" = dyb_web ] && printf dyb_web || printf GitHub
+}
+
 plan_part() {
   [ -n "$task" ] || return 0
   repo=$(git -C "$dir" remote get-url origin | sed -E 's#^.*github\.com[:/]##; s#\.git$##')
@@ -70,7 +74,7 @@ plan_part() {
   progress=$(printf '%s\n' "$read" | sed -n 1p)
   state=$(printf '%s\n' "$read" | sed -n 2p)
   if [ -z "$progress" ]; then
-    [ "$state" != stale ] || printf 'Plan progress unavailable: GitHub cannot be read\n'
+    [ "$state" != stale ] || printf 'Plan progress unavailable: %s cannot be read\n' "$(source_name)"
     return 0
   fi
   IFS=$'\t' read -r title closed total stage stages criteria <<< "$progress"
