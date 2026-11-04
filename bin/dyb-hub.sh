@@ -11,7 +11,12 @@ Calls one method of dyb_web's Pipelines hub over its JSON API and prints the
 answer. A get sends each name=value as a query value, and a post sends the
 JSON object it reads as the method's params. page
 prints the production address of a path. Reads url= and token= from
-~/.config/symphony/dyb_web.
+~/.config/symphony/dyb_web. Every call names the major version it expects, and
+an answer at another major is refused.
+
+Exits 69 when production cannot be reached, 78 when the connection file is
+missing, 3 when production holds no such record, and 1 for anything else
+production refuses, each with a message saying why.
 USAGE
   exit 64
 }
