@@ -35,6 +35,7 @@ cat > "$STUB_BIN/curl" <<'STUB'
 #!/usr/bin/env bash
 for arg in "$@"; do [ "$arg" = "@-" ] && cat > "$STUB_SENT"; done
 printf '%s\n' "$@" > "$STUB_SENT.args"
+[ -z "${STUB_CURL_EXIT:-}" ] || exit "$STUB_CURL_EXIT"
 printf '%s\n%s' "$STUB_BODY" "$STUB_STATUS"
 STUB
 chmod +x "$STUB_BIN/curl"
@@ -67,6 +68,11 @@ assert_equals "work_item_id=12" "$(grep -A1 -x -- --data-urlencode "$WORK/sent.a
 
 assert_equals "https://dyb.example/console/pipelines/plans/12" "$(hub page /console/pipelines/plans/12 2>&1)" \
   "prints the production address of a page"
+
+STUB_CURL_EXIT=7 STUB_BODY= STUB_STATUS= hub get task_choices >"$WORK/out" 2>&1
+exit_status=$?
+assert_equals $'dyb-hub.sh: cannot reach https://dyb.example\n69' "$(cat "$WORK/out")"$'\n'"$exit_status" \
+  "stops with the address it tried when production cannot be reached"
 
 echo ""
 echo "$PASS passed, $FAIL failed"

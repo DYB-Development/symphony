@@ -27,7 +27,8 @@ call() {
   shift 2
   reply="$(curl -sS -w '\n%{http_code}' -X "$verb" "$@" \
     -H "Authorization: token $(value token)" \
-    "$(value url)/api/v1/hubs/pipelines/$method")"
+    "$(value url)/api/v1/hubs/pipelines/$method")" ||
+    { printf 'dyb-hub.sh: cannot reach %s\n' "$(value url)" >&2; exit 69; }
   body="${reply%$'\n'*}"
   case "${reply##*$'\n'}" in
     2??) printf '%s' "$body" | jq -c '.answer' ;;
