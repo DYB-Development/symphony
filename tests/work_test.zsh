@@ -65,6 +65,15 @@ assert_equals 'Export "quotes" to C:\exports' "$(jq -r .label .work 2>&1)" \
   "keeps a label holding quotes and a backslash readable as JSON"
 drop_repo
 
+new_repo
+mkdir -p deep/nested
+cd deep/nested
+"$WORK_SH" "https://github.com/acme/shop/issues/28" "shop#28" >/dev/null
+cd "$REPO"
+assert_equals ".work" "$(ls .work deep/nested/.work 2>/dev/null)" \
+  "writes at the root of the worktree when run from a subdirectory"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
