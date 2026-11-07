@@ -484,6 +484,10 @@
     {
       "file": "agents/review-scribe.md",
       "absent": "gh pr diff"
+    },
+    {
+      "file": "commands/next-task.md",
+      "contains": "run `~/.claude/bin/work-store.sh record <n>` from the worktree"
     }
   ]
 }
