@@ -492,6 +492,10 @@
     {
       "file": "rules/pr-body.md",
       "contains": "`~/.claude/bin/work.sh \"<the ticket's full address>\" \"<its key>\"`"
+    },
+    {
+      "file": "README.md",
+      "contains": "The rules keep four working-tree files that must never reach a commit"
     }
   ]
 }

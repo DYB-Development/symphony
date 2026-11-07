@@ -203,13 +203,14 @@ exits naming a failed check, and otherwise exits when it is merged or closed:
 
 ### Two more steps
 
-The rules keep three working-tree files that must never reach a commit — the
-decision log, the ticket reference and the resume bookmark. Add them to your
-global gitignore:
+The rules keep four working-tree files that must never reach a commit — the
+decision log, the ticket reference, the work record and the resume bookmark.
+Add them to your global gitignore:
 
 ```
 .decisions.md
 .ticket
+.work
 start_here.md
 ```
 
