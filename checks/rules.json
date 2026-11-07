@@ -488,6 +488,10 @@
     {
       "file": "commands/next-task.md",
       "contains": "run `~/.claude/bin/work-store.sh record <n>` from the worktree"
+    },
+    {
+      "file": "rules/pr-body.md",
+      "contains": "`~/.claude/bin/work.sh \"<the ticket's full address>\" \"<its key>\"`"
     }
   ]
 }
