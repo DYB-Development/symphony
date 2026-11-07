@@ -34,8 +34,9 @@ take-next  Takes the next ready work item by hand for the repo the setting
            production reads it.
 item       Prints the work item as production reads it, with the address of
            its page, without claiming it.
-record     Records the taken issue in .work at the worktree root, with its
-           address and its repo and number as the label.
+record     Records the taken work in .work at the worktree root: a work item's
+           page address with its title as the label in a dyb_web repo, and an
+           issue's address with its repo and number as the label otherwise.
 branch-item
            Prints the work item a branch names, or nothing when the branch
            names none.
@@ -158,6 +159,13 @@ branch_item() {
 }
 
 record() {
+  if [ "$(store_name)" = dyb_web ]; then
+    local found
+    found=$(item "$1")
+    "$(dirname "$0")/work.sh" "$(printf '%s' "$found" | jq -r '.address')" "$(printf '%s' "$found" | jq -r '.title')"
+    return
+  fi
+
   local address
   address=$(gh issue view "$1" --json url --jq '.url')
   local repo=${address%/issues/*}
