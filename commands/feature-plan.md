@@ -4,7 +4,7 @@ description: Turn a large feature request into a reviewable plan — what is bui
 
 You are taking a feature request large enough that building it straight away
 would lose its end goal by the third issue. It becomes a plan first: a
-`type:plan` issue and the artifact that renders it, with the units of work
+`type:plan` issue, with the units of work
 written out and ready to be filed once I have read them.
 
 **Read `~/.claude/rules/feature-plan.md`** — the header, the ten sections, the
@@ -31,24 +31,21 @@ this session already believes.
    confirming a guess instead of checking one.
 
 2. **Spawn the Scribe** and wait. It reads the repo, writes the plan, files the
-   issue, publishes the artifact, and returns both URLs with the open decisions.
+   issue, and returns its URL with the open decisions.
 
-3. **Report back**: the artifact link first, then the issue, the unit count, and
-   the questions section 08 leaves open. Then stop — the plan is for me to read.
+3. **Report back**: the issue link, the unit count, and the questions section
+   08 leaves open. Then stop — the plan is for me to read.
 
    In a repo whose plans live in dyb_web, `~/.claude/bin/work-store.sh show`
    prints `dyb_web` first, and the Scribe returns the plan page's address in
-   place of the issue and the artifact. Report that address.
+   place of the issue. Report that address.
 
 4. **In a repo whose plans live in dyb_web**, I choose each decision and approve
    the plan on its dyb_web page, and approving makes a work item for each unit.
    File no breakdown and no task issues, and stop after step 3.
 
    **In any other repo, when I have read it and settled section 08**, edit the answers into the
-   issue body and republish the artifact in the same step, rendered with
-   `~/.claude/bin/render-plan.sh <owner/repo> <issue-number>`. Then file the
-
-   `type:breakdown` that slices the units into `type:task` issues. The units are
+   issue body. Then file the `type:breakdown` that slices the units into `type:task` issues. The units are
    already written as issue bodies, so the breakdown copies them rather than
    rewriting them — hand each to an `issue-scribe` with the unit's body inlined
    and its `Blocked by` wired to the issue numbers the earlier units got. List
@@ -68,7 +65,7 @@ this session already believes.
 - **One plan per request.** If what I asked for is really two features, say so
   and ask which one to plan.
 - **Do not summarise the plan back to me.** I am going to read it. Give me the
-  links, the unit count, and the open questions.
+  link, the unit count, and the open questions.
 
 Write to the rules in `~/.claude/rules/writing-style.md`: no metaphors, no
 stories, no filler, plain words, short.
