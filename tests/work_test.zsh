@@ -52,6 +52,13 @@ assert_equals '{"address":"https://github.com/acme/shop/issues/28","label":"shop
   "appends a second piece of work on its own line below the first"
 drop_repo
 
+new_repo
+"$WORK_SH" "https://github.com/acme/shop/issues/28" "shop#28" >/dev/null
+"$WORK_SH" "https://github.com/acme/shop/issues/28" "Export quotes" >/dev/null
+assert_equals '{"address":"https://github.com/acme/shop/issues/28","label":"shop#28"}' "$(cat .work 2>&1)" \
+  "records an address it already holds once, even under another label"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
