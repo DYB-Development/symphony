@@ -245,6 +245,11 @@ whose ticket has not been named yet. A ticket found later is recorded with
 updates the body, so the section is never edited by hand. A branch may carry
 more than one ticket, and one ticket may span several branches.
 
+Recording a ticket here does not add it to the branch's work record, the `.work`
+file at the worktree root that lists the work a session is for. A Jira ticket is
+added there by its full address and a label with
+`~/.claude/bin/work.sh "<the ticket's full address>" "<its key>"`.
+
 **Tokens Used** — what this branch has cost so far, one line each for input,
 output, cache read, cache write and the total. This section is **generated, not
 written**: `~/.claude/bin/usage.sh --render` prints it from the session

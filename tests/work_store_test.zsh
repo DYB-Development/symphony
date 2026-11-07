@@ -263,6 +263,22 @@ assert_equals $'No work is ready to take.\nexit 1' \
   "reports that no work is ready with production's message"
 
 echo ""
+echo "work-store.sh record:"
+
+RECORDED="$WORK/recorded"
+git init -q "$RECORDED"
+(cd "$RECORDED" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$WORK/no-settings" STUB_GH_ARGS="$WORK/gh-args" "$SCRIPT" record 30 >/dev/null 2>&1)
+assert_equals '{"address":"https://github.com/acme/shop/issues/30","label":"shop#30"}' "$(cat "$RECORDED/.work" 2>&1)" \
+  "records a GitHub issue's address and its repo and number as the label"
+
+rm -f "$RECORDED/.work"
+printf '{"store": "dyb_web", "repo": "acme/shop", "pipeline_id": 3}' > "$SETTINGS/recorded.json"
+(cd "$RECORDED" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$SETTINGS" SYMPHONY_DYB_WEB_FILE="$CONNECTION" STUB_GH_ARGS="$WORK/gh-args" \
+  STUB_BODY='{"answer": {"title": "Export quotes", "branch": "12-export-quotes"}}' "$SCRIPT" record 12 >/dev/null 2>&1)
+assert_equals '{"address":"https://dyb.example/console/pipelines/work_items/12","label":"Export quotes"}' "$(cat "$RECORDED/.work" 2>&1)" \
+  "records a dyb_web work item's page address and its title as the label"
+
+echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"
 [[ $FAIL -eq 0 ]]

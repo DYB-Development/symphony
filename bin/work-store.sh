@@ -9,6 +9,7 @@ usage: work-store.sh show|check
        work-store.sh take <work-item-id>
        work-store.sh take-next
        work-store.sh item <work-item-id>
+       work-store.sh record <issue-or-work-item-id>
        work-store.sh branch-item <branch>
        work-store.sh plan-progress <owner/repo> <task> <branch>
        work-store.sh name
@@ -33,6 +34,9 @@ take-next  Takes the next ready work item by hand for the repo the setting
            production reads it.
 item       Prints the work item as production reads it, with the address of
            its page, without claiming it.
+record     Records the taken work in .work at the worktree root: a work item's
+           page address with its title as the label in a dyb_web repo, and an
+           issue's address with its repo and number as the label otherwise.
 branch-item
            Prints the work item a branch names, or nothing when the branch
            names none.
@@ -154,6 +158,20 @@ branch_item() {
   printf '%s' "$found" | jq -c --arg branch "$1" 'select(.branch == $branch)'
 }
 
+record() {
+  if [ "$(store_name)" = dyb_web ]; then
+    local found
+    found=$(item "$1")
+    "$(dirname "$0")/work.sh" "$(printf '%s' "$found" | jq -r '.address')" "$(printf '%s' "$found" | jq -r '.title')"
+    return
+  fi
+
+  local address
+  address=$(gh issue view "$1" --json url --jq '.url')
+  local repo=${address%/issues/*}
+  "$(dirname "$0")/work.sh" "$address" "${repo##*/}#$1"
+}
+
 store_name() { setting | jq -r '.store'; }
 
 name() { [ "$(store_name)" = dyb_web ] && printf 'dyb_web\n' || printf 'GitHub\n'; }
@@ -212,6 +230,7 @@ case "${1:-}" in
   take) [ $# -eq 2 ] || usage; take "$2" ;;
   take-next) [ $# -eq 1 ] || usage; take_next ;;
   item) [ $# -eq 2 ] || usage; item "$2" ;;
+  record) [ $# -eq 2 ] || usage; record "$2" ;;
   branch-item) [ $# -eq 2 ] || usage; branch_item "$2" ;;
   plan-progress) [ $# -eq 4 ] || usage; plan_progress "$2" "$3" "$4" ;;
   ticket-criteria) [ $# -eq 3 ] || usage; ticket_criteria "$2" "$3" ;;

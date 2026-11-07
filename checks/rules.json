@@ -484,6 +484,34 @@
     {
       "file": "agents/review-scribe.md",
       "absent": "gh pr diff"
+    },
+    {
+      "file": "commands/next-task.md",
+      "contains": "run `~/.claude/bin/work-store.sh record <n>` from the worktree"
+    },
+    {
+      "file": "rules/pr-body.md",
+      "contains": "`~/.claude/bin/work.sh \"<the ticket's full address>\" \"<its key>\"`"
+    },
+    {
+      "file": "README.md",
+      "contains": "The rules keep four working-tree files that must never reach a commit"
+    },
+    {
+      "file": "README.md",
+      "contains": "| `.work` | The address and label of each piece of work the branch is for |"
+    },
+    {
+      "file": "rules/agent-worktrees.md",
+      "contains": "It is the same step that deletes `start_here.md`, `.decisions.md`, `.ticket`"
+    },
+    {
+      "file": "bin/work.sh",
+      "absent": "sesh"
+    },
+    {
+      "file": "bin/work.sh",
+      "absent": "conductor"
     }
   ]
 }
