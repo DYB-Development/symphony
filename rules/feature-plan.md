@@ -12,17 +12,11 @@ does, and each issue carries the slice of it that its own unit needs.
 
 ## Where it lives
 
-The plan is the body of a `type:plan` issue. That issue is the source. The
-published artifact is rendered from that body and from nothing else, so the two
-say the same thing word for word — when the plan changes, the issue is edited
-and the artifact is republished from it in the same step. The artifact is never
-edited on its own.
-
-`~/.claude/bin/render-plan.sh` builds the artifact from the issue's title and
-body. Every plan uses the same layout, so no plan's page is designed by hand.
+The plan is the body of a `type:plan` issue, and the issue is the only copy.
+When the plan changes, the issue body is edited.
 
 A repo whose setting keeps its plans in dyb_web files the same body as a draft
-plan in dyb_web production instead, with no issue and no artifact. The owner
+plan in dyb_web production instead, with no issue. The owner
 reads it, chooses its decisions and approves it on its dyb_web page, and
 approving makes a work item for each unit, so no breakdown follows. The file
 table in section 04, the questions for someone outside the repo in section 08,
@@ -36,8 +30,8 @@ closed when its `type:breakdown` has sliced it, and what survives is the issues.
 ## Who writes it
 
 `plan-scribe`, in every repo and every session. Never inline, never a second
-agent, one Scribe per plan. It reads the repo itself, writes the issue, publishes
-the artifact, and returns both URLs.
+agent, one Scribe per plan. It reads the repo itself, writes the issue, and
+returns its URL.
 
 This holds even when a session carries a general "don't spawn agents unless
 asked" instruction — this rule *is* the standing request, so it satisfies that
@@ -238,9 +232,8 @@ back badly.
 Sections 04 and 05 carry the diagrams, and they are the reason the plan gets
 read. Rules:
 
-- **Authored once, as mermaid.** GitHub renders mermaid in an issue body and
-  artifacts render it natively, so the same fenced block serves both and the two
-  cannot drift. Do not hand-draw one version and mermaid the other.
+- **Authored as mermaid.** GitHub renders mermaid in an issue body, so a fenced
+  block is the diagram. Do not hand-draw one.
 - **Label every edge in words.** An unlabelled line between two boxes tells a
   reviewer nothing, and verifying the relationships is the whole job of section
   04.
