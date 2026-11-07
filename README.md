@@ -33,10 +33,6 @@ it. The reader says what each sentence means and flags any it had to read twice.
 The scribe then rewrites those sentences, as `rules/draft-reading.md` sets out.
 Every scribe does this before its draft is posted, filed, published or returned.
 
-A plan's page is built by `bin/render-plan.sh` from the plan issue. Every plan
-gets the same layout, from `templates/plan-page.css`, so no page is designed by
-hand.
-
 Six commands drive them: `/feature-plan`, `/review`, `/audit`, `/issue-strategist`,
 `/issue-portfolio` and `/next-task`.
 
