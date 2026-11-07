@@ -508,6 +508,10 @@
     {
       "file": "bin/work.sh",
       "absent": "sesh"
+    },
+    {
+      "file": "bin/work.sh",
+      "absent": "conductor"
     }
   ]
 }
