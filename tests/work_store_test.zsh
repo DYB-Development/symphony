@@ -263,6 +263,15 @@ assert_equals $'No work is ready to take.\nexit 1' \
   "reports that no work is ready with production's message"
 
 echo ""
+echo "work-store.sh record:"
+
+RECORDED="$WORK/recorded"
+git init -q "$RECORDED"
+(cd "$RECORDED" && PATH="$STUB_BIN:$PATH" SYMPHONY_WORK_DIR="$WORK/no-settings" STUB_GH_ARGS="$WORK/gh-args" "$SCRIPT" record 30 >/dev/null 2>&1)
+assert_equals '{"address":"https://github.com/acme/shop/issues/30","label":"shop#30"}' "$(cat "$RECORDED/.work" 2>&1)" \
+  "records a GitHub issue's address and its repo and number as the label"
+
+echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"
 [[ $FAIL -eq 0 ]]
