@@ -43,15 +43,11 @@
     },
     {
       "file": "agents/plan-scribe.md",
-      "contains": "~/.claude/bin/owner-turn.sh \"plan\" \"Review plan #<n>\" \"<the artifact URL>\""
+      "contains": "~/.claude/bin/owner-turn.sh \"plan\" \"Review plan #<n>\" \"<the issue URL>\""
     },
     {
       "file": "commands/feature-plan.md",
       "contains": "~/.claude/bin/plan-link.sh <owner/repo> <plan-issue> <task-issue>"
-    },
-    {
-      "file": "agents/plan-scribe.md",
-      "contains": "~/.claude/bin/render-plan.sh"
     },
     {
       "file": "agents/plan-scribe.md",
@@ -83,15 +79,7 @@
     },
     {
       "file": "rules/feature-plan.md",
-      "contains": "~/.claude/bin/render-plan.sh"
-    },
-    {
-      "file": "rules/feature-plan.md",
       "contains": "**Patterns** — answered in section 04"
-    },
-    {
-      "file": "commands/feature-plan.md",
-      "contains": "~/.claude/bin/render-plan.sh"
     },
     {
       "file": "agents/review-scribe.md",
@@ -203,11 +191,7 @@
     },
     {
       "file": "agents/plan-scribe.md",
-      "contains": "open \"<the artifact URL>\""
-    },
-    {
-      "file": "agents/plan-scribe.md",
-      "contains": "Do this step again after every republish, so the page opens once for each publish."
+      "contains": "open \"<the issue URL>\""
     },
     {
       "file": "rules/develop_process_rules.md",
