@@ -46,6 +46,9 @@ assert_equals "yes" "$(asked)" "marks a prompt opening with a question word and 
 reset_marks; prompt "are you ok?"; prompt "go ahead with the plan"
 assert_equals "no" "$(asked)" "removes the mark when the owner's next prompt is an instruction"
 
+reset_marks; CLAUDE_CODE_SESSION_ATTENDED=0 prompt "Could you implement from this alone?"
+assert_equals "no" "$(asked)" "does not mark a question in a run no owner attends"
+
 reset_marks; prompt "are you ok?"; prompt "<task-notification>
 <task-id>b1</task-id>
 <status>completed</status>
