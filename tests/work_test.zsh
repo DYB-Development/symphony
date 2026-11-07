@@ -59,6 +59,12 @@ assert_equals '{"address":"https://github.com/acme/shop/issues/28","label":"shop
   "records an address it already holds once, even under another label"
 drop_repo
 
+new_repo
+"$WORK_SH" "https://dyb.example/console/pipelines/work_items/12" 'Export "quotes" to C:\exports' >/dev/null
+assert_equals 'Export "quotes" to C:\exports' "$(jq -r .label .work 2>&1)" \
+  "keeps a label holding quotes and a backslash readable as JSON"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
