@@ -44,6 +44,14 @@ assert_equals '{"address":"https://github.com/acme/shop/issues/28","label":"shop
   "records the address and label it is given as one JSON object"
 drop_repo
 
+new_repo
+"$WORK_SH" "https://github.com/acme/shop/issues/28" "shop#28" >/dev/null
+"$WORK_SH" "https://acme.atlassian.net/browse/ACME-1234" "ACME-1234" >/dev/null
+assert_equals '{"address":"https://github.com/acme/shop/issues/28","label":"shop#28"}
+{"address":"https://acme.atlassian.net/browse/ACME-1234","label":"ACME-1234"}' "$(cat .work 2>&1)" \
+  "appends a second piece of work on its own line below the first"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
