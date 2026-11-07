@@ -504,6 +504,10 @@
     {
       "file": "rules/agent-worktrees.md",
       "contains": "It is the same step that deletes `start_here.md`, `.decisions.md`, `.ticket`"
+    },
+    {
+      "file": "bin/work.sh",
+      "absent": "sesh"
     }
   ]
 }
