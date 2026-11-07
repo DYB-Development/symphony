@@ -496,6 +496,10 @@
     {
       "file": "README.md",
       "contains": "The rules keep four working-tree files that must never reach a commit"
+    },
+    {
+      "file": "README.md",
+      "contains": "| `.work` | The address and label of each piece of work the branch is for |"
     }
   ]
 }
