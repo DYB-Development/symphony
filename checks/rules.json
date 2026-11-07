@@ -500,6 +500,10 @@
     {
       "file": "README.md",
       "contains": "| `.work` | The address and label of each piece of work the branch is for |"
+    },
+    {
+      "file": "rules/agent-worktrees.md",
+      "contains": "It is the same step that deletes `start_here.md`, `.decisions.md`, `.ticket`"
     }
   ]
 }

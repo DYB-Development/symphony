@@ -43,8 +43,8 @@ kinds.
 ## When the branch is merged
 
 **The moment its pull request is confirmed merged, the worktree is cleaned up.**
-It is the same step that deletes `start_here.md`, `.decisions.md` and `.ticket`,
-and it is required, not something to ask about:
+It is the same step that deletes `start_here.md`, `.decisions.md`, `.ticket`
+and `.work`, and it is required, not something to ask about:
 
 ```
 ~/.claude/bin/worktree-done.sh ~/projects/app-feature-quotes
