@@ -1,6 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+usage() {
+  cat >&2 <<'USAGE'
+usage: work.sh "<address>" "<label>"
+
+Appends one piece of work to .work at the worktree root as a JSON line holding
+its full address and a short label, creating the file if absent and recording
+an address it already holds once. Taking an issue or a work item records it, and
+a Jira ticket is recorded by calling this with its address.
+The file is gitignored and is removed with the worktree when the branch's PR
+merges. See ~/.claude/rules/agent-worktrees.md.
+USAGE
+  exit 64
+}
+
+[ $# -eq 2 ] || usage
+
 address=$1
 label=$2
 

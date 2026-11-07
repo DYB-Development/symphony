@@ -74,6 +74,11 @@ assert_equals ".work" "$(ls .work deep/nested/.work 2>/dev/null)" \
   "writes at the root of the worktree when run from a subdirectory"
 drop_repo
 
+new_repo
+"$WORK_SH" "https://github.com/acme/shop/issues/28" >/dev/null 2>&1
+assert_equals "64" "$?" "exits with a usage code when given no label"
+drop_repo
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
