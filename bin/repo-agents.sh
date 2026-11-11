@@ -25,7 +25,7 @@ blocked_names() {
 }
 
 defined_in_repo() {
-  [ -f "$1/.claude/agents/$2.md" ]
+  [ -f "$1/.claude/agents/$2.md" ] || [ -f "$(main_clone "$1")/.claude/agents/$2.md" ]
 }
 
 is_blocked() {

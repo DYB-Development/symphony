@@ -55,6 +55,12 @@ assert_equals "deny" "$(decision shop-reviewer)" \
 assert_equals "" "$(decision general-purpose)" \
   "lets through an agent the repo does not define when the block list holds a star"
 
+git -C "$REPO" worktree add -q -b feature "$STATE/shop-feature"
+printf -- '---\nname: shop-installer\n---\n' > "$REPO/.claude/agents/shop-installer.md"
+
+assert_equals "deny" "$(decision shop-installer "$STATE/shop-feature")" \
+  "refuses from a worktree an agent defined only in the repo's main clone"
+
 rm -rf "$STATE"
 
 echo ""
