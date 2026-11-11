@@ -155,6 +155,7 @@ settings that are not its own alone:
 | `PreToolUse` | `one-question-gate.sh check` | Refuses a question prompt that asks more than one question |
 | `PreToolUse` | `answer-gate.sh check` | Refuses a question an approved repo answer or a default already settles, quoting that answer, and lets it through with a warning when the search fails |
 | `PreToolUse` | `description-gate.sh check` | Refuses a shell command that carries no description of what it does |
+| `PreToolUse` | `repo-agents.sh check` | Refuses to spawn an agent your block list for the repo names, or any agent the repo defines itself when the list holds `*` |
 | `PreToolUse` | `agent-model.sh set` | Gives a spawned agent the model your agent models file names for it |
 | `PreToolUse` | `review-block.sh start` | Marks the session as reviewing a pull request when it spawns the review scribe, and a mark more than a day old is ignored |
 | `PreToolUse` | `owner-turn.sh record` | Records a question prompt, and each item an agent marks with `owner-turn.sh`, as something the owner is waited on for |
@@ -342,6 +343,7 @@ overwrites them.
 |---|---|
 | `SYMPHONY_OVERLAY_DIR` | Where your own rules files are read from, instead of `~/.config/symphony/rules` |
 | `SYMPHONY_EXPERTS_DIR` | Where the path patterns each gem's expert owns are read from, instead of `~/.config/symphony/experts` |
+| `SYMPHONY_AGENTS_DIR` | Where each repo's list of blocked agents is read from, instead of `~/.config/symphony/agents` |
 | `SYMPHONY_AGENT_MODELS_FILE` | Where the model each agent runs on is read from, instead of `~/.config/symphony/agent-models.json` |
 | `SYMPHONY_WORK_DIR` | Where each repo's work store setting is read from, instead of `~/.config/symphony/work` |
 | `SYMPHONY_DYB_WEB_FILE` | Where the dyb_web production address and token are read from, instead of `~/.config/symphony/dyb_web` |
@@ -480,6 +482,25 @@ its page in production, and does not claim it. `pr-scribe` reads the work item
 this way when it is handed one, writes its criteria as the body's ACs Covered,
 and ends the body with `Work item: <address>` in place of `Closes #<n>`. A work
 item production cannot find stops the scribe with production's message.
+
+### Blocking a repo's own agents
+
+A repo can define its own agents in its `.claude/agents` folder. To stop a
+session from spawning some of them, put a file at
+`~/.config/symphony/agents/<repo>.json`, where `<repo>` is the folder name of
+the repo's main clone:
+
+```json
+{
+  "block": ["shop-reviewer", "shop-planner"]
+}
+```
+
+An agent named in the list is refused, and the session is told to do the work
+itself or hand it to an agent that is not blocked. Put `"*"` in the list to
+block every agent the repo defines in `.claude/agents`, in the worktree or in
+the main clone. Agents installed elsewhere, such as the scribes here, stay
+allowed. The file lives outside every repo, so a repo cannot change it.
 
 ### Choosing each agent's model
 
