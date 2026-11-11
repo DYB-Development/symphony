@@ -45,6 +45,16 @@ printf '{"block": ["shop-helper"]}' > "$SYMPHONY_AGENTS_DIR/shop.json"
 assert_equals "deny" "$(decision shop-helper)" \
   "refuses an agent the repo's block list names"
 
+printf '{"block": ["*"]}' > "$SYMPHONY_AGENTS_DIR/shop.json"
+mkdir -p "$REPO/.claude/agents"
+printf -- '---\nname: shop-reviewer\n---\n' > "$REPO/.claude/agents/shop-reviewer.md"
+
+assert_equals "deny" "$(decision shop-reviewer)" \
+  "refuses every agent the repo defines when the block list holds a star"
+
+assert_equals "" "$(decision general-purpose)" \
+  "lets through an agent the repo does not define when the block list holds a star"
+
 rm -rf "$STATE"
 
 echo ""

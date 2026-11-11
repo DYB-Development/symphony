@@ -24,23 +24,33 @@ blocked_names() {
   jq -r '.block // [] | .[]' "$file" 2>/dev/null || true
 }
 
+defined_in_repo() {
+  [ -f "$1/.claude/agents/$2.md" ]
+}
+
+is_blocked() {
+  local name
+  while IFS= read -r name; do
+    [ "$name" = "$2" ] && return 0
+    [ "$name" = "*" ] && defined_in_repo "$1" "$2" && return 0
+  done < <(blocked_names "$1")
+  return 1
+}
+
 refuse() {
   jq -nc '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $text}}' \
     --arg text "The owner has blocked the $1 agent in this repo. Do this work in this session, or hand it to an agent that is not blocked."
 }
 
 check() {
-  local payload type cwd name
+  local payload type cwd root
   payload=$(cat)
   type=$(jq -r '.tool_input.subagent_type // empty' <<< "$payload")
   cwd=$(jq -r '.cwd // empty' <<< "$payload")
   [ -n "$type" ] && [ -d "$cwd" ] || return 0
-  git -C "$cwd" rev-parse --git-dir >/dev/null 2>&1 || return 0
-  while IFS= read -r name; do
-    [ "$name" = "$type" ] || continue
-    refuse "$type"
-    return 0
-  done < <(blocked_names "$cwd")
+  root=$(git -C "$cwd" rev-parse --show-toplevel 2>/dev/null) || return 0
+  is_blocked "$root" "$type" || return 0
+  refuse "$type"
 }
 
 case "${1:-}" in
