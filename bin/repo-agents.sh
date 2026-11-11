@@ -19,7 +19,8 @@ main_clone() {
 }
 
 blocked_names() {
-  local file="$agents_dir/$(basename "$(main_clone "$1")").json"
+  local file
+  file="$agents_dir/$(basename "$(main_clone "$1")").json"
   [ -r "$file" ] || return 0
   jq -r '.block // [] | .[]' "$file" 2>/dev/null || true
 }
