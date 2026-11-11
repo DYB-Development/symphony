@@ -61,6 +61,11 @@ printf -- '---\nname: shop-installer\n---\n' > "$REPO/.claude/agents/shop-instal
 assert_equals "deny" "$(decision shop-installer "$STATE/shop-feature")" \
   "refuses from a worktree an agent defined only in the repo's main clone"
 
+assert_equals "Agent" \
+  "$(jq -r '.hooks.PreToolUse[] | select(any(.hooks[]; .command | endswith("/bin/repo-agents.sh check"))) | .matcher' \
+    "$SCRIPT_DIR/../hooks/hooks.json")" \
+  "the hooks send every agent spawn to the gate"
+
 rm -rf "$STATE"
 
 echo ""
