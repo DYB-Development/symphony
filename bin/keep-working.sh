@@ -42,7 +42,7 @@ commits_ahead() {
 }
 
 hook=$(cat)
-mark="$("$(dirname "$0")/owner-question.sh" path "$(jq -r '.session_id // empty' <<< "$hook")")"
+mark="${KEEP_WORKING_DIR:-$HOME/.claude/keep-working}/$(jq -r '.session_id // empty' <<< "$hook" | shasum | cut -c1-40)"
 
 github_failed() {
   echo "keep-working.sh: GitHub could not be read, so the session stopped unchecked" >&2
