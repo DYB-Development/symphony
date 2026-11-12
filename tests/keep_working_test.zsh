@@ -125,7 +125,7 @@ assert_contains "unticked acceptance criteria" "$(reason)" "refuses a stop while
 new_repo
 touch "$ROOT/shop-feature/new.txt"
 jq -nc '{session_id: "s1", prompt: "are you ok?"}' | "$GATE" record
-assert_equals "" "$(stopping)" "lets a session stop after the owner asked a question"
+assert_contains "uncommitted changes" "$(reason)" "keeps a session working after the owner asked a question"
 
 new_repo
 touch "$ROOT/shop-feature/new.txt"
