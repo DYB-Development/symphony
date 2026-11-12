@@ -148,6 +148,7 @@ settings that are not its own alone:
 | `PostToolUseFailure` | `answer-capture.sh record` | Records a question window the owner rejected as rejected in that repo's review list |
 | `PostToolUseFailure` | `agent-progress.sh record` | Logs each step a subagent marked in a command that then failed, from that command's output |
 | `PreToolUse` | `main-clone-gate.sh check` | Refuses an edit or a branch-changing git command aimed at a repo's main clone, which is kept for its owner |
+| `PreToolUse` | `full-suite-gate.sh check` | Refuses a subagent's run of a project's whole test suite, and lets through one test file, one test, and every run the main session makes |
 | `PreToolUse` | `expert-handoff.sh check` | Refuses an edit to a file an installed expert owns, by your experts files, unless that gem's own develop or install agent makes it, and names the agent to hand the work to |
 | `PreToolUse` | `decision-gate.sh check` | Refuses a commit while that choice is still unrecorded |
 | `PreToolUse` | `review-block.sh check` | Refuses, while the session is reviewing a pull request, an edit outside its temporary folders and the review draft, a git commit, push, merge, rebase or reset, and a run of the repo's tests |

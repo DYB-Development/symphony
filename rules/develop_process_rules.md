@@ -68,6 +68,14 @@ into a single test or a single commit.
 Run only the test file you are working in during a cycle. Run the whole suite
 once, before the branch merges, never after each commit.
 
+**A subagent runs only the test file of its current cycle**, at steps 2 and 4.
+It never runs the whole suite, and `full-suite-gate.sh` refuses it when it
+tries.
+
+**The main session runs the whole suite before it creates the pull request.**
+It collects every failing test from that run and fixes them all. It runs the
+suite again until nothing fails, and only then creates the pull request.
+
 Write a test only for behavior that is added or changed. Code that is moved or
 refactored with its behavior unchanged gets no new test, since the tests that
 already exist are what show nothing changed.
