@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+set -f
 
 usage() {
   cat >&2 <<'USAGE'
@@ -15,8 +16,28 @@ USAGE
 
 reason="A subagent runs only the test file it is working in, never the whole suite. Run that one file, or one test in it, and leave the full suite to the main session, which runs it before creating the pull request."
 
-runs_full_suite() {
+words_of() {
+  local word words=()
+  for word in $1; do
+    case "$word" in
+      [A-Za-z_]*=*) [ ${#words[@]} -eq 0 ] && continue ;;
+      *'>'*|*'<'*) continue ;;
+    esac
+    words+=("$word")
+  done
+  printf '%s\n' "${words[*]:-}"
+}
+
+is_full_suite() {
   [ "$1" = "bin/rails test" ]
+}
+
+runs_full_suite() {
+  local segment
+  while IFS= read -r segment; do
+    is_full_suite "$(words_of "$segment")" && return 0
+  done < <(printf '%s\n' "$1" | sed -E 's/[0-9]*>&[0-9]+//g; s/(&&|\|\||[;|&])/\n/g')
+  return 1
 }
 
 check() {

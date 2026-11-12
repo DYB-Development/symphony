@@ -41,6 +41,9 @@ assert_equals "" "$(from_main_session 'bin/rails test')" \
 assert_equals "deny" "$(from_agent 'bin/rails test')" \
   "refuses a subagent's run of the whole Rails suite"
 
+assert_equals "deny" "$(from_agent 'cd ~/projects/shop-feature && PARALLEL_WORKERS=2 bin/rails test 2>&1 | tail -15')" \
+  "refuses the whole suite after a cd, a setting and with its output piped"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
