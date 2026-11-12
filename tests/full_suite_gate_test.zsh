@@ -74,6 +74,11 @@ assert_equals "" "$(from_agent 'bin/rails test test/models/quote_test.rb:42')" \
 assert_equals "" "$(from_agent 'bin/rails test -n test_converts_a_quote')" \
   "lets a subagent run one test by its name"
 
+assert_equals "Bash" \
+  "$(jq -r '.hooks.PreToolUse[] | select(any(.hooks[]; .command | endswith("/bin/full-suite-gate.sh check"))) | .matcher' \
+    "$SCRIPT_DIR/../hooks/hooks.json")" \
+  "the hooks send every shell command to the gate"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

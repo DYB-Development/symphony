@@ -40,6 +40,7 @@ only_flags() {
 }
 
 is_full_suite() {
+  # shellcheck disable=SC2086
   set -- $1
   [ "${1:-}" = bundle ] && [ "${2:-}" = exec ] && shift 2
   case "${1:-}" in
