@@ -44,6 +44,13 @@ assert_equals "deny" "$(from_agent 'bin/rails test')" \
 assert_equals "deny" "$(from_agent 'cd ~/projects/shop-feature && PARALLEL_WORKERS=2 bin/rails test 2>&1 | tail -15')" \
   "refuses the whole suite after a cd, a setting and with its output piped"
 
+let_through=()
+for command in 'bin/rails test:all' 'bin/rails test:system' 'bin/ci' 'bundle exec rails test' 'bin/rails test --fail-fast'; do
+  [[ "$(from_agent "$command")" == deny ]] || let_through+=("$command")
+done
+assert_equals "" "${(j:, :)let_through}" \
+  "refuses every other way of running the whole Rails suite"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

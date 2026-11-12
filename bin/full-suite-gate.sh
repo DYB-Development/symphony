@@ -28,8 +28,29 @@ words_of() {
   printf '%s\n' "${words[*]:-}"
 }
 
+only_flags() {
+  local word
+  for word in "$@"; do
+    case "$word" in
+      -n|--name|-n=*|--name=*) return 1 ;;
+      -*) ;;
+      *) return 1 ;;
+    esac
+  done
+}
+
 is_full_suite() {
-  [ "$1" = "bin/rails test" ]
+  set -- $1
+  [ "${1:-}" = bundle ] && [ "${2:-}" = exec ] && shift 2
+  case "${1:-}" in
+    bin/ci) return 0 ;;
+    bin/rails|rails) ;;
+    *) return 1 ;;
+  esac
+  case "${2:-}" in
+    test|test:all|test:system) shift 2; only_flags "$@" ;;
+    *) return 1 ;;
+  esac
 }
 
 runs_full_suite() {
