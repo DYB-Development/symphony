@@ -51,6 +51,15 @@ done
 assert_equals "" "${(j:, :)let_through}" \
   "refuses every other way of running the whole Rails suite"
 
+assert_equals "" "$(from_agent 'cd ~/projects/shop-feature && bin/rails test test/models/quote_test.rb 2>&1 | tail -5')" \
+  "lets a subagent run one test file"
+
+assert_equals "" "$(from_agent 'bin/rails test test/models/quote_test.rb:42')" \
+  "lets a subagent run one test by its line"
+
+assert_equals "" "$(from_agent 'bin/rails test -n test_converts_a_quote')" \
+  "lets a subagent run one test by its name"
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
