@@ -27,7 +27,16 @@ from_agent() {
     | "$GATE" check | jq -r '.hookSpecificOutput.permissionDecision // empty'
 }
 
+from_main_session() {
+  jq -nc --arg command "$1" \
+    '{hook_event_name: "PreToolUse", session_id: "s1", tool_name: "Bash", tool_input: {command: $command, description: "Run tests"}}' \
+    | "$GATE" check | jq -r '.hookSpecificOutput.permissionDecision // empty'
+}
+
 echo "full-suite-gate.sh:"
+
+assert_equals "" "$(from_main_session 'bin/rails test')" \
+  "lets the main session run the whole suite"
 
 assert_equals "deny" "$(from_agent 'bin/rails test')" \
   "refuses a subagent's run of the whole Rails suite"

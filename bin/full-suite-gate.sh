@@ -22,6 +22,7 @@ runs_full_suite() {
 check() {
   local payload command
   payload=$(cat)
+  [ -n "$(jq -r '.agent_id // empty' <<< "$payload")" ] || return 0
   command=$(jq -r '.tool_input.command // empty' <<< "$payload")
   runs_full_suite "$command" || return 0
   jq -nc --arg text "$reason" '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $text}}'
