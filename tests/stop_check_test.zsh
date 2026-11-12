@@ -175,15 +175,6 @@ assert_equals '${CLAUDE_PLUGIN_ROOT}/bin/stop-check.sh check' \
   "$(jq -r '.hooks.Stop[].hooks[].command | select(test("stop-check"))' "$SCRIPT_DIR/../hooks/hooks.json")" \
   "registers the plain-text question check on Stop"
 
-new_transcript
-says "Do you want the short version?"
-OWNER_QUESTION_DIR="$WORK/marks"
-export OWNER_QUESTION_DIR
-jq -nc '{session_id: "s1", prompt: "what happened?"}' | "$CHECK:h/owner-question.sh" record
-assert_equals "" "$(stop)" "lets a turn stop when it answers an owner question"
-unset OWNER_QUESTION_DIR
-drop_transcript
-
 echo ""
 echo "$PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]]

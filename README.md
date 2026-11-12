@@ -163,9 +163,6 @@ settings that are not its own alone:
 | `UserPromptSubmit` | `owner-turn.sh record` | Records when the owner last prompted, which ends that session's flag in the status line |
 | `Stop` | `owner-turn.sh stop` | Shows the session's flags as the last lines of the turn when the owner is waited on |
 | `Stop` | `stop-check.sh check` | Refuses a turn that ends by asking the owner something in plain text with no question window, once per turn, and lets the turn stop with a warning when the transcript cannot be read |
-| `UserPromptSubmit` | `owner-question.sh record` | Marks the session when the owner's prompt is a question or tells it to stop, and removes the mark on an instruction, leaving it alone for a machine-sent message |
-| `PreToolUse` | `owner-question.sh check` | While the session is marked, refuses anything that is not a read, and once the turn has ended refuses reads too, so a background task finishing starts nothing |
-| `Stop` | `owner-question.sh stop` | Records that the turn answering the owner's question has ended |
 | `Stop` | `keep-working.sh check` | After an instruction, refuses a stop while the session's branch has uncommitted changes, unpushed commits, no pull request or unticked criteria, and names the plan's next issue once the pull request has merged |
 | `PreToolUse` | `working-line.sh record` | Keeps the description of the session's most recent tool call as its working line |
 | `Stop` | `working-line.sh record` | Clears the working line when the session ends its turn |

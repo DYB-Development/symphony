@@ -3,7 +3,6 @@ setopt no_unset
 
 SCRIPT_DIR="${0:A:h}"
 CHECK="$SCRIPT_DIR/../bin/keep-working.sh"
-GATE="$SCRIPT_DIR/../bin/owner-question.sh"
 
 PASS=0
 FAIL=0
@@ -35,7 +34,7 @@ assert_contains() {
 
 ROOT="${$(mktemp -d "${TMPDIR:-/tmp}/keep_working_test.XXXXXX"):A}"
 trap 'rm -rf "$ROOT"' EXIT
-export OWNER_QUESTION_DIR="$ROOT/marks"
+export KEEP_WORKING_DIR="$ROOT/marks"
 export CLAUDE_CONFIG_DIR="$ROOT/config"
 export GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t
 
@@ -54,7 +53,7 @@ export PATH="$ROOT/stubs:$PATH"
 export GH_DATA="$ROOT/gh"
 
 new_repo() {
-  rm -rf "$ROOT/origin.git" "$ROOT/shop" "$ROOT/shop-feature" "$OWNER_QUESTION_DIR" "$GH_DATA" "$CLAUDE_CONFIG_DIR/session-worktrees.tsv"
+  rm -rf "$ROOT/origin.git" "$ROOT/shop" "$ROOT/shop-feature" "$KEEP_WORKING_DIR" "$GH_DATA" "$CLAUDE_CONFIG_DIR/session-worktrees.tsv"
   mkdir -p "$GH_DATA"
   echo '[]' > "$GH_DATA/prs.json"
   git init -q --bare -b main "$ROOT/origin.git"
@@ -124,23 +123,12 @@ assert_contains "unticked acceptance criteria" "$(reason)" "refuses a stop while
 
 new_repo
 touch "$ROOT/shop-feature/new.txt"
-jq -nc '{session_id: "s1", prompt: "are you ok?"}' | "$GATE" record
-assert_equals "" "$(stopping)" "lets a session stop after the owner asked a question"
-
-new_repo
-touch "$ROOT/shop-feature/new.txt"
 assert_equals "" "$(stopping '[{"id":"b1","type":"shell","status":"running"}]')" "lets a session stop while a background task is running"
 
 new_repo
 commit_work
 stopping >/dev/null; stopping >/dev/null; stopping >/dev/null
 assert_equals "" "$(reason)" "lets a session stop after three refusals with nothing changed"
-
-new_repo
-commit_work
-stopping >/dev/null; stopping >/dev/null; stopping >/dev/null
-jq -nc '{session_id: "s1", prompt: "keep going"}' | "$GATE" record
-assert_contains "unpushed commits" "$(reason)" "counts refusals again after the owner's next instruction"
 
 new_repo
 commit_work

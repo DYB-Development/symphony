@@ -42,7 +42,7 @@ commits_ahead() {
 }
 
 hook=$(cat)
-mark="$("$(dirname "$0")/owner-question.sh" path "$(jq -r '.session_id // empty' <<< "$hook")")"
+mark="${KEEP_WORKING_DIR:-$HOME/.claude/keep-working}/$(jq -r '.session_id // empty' <<< "$hook" | shasum | cut -c1-40)"
 
 github_failed() {
   echo "keep-working.sh: GitHub could not be read, so the session stopped unchecked" >&2
@@ -94,8 +94,6 @@ next_in_plan() {
     "Stopped before starting issue #$next, the next in this plan."
 }
 
-session=$(jq -r '.session_id // empty' <<< "$hook")
-"$(dirname "$0")/owner-question.sh" asked "$session" && exit 0
 [ "$(jq '.background_tasks // [] | map(select(.status == "running")) | length' <<< "$hook")" -eq 0 ] || exit 0
 transcript=$(jq -r '.transcript_path // empty' <<< "$hook")
 worktree=$(session_worktree "$transcript")
