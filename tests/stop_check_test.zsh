@@ -180,7 +180,7 @@ says "Do you want the short version?"
 OWNER_QUESTION_DIR="$WORK/marks"
 export OWNER_QUESTION_DIR
 jq -nc '{session_id: "s1", prompt: "what happened?"}' | "$CHECK:h/owner-question.sh" record
-assert_equals "" "$(stop)" "lets a turn stop when it answers an owner question"
+assert_equals "$BLOCK" "$(stop)" "refuses a plain-text question even in a turn that answers an owner question"
 unset OWNER_QUESTION_DIR
 drop_transcript
 
