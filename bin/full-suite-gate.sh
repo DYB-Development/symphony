@@ -33,7 +33,7 @@ only_flags() {
   for word in "$@"; do
     case "$word" in
       -n|--name|-n=*|--name=*) return 1 ;;
-      -*) ;;
+      -*|[0-9]*) ;;
       *) return 1 ;;
     esac
   done
@@ -44,11 +44,19 @@ is_full_suite() {
   [ "${1:-}" = bundle ] && [ "${2:-}" = exec ] && shift 2
   case "${1:-}" in
     bin/ci) return 0 ;;
-    bin/rails|rails) ;;
-    *) return 1 ;;
-  esac
-  case "${2:-}" in
-    test|test:all|test:system) shift 2; only_flags "$@" ;;
+    bin/rails|rails)
+      case "${2:-}" in test|test:all|test:system) shift 2; only_flags "$@" ;; *) return 1 ;; esac ;;
+    rake)
+      shift
+      case "${1:-}" in test|spec|default) shift ;; -*|'') ;; *) return 1 ;; esac
+      only_flags "$@" ;;
+    rspec|*/run_tests.sh|run_tests.sh) shift; only_flags "$@" ;;
+    bun|npm|yarn|pnpm)
+      case "${2:-} ${3:-}" in
+        'test '*) shift 2; only_flags "$@" ;;
+        'run test'|'run test:'*) shift 3; only_flags "$@" ;;
+        *) return 1 ;;
+      esac ;;
     *) return 1 ;;
   esac
 }

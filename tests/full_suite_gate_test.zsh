@@ -51,6 +51,20 @@ done
 assert_equals "" "${(j:, :)let_through}" \
   "refuses every other way of running the whole Rails suite"
 
+let_through=()
+for command in 'bundle exec rake' 'bundle exec rake test' 'rake test' 'bundle exec rspec' 'bun test' 'bun run test' 'bun run test:e2e' 'npm test' 'yarn test' './run_tests.sh' 'run_tests.sh --seed 4'; do
+  [[ "$(from_agent "$command")" == deny ]] || let_through+=("$command")
+done
+assert_equals "" "${(j:, :)let_through}" \
+  "refuses the whole suite of a gem, a Bun or Node app and this repo"
+
+allowed=()
+for command in 'bundle exec rake test TEST=test/quote_test.rb' 'bundle exec rspec spec/models/quote_spec.rb' 'bun test apps/api/quote.test.ts' './run_tests.sh tests/keep_working_test.zsh'; do
+  [[ -z "$(from_agent "$command")" ]] || allowed+=("$command")
+done
+assert_equals "" "${(j:, :)allowed}" \
+  "lets a subagent run one file with any of those runners"
+
 assert_equals "" "$(from_agent 'cd ~/projects/shop-feature && bin/rails test test/models/quote_test.rb 2>&1 | tail -5')" \
   "lets a subagent run one test file"
 
