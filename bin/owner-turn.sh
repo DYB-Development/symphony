@@ -72,6 +72,7 @@ flags() {
   [ ${#files[@]} -gt 0 ] || return 0
   local last_prompt=0
   [ -f "$record_dir/prompts/$session" ] && last_prompt=$(cat "$record_dir/prompts/$session")
+  [[ "$last_prompt" =~ ^[0-9]+$ ]] || last_prompt=0
   jq -sr --arg session "$session" --argjson after "$last_prompt" '
     map(select(.session == $session and .arrived > $after))
     | sort_by(.arrived)[]
