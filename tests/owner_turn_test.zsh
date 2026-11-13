@@ -161,6 +161,16 @@ assert_equals "$("$TURN" flags s1)" "$(stop_turn s1 | jq -r .systemMessage)" \
   "words every kind of flag the same at the end of a turn as on the status line"
 drop_record
 
+new_record
+record_bash s1 '~/.claude/bin/owner-turn.sh "question" "Which road?"'
+mkdir -p "$OWNER_TURN_DIR/prompts"
+: > "$OWNER_TURN_DIR/prompts/s1"
+output=$(stop_turn s1 2>&1)
+code=$?
+assert_equals '0 {"systemMessage":"▶ question · Which road?"}' "$code $output" \
+  "shows the flag with no error when the session's prompt record is empty"
+drop_record
+
 echo ""
 printf '%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
