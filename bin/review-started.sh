@@ -17,6 +17,7 @@ USAGE
 
 repo=$1 pr=$2
 
-head=$(gh pr view "$pr" --repo "$repo" --json headRefOid --jq .headRefOid)
+head=$(gh pr view "$pr" --repo "$repo" --json headRefOid --jq .headRefOid 2>/dev/null) ||
+  { echo "review-started.sh: the head commit of $repo#$pr could not be read, so nothing was posted" >&2; exit 70; }
 
 gh pr comment "$pr" --repo "$repo" --body "Review started against ${head:0:7}."

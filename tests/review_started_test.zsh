@@ -63,6 +63,13 @@ assert_equals "Review started against a1b2c3d." "$(cat "$WORK/posted" 2>/dev/nul
   "posts one comment naming the head commit the review reads"
 drop_gh
 
+stub_gh
+touch "$WORK/unreadable"
+assert_equals "review-started.sh: the head commit of acme/widget#7 could not be read, so nothing was posted" \
+  "$(PATH="$WORK/bin:$PATH" "$STARTED" acme/widget 7 2>&1 >/dev/null)" \
+  "says nothing was posted when the head commit cannot be read"
+drop_gh
+
 rm -rf "$SHARED_STUBS"
 
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
