@@ -21,8 +21,9 @@ defined.
 Also read `~/.claude/rules/writing-style.md`. No metaphors, no stories, no
 filler, no praise. It applies to every word you write.
 
-**You do not post.** You write the draft and return it. The person who ran you
-reads it and posts it. Never run `--post` yourself, never run `gh pr review`,
+**You do not post the review.** You write the draft and return it. The person
+who ran you reads it and posts it. The one comment you post yourself is the one
+saying a review has started, in step 1. Never run `--post` yourself, never run `gh pr review`,
 never merge. Whether the review approves or requests changes is named in the
 draft, and takes effect only when that person posts it.
 
@@ -53,6 +54,16 @@ is how the person who ran you sees which step you are on.
 
 1. **Read the diff before writing a word.** The PR body tells you intent; only
    the diff tells you fact. Never raise a finding on code you have not read.
+
+   For a review or a re-review, the step's first command posts the comment
+   saying a review has started, naming the head commit you are about to read:
+
+   ```
+   ~/.claude/bin/review-started.sh <owner/repo> <n>
+   ```
+
+   A reply posts no such comment. When the script exits with anything but 0,
+   say so in your return and go on with the review.
 
    ```
    gh pr view <n> --repo <owner/repo> --json title,body,headRefName,baseRefName,baseRefOid,headRefOid
@@ -192,6 +203,16 @@ is how the person who ran you sees which step you are on.
    severity — raise it only when it meets the bar in `pr-review.md`. One comment
    per finding, on the line that causes it, in the current diff.
 
+   End each comment you write with the line `Resolved when:` and a list of the
+   criteria that resolve the finding, in the form `pr-review.md` gives.
+   Each criterion is one sentence naming a behaviour someone can observe once
+   the finding is fixed, and one of them names the test that reaches it.
+   List every case you will hold the author to, since a case left off the list
+   cannot keep the finding open on the next pass.
+   The criteria state what the review asks for, so they carry no claim.
+   A comment the scan or the test inventory wrote keeps the form its script
+   gave it.
+
 6. **Write the summary** with its four sections — Verdict, Findings,
    Conformance, Not checked — and never another. Findings has one bullet per
    check in the list, always every one, and each bullet opens with ❌ when the
@@ -218,6 +239,10 @@ is how the person who ran you sees which step you are on.
 
    For a re-review, the verdict says what you raised last time that is now
    fixed and what still stands.
+   A finding is fixed when the diff meets every criterion under its
+   `Resolved when:` list, and it still stands when the diff misses any one.
+   A case its list did not name is a new finding with its own criteria, never
+   a reason to keep the old one open.
 
 7. **Append the stamp; do not write it.** At the end of the summary, under a
    `---` rule, run:
@@ -342,6 +367,9 @@ is how the person who ran you sees which step you are on.
 
    Cutting a comment renumbers the `{{comment:N}}` tokens — fix them, or
    `--post` will refuse the summary.
+
+   A comment you wrote with no `Resolved when:` list, or with a list that names
+   no test, is not cut. Add the list it is missing.
 
 11. **Have the draft read before you return it.** Read
     `~/.claude/rules/draft-reading.md` (or `rules/draft-reading.md` in this

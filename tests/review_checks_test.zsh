@@ -136,5 +136,41 @@ else
   fail "review-scribe.md searches the head commit for what the diff left wrong"
 fi
 
+comment_template="$(awk '/^## An inline comment/ { on = 1; next } /^## / { on = 0 } on' "$RULES/pr-review.md" \
+  | awk '/^```/ { n++; next } n == 1')"
+if [[ "$comment_template" == *"<one sentence saying what to do instead>"*"Resolved when:"*"- <one sentence: "* ]]; then
+  ok "pr-review.md ends an inline comment with the criteria that resolve it"
+else
+  fail "pr-review.md ends an inline comment with the criteria that resolve it"
+fi
+
+re_review="$(awk '/^## Re-reviewing/ { on = 1; next } /^## / { on = 0 } on' "$RULES/pr-review.md")"
+if [[ "$re_review" == *"against its own resolution criteria"* ]]; then
+  ok "pr-review.md checks a fixed finding against its own resolution criteria"
+else
+  fail "pr-review.md checks a fixed finding against its own resolution criteria"
+fi
+
+scribe_comment_step="$(awk '/^5\. \*\*Write each inline comment\*\*/ { on = 1 } /^6\. / { on = 0 } on' "$SCRIPT_DIR/../agents/review-scribe.md")"
+if [[ "$scribe_comment_step" == *"Resolved when:"* ]]; then
+  ok "review-scribe.md ends each inline comment with the criteria that resolve it"
+else
+  fail "review-scribe.md ends each inline comment with the criteria that resolve it"
+fi
+
+review_starts="$(awk '/^## When a review starts/ { on = 1; next } /^## / { on = 0 } on' "$RULES/pr-review.md")"
+if [[ "$review_starts" == *"~/.claude/bin/review-started.sh <owner/repo> <pr>"* && "$review_starts" == *"reply"* ]]; then
+  ok "pr-review.md posts a comment on the pull request when a review starts"
+else
+  fail "pr-review.md posts a comment on the pull request when a review starts"
+fi
+
+scribe_first_step="$(awk '/^1\. \*\*Read the diff/ { on = 1 } /^2\. / { on = 0 } on' "$SCRIPT_DIR/../agents/review-scribe.md")"
+if [[ "$scribe_first_step" == *"~/.claude/bin/review-started.sh <owner/repo> <n>"* ]]; then
+  ok "review-scribe.md posts that a review has started before reading the diff"
+else
+  fail "review-scribe.md posts that a review has started before reading the diff"
+fi
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

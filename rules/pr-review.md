@@ -63,6 +63,10 @@ One finding, on the line that causes it. The whole comment:
 3. <one sentence: the wrong result someone gets>
 
 <one sentence saying what to do instead>
+
+Resolved when:
+- <one sentence: a behaviour someone can observe once the finding is fixed>
+- <one sentence: the test that reaches that behaviour>
 ```
 
 - **Check** is the name of one of the checks, spelled as `review-checks.md`
@@ -84,8 +88,16 @@ One finding, on the line that causes it. The whole comment:
 - **Four steps is the cap.** Past four the comment is describing a subsystem
   rather than a defect, and the honest move is to name the step that is wrong
   and stop.
-- **The last line is the fix** — one sentence saying what to do instead, never a
+- **The fix follows the steps** — one sentence saying what to do instead, never a
   restatement of the defect and never a question.
+- **The comment ends with the criteria that resolve it**, under the line
+  `Resolved when:`, as a list the author can check the change against.
+  Each criterion is one sentence naming a behaviour someone can observe once
+  the finding is fixed, and one of them names the test that reaches that
+  behaviour.
+  The list names every case the fix has to cover, so a case the review means
+  to hold the author to is written there and not raised later.
+  Meeting every criterion means the finding no longer blocks approval.
 - **The bar is correctness.** A finding is raised only when the code is wrong
   without the fix. Anything below that bar is not raised at all — a preference,
   a tidier alternative, a cost the author may reasonably decide to carry.
@@ -178,11 +190,25 @@ generated. Nothing to say means `Not relevant.`
 The rule from `~/.claude/rules/pr-body.md` applies to every bullet and every
 inline comment here. One sentence, one period, no semicolon, no clause bolted on
 the end. An inline comment is a header phrase, one sentence naming the defect,
-one sentence per numbered step, and one sentence saying what to do instead. The
+one sentence per numbered step, one sentence saying what to do instead, and one
+sentence per resolution criterion. The
 steps carry the chain of cause, so no single sentence has to.
 
 And `~/.claude/rules/writing-style.md` applies to every word. No metaphors, no
 narration, no filler, no praise.
+
+## When a review starts
+
+A review or a re-review starts by posting one comment on the pull request,
+naming the head commit it reads, so the author knows a review is under way:
+
+```
+~/.claude/bin/review-started.sh <owner/repo> <pr>
+```
+
+The comment reads `Review started against <sha>.` and says nothing else.
+A reply to a thread is not a review and posts no such comment.
+When the head commit cannot be read, the script posts nothing and says so.
 
 ## The draft
 
@@ -223,6 +249,15 @@ A re-review reads the commits since the last review and says so in its verdict:
 what was raised before and is now fixed, and what still stands. A finding still
 present gets a fresh inline comment on the current line, since the old one
 points at a line that has moved.
+
+A finding the author says is fixed is checked
+against its own resolution criteria, and against nothing else.
+It is fixed when the diff meets every criterion it listed, and it still stands
+when the diff misses any one of them.
+A case the earlier comment did not list is not a reason to keep that finding
+open.
+When that case meets the bar, it is raised as a new finding with its own
+resolution criteria.
 
 ## The review block
 
