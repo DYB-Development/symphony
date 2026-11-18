@@ -144,5 +144,12 @@ else
   fail "pr-review.md ends an inline comment with the criteria that resolve it"
 fi
 
+re_review="$(awk '/^## Re-reviewing/ { on = 1; next } /^## / { on = 0 } on' "$RULES/pr-review.md")"
+if [[ "$re_review" == *"against its own resolution criteria"* ]]; then
+  ok "pr-review.md checks a fixed finding against its own resolution criteria"
+else
+  fail "pr-review.md checks a fixed finding against its own resolution criteria"
+fi
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

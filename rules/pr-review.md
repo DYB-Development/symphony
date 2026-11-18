@@ -237,6 +237,15 @@ what was raised before and is now fixed, and what still stands. A finding still
 present gets a fresh inline comment on the current line, since the old one
 points at a line that has moved.
 
+A finding the author says is fixed is checked against its own resolution
+criteria, and against nothing else.
+It is fixed when the diff meets every criterion it listed, and it still stands
+when the diff misses any one of them.
+A case the earlier comment did not list is not a reason to keep that finding
+open.
+When that case meets the bar, it is raised as a new finding with its own
+resolution criteria.
+
 ## The review block
 
 While a review is open the session reviews and does nothing else. Spawning
