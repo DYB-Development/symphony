@@ -136,5 +136,13 @@ else
   fail "review-scribe.md searches the head commit for what the diff left wrong"
 fi
 
+comment_template="$(awk '/^## An inline comment/ { on = 1; next } /^## / { on = 0 } on' "$RULES/pr-review.md" \
+  | awk '/^```/ { n++; next } n == 1')"
+if [[ "$comment_template" == *"<one sentence saying what to do instead>"*"Resolved when:"*"- <one sentence: "* ]]; then
+  ok "pr-review.md ends an inline comment with the criteria that resolve it"
+else
+  fail "pr-review.md ends an inline comment with the criteria that resolve it"
+fi
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
