@@ -197,6 +197,19 @@ steps carry the chain of cause, so no single sentence has to.
 And `~/.claude/rules/writing-style.md` applies to every word. No metaphors, no
 narration, no filler, no praise.
 
+## When a review starts
+
+A review or a re-review starts by posting one comment on the pull request,
+naming the head commit it reads, so the author knows a review is under way:
+
+```
+~/.claude/bin/review-started.sh <owner/repo> <pr>
+```
+
+The comment reads `Review started against <sha>.` and says nothing else.
+A reply to a thread is not a review and posts no such comment.
+When the head commit cannot be read, the script posts nothing and says so.
+
 ## The draft
 
 A review is drafted before it is posted, and I read the draft first. The Scribe

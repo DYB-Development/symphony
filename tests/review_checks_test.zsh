@@ -158,5 +158,12 @@ else
   fail "review-scribe.md ends each inline comment with the criteria that resolve it"
 fi
 
+review_starts="$(awk '/^## When a review starts/ { on = 1; next } /^## / { on = 0 } on' "$RULES/pr-review.md")"
+if [[ "$review_starts" == *"~/.claude/bin/review-started.sh <owner/repo> <pr>"* && "$review_starts" == *"reply"* ]]; then
+  ok "pr-review.md posts a comment on the pull request when a review starts"
+else
+  fail "pr-review.md posts a comment on the pull request when a review starts"
+fi
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
