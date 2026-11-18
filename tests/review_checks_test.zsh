@@ -151,5 +151,12 @@ else
   fail "pr-review.md checks a fixed finding against its own resolution criteria"
 fi
 
+scribe_comment_step="$(awk '/^5\. \*\*Write each inline comment\*\*/ { on = 1 } /^6\. / { on = 0 } on' "$SCRIPT_DIR/../agents/review-scribe.md")"
+if [[ "$scribe_comment_step" == *"Resolved when:"* ]]; then
+  ok "review-scribe.md ends each inline comment with the criteria that resolve it"
+else
+  fail "review-scribe.md ends each inline comment with the criteria that resolve it"
+fi
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]

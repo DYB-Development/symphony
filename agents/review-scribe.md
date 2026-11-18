@@ -192,6 +192,16 @@ is how the person who ran you sees which step you are on.
    severity — raise it only when it meets the bar in `pr-review.md`. One comment
    per finding, on the line that causes it, in the current diff.
 
+   End each comment you write with the line `Resolved when:` and a list of the
+   criteria that resolve the finding, in the form `pr-review.md` gives.
+   Each criterion is one sentence naming a behaviour someone can observe once
+   the finding is fixed, and one of them names the test that reaches it.
+   List every case you will hold the author to, since a case left off the list
+   cannot keep the finding open on the next pass.
+   The criteria state what the review asks for, so they carry no claim.
+   A comment the scan or the test inventory wrote keeps the form its script
+   gave it.
+
 6. **Write the summary** with its four sections — Verdict, Findings,
    Conformance, Not checked — and never another. Findings has one bullet per
    check in the list, always every one, and each bullet opens with ❌ when the
@@ -218,6 +228,10 @@ is how the person who ran you sees which step you are on.
 
    For a re-review, the verdict says what you raised last time that is now
    fixed and what still stands.
+   A finding is fixed when the diff meets every criterion under its
+   `Resolved when:` list, and it still stands when the diff misses any one.
+   A case its list did not name is a new finding with its own criteria, never
+   a reason to keep the old one open.
 
 7. **Append the stamp; do not write it.** At the end of the summary, under a
    `---` rule, run:
@@ -342,6 +356,9 @@ is how the person who ran you sees which step you are on.
 
    Cutting a comment renumbers the `{{comment:N}}` tokens — fix them, or
    `--post` will refuse the summary.
+
+   A comment you wrote with no `Resolved when:` list, or with a list that names
+   no test, is not cut. Add the list it is missing.
 
 11. **Have the draft read before you return it.** Read
     `~/.claude/rules/draft-reading.md` (or `rules/draft-reading.md` in this
