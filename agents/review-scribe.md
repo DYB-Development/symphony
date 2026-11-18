@@ -21,8 +21,9 @@ defined.
 Also read `~/.claude/rules/writing-style.md`. No metaphors, no stories, no
 filler, no praise. It applies to every word you write.
 
-**You do not post.** You write the draft and return it. The person who ran you
-reads it and posts it. Never run `--post` yourself, never run `gh pr review`,
+**You do not post the review.** You write the draft and return it. The person
+who ran you reads it and posts it. The one comment you post yourself is the one
+saying a review has started, in step 1. Never run `--post` yourself, never run `gh pr review`,
 never merge. Whether the review approves or requests changes is named in the
 draft, and takes effect only when that person posts it.
 
@@ -53,6 +54,16 @@ is how the person who ran you sees which step you are on.
 
 1. **Read the diff before writing a word.** The PR body tells you intent; only
    the diff tells you fact. Never raise a finding on code you have not read.
+
+   For a review or a re-review, the step's first command posts the comment
+   saying a review has started, naming the head commit you are about to read:
+
+   ```
+   ~/.claude/bin/review-started.sh <owner/repo> <n>
+   ```
+
+   A reply posts no such comment. When the script exits with anything but 0,
+   say so in your return and go on with the review.
 
    ```
    gh pr view <n> --repo <owner/repo> --json title,body,headRefName,baseRefName,baseRefOid,headRefOid

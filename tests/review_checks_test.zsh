@@ -165,5 +165,12 @@ else
   fail "pr-review.md posts a comment on the pull request when a review starts"
 fi
 
+scribe_first_step="$(awk '/^1\. \*\*Read the diff/ { on = 1 } /^2\. / { on = 0 } on' "$SCRIPT_DIR/../agents/review-scribe.md")"
+if [[ "$scribe_first_step" == *"~/.claude/bin/review-started.sh <owner/repo> <n>"* ]]; then
+  ok "review-scribe.md posts that a review has started before reading the diff"
+else
+  fail "review-scribe.md posts that a review has started before reading the diff"
+fi
+
 printf '\n%d passed, %d failed\n' "$PASS" "$FAIL"
 [[ $FAIL -eq 0 ]]
