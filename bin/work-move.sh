@@ -41,6 +41,7 @@ in_flight | while IFS= read -r plan; do
     def completed($title): [$tickets[0][] | select(.title == $title) | .state] | length > 0 and all(. == "CLOSED");
     {title: $plan.title,
      priority: (first($plan.labels[].name | select(startswith("priority:")) | ltrimstr("priority:")) // "medium")}
+    + ($setting[0] | with_entries(select(.key | IN("own_project_id", "job_id", "product_id"))))
     + $fields + {units: [$fields.units[] | . + {pipeline_id: $setting[0].pipeline_id}]}
     + {done_units: [$fields.units[] | select(completed(.title)) | .number]}' |
     "$hub" post move_in_plan >/dev/null

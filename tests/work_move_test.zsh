@@ -97,6 +97,10 @@ assert_equals '["high","medium"]' "$(sent 'map(.priority)')" \
 move "[$(plan 41 "Quote-to-order conversion" OPEN)]" >/dev/null 2>&1
 assert_equals '[[3,3]]' "$(sent 'map([.units[].pipeline_id])')" "sends every unit on the pipeline dyb_web's work setting names"
 
+move "[$(plan 41 "Quote-to-order conversion" OPEN)]" >/dev/null 2>&1
+assert_equals '[{"own_project_id":7,"job_id":null,"repo":null,"pipeline_id":null}]' "$(sent 'map({own_project_id, job_id, repo, pipeline_id})')" \
+  "sends each plan linked as dyb_web's work setting names"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"
