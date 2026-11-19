@@ -94,6 +94,9 @@ move "[$(plan 41 "Quote-to-order conversion" OPEN "$PLAN_BODY" '[{"name": "prior
 assert_equals '["high","medium"]' "$(sent 'map(.priority)')" \
   "sends each plan with the priority its plan issue's label gives, and medium when it has none"
 
+move "[$(plan 41 "Quote-to-order conversion" OPEN)]" >/dev/null 2>&1
+assert_equals '[[3,3]]' "$(sent 'map([.units[].pipeline_id])')" "sends every unit on the pipeline dyb_web's work setting names"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"
