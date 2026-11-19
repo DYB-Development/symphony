@@ -480,17 +480,6 @@ this way when it is handed one, writes its criteria as the body's ACs Covered,
 and ends the body with `Work item: <address>` in place of `Closes #<n>`. A work
 item production cannot find stops the scribe with production's message.
 
-`work-move.sh` moves dyb_web's plans still in flight on GitHub into production.
-It takes every open `type:plan` issue in the repo dyb_web's work setting names,
-and every closed one whose title an open ticket's Part of line still names. Each
-plan arrives with the priority its `priority:` label gives, or medium, linked as
-the setting names, with every unit on the setting's pipeline. A unit whose
-ticket of the same title is closed arrives completed, and any other unit arrives
-open. It prints each plan issue's number beside its plan's page in production,
-and lists a plan issue `plan-fields.sh` cannot read with its title and reason
-before going on with the rest. It refuses to start unless
-`~/.config/symphony/work/dyb_web.json` names `dyb_web` as its store.
-
 ### Blocking a repo's own agents
 
 A repo can define its own agents in its `.claude/agents` folder. To stop a
