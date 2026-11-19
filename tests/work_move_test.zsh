@@ -86,6 +86,10 @@ move "[$(plan 41 "Quote-to-order conversion" OPEN)]" \
   "[$(ticket 60 "Convert a quote" CLOSED "Quote-to-order conversion, stage 1 of 4 — End to end."), $(ticket 61 "Email the order" OPEN "Quote-to-order conversion, stage 2 of 4 — Enrich.")]" >/dev/null 2>&1
 assert_equals '[["1.1"]]' "$(sent 'map(.done_units)')" "sends a unit whose ticket of the same title is closed as completed"
 
+move "[$(plan 41 "Quote-to-order conversion" OPEN)]" \
+  "[$(ticket 60 "Convert a quote" CLOSED "Quote-to-order conversion, stage 1 of 4 — End to end.")]" >/dev/null 2>&1
+assert_equals '[["1.1"]]' "$(sent 'map(.done_units)')" "sends a unit with no ticket in dyb_web as open"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"
