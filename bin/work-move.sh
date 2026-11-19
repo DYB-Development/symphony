@@ -38,7 +38,11 @@ in_flight() {
 
 in_flight | while IFS= read -r plan; do
   printf '%s' "$plan" | jq -r '.body' > "$work/body.md"
-  fields="$("$(dirname "$0")/plan-fields.sh" "$work/body.md")"
+  if ! fields="$("$(dirname "$0")/plan-fields.sh" "$work/body.md" 2>"$work/reason")"; then
+    printf '#%s %s was not moved: %s\n' "$(printf '%s' "$plan" | jq -r '.number')" "$(printf '%s' "$plan" | jq -r '.title')" \
+      "$(sed 's/^plan-fields.sh: //' "$work/reason")"
+    continue
+  fi
   moved="$(jq -c -n --argjson plan "$plan" --argjson fields "$fields" --slurpfile tickets "$work/tickets.json" --slurpfile setting "$setting_file" '
     def completed($title): [$tickets[0][] | select(.title == $title) | .state] | length > 0 and all(. == "CLOSED");
     {title: $plan.title,

@@ -111,6 +111,10 @@ printf '{"store": "dyb_web", "repo": "acme/dyb_web", "pipeline_id": 3, "own_proj
 assert_equals "#41 https://dyb.example/console/pipelines/plans/12" "$(move "[$(plan 41 "Quote-to-order conversion" OPEN)]" 2>&1)" \
   "prints each plan issue's number beside the address of the plan's page in production"
 
+assert_equals $'#45 Broken plan was not moved: the plan has no section 02 Already built\n#41 https://dyb.example/console/pipelines/plans/12' \
+  "$(move "[$(plan 45 "Broken plan" OPEN $'## 01 The plan\n\nNothing yet.\n'), $(plan 41 "Quote-to-order conversion" OPEN)]" 2>&1)" \
+  "lists a plan issue the plan reader cannot read with its number, title and reason, and moves the rest"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"
