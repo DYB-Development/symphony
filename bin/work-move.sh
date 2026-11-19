@@ -16,6 +16,8 @@ USAGE
 settings_dir="${SYMPHONY_WORK_DIR:-$HOME/.config/symphony/work}"
 setting_file="$settings_dir/dyb_web.json"
 hub="$(dirname "$0")/dyb-hub.sh"
+[ "$(jq -r '.store' "$setting_file" 2>/dev/null)" = dyb_web ] ||
+  { printf "work-move.sh: %s does not keep dyb_web's work in dyb_web, so nothing was moved\n" "$setting_file" >&2; exit 1; }
 repo="$(jq -r '.repo' "$setting_file")"
 
 work="$(mktemp -d)"

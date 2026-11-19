@@ -101,6 +101,13 @@ move "[$(plan 41 "Quote-to-order conversion" OPEN)]" >/dev/null 2>&1
 assert_equals '[{"own_project_id":7,"job_id":null,"repo":null,"pipeline_id":null}]' "$(sent 'map({own_project_id, job_id, repo, pipeline_id})')" \
   "sends each plan linked as dyb_web's work setting names"
 
+printf '{"store": "github"}' > "$SETTINGS/dyb_web.json"
+output=$(move "[$(plan 41 "Quote-to-order conversion" OPEN)]" 2>&1)
+assert_equals "1 work-move.sh: $SETTINGS/dyb_web.json does not keep dyb_web's work in dyb_web, so nothing was moved"$'\n'"nothing sent" \
+  "$? $output"$'\n'"$([ -e "$WORK/sent" ] && echo sent || echo nothing sent)" \
+  "refuses to start unless dyb_web's work setting names dyb_web"
+printf '{"store": "dyb_web", "repo": "acme/dyb_web", "pipeline_id": 3, "own_project_id": 7}' > "$SETTINGS/dyb_web.json"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"
