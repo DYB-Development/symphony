@@ -71,6 +71,17 @@ echo "work-move.sh:"
 move "[$(plan 41 "Quote-to-order conversion" OPEN)]" >/dev/null 2>&1
 assert_equals '["Quote-to-order conversion"]' "$(sent 'map(.title)')" "moves an open plan issue into production"
 
+ticket() {
+  jq -n --argjson number "$1" --arg title "$2" --arg state "$3" --arg part_of "${4:-standalone}" --argjson labels "${5:-[]}" \
+    '{number: $number, title: $title, state: $state, labels: ([{name: "type:task"}] + $labels),
+      body: "**As a** rep,\n**I want** a thing,\n**so that** it helps.\n\n## Part of\n\($part_of)\n\n## Acceptance criteria\n- [ ] It works.\n"}'
+}
+
+move "[$(plan 41 "Quote-to-order conversion" OPEN), $(plan 42 "Invoice export" CLOSED), $(plan 43 "Old reports" CLOSED)]" \
+  "[$(ticket 50 "Send an invoice" OPEN "Invoice export, stage 2 of 4 — Enrich."), $(ticket 51 "Print a report" CLOSED "Old reports, stage 1 of 4 — End to end.")]" >/dev/null 2>&1
+assert_equals '["Quote-to-order conversion","Invoice export"]' "$(sent 'map(.title)')" \
+  "also moves a closed plan issue whose feature group an open ticket's Part of line still names"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"

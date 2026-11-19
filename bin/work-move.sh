@@ -18,12 +18,24 @@ setting_file="$settings_dir/dyb_web.json"
 hub="$(dirname "$0")/dyb-hub.sh"
 repo="$(jq -r '.repo' "$setting_file")"
 
-plans="$(gh issue list --repo "$repo" --state all --label type:plan --limit 1000 --json number,title,body,labels,state)"
+work="$(mktemp -d)"
+trap 'rm -rf "$work"' EXIT
 
-printf '%s' "$plans" | jq -c '.[] | select(.state == "OPEN")' | while IFS= read -r plan; do
-  body="$(mktemp)"
-  printf '%s' "$plan" | jq -r '.body' > "$body"
-  fields="$("$(dirname "$0")/plan-fields.sh" "$body")"
-  rm -f "$body"
+gh issue list --repo "$repo" --state all --label type:plan --limit 1000 --json number,title,body,labels,state > "$work/plans.json"
+gh issue list --repo "$repo" --state all --limit 10000 --json number,title,body,labels,state |
+  jq -c 'map(select(any(.labels[]; .name == "type:plan") | not)
+             | {title, state, part_of: ((.body | capture("(?m)^## Part of\n(?<line>[^\n]*)").line // "") | ascii_downcase)})' \
+  > "$work/tickets.json"
+
+in_flight() {
+  jq -c --slurpfile tickets "$work/tickets.json" '
+    [$tickets[0][] | select(.state == "OPEN") | .part_of] as $named
+    | .[] | (.title | ascii_downcase) as $group
+    | select(.state == "OPEN" or any($named[]; contains($group)))' "$work/plans.json"
+}
+
+in_flight | while IFS= read -r plan; do
+  printf '%s' "$plan" | jq -r '.body' > "$work/body.md"
+  fields="$("$(dirname "$0")/plan-fields.sh" "$work/body.md")"
   jq -c -n --argjson plan "$plan" --argjson fields "$fields" '{title: $plan.title} + $fields' | "$hub" post move_in_plan >/dev/null
 done
