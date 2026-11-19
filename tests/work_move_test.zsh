@@ -90,6 +90,10 @@ move "[$(plan 41 "Quote-to-order conversion" OPEN)]" \
   "[$(ticket 60 "Convert a quote" CLOSED "Quote-to-order conversion, stage 1 of 4 — End to end.")]" >/dev/null 2>&1
 assert_equals '[["1.1"]]' "$(sent 'map(.done_units)')" "sends a unit with no ticket in dyb_web as open"
 
+move "[$(plan 41 "Quote-to-order conversion" OPEN "$PLAN_BODY" '[{"name": "priority:high"}]'), $(plan 44 "Invoice export" OPEN)]" >/dev/null 2>&1
+assert_equals '["high","medium"]' "$(sent 'map(.priority)')" \
+  "sends each plan with the priority its plan issue's label gives, and medium when it has none"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"
