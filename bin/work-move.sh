@@ -39,12 +39,13 @@ in_flight() {
 in_flight | while IFS= read -r plan; do
   printf '%s' "$plan" | jq -r '.body' > "$work/body.md"
   fields="$("$(dirname "$0")/plan-fields.sh" "$work/body.md")"
-  jq -c -n --argjson plan "$plan" --argjson fields "$fields" --slurpfile tickets "$work/tickets.json" --slurpfile setting "$setting_file" '
+  moved="$(jq -c -n --argjson plan "$plan" --argjson fields "$fields" --slurpfile tickets "$work/tickets.json" --slurpfile setting "$setting_file" '
     def completed($title): [$tickets[0][] | select(.title == $title) | .state] | length > 0 and all(. == "CLOSED");
     {title: $plan.title,
      priority: (first($plan.labels[].name | select(startswith("priority:")) | ltrimstr("priority:")) // "medium")}
     + ($setting[0] | with_entries(select(.key | IN("own_project_id", "job_id", "product_id"))))
     + $fields + {units: [$fields.units[] | . + {pipeline_id: $setting[0].pipeline_id}]}
     + {done_units: [$fields.units[] | select(completed(.title)) | .number]}' |
-    "$hub" post move_in_plan >/dev/null
+    "$hub" post move_in_plan)"
+  printf '#%s %s\n' "$(printf '%s' "$plan" | jq -r '.number')" "$("$hub" page "/console/pipelines/plans/$(printf '%s' "$moved" | jq -r '.plan_id')")"
 done

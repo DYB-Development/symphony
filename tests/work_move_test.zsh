@@ -108,6 +108,9 @@ assert_equals "1 work-move.sh: $SETTINGS/dyb_web.json does not keep dyb_web's wo
   "refuses to start unless dyb_web's work setting names dyb_web"
 printf '{"store": "dyb_web", "repo": "acme/dyb_web", "pipeline_id": 3, "own_project_id": 7}' > "$SETTINGS/dyb_web.json"
 
+assert_equals "#41 https://dyb.example/console/pipelines/plans/12" "$(move "[$(plan 41 "Quote-to-order conversion" OPEN)]" 2>&1)" \
+  "prints each plan issue's number beside the address of the plan's page in production"
+
 echo ""
 echo "$PASS passed, $FAIL failed"
 rm -rf "$WORK"
